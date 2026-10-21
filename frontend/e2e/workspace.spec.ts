@@ -213,7 +213,9 @@ test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링�
   await expect(
     page.getByRole('heading', { name: '근거와 함께 대화하기' }),
   ).toBeVisible();
-  await expect(page.locator('.profile-details')).not.toHaveAttribute('open');
+  await expect(
+    page.locator('[data-testid="profile-details"]'),
+  ).not.toHaveAttribute('open');
   await page.getByLabel('포켓몬 질문').fill('피카츄 타입');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.getByText('원문 자료를 확인하고 있어요')).toBeVisible();
@@ -221,20 +223,24 @@ test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링�
     page.getByRole('link', { name: '근거 1 원문 열기' }),
   ).toHaveAttribute('href', 'https://pokeapi.co/api/v2/pokemon/25/');
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
-  await expect(page.locator('.answer-body')).toHaveCount(0);
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await page.getByLabel('포켓몬 질문').fill('이상해씨 설명');
   await page.getByRole('button', { name: '질문 보내기' }).click();
-  await expect(page.locator('.answer-body')).toHaveCount(1);
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
   await page.getByRole('button', { name: '피카츄 선택' }).click();
-  await expect(page.locator('.user-message p')).toHaveText('피카츄 타입');
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText(
+    '피카츄 타입',
+  );
   await page.reload();
-  await expect(page.locator('.user-message p')).toHaveText('피카츄 타입');
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText(
+    '피카츄 타입',
+  );
   await page.getByRole('button', { name: '새 대화 만들기' }).click();
-  await expect(page.locator('.answer-body')).toHaveCount(0);
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await page
     .getByLabel('대화 기록 선택')
     .selectOption({ label: '피카츄 타입' });
-  await expect(page.locator('.answer-body')).toHaveCount(1);
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
   expect(
     await page.evaluate(() => sessionStorage.getItem('pokecoach-pending')),
   ).not.toContain('피카츄 타입');
@@ -249,7 +255,7 @@ test('가이드도 대화에 표시하고 자연어 검색은 명확화·빈 결
   await expect(
     page.getByText('근거 기반 운용 가이드', { exact: true }).last(),
   ).toBeVisible();
-  await expect(page.locator('.answer-label')).toContainText(
+  await expect(page.locator('[data-testid="answer-label"]')).toContainText(
     '근거 기반 운용 가이드',
   );
   await page
@@ -287,9 +293,9 @@ test('네트워크 재시도, 진행 중 새로고침, HTML은 텍스트로 표�
   await page.getByRole('button', { name: '다시 시도', exact: true }).click();
   await expect(page.getByText('원문 자료를 확인하고 있어요')).toBeVisible();
   await page.reload();
-  await expect(page.locator('.answer-body')).toHaveCount(1);
-  await expect(page.locator('.answer-text img')).toHaveCount(0);
-  await expect(page.locator('.answer-text')).toContainText(
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await expect(page.locator('[data-testid="answer-text"] img')).toHaveCount(0);
+  await expect(page.locator('[data-testid="answer-text"]')).toContainText(
     '<img src=x onerror=alert(1)>',
   );
 });
@@ -333,8 +339,10 @@ test('이름 검색 빈 결과와 근거 없는 답변 안내', async ({ page })
   await expect(
     page.getByText('이 답변에 인용된 근거가 없습니다.', { exact: true }),
   ).toBeVisible();
-  await expect(page.locator('.evidence-card')).toHaveCount(0);
-  await expect(page.locator('.answer-state')).toHaveText('확인되지 않음');
+  await expect(page.locator('[data-testid="evidence-card"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="answer-state"]')).toHaveText(
+    '확인되지 않음',
+  );
 });
 
 test('모바일 검색은 접고 챗봇을 먼저 표시', async ({ page }) => {
@@ -496,3 +504,73 @@ for (const missingSprite of [false, true])
       page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
     ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
   });
+
+test('기존 반응형 경계와 높은 화면의 대화 영역 유지', async ({ page }) => {
+  await fixture(page);
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: '피카츄', exact: true }),
+  ).toBeVisible();
+  for (const [width, height, railWidth, headingSize, feedHeight] of [
+    [390, 844, 54, 22, 420],
+    [480, 844, 54, 22, 420],
+    [481, 900, 54, 25, 420],
+    [780, 1100, 54, 25, 420],
+    [781, 1100, 72, 26, 510],
+    [1150, 900, 72, 26, 410],
+    [1151, 900, 72, 28, 410],
+    [1440, 1100, 72, 28, 510],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await expect(
+      page.getByRole('complementary', { name: '주 메뉴' }),
+    ).toHaveCSS('width', `${railWidth}px`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCSS(
+      'font-size',
+      `${headingSize}px`,
+    );
+    await expect(page.getByRole('log')).toHaveCSS('height', `${feedHeight}px`);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (width <= 780) {
+      await expect(page.getByLabel('포켓몬 이름 검색')).toBeHidden();
+    } else {
+      await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
+    }
+  }
+});
+
+test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', async ({ page }) => {
+  await fixture(page);
+  await page.route('**/api/jobs/**', (route) =>
+    route.fulfill({
+      json: {
+        data: { jobId: 'test', status: 'running', stage: 'collecting' },
+      },
+    }),
+  );
+  await page.goto('/');
+  const selected = page.getByRole('button', { name: '피카츄 선택' });
+  const other = page.getByRole('button', { name: '이상해씨 선택' });
+  await expect(selected).toHaveAttribute('aria-pressed', 'true');
+  await selected.hover();
+  await expect(selected).toHaveCSS(
+    'background-color',
+    'rgba(167, 239, 197, 0.043)',
+  );
+  await other.hover();
+  await expect(other).toHaveCSS('background-color', 'rgb(32, 43, 56)');
+  const input = page.getByLabel('포켓몬 이름 검색');
+  await input.focus();
+  await expect(input).toHaveCSS('outline-color', 'rgb(167, 239, 197)');
+  await expect(input).toHaveCSS('outline-width', '2px');
+  await page.getByLabel('포켓몬 질문').fill('타입 질문');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  const spinner = page.getByRole('status').locator('svg').first();
+  await expect(spinner).toHaveCSS('animation-duration', '1.1s');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(spinner).toHaveCSS('animation-name', 'none');
+});
