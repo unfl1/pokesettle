@@ -14,9 +14,16 @@ from starlette.exceptions import HTTPException
 from backend.catalog import Catalog
 from backend.config import Settings
 from backend.data_preparation.pokeapi import PokeApiSource
+from backend.discovery import discover
 from backend.errors import ServiceError
 from backend.http_client import SourceClient
-from backend.models import ChatRequest, CollectRequest
+from backend.models import (
+    ChatRequest,
+    CollectRequest,
+    ConversationRequest,
+    DiscoveryRequest,
+    GuideRequest,
+)
 from backend.rag.model import StructuredModel
 from backend.rag.vector_store import VectorStore
 from backend.services import KnowledgeService
@@ -184,8 +191,10 @@ def create_app(settings=None, *, service=None):
             store.update_job(job_id, stage=value)
 
         try:
-            if kind == "chat":
-                result = service.chat(body, session_id, stage)
+            if kind in {"chat", "guide"}:
+                result = service.chat(
+                    body, session_id, stage, feature="pokemon_guide" if kind == "guide" else None
+                )
             else:
                 result = service.collect(body.pokemon_id, body.question, body.regulation_id, stage)
             store.update_job(
@@ -211,7 +220,7 @@ def create_app(settings=None, *, service=None):
         session_id = session(request)
         check_scope(body)
         ensure_ready()
-        if kind == "chat" and body.conversation_id:
+        if kind in {"chat", "guide"} and body.conversation_id:
             store.conversation(
                 session_id, body.pokemon_id, body.regulation_id, body.conversation_id
             )
@@ -315,6 +324,61 @@ def create_app(settings=None, *, service=None):
     @app.get("/api/pokemon/{pokemon_id}")
     def detail(request: Request, pokemon_id: str):
         return ok(request, catalog.get(pokemon_id).model_dump())
+
+    @app.post("/api/pokemon/search")
+    def discovery(request: Request, body: DiscoveryRequest):
+        session(request)
+        if body.regulation_id and body.regulation_id not in {
+            r["regulation_id"] for r in regulations()
+        }:
+            raise ServiceError("UNKNOWN_REGULATION", "등록되지 않은 규칙입니다.", 422)
+        ensure_ready()
+        return ok(
+            request,
+            discover(service, body),
+            warnings=["일반 도감 속성으로 검증한 결과이며 Champions 적격성을 뜻하지 않습니다."],
+        )
+
+    @app.post("/api/conversations")
+    def new_conversation(request: Request, body: ConversationRequest):
+        session_id = session(request)
+        check_scope(body)
+        identifier = store.conversation(session_id, body.pokemon_id, body.regulation_id)
+        return ok(
+            request,
+            {
+                "conversation_id": identifier,
+                "pokemon_id": body.pokemon_id,
+                "regulation_id": body.regulation_id,
+            },
+            201,
+        )
+
+    @app.get("/api/conversations")
+    def conversation_list(
+        request: Request,
+        pokemon_id: str = Query(..., alias="pokemonId"),
+        limit: int = Query(20, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+    ):
+        session_id = session(request)
+        catalog.get(pokemon_id)
+        return ok(request, store.conversations(session_id, pokemon_id, limit, offset))
+
+    @app.get("/api/conversations/{conversation_id}/messages")
+    def conversation_messages(
+        request: Request,
+        conversation_id: str,
+        limit: int = Query(50, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+    ):
+        return ok(request, store.messages(session(request), conversation_id, limit, offset))
+
+    @app.post("/api/pokemon/{pokemon_id}/guide")
+    def guide(request: Request, background: BackgroundTasks, pokemon_id: str, body: GuideRequest):
+        guide_question = "선택한 포켓몬의 근거 기반 운용 가이드를 작성해 주세요. 먼저 일반 도감에서 확인되는 타입, 종족값의 특징, 특성 이름과 수집 문서에 설명된 특성 작용을 근거와 함께 정리하세요. 운용 역할과 주의점은 문서가 직접 뒷받침할 때만 설명하고, 없으면 미확인으로 구분하세요. Champions의 적격성·추천 세트·승률·데미지는 추측하지 마세요. 도감의 생태 이야기는 생략하고 타입·종족값·특성 설명에 집중해 최대 6개 주장으로 간결하게 답하세요. 문서에 없는 운용 역할과 Champions 적용 여부는 claims가 아니라 unknowns에 따로 기록하세요."
+        chat_body = ChatRequest(**body.model_dump(), pokemon_id=pokemon_id, question=guide_question)
+        return submit(request, background, chat_body, "guide")
 
     @app.get("/api/regulations")
     def regulation_list(request: Request):

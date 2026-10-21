@@ -90,7 +90,9 @@ def render_answer(generated, evidence, regulation_id):
             }
         )
     return {
-        "answer_status": generated.answer_status,
+        "answer_status": "partial"
+        if generated.claims and generated.unknowns
+        else generated.answer_status,
         "answer": "\n\n".join(sentences) or "수집된 문서에서 확인되지 않습니다.",
         "facts": facts,
         "assumptions": [

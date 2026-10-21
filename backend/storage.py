@@ -107,6 +107,72 @@ class Store:
                 )
         return ids
 
+    def conversations(self, session_id, pokemon_id, limit=20, offset=0):
+        with self.connect() as db:
+            total = db.execute(
+                "SELECT COUNT(*) FROM conversations WHERE session_id=? AND pokemon_id=?",
+                (session_id, pokemon_id),
+            ).fetchone()[0]
+            rows = db.execute(
+                """SELECT c.*, COALESCE(MAX(m.created_at),'') AS updated_at,
+                (SELECT content FROM messages WHERE conversation_id=c.id AND role='user' ORDER BY rowid LIMIT 1) AS first_question,
+                COUNT(m.id) AS message_count
+                FROM conversations c LEFT JOIN messages m ON m.conversation_id=c.id
+                WHERE c.session_id=? AND c.pokemon_id=? GROUP BY c.id
+                ORDER BY c.rowid DESC LIMIT ? OFFSET ?""",
+                (session_id, pokemon_id, limit, offset),
+            ).fetchall()
+        return {
+            "items": [
+                {
+                    "conversation_id": r["id"],
+                    "pokemon_id": r["pokemon_id"],
+                    "regulation_id": r["regulation_id"],
+                    "title": json.loads(r["first_question"])[:80]
+                    if r["first_question"]
+                    else "새 대화",
+                    "updated_at": r["updated_at"] or None,
+                    "message_count": r["message_count"],
+                }
+                for r in rows
+            ],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+
+    def messages(self, session_id, conversation_id, limit=50, offset=0):
+        with self.connect() as db:
+            owner = db.execute(
+                "SELECT * FROM conversations WHERE id=? AND session_id=?",
+                (conversation_id, session_id),
+            ).fetchone()
+            if not owner:
+                raise ServiceError("RESOURCE_NOT_FOUND", "대화를 찾을 수 없습니다.", 404)
+            total = db.execute(
+                "SELECT COUNT(*) FROM messages WHERE conversation_id=?", (conversation_id,)
+            ).fetchone()[0]
+            rows = db.execute(
+                "SELECT * FROM messages WHERE conversation_id=? ORDER BY rowid LIMIT ? OFFSET ?",
+                (conversation_id, limit, offset),
+            ).fetchall()
+        return {
+            "conversation_id": conversation_id,
+            "pokemon_id": owner["pokemon_id"],
+            "items": [
+                {
+                    "message_id": r["id"],
+                    "role": r["role"],
+                    "content": json.loads(r["content"]),
+                    "created_at": r["created_at"],
+                }
+                for r in rows
+            ],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+
     def history(self, conversation_id):
         with self.connect() as db:
             rows = db.execute(

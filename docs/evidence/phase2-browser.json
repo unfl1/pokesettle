@@ -1,0 +1,25 @@
+{
+  "verifiedAt": "2026-10-21T06:04:26.670Z",
+  "viewportDesktop": [
+    1440,
+    1080
+  ],
+  "viewportMobile": [
+    390,
+    844
+  ],
+  "browser": "installed Google Chrome",
+  "realApi": true,
+  "realModel": true,
+  "errors": [],
+  "sources": 1,
+  "hiddenOtherHistory": true,
+  "noOverflow": true,
+  "reloadRestoresHistory": true,
+  "timing": {
+    "acceptedMs": 128,
+    "totalMs": 10079,
+    "sampleCount": 1,
+    "scope": "single local metadata question; no performance guarantee"
+  }
+}

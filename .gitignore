@@ -25,3 +25,14 @@ service-account*.json
 .idea/
 .vscode/
 *.log
+# Personal learning notes: local only
+/docs/PHASE1_LEARNING_NOTES.md
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+# Local browser captures may contain conversations
+/runtime-ui/
+
+.pnpm-store/

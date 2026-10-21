@@ -195,3 +195,25 @@ def test_generation_validation_retries_then_abstains_safely(setup):
         {"pokemon_id": "pokemon:1", "question": "test"}
     )["result"]
     assert result["answer_status"] == "abstained" and result["citations"] == []
+
+
+def test_blank_version_placeholder_is_absence_but_unknown_id_still_rejected(setup):
+    generation = Generation(
+        answer_status="answered",
+        claims=[
+            {
+                "text": "도감의 테스트 정보",
+                "evidence_ids": ["pokemon:1"],
+                "source_versions": ["", "  "],
+            }
+        ],
+        assumptions=[],
+        unknowns=["전략은 미확인"],
+    )
+    assert generation.claims[0].source_versions == []
+    result = render_answer(generation, setup.vectors.retrieve("pokemon:1", "test"), None)
+    assert result["citations"] and "원문 버전" not in result["answer"]
+    assert result["answer_status"] == "partial"
+    generation.claims[0].source_versions = ["invented-version"]
+    with pytest.raises(ServiceError):
+        render_answer(generation, setup.vectors.retrieve("pokemon:1", "test"), None)

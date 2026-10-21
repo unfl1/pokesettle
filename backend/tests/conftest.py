@@ -8,7 +8,7 @@ import pytest
 
 from backend.catalog import Catalog
 from backend.config import Settings
-from backend.models import Candidate, Document, Generation, QueryPlan, Selection
+from backend.models import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
 from backend.rag.vector_store import VectorStore
 from backend.services import KnowledgeService
 from backend.storage import Store
@@ -65,11 +65,19 @@ class FakeModel:
         self.invalid_selection = False
         self.abstain = False
         self.fail = False
+        self.discovery_plan = DiscoveryPlan(
+            filters=[],
+            requires_clarification=True,
+            unresolved_conditions=["구체적인 조건이 필요합니다."],
+            explanation="조건을 확인해 주세요.",
+        )
 
     def invoke(self, purpose, system, payload, schema):
         self.calls.append((purpose, payload))
         if self.fail:
             raise RuntimeError("SECRET_TEST_TOKEN full prompt raw provider exception")
+        if purpose == "discovery":
+            return self.discovery_plan
         if purpose == "queries":
             return QueryPlan(queries=[])
         if purpose == "selection":

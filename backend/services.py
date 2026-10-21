@@ -144,7 +144,7 @@ class KnowledgeService:
                 "elapsed_seconds": round(time.monotonic() - started, 3),
             }
 
-    def chat(self, request, session_id, stage=lambda _: None):
+    def chat(self, request, session_id, stage=lambda _: None, feature=None):
         self.catalog.get(request.pokemon_id)
         conversation_id = self.store.conversation(
             session_id, request.pokemon_id, request.regulation_id, request.conversation_id
@@ -164,7 +164,17 @@ class KnowledgeService:
         )
         stage("saving")
         result = state["result"]
-        user_id, assistant_id = self.store.save_exchange(conversation_id, request.question, result)
+        if feature:
+            result["feature"] = feature
+            result["guide_scope"] = "generic_reference"
+            result["guide_limitations"] = [
+                "일반 도감과 수집 문서에서 확인한 정보입니다.",
+                "Champions 전략 역할·적격성은 확인된 근거가 있을 때만 설명합니다.",
+            ]
+        display_question = (
+            "근거 기반 운용 가이드를 작성해 줘." if feature == "pokemon_guide" else request.question
+        )
+        user_id, assistant_id = self.store.save_exchange(conversation_id, display_question, result)
         return {
             **result,
             "conversation_id": conversation_id,

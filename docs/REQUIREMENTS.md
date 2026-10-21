@@ -2,6 +2,8 @@
 
 작성일: 2026-10-21 (Asia/Seoul). 이 문서는 Phase 0 설계 기준이다. **Phase 1 구현·실행 결과는 [TEST_RESULTS.md](TEST_RESULTS.md)를 참조한다.** 아래 '구현 전' 기록은 Phase 0 당시의 상태이며 현재 상태와 구별한다.
 
+> 현재 구현 상태: Phase 0의 아래 “미확인” 표기는 당시 설계 기록이다. Phase 1 데이터·RAG와 Phase 2 대화 UI·통합을 실행 검증했으며 최신 판정은 [Phase 2 결과](PHASE2_RESULTS.md)를 참조한다. Champions 규칙·적격성과 외부 상호 점검은 여전히 미확인이다.
+
 ## 1. 기준과 현재 상태
 
 - 루트 `AGENTS.md`: 작업 규칙과 사실·가정·미확인 구분.

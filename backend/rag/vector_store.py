@@ -68,6 +68,14 @@ class VectorStore:
                     ],
                 )
 
+    def metadata_rank(self, query):
+        with self.lock:
+            count = self.meta.count()
+            if not count:
+                raise ServiceError("INDEX_NOT_READY", "메타데이터 색인이 없습니다.", 503)
+            result = self.meta.query(query_embeddings=self.embed([query]), n_results=count)
+            return {identifier: rank for rank, identifier in enumerate(result["ids"][0])}
+
     def index_document(self, pokemon_id, document):
         if document.rights_status != "approved":
             raise ServiceError(
