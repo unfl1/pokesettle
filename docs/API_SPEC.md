@@ -1,23 +1,23 @@
 # API 계약 설계
 
-작성일: 2026-10-21. Phase 0 계약 초안. 실행 가능한 서버·Pydantic 모델·OpenAPI 파일은 아직 작성하지 않았다. 예시 ID와 문장은 형식 설명용이며 실제 수집·분석 결과가 아니다.
+작성일: 2026-10-21. Phase 0 계약 초안. 실행 가능한 서버·Pydantic 모델·OpenAPI 파일은 아직 작성하지 않음. 예시 ID와 문장은 형식 설명용이며 실제 수집·분석 결과가 아님.
 
-> Phase 1 업데이트: 아래 표는 설계 당시 계획이다. 현재 `/api/status`, `/api/session`, `/api/pokemon`, `/api/pokemon/{id}`, `/api/regulations`, `/api/documents/collect`, `/api/chat`, `/api/jobs/{jobId}`를 구현했다. 대화 저장은 채팅의 최소 내부 기능으로 제공하고 대화 목록·조회 API, 탐색·가이드·UI는 Phase 2에 남겼다. 실제 OpenAPI는 [스냅샷](evidence/openapi.json), 검증은 [TEST_RESULTS.md](TEST_RESULTS.md)를 참조한다. 근거의 적용 범위는 현재 `game`, `battleFormat`, `regulationId` 필드로 표시한다.
+> Phase 1 업데이트: 아래 표는 설계 당시 계획임. 현재 `/api/status`, `/api/session`, `/api/pokemon`, `/api/pokemon/{id}`, `/api/regulations`, `/api/documents/collect`, `/api/chat`, `/api/jobs/{jobId}`를 구현함. 대화 저장은 채팅의 최소 내부 기능으로 제공하고 대화 목록·조회 API, 탐색·가이드·UI는 Phase 2에 남김. 실제 OpenAPI는 [스냅샷](evidence/openapi.json), 검증은 [TEST_RESULTS.md](TEST_RESULTS.md)를 참조함. 근거의 적용 범위는 현재 `game`, `battleFormat`, `regulationId` 필드로 표시함.
 
-> Phase 2 업데이트: 대화 생성·목록·메시지, 조건 검색, 가이드 작업 API와 React 화면을 구현했다. 아래는 설계 계약과 후속 계획을 함께 보존한 문서다. 현재 동작은 [Phase 2 결과](PHASE2_RESULTS.md)와 최신 [OpenAPI](evidence/openapi.json)를 기준으로 확인한다. 팀·전투·SSE 경로는 미구현이다.
+> Phase 2 업데이트: 대화 생성·목록·메시지, 조건 검색, 가이드 작업 API와 React 화면을 구현함. 아래는 설계 계약과 후속 계획을 함께 보존한 문서임. 현재 동작은 [Phase 2 결과](PHASE2_RESULTS.md)와 최신 [OpenAPI](evidence/openapi.json)를 기준으로 확인함. 팀·전투·SSE 경로는 미구현임.
 
 관련 문서: [요구사항](REQUIREMENTS.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](DATA_SOURCES.md).
 
 ## 1. 공통 규약
 
-- `/api`, JSON UTF-8. JSON은 camelCase, 내부 Python은 snake_case로 명시 변환한다.
+- `/api`, JSON UTF-8. JSON은 camelCase, 내부 Python은 snake_case로 명시 변환함.
 - 문자열 ID, UTC ISO 8601 시각. 알 수 없는 값은 null, 확인된 빈 목록은 `[]`.
 - 성공: `{ "data": ..., "requestId": "...", "warnings": [] }`.
-- 실패: `{ "error": {"code":"...", "message":"안전한 한국어 안내", "retryable":false, "details":[]}, "requestId":"..." }`. details에는 입력 필드/코드만, 키·프롬프트·서버 경로·traceback은 넣지 않는다.
+- 실패: `{ "error": {"code":"...", "message":"안전한 한국어 안내", "retryable":false, "details":[]}, "requestId":"..." }`. details에는 입력 필드/코드만, 키·프롬프트·서버 경로·traceback은 넣지 않음.
 - 목록은 `items`, `total`, `limit`, `offset`. `1 <= limit <= 100`, 기본 20, `offset >= 0`. 검색 문자열 1~200자, 질문/자연어 조건 1~2000자, 앞뒤 공백 제거.
-- 개인용 로컬 배포를 기본으로 한다. 서버가 임의 세션을 발급하고 HttpOnly, SameSite=Lax 쿠키로 소유권을 확인한다. 세션별 대화·작업·팀 접근을 검사한다. 개발 origin allowlist와 변경 요청의 Origin 검사 적용. 외부 공개 인증·계정 체계는 범위 밖이다.
-- 작업 요청에는 `clientRequestId`(UUID)를 받는다. 같은 세션·종류·ID·본문이면 같은 작업을 반환하고, 같은 ID에 다른 본문이면 409. 실패 작업의 의도적 재시도는 새 ID를 쓴다.
-- `regulationId`는 외부 설정 참조다. 생략 시 일반 지식 범위이며 '현재 합법'으로 판정하지 않는다. 모르는 ID는 422, 확인되지 않은 규칙에 의존하는 분석은 보류한다.
+- 개인용 로컬 배포를 기본으로 함. 서버가 임의 세션을 발급하고 HttpOnly, SameSite=Lax 쿠키로 소유권을 확인함. 세션별 대화·작업·팀 접근을 검사함. 개발 origin allowlist와 변경 요청의 Origin 검사 적용. 외부 공개 인증·계정 체계는 범위 밖임.
+- 작업 요청에는 `clientRequestId`(UUID)를 받음. 같은 세션·종류·ID·본문이면 같은 작업을 반환하고, 같은 ID에 다른 본문이면 409. 실패 작업의 의도적 재시도는 새 ID를 사용함.
+- `regulationId`는 외부 설정 참조임. 생략 시 일반 지식 범위이며 '현재 합법'으로 판정하지 않음. 모르는 ID는 422, 확인되지 않은 규칙에 의존하는 분석은 보류함.
 
 ## 2. 공통 결과 모델
 
@@ -30,11 +30,11 @@
 | `Calculation` | `status`: `not_requested/verified/unsupported/insufficient_input`, `engineVersion`, `rulesetVersion`, `inputs`, `outputs`, `limitations`. 계산하지 않은 outputs는 null |
 | `GroundedResult` | `answerStatus`: `answered/partial/abstained`, `answer`, `facts`, `assumptions`, `unknowns`, `calculation`, `citations`, `citationNotice`, `regulationId` |
 
-Citation의 sourceType은 `metadata/api/wiki/web/pdf/curated` 중 실제 유형이다. 메타 출처는 로컬 상세 페이지 링크와 원 제공자 URL을 구분한다. URL은 수집 기록에서만 채우고 LLM 출력 URL을 그대로 신뢰하지 않는다. 인용 번호는 답변 내 `[근거 n]`과 정확히 일치해야 한다. retrieved 전체와 실제 cited는 다르며 API에는 실제 인용만 표시한다.
+Citation의 sourceType은 `metadata/api/wiki/web/pdf/curated` 중 실제 유형임. 메타 출처는 로컬 상세 페이지 링크와 원 제공자 URL을 구분함. URL은 수집 기록에서만 채우고 LLM 출력 URL을 그대로 신뢰하지 않음. 인용 번호는 답변 내 `[근거 n]`과 정확히 일치해야 함. retrieved 전체와 실제 cited는 다르며 API에는 실제 인용만 표시함.
 
 ## 3. 단계별 엔드포인트
 
-Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
+Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획임.
 
 | 메서드 / 경로 | 목적 | 예정 단계 |
 |---|---|---|
@@ -57,7 +57,7 @@ Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
 | POST `/api/battle/damage` | 검증된 계산 입력에 대한 데미지/조건부 KO | Phase 4 선택 |
 | POST `/api/chat/stream` | SSE 선택 확장 | 선택. 필수 진행 상태는 polling으로 충족 |
 
-메타/문서 초기 일괄 색인과 강제 갱신은 서버 운영 스크립트로 제공할 계획이다. 사용자 화면에 임의 URL 수집·삭제/전체 재색인 API를 노출하지 않는다.
+메타/문서 초기 일괄 색인과 강제 갱신은 서버 운영 스크립트로 제공할 계획임. 사용자 화면에 임의 URL 수집·삭제/전체 재색인 API를 노출하지 않음.
 
 ## 4. 상태·목록·상세
 
@@ -74,13 +74,15 @@ Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
 }
 ```
 
-이 예시는 준비 전 상태 형식이다. 키 값이나 내부 경로는 반환하지 않는다. 서버가 살아 있으나 준비 전이면 이 엔드포인트는 200으로 상태를 알려 주고 채팅 요청은 503으로 거절한다.
+이 예시는 준비 전 상태 형식임. 키 값이나 내부 경로는 반환하지 않음. 서버가 살아 있으나 준비 전이면 이 엔드포인트는 200으로 상태를 알려 주고 채팅 요청은 503으로 거절함.
 
-`GET /api/pokemon` query: `q?`, `type?`, `regulationId?`, `eligibilityStatus?`, `limit?`, `offset?`. 적격 필터는 확인된 판정만 일치시킨다. 알려지지 않은 적격을 true로 변환하지 않는다. 미지원 조건은 무시하지 않고 422.
+`GET /api/pokemon` query: `q?`, `type?`, `regulationId?`, `eligibilityStatus?`, `limit?`, `offset?`. 적격 필터는 확인된 판정만 일치시킴. 알려지지 않은 적격을 true로 변환하지 않음. 미지원 조건은 무시하지 않고 422.
 
-`PokemonSummary`: `pokemonId`, `nameKo`, `nameEn`, `types`, `championsEligibilityStatus`, `verificationStatus`, `scope`. `PokemonDetail`은 `baseStats`, `abilities`, `availableMoves`, `megaForms`, `description`, `eligibleRegulations`, `fieldProvenance`, `sources`를 추가한다. 세부 타입·null 규칙은 ARCHITECTURE의 데이터 계약과 일치한다.
+- `PokemonSummary`: `pokemonId`, `nameKo`, `nameEn`, `types`, `championsEligibilityStatus`, `verificationStatus`, `scope`.
+- `PokemonDetail`은 `baseStats`, `abilities`, `availableMoves`, `megaForms`, `description`, `eligibleRegulations`, `fieldProvenance`, `sources`를 추가함.
+- 세부 타입·null 규칙은 ARCHITECTURE의 데이터 계약과 일치함.
 
-`GET /api/regulations`: ID·게임·포맷·UTC 적용 기간·규칙별 검증 상태·source IDs·확인일. 명단 미확인이면 `eligibleEntries:null`이며 빈 목록으로 전체 부적격을 암시하지 않는다. 현재 날짜에 해당하는 규칙과 검증 여부를 별개 필드로 반환한다.
+`GET /api/regulations`: ID·게임·포맷·UTC 적용 기간·규칙별 검증 상태·source IDs·확인일. 명단 미확인이면 `eligibleEntries:null`이며 빈 목록으로 전체 부적격을 암시하지 않음. 현재 날짜에 해당하는 규칙과 검증 여부를 별개 필드로 반환함.
 
 ## 5. 문서 준비와 작업 상태
 
@@ -95,7 +97,7 @@ Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
 }
 ```
 
-서버가 등록된 출처 어댑터로만 검색하고 캐시·자체 문서 포함 규칙을 적용한다. 강제 갱신은 이 요청에서 허용하지 않는다. 202 응답 data는 `jobId`, `status:"queued"`, `statusUrl`이다. 진행 위치는 `Location` 헤더에도 둔다.
+서버가 등록된 출처 어댑터로만 검색하고 캐시·자체 문서 포함 규칙을 적용함. 강제 갱신은 이 요청에서 허용하지 않음. 202 응답 data는 `jobId`, `status:"queued"`, `statusUrl`임. 진행 위치는 `Location` 헤더에도 둠.
 
 `GET /api/jobs/{jobId}`:
 
@@ -109,7 +111,7 @@ Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
 | `error` | 실패 시 공통 안전 오류, 나머지는 null |
 | `createdAt`, `updatedAt` | UTC 시각 |
 
-polling 기본 1초, 장기 작업은 2~5초로 간격 확대한다. 다른 세션의 job은 404. 완료가 되어도 `answerStatus=abstained`일 수 있으며 유보는 서버 오류가 아니다. 수집 결과는 `documentCount`, `chunkCount`, 채택 문서 제목/출처, `subjectDocumentStatus`를 포함한다. 필수 자체 문서가 없으면 성공 완료로 보고하지 않는다.
+polling 기본 1초, 장기 작업은 2~5초로 간격 확대함. 다른 세션의 job은 404. 완료가 되어도 `answerStatus=abstained`일 수 있으며 유보는 서버 오류가 아님. 수집 결과는 `documentCount`, `chunkCount`, 채택 문서 제목/출처, `subjectDocumentStatus`를 포함함. 필수 자체 문서가 없으면 성공 완료로 보고하지 않음.
 
 ## 6. 대화와 RAG 응답
 
@@ -127,9 +129,9 @@ polling 기본 1초, 장기 작업은 2~5초로 간격 확대한다. 다른 세�
 }
 ```
 
-conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한다. 기존 ID이면 소유 세션·pokemonId·regulationId 일치를 검사하고 불일치는 409. 규칙 변경은 새 대화로 분리해 과거 맥락 혼입을 막는다. 채팅은 202 작업 응답을 반환하고, 서버가 필요한 수집을 거쳐 retrieve/generate를 수행한다. UI가 별도 수집 요청을 먼저 호출할 필요는 없다.
+conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성함. 기존 ID이면 소유 세션·pokemonId·regulationId 일치를 검사하고 불일치는 409. 규칙 변경은 새 대화로 분리해 과거 맥락 혼입을 방지함. 채팅은 202 작업 응답을 반환하고, 서버가 필요한 수집을 거쳐 retrieve/generate를 수행함. UI가 별도 수집 요청을 먼저 호출할 필요는 없음.
 
-완료된 chat job의 result는 `{conversationId,userMessageId,assistantMessageId,...GroundedResult}`다. 근거 부족 예시:
+완료된 chat job의 result는 `{conversationId,userMessageId,assistantMessageId,...GroundedResult}`임. 근거 부족 예시:
 
 ```json
 {
@@ -145,9 +147,9 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 }
 ```
 
-예시는 GroundedResult 부분만 보여 준다. 정상 주장에는 번호·실제 인용 목록이 있어야 한다. 전체 검색 근거는 메타를 포함해도 질문 관련 근거 부족이면 이와 같이 유보할 수 있다. `GET .../messages`는 `messageId`, `role`, `content`, `createdAt`, assistant의 GroundedResult 스냅샷을 페이지 단위로 돌려준다.
+예시는 GroundedResult 부분만 보여 제공함. 정상 주장에는 번호·실제 인용 목록이 있어야 함. 전체 검색 근거는 메타를 포함해도 질문 관련 근거 부족이면 이와 같이 유보할 수 있음. `GET .../messages`는 `messageId`, `role`, `content`, `createdAt`, assistant의 GroundedResult 스냅샷을 페이지 단위로 반환함.
 
-`POST /api/pokemon/{id}/guide`는 `conversationId?`, `regulationId?`, `clientRequestId`를 받는다. 서버의 가이드 질문 템플릿으로 역할·주의점·적용 포맷을 요청하고 동일 RAG 작업과 GroundedResult를 사용한다. 모델이 일반 지식으로 채운 가이드를 별도 성공 경로로 제공하지 않는다.
+`POST /api/pokemon/{id}/guide`는 `conversationId?`, `regulationId?`, `clientRequestId`를 받음. 서버의 가이드 질문 템플릿으로 역할·주의점·적용 포맷을 요청하고 동일 RAG 작업과 GroundedResult를 사용함. 모델이 일반 지식으로 채운 가이드를 별도 성공 경로로 제공하지 않음.
 
 ## 7. 자연어 조건 탐색
 
@@ -158,11 +160,11 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 - `items`: PokemonSummary + `matchedConditions`, `supportingEvidenceIds`, `conversationTarget:{pokemonId}`.
 - `unknownConditions`, `excludedUnknownCount`, `total`, `limit`, `offset`, `completeness`: `complete_for_structured_filters` (LLM 해석의 의미적 정확성까지 보증하지 않음).
 
-정확 조건은 실제 필드로 검증한다. 속성 미확인은 일치 목록에서 제외하고 이유를 표시한다. 모호한 해석은 clarification 안내를 반환하며 뜻을 임의 확정하지 않는다. 유사도 점수는 관련도일 뿐 확률이 아니며, 필요 없으면 UI에 노출하지 않는다.
+정확 조건은 실제 필드로 검증함. 속성 미확인은 일치 목록에서 제외하고 이유를 표시함. 모호한 해석은 clarification 안내를 반환하며 뜻을 임의 확정하지 않음. 유사도 점수는 관련도일 뿐 확률이 아니며, 필요 없으면 UI에 노출하지 않음.
 
 ## 8. 후속 팀·전투 계약
 
-이 절은 Phase 3·4의 방향만 고정한다. 상세 규칙 미확인 상태이므로 실행용 최종 스키마는 해당 단계에서 검증 후 확정한다. 미구현 경로를 호출 가능한 기능으로 표시하지 않는다.
+이 절은 Phase 3·4의 방향만 고정함. 상세 규칙 미확인 상태이므로 실행용 최종 스키마는 해당 단계에서 검증 후 확정함. 미구현 경로를 호출 가능한 기능으로 표시하지 않음.
 
 | 요청 | 입력 | 출력·제약 |
 |---|---|---|
@@ -173,9 +175,9 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 | battle/recommend | BattleState·가정 시나리오 | 공격/교체/메가 연계 후보·이유·위험·대안. 합법 행동 정의 검증 필요 |
 | battle/damage | 공격·방어 세트, 기술, 필드·규칙·조건 | 계산 분포·조건부 KO·정확한 조건 및 엔진 버전. 미지원/입력 부족이면 수치 null |
 
-공통 facts/assumptions/unknowns/calculation/citations를 재사용한다. 알려지지 않은 레벨·육성·기술 효과를 몰래 기본값으로 채우지 않는다. 미지원 공식은 422 `UNSUPPORTED_MECHANICS`, 입력 부족은 422 `INSUFFICIENT_BATTLE_INPUT`. 데이터는 있으나 전략적 결론을 지지하지 못하는 경우는 정상 유보다.
+공통 facts/assumptions/unknowns/calculation/citations를 재사용함. 알려지지 않은 레벨·육성·기술 효과를 몰래 기본값으로 채우지 않음. 미지원 공식은 422 `UNSUPPORTED_MECHANICS`, 입력 부족은 422 `INSUFFICIENT_BATTLE_INPUT`. 데이터는 있으나 전략적 결론을 지지하지 못하는 경우는 정상 유보임.
 
-팀 저장·갱신은 201/200, 삭제는 204를 사용한다. 분석은 장기 실행 시 동일 202/job 계약을 재사용한다. 상세 필드와 동시 갱신 정책은 Phase 3에서 확정한다.
+팀 저장·갱신은 201/200, 삭제는 204를 사용함. 분석은 장기 실행 시 동일 202/job 계약을 재사용함. 상세 필드와 동시 갱신 정책은 Phase 3에서 확정함.
 
 ## 9. 오류·검증 매핑
 
@@ -193,31 +195,31 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 | 502 `GENERATION_INVALID` | 제한 재시도 후 출력 검증 실패 | 안전한 오류, 내부 전문 비노출 |
 | 500 `INTERNAL_ERROR` | 예상 외 실패 | requestId와 일반 안내 |
 
-접수 후 실패는 GET job 자체를 500으로 바꾸지 않고 200 data.status=`failed`와 같은 code를 담은 error로 표현한다. 동기 단계 실패만 표의 HTTP 코드를 사용한다. 조건 검색 빈 결과는 200 `no_results`, 근거 부족은 200 결과/완료 job의 `abstained`이며 장애와 구분한다.
+접수 후 실패는 GET job 자체를 500으로 바꾸지 않고 200 data.status=`failed`와 같은 code를 담은 error로 표현함. 동기 단계 실패만 표의 HTTP 코드를 사용함. 조건 검색 빈 결과는 200 `no_results`, 근거 부족은 200 결과/완료 job의 `abstained`이며 장애와 구분함.
 
 ## 10. 계약 검증 계획
 
-- Phase 1: 입력·응답 Pydantic 검증, 색인/키 누락, 잘못된 출력·인용 ID·작업 실패, 캐시, 타 세션 접근, 요청 중복을 확인한다.
-- Phase 2: 항목 전환/재접속 기록, 수집·생성 상태, 실제 인용 링크, 빈 결과·유보·오류 화면을 통합 검증한다.
-- 일반 요청이 `TOP_K`·프롬프트·모델 키를 덮어쓰지 못하도록 한다. 설정 변화 검증은 서버 설정에서 수행한다.
-- SSE를 추가한다면 상태·최종 결과·오류와 ID 계약을 polling과 동일하게 유지하고 최종 인용 검증 전의 토큰을 검증된 답변으로 표시하지 않는다.
+- Phase 1: 입력·응답 Pydantic 검증, 색인/키 누락, 잘못된 출력·인용 ID·작업 실패, 캐시, 타 세션 접근, 요청 중복을 확인함.
+- Phase 2: 항목 전환/재접속 기록, 수집·생성 상태, 실제 인용 링크, 빈 결과·유보·오류 화면을 통합 검증함.
+- 일반 요청이 `TOP_K`·프롬프트·모델 키를 덮어쓰지 못하도록 함. 설정 변화 검증은 서버 설정에서 수행함.
+- SSE를 추가한다면 상태·최종 결과·오류와 ID 계약을 polling과 동일하게 유지하고 최종 인용 검증 전의 토큰을 검증된 답변으로 표시하지 않음.
 
-Phase 0에서는 문서만 점검했다. Phase 1·2 실행 검증과 남은 한계는 각 결과 문서에서 구분한다.
+Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계는 각 결과 문서에서 구분함.
 
 ## Phase 2 구현 세부사항
 
-- 대화 목록은 `pokemonId` 필수, `limit` 기본 20/최대 100, `offset` 기본 0이며 최신 생성 순이다. 메시지는 작성 순으로 기본 50/최대 100이다. 다른 세션의 대화는 404다. 세션 쿠키는 7일 유효하며 이 기간은 장기 보존·삭제 정책을 뜻하지 않는다.
-- guide는 일반 도감의 타입·종족값·문서의 특성 설명을 먼저 요청한다. 문서에 없는 역할·추천 세트·Champions 전용 전략은 미확인으로 남긴다. 결과는 GroundedResult에 `feature:pokemon_guide`, `guideScope:generic_reference`, `guideLimitations`가 추가된다. 대화에는 짧은 사용자 요청과 최종 결과를 저장한다.
-- 조건 필드: `name`, `types`, `abilities`, `champions_eligibility_status`, `base_stats.{hp,attack,defense,sp_attack,sp_defense,speed}`. 필드 식별자 문자열은 snake_case다. 값은 문자열이며 숫자 비교는 질문에 명시된 정수만 허용한다. 이름은 eq/contains, 타입·특성·적격성은 eq, 수치는 eq/gte/lte/gt/lt만 허용한다. OR와 질적 기준·미검증 전투 효과는 확인 요청 대상이다.
-- 메타 컬렉션 전체를 의미 검색한 뒤 전체 도감에 정확 조건을 적용한다. 상위 일부 후보만으로 전체 일치를 주장하지 않는다. 검증된 일치 집합은 의미 순위로 정렬한다. `baseStats`, `sourceUrl`, `matchedConditions`, `supportingEvidenceIds`를 반환한다. 실제 UI는 해석 조건과 미확인 제외 수를 표시하고 항목 선택으로 원문 상세를 연결한다.
-- 현재 확보된 100종은 한 번에 표시한다. API는 페이지를 지원하지만 프론트엔드의 도감·탐색은 첫 100종, 대화 목록도 최신 100개까지 표시한다. 메시지는 모든 페이지를 읽는다. 대규모 카탈로그 확장 시 목록 페이지 UI를 추가해야 한다.
+- 대화 목록은 `pokemonId` 필수, `limit` 기본 20/최대 100, `offset` 기본 0이며 최신 생성 순임. 메시지는 작성 순으로 기본 50/최대 100임. 다른 세션의 대화는 404임. 세션 쿠키는 7일 유효하며 이 기간은 장기 보존·삭제 정책을 뜻하지 않음.
+- guide는 일반 도감의 타입·종족값·문서의 특성 설명을 먼저 요청함. 문서에 없는 역할·추천 세트·Champions 전용 전략은 미확인으로 남김. 결과는 GroundedResult에 `feature:pokemon_guide`, `guideScope:generic_reference`, `guideLimitations`가 추가됨. 대화에는 짧은 사용자 요청과 최종 결과를 저장함.
+- 조건 필드: `name`, `types`, `abilities`, `champions_eligibility_status`, `base_stats.{hp,attack,defense,sp_attack,sp_defense,speed}`. 필드 식별자 문자열은 snake_case임. 값은 문자열이며 숫자 비교는 질문에 명시된 정수만 허용함. 이름은 eq/contains, 타입·특성·적격성은 eq, 수치는 eq/gte/lte/gt/lt만 허용함. OR와 질적 기준·미검증 전투 효과는 확인 요청 대상임.
+- 메타 컬렉션 전체를 의미 검색한 뒤 전체 도감에 정확 조건을 적용함. 상위 일부 후보만으로 전체 일치를 주장하지 않음. 검증된 일치 집합은 의미 순위로 정렬함. `baseStats`, `sourceUrl`, `matchedConditions`, `supportingEvidenceIds`를 반환함. 실제 UI는 해석 조건과 미확인 제외 수를 표시하고 항목 선택으로 원문 상세를 연결함.
+- 현재 확보된 100종은 한 번에 표시함. API는 페이지를 지원하지만 프론트엔드의 도감·탐색은 첫 100종, 대화 목록도 최신 100개까지 표시함. 메시지는 모든 페이지를 읽음. 대규모 카탈로그 확장 시 목록 페이지 UI를 추가해야 함.
 
 ## 전체 도감·이미지 보완 (2026-10-21)
 
-이 절은 앞의 초기 100종 표시 제한을 대체한다. 도감과 조건 검색은 100개 단위로 “더 보기”를 제공하며 전체 항목에 접근한다. 대화 목록은 기존처럼 최신 100개이며 메시지는 모든 페이지를 읽는다. 조건 검색은 동일한 질문·규칙·도감 스냅샷·프롬프트·모델 설정의 구조화 해석을 캐시해 다음 페이지에서 모델을 다시 호출하지 않는다. 정확한 속성 조건은 매번 실제 자료에 대조한다.
+이 절은 앞의 초기 100종 표시 제한을 대체함. 도감과 조건 검색은 100개 단위로 “더 보기”를 제공하며 전체 항목에 접근함. 대화 목록은 기존처럼 최신 100개이며 메시지는 모든 페이지를 읽음. 조건 검색은 동일한 질문·규칙·도감 스냅샷·프롬프트·모델 설정의 구조화 해석을 캐시해 다음 페이지에서 모델을 다시 호출하지 않음. 정확한 속성 조건은 매번 실제 자료에 대조함.
 
 - `PokemonSummary`·상세·조건 검색 항목에 `speciesId`, `isDefault`, `formIdentifier`, `images` 추가.
-- `pokemonId`는 pokemon 리소스 ID, `speciesId`는 여러 폼이 공유하는 종 ID다. 기존 기본 종의 ID와 대화는 유지한다.
-- `images`: `artworkUrl`, `spriteUrl`, `sourceUrl`, `rightsNotice`, `checkedAt`, `availability:checked_on_display`. 주소가 항상 존재한다고 보증하지 않으며 화면에서 실패를 처리한다. 이미지 URL이 없어도 포켓몬 선택·대화는 가능하다.
-- `/api/status`의 `metadataCount`는 종·별도 폼을 합한 항목 수, `speciesCount`는 고유 종 수, `alternateVarietyCount`는 기본 폼 이외 항목 수다.
-- 종별 설명은 폼 사이에서 공유할 수 있지만 각 폼의 타입·능력치·특성은 선택한 폼의 메타를 사용한다. 별도 폼 수록과 Champions 적격성은 별개다.
+- `pokemonId`는 pokemon 리소스 ID, `speciesId`는 여러 폼이 공유하는 종 ID임. 기존 기본 종의 ID와 대화는 유지함.
+- `images`: `artworkUrl`, `spriteUrl`, `sourceUrl`, `rightsNotice`, `checkedAt`, `availability:checked_on_display`. 주소가 항상 존재한다고 보증하지 않으며 화면에서 실패를 처리함. 이미지 URL이 없어도 포켓몬 선택·대화는 가능함.
+- `/api/status`의 `metadataCount`는 종·별도 폼을 합한 항목 수, `speciesCount`는 고유 종 수, `alternateVarietyCount`는 기본 폼 이외 항목 수임.
+- 종별 설명은 폼 사이에서 공유할 수 있지만 각 폼의 타입·능력치·특성은 선택한 폼의 메타를 사용함. 별도 폼 수록과 Champions 적격성은 별개임.
