@@ -6,40 +6,19 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { ArrowLeft, MessageSquare, ShieldAlert } from 'lucide-react';
-import { api } from '../services/api';
+import { pokemonApi } from '../../pokemon/api';
+import { battleApi } from '../api';
+import { useAnalysis } from '../hooks/useAnalysis';
 import {
-  battleApi,
   type BattleResult,
   type Context,
   type SavedTeam,
   type SelectionResult,
   type TeamMember,
   type TeamResult,
-} from '../services/battle';
-import { typeLabels } from './PokemonProfile';
+} from '../types';
+import { typeLabels } from '../../pokemon/typeLabels';
 import TeamEditor, { action, control } from './TeamEditor';
-
-function useAnalysis<T>(path: string, payload: unknown) {
-  const value = JSON.stringify(payload);
-  const [snapshot, setSnapshot] = useState<string | null>(null);
-  const current = snapshot === value;
-  const query = useQuery({
-    queryKey: ['analysis', path, snapshot],
-    queryFn: () => battleApi.analyze<T>(path, JSON.parse(snapshot!)),
-    enabled: current,
-    retry: false,
-    staleTime: Infinity,
-  });
-  return {
-    data: current ? query.data : undefined,
-    error: current ? query.error : null,
-    busy: current && query.isFetching,
-    run: () => {
-      if (current) void query.refetch();
-      else setSnapshot(value);
-    },
-  };
-}
 
 function Evidence({ result }: { result: Context }) {
   return (
@@ -139,7 +118,7 @@ export default function TeamWorkspace({
     queries: [...new Set([...own, ...opponent].map((m) => m.pokemonId))].map(
       (id) => ({
         queryKey: ['team-pokemon', id],
-        queryFn: () => api.detail(id),
+        queryFn: () => pokemonApi.detail(id),
         staleTime: 60000,
       }),
     ),
@@ -152,7 +131,7 @@ export default function TeamWorkspace({
   const active = records.find((p) => p.pokemonId === activeId);
   const megaForms = useQuery({
     queryKey: ['mega-options', active?.speciesId],
-    queryFn: () => api.pokemon(active!.nameEn.split('-mega')[0]),
+    queryFn: () => pokemonApi.pokemon(active!.nameEn.split('-mega')[0]),
     enabled: Boolean(active),
     staleTime: 60000,
   });
