@@ -1,10 +1,5 @@
-import {
-  ArrowUpRight,
-  BookOpen,
-  ChevronDown,
-  CircleHelp,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowUpRight, BookOpen, ChevronDown, CircleHelp } from 'lucide-react';
+import PokemonImage from './PokemonImage';
 import type { PokemonDetail, StatName } from '../types';
 
 export const typeLabels: Record<string, string> = {
@@ -56,13 +51,12 @@ export function PokemonProfile({
   return (
     <section className="profile-card" aria-label="선택한 포켓몬 정보">
       <div className="profile-primary">
-        <div
-          className={`specimen specimen-${pokemon.types[0]}`}
-          aria-hidden="true"
-        >
-          <span className="specimen-orbit" />
-          <Sparkles size={29} strokeWidth={1.3} />
-          <small>#{String(pokemon.speciesId).padStart(3, '0')}</small>
+        <div className={`specimen specimen-${pokemon.types[0]}`}>
+          <PokemonImage
+            key={pokemon.pokemonId}
+            pokemon={pokemon}
+            size="large"
+          />
         </div>
         <div className="profile-name">
           <p className="eyebrow">현재 대화 주제</p>
@@ -125,6 +119,24 @@ export function PokemonProfile({
             PokéAPI 메타데이터 원문
             <ArrowUpRight size={12} />
           </a>
+          {pokemon.images && (
+            <p className="image-credit">
+              <a
+                href={pokemon.images.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                이미지 출처: PokéAPI sprites
+              </a>{' '}
+              · Pokémon © The Pokémon Company
+            </p>
+          )}
+          {pokemon.formIdentifier && (
+            <p className="stats-footnote">
+              별도 폼: {pokemon.formIdentifier} · 종 도감 번호 #
+              {pokemon.speciesId}
+            </p>
+          )}
         </div>
       </details>
     </section>

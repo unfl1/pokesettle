@@ -27,9 +27,21 @@ class Stats(Model):
     speed: int = Field(gt=0)
 
 
+class PokemonImages(Model):
+    artwork_url: HttpUrl | None = None
+    sprite_url: HttpUrl | None = None
+    source_url: HttpUrl
+    rights_notice: str
+    checked_at: str
+    availability: Literal["checked_on_display"] = "checked_on_display"
+
+
 class Pokemon(Model):
     pokemon_id: str
     species_id: int = Field(gt=0)
+    is_default: bool = True
+    form_identifier: str | None = None
+    images: PokemonImages | None = None
     name_ko: str | None
     name_en: str
     types: list[str] = Field(min_length=1, max_length=2)

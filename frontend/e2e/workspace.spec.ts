@@ -351,3 +351,148 @@ test('모바일 검색은 접고 챗봇을 먼저 표시', async ({ page }) => {
     page.getByRole('heading', { name: '이상해씨', exact: true }),
   ).toBeVisible();
 });
+
+test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', async ({
+  page,
+}) => {
+  await fixture(page);
+  const all = Array.from({ length: 205 }, (_, i) => ({
+    pokemonId: `pokemon:${i + 1}`,
+    speciesId: i + 1,
+    isDefault: true,
+    nameKo: `전체테스트${i + 1}`,
+    nameEn: `test-${i + 1}`,
+    types: ['electric'],
+    championsEligibilityStatus: 'unknown',
+    scope: 'generic',
+  }));
+  await page.route('**/api/**', async (route) => {
+    const request = route.request(),
+      url = new URL(request.url()),
+      path = decodeURIComponent(url.pathname);
+    const ok = (data: unknown) => route.fulfill({ json: { data } });
+    if (path === '/api/pokemon') {
+      const offset = Number(url.searchParams.get('offset') ?? 0),
+        q = url.searchParams.get('q');
+      const filtered = all.filter((p) => !q || p.nameKo.includes(q));
+      return ok({
+        items: filtered.slice(offset, offset + 100),
+        offset,
+        limit: 100,
+        total: filtered.length,
+      });
+    }
+    if (path === '/api/pokemon/search') {
+      const offset = request.postDataJSON().offset ?? 0;
+      return ok({
+        items: all.slice(offset, offset + 100),
+        offset,
+        limit: 100,
+        total: 205,
+        status: 'matched',
+        interpretation: '전기 타입',
+        unknownConditions: [],
+        excludedUnknownCount: 0,
+        interpretedFilters: [],
+      });
+    }
+    if (path === '/api/pokemon/pokemon:205')
+      return ok({
+        ...all[204],
+        baseStats: {
+          hp: 35,
+          attack: 55,
+          defense: 40,
+          spAttack: 50,
+          spDefense: 50,
+          speed: 90,
+        },
+        abilities: ['test-ability'],
+        sourceUrl: 'https://pokeapi.co/api/v2/pokemon/205/',
+      });
+    return route.fallback();
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: '더 보기 (100 / 205)' }).click();
+  await expect(
+    page.getByRole('button', { name: '전체테스트200 선택', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: '더 보기 (200 / 205)' }).click();
+  await page
+    .getByRole('button', { name: '전체테스트205 선택', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: '전체테스트205', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: '조건으로 찾기', exact: true })
+    .click();
+  await page.getByLabel('자연어 검색 조건').fill('전기 타입');
+  await page.getByRole('button', { name: '조건에 맞는 포켓몬 찾기' }).click();
+  await page.getByRole('button', { name: '더 보기 (100 / 205)' }).click();
+  await page.getByRole('button', { name: '더 보기 (200 / 205)' }).click();
+  await expect(
+    page.getByRole('button', { name: '전체테스트205 선택', exact: true }),
+  ).toBeVisible();
+});
+
+for (const missingSprite of [false, true])
+  test(`이미지 실패 대체 처리: sprite missing=${missingSprite}`, async ({
+    page,
+  }) => {
+    await fixture(page);
+    const root =
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+    await page.route('**/api/pokemon/pokemon%3A25', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            pokemonId: 'pokemon:25',
+            speciesId: 25,
+            nameKo: '피카츄',
+            nameEn: 'pikachu',
+            types: ['electric'],
+            abilities: ['static'],
+            baseStats: {
+              hp: 35,
+              attack: 55,
+              defense: 40,
+              spAttack: 50,
+              spDefense: 50,
+              speed: 90,
+            },
+            sourceUrl: 'https://pokeapi.co/api/v2/pokemon/25/',
+            images: {
+              artworkUrl: `${root}/other/official-artwork/25.png`,
+              spriteUrl: `${root}/25.png`,
+              sourceUrl: 'https://github.com/PokeAPI/sprites',
+            },
+          },
+        },
+      }),
+    );
+    await page.route('**/PokeAPI/sprites/**', (route) => {
+      if (route.request().url().includes('official-artwork') || missingSprite)
+        return route.fulfill({ status: 404 });
+      return route.fulfill({
+        contentType: 'image/png',
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6XkAAAAASUVORK5CYII=',
+          'base64',
+        ),
+      });
+    });
+    await page.goto('/');
+    if (missingSprite)
+      await expect(
+        page.getByRole('img', { name: '피카츄 이미지 없음' }),
+      ).toBeVisible();
+    else
+      await expect(
+        page.getByRole('img', { name: '피카츄 이미지', exact: true }),
+      ).toHaveAttribute('src', `${root}/25.png`);
+    await page.getByText('종족값과 출처 확인', { exact: true }).click();
+    await expect(
+      page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
+    ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
+  });

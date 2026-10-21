@@ -1340,3 +1340,93 @@ h1 {
     height: 420px;
   }
 }
+
+.pokemon-image {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.image-small {
+  width: 32px;
+  height: 32px;
+}
+.image-large {
+  width: 78px;
+  height: 78px;
+}
+.image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #667c91;
+  flex-shrink: 0;
+}
+.specimen {
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+}
+.pokemon-item {
+  gap: 7px;
+}
+.pokemon-number {
+  font-size: 9px;
+}
+.pokemon-copy small {
+  overflow-wrap: anywhere;
+}
+.load-more {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  font-size: 11px;
+  color: #a7efc5;
+  border: 1px solid #a7efc530;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+.image-credit {
+  font-size: 9px;
+  line-height: 1.8;
+  color: #8499ad;
+  margin-top: 8px;
+}
+.image-credit a {
+  text-decoration: underline;
+}
+.catalog-footnote {
+  font-size: 9px;
+}
+@media (max-width: 780px) {
+  .pokemon-list .load-more {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 480px) {
+  .image-small {
+    width: 23px;
+    height: 23px;
+  }
+  .pokemon-number {
+    display: none;
+  }
+  .pokemon-item {
+    gap: 5px;
+  }
+  .list-types {
+    gap: 3px;
+  }
+  .pokemon-copy strong {
+    font-size: 10px;
+  }
+  .pokemon-copy small {
+    font-size: 8px;
+  }
+  .specimen {
+    width: 66px;
+    height: 66px;
+  }
+  .image-large {
+    width: 64px;
+    height: 64px;
+  }
+}

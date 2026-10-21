@@ -1,8 +1,8 @@
-# PokéCoach AI
+# PokeTact
 
 Pokémon Champions 랭크 싱글 준비·복기를 목표로 하는 근거 기반 지식 서비스입니다. 현재 **Phase 2 챗봇 중심 화면과 API 통합**까지 구현했습니다. 포켓몬별 대화·기록 복원, 출처 확인, 자연어 조건 검색, 근거 가이드를 제공합니다. 팀·전투 계산은 후속 단계입니다.
 
-현재 데이터는 **일반 PokéAPI 기본 포켓몬 100종**과 종별 설명 문서입니다. Champions 참가 가능 100종이라는 뜻이 아닙니다. 참가 가능 여부·육성·레벨·데미지·승률은 미확인으로 두고 배틀 계산을 제공하지 않습니다.
+현재 데이터는 **일반 PokéAPI 기본 1,025종 + 별도 폼 326개, 총 1,351개 항목**과 종별 설명 문서입니다. 수집 시점 원본의 전체 pokemon 리소스를 포함하며 코드에 도감 상한을 고정하지 않습니다. 독립 능력치가 없는 외형 전용 폼은 별도 채팅 항목으로 나누지 않습니다. Champions 참가 가능 명단이라는 뜻은 아닙니다. 참가 가능 여부·육성·레벨·데미지·승률은 미확인으로 두고 배틀 계산을 제공하지 않습니다.
 
 ## 실행
 
@@ -27,7 +27,8 @@ LANGSMITH_TRACING=false
 
 ```bash
 # 배포된 pokemon.json과 종별 문서가 있으면 수집은 생략할 수 있습니다.
-uv run --frozen python -m backend.scripts.prepare_data --count 100
+# 기본값은 전체 종·별도 폼입니다. --count는 개발용 종 수 제한입니다.
+uv run --frozen python -m backend.scripts.prepare_data
 
 # 첫 실행은 로컬 임베딩 모델 다운로드가 필요합니다.
 uv run --frozen python -m backend.scripts.index_data
@@ -47,6 +48,8 @@ pnpm --dir frontend dev
 ```
 
 [로컬 챗봇](http://127.0.0.1:5173/)에서 포켓몬을 고르고 질문합니다. 대화가 주 화면이며, 도감 수치와 출처는 필요할 때 펼쳐 봅니다. 모바일의 포켓몬 검색도 기본적으로 접혀 있습니다. 이름 검색·조건 검색 결과는 같은 대화 화면으로 연결됩니다.
+
+목록·조건 검색은 “더 보기”로 전체 항목에 접근합니다. 목록에는 스프라이트, 선택 프로필에는 일러스트를 표시하며 실패 시 스프라이트·대체 아이콘 순으로 전환합니다. 같은 종의 별도 폼도 고유 ID·능력치·대화 기록으로 구분합니다.
 
 Vite가 `/api`를 127.0.0.1:8000으로 전달합니다. 키는 백엔드 루트 `.env`에만 두고 `VITE_` 환경변수로 옮기지 않습니다. 개발 서버는 로컬 주소에만 바인딩합니다. 실사용 배포에는 같은 출처에서 화면과 API를 연결할 배포 설정이 필요합니다.
 
@@ -123,7 +126,9 @@ uv run --frozen python -m backend.scripts.verify_phase2 --live
 
 ## 출처와 문서
 
-기초 데이터는 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv), 설명은 [PokéAPI v2](https://pokeapi.co/docs/v2)에서 수집했습니다. 출처 URL·수집 시각·해시·이용 조건을 기록하고, 프로젝트 [라이선스 원문](data/licenses/POKEAPI_LICENSE.md)을 보존합니다. Pokémon 이름·원문 설명 등의 권리는 원 권리자에게 있으며 소프트웨어 라이선스를 이미지/상표 등 전체 권리 허가로 해석하지 않습니다. 공식 이미지와 스프라이트는 수집하지 않았습니다.
+전체 기초 데이터와 종별 설명은 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv)로 일괄 수집하며, 질문에 필요한 관련 문서는 [PokéAPI v2](https://pokeapi.co/docs/v2)로 추가 수집합니다. 출처 URL·수집 시각·해시·이용 조건과 원래 게임 버전을 기록하고, 프로젝트 [라이선스 원문](data/licenses/POKEAPI_LICENSE.md)을 보존합니다. 이미지는 [PokéAPI sprites](https://github.com/PokeAPI/sprites)의 원본 주소를 연결하며 이미지 파일을 Git에 넣지 않습니다. 외부 네트워크 연결이 필요합니다. 이미지 저작권이 Pokémon Company에 있음을 화면과 데이터에 명시하며 저장소 라이선스를 캐릭터 권리의 포괄 허가로 해석하지 않습니다.
+
+최신 범위·검증·한계는 [전체 도감·이미지 보완 보고서](docs/CATALOG_EXPANSION.md)를 참조하세요. 초기 100종을 기준으로 한 Phase 1·2 증거는 당시 실행 기록으로 보존합니다.
 
 - [요구사항 및 단계 계획](docs/REQUIREMENTS.md)
 - [아키텍처와 데이터 설계](docs/ARCHITECTURE.md)

@@ -148,7 +148,7 @@ def test_discovery_vague_unsupported_unknown_and_empty(setup):
         [{"field": "champions_eligibility_status", "operator": "contains", "value": "eligible"}],
     )
     with pytest.raises(ServiceError):
-        discover(setup.service, DiscoveryRequest(query="사용 가능"))
+        discover(setup.service, DiscoveryRequest(query="지원하지 않는 비교 연산"))
     plan(setup, [{"field": "name", "operator": "contains", "value": ""}])
     with pytest.raises(ServiceError):
         discover(setup.service, DiscoveryRequest(query="이름"))

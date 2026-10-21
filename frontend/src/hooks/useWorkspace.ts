@@ -49,7 +49,7 @@ export function useWorkspace(pokemonId: string) {
     refetchInterval: 15000,
   });
   const detail = useQuery({
-    queryKey: ['detail', pokemonId],
+    queryKey: ['detail', pokemonId, status.data?.metadataCount],
     queryFn: () => api.detail(pokemonId),
   });
   const conversations = useQuery({

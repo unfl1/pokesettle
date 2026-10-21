@@ -1,37 +1,208 @@
-"""Download baseline metadata and per-species documents, without an LLM or invented facts."""
+"""Prepare the complete upstream catalogue and species documents from bulk CSV snapshots."""
 
 import argparse
 import csv
 import io
 import json
+from collections import defaultdict
 
 from backend.config import Settings
 from backend.data_preparation.pokeapi import LICENCE_URL, PokeApiSource
 from backend.http_client import SourceClient
-from backend.models import Pokemon
-from backend.storage import Store
+from backend.models import Document, Pokemon
+from backend.storage import Store, digest
 
 CSV_ROOT = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv"
+SPRITES_ROOT = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
+TABLES = [
+    "pokemon",
+    "pokemon_stats",
+    "pokemon_types",
+    "types",
+    "pokemon_abilities",
+    "abilities",
+    "pokemon_species_names",
+    "pokemon_forms",
+    "pokemon_form_names",
+    "pokemon_species_flavor_text",
+    "versions",
+]
 
 
-def prepare(settings, count=100):
-    if not 100 <= count <= 1025:
-        raise ValueError("기본 포켓몬 수는 100~1025 범위로 지정하세요.")
+def grouped(rows, key):
+    result = defaultdict(list)
+    for row in rows:
+        result[row[key]].append(row)
+    return result
+
+
+def build_snapshots(tables, sources, count=None):
+    """Pure transformation: no fixed national-dex upper bound and no generated facts."""
+    default_rows = sorted(
+        (r for r in tables["pokemon"] if r["is_default"] == "1"), key=lambda r: int(r["species_id"])
+    )
+    if count is not None and not 1 <= count <= len(default_rows):
+        raise ValueError(f"종 수는 1~{len(default_rows)} 범위로 지정하세요.")
+    species_ids = {r["species_id"] for r in (default_rows[:count] if count else default_rows)}
+    names = {
+        (r["pokemon_species_id"], r["local_language_id"]): r["name"]
+        for r in tables["pokemon_species_names"]
+    }
+    types = {r["id"]: r["identifier"] for r in tables["types"]}
+    abilities = {r["id"]: r["identifier"] for r in tables["abilities"]}
+    versions = {r["id"]: r["identifier"] for r in tables["versions"]}
+    forms = grouped(tables["pokemon_forms"], "pokemon_id")
+    form_names = {
+        (r["pokemon_form_id"], r["local_language_id"]): r for r in tables["pokemon_form_names"]
+    }
+    stats, type_rows, ability_rows = [
+        grouped(tables[k], "pokemon_id")
+        for k in ["pokemon_stats", "pokemon_types", "pokemon_abilities"]
+    ]
+    descriptions = grouped(
+        [r for r in tables["pokemon_species_flavor_text"] if r["language_id"] in {"3", "9"}],
+        "species_id",
+    )
+    stat_names = {
+        "1": "hp",
+        "2": "attack",
+        "3": "defense",
+        "4": "sp_attack",
+        "5": "sp_defense",
+        "6": "speed",
+    }
+    by_source = {s["source_id"]: s for s in sources}
+    documents_by_species = {}
+    for sid in sorted(species_ids, key=int):
+        payload = {
+            "id": int(sid),
+            "name": names.get((sid, "9"), sid),
+            "names": [
+                {"language": {"name": language}, "name": names[(sid, language_id)]}
+                for language_id, language in [("3", "ko"), ("9", "en")]
+                if (sid, language_id) in names
+            ],
+            "flavor_text_entries": [
+                {
+                    "language": {"name": "ko" if r["language_id"] == "3" else "en"},
+                    "version": {"name": versions[r["version_id"]]},
+                    "flavor_text": r["flavor_text"],
+                }
+                for r in descriptions[sid]
+            ],
+        }
+        if not payload["flavor_text_entries"]:
+            raise ValueError(f"자체 설명 문서 없음: species:{sid}")
+        source = by_source["pokeapi-csv:pokemon_species_flavor_text"]
+        documents_by_species[sid] = Document(
+            document_id=f"pokeapi:pokemon-species:{sid}",
+            title=f"{names.get((sid, '9'), sid)} — PokéAPI species CSV",
+            source_url=source["source_url"],
+            source_type="curated",
+            body=PokeApiSource.render("pokemon-species", payload),
+            collected_at=source["collected_at"],
+            revision_id=digest(payload),
+            licence="PokéAPI project terms; Pokémon names and original text rights reserved to their owners",
+            licence_url=LICENCE_URL,
+        )
+    records, documents = [], []
+    for row in sorted(
+        tables["pokemon"],
+        key=lambda r: (int(r["species_id"]), r["is_default"] != "1", int(r["id"])),
+    ):
+        sid, identifier = row["species_id"], row["id"]
+        if sid not in species_ids:
+            continue
+        default = row["is_default"] == "1"
+        default_form = next((r for r in forms[identifier] if r["is_default"] == "1"), None)
+        label = form_names.get((default_form["id"], "3"), {}) if default_form else {}
+        base_ko = names.get((sid, "3"))
+        form_label = (
+            label.get("form_name")
+            or (default_form.get("form_identifier") if default_form else None)
+            or row["identifier"]
+        )
+        name_ko = (
+            base_ko
+            if default
+            else label.get("pokemon_name") or (f"{base_ko} ({form_label})" if base_ko else None)
+        )
+        provenance = {
+            field: {
+                "source_ids": [f"pokeapi-csv:{table}"],
+                "verification_status": "verified",
+                "scope": "generic PokéAPI reference; Champions applicability unknown",
+                "verified_at": by_source[f"pokeapi-csv:{table}"]["collected_at"],
+            }
+            for field, table in [
+                ("names", "pokemon_species_names"),
+                ("types", "pokemon_types"),
+                ("base_stats", "pokemon_stats"),
+                ("abilities", "pokemon_abilities"),
+                ("form", "pokemon_forms"),
+            ]
+        }
+        provenance["names"]["source_ids"].append("pokeapi-csv:pokemon_form_names")
+        provenance["names"]["verified_at"] = max(
+            provenance["names"]["verified_at"],
+            by_source["pokeapi-csv:pokemon_form_names"]["collected_at"],
+        )
+        provenance["images"] = {
+            "source_ids": ["pokeapi-sprites"],
+            "verification_status": "unknown",
+            "scope": "Repository URL convention; availability checked on display",
+            "verified_at": None,
+        }
+        pokemon = Pokemon(
+            pokemon_id=f"pokemon:{identifier}",
+            species_id=int(sid),
+            is_default=default,
+            form_identifier=None if default else row["identifier"],
+            name_ko=name_ko,
+            name_en=names.get((sid, "9"), row["identifier"]) if default else row["identifier"],
+            types=[
+                types[r["type_id"]]
+                for r in sorted(type_rows[identifier], key=lambda r: int(r["slot"]))
+            ],
+            base_stats={
+                stat_names[r["stat_id"]]: int(r["base_stat"])
+                for r in stats[identifier]
+                if r["stat_id"] in stat_names
+            },
+            abilities=[abilities[r["ability_id"]] for r in ability_rows[identifier]],
+            source_url=f"https://pokeapi.co/api/v2/pokemon/{identifier}/",
+            collected_at=sources[0]["collected_at"],
+            field_provenance=provenance,
+            images={
+                "artwork_url": f"{SPRITES_ROOT}/other/official-artwork/{identifier}.png",
+                "sprite_url": f"{SPRITES_ROOT}/{identifier}.png",
+                "source_url": "https://github.com/PokeAPI/sprites",
+                "rights_notice": "Pokémon images © The Pokémon Company. Source: PokéAPI sprites.",
+                "checked_at": sources[0]["collected_at"],
+                "availability": "checked_on_display",
+            },
+        )
+        records.append(pokemon.model_dump(mode="json"))
+        documents.append(
+            {
+                "pokemon_id": pokemon.pokemon_id,
+                "document": documents_by_species[sid].model_dump(mode="json"),
+            }
+        )
+    if len({r["species_id"] for r in records if r["is_default"]}) != len(species_ids):
+        raise ValueError("기본 종 누락")
+    return records, documents
+
+
+def prepare(settings, count=None):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     (settings.data_dir / "documents").mkdir(exist_ok=True)
-    store = Store(settings.runtime_dir / "state.sqlite3")
-    client = SourceClient(settings, store)
+    client = SourceClient(settings, Store(settings.runtime_dir / "state.sqlite3"))
     tables, sources = {}, []
-    for name in [
-        "pokemon",
-        "pokemon_stats",
-        "pokemon_types",
-        "types",
-        "pokemon_abilities",
-        "abilities",
-        "pokemon_species_names",
-    ]:
+    for name in TABLES:
         snapshot = client.fetch(f"{CSV_ROOT}/{name}.csv", expect_json=False)
+        if not snapshot:
+            raise ValueError(f"원본 CSV 없음: {name}")
         tables[name] = list(csv.DictReader(io.StringIO(snapshot["body"])))
         sources.append(
             {
@@ -41,85 +212,21 @@ def prepare(settings, count=100):
                 "content_hash": snapshot["content_hash"],
                 "licence_url": LICENCE_URL,
                 "scope": "generic",
-                "transformation_notes": "CSV rows normalized; images and sprites excluded",
+                "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier",
             }
         )
-    names = {
-        (int(r["pokemon_species_id"]), int(r["local_language_id"])): r["name"]
-        for r in tables["pokemon_species_names"]
-    }
-    types = {r["id"]: r["identifier"] for r in tables["types"]}
-    abilities = {r["id"]: r["identifier"] for r in tables["abilities"]}
-    stat_names = {
-        "1": "hp",
-        "2": "attack",
-        "3": "defense",
-        "4": "sp_attack",
-        "5": "sp_defense",
-        "6": "speed",
-    }
-    source = PokeApiSource(client)
-    records, documents = [], []
-    for row in tables["pokemon"]:
-        species_id = int(row["species_id"])
-        if row["is_default"] != "1" or species_id > count:
-            continue
-        identifier = row["id"]
-        stats = {
-            stat_names[s["stat_id"]]: int(s["base_stat"])
-            for s in tables["pokemon_stats"]
-            if s["pokemon_id"] == identifier
+        print(f"원본 준비: {name} ({len(tables[name])}행)", flush=True)
+    records, documents = build_snapshots(tables, sources, count)
+    sources.append(
+        {
+            "source_id": "pokeapi-sprites",
+            "source_url": "https://github.com/PokeAPI/sprites",
+            "licence_url": "https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt",
+            "collected_at": sources[0]["collected_at"],
+            "rights_notice": "All image contents are Copyright The Pokémon Company; repository CC0 is not a blanket grant of third-party character rights.",
+            "transformation_notes": "Image URLs use upstream pokemon resource IDs. Availability checked by browser; missing artwork falls back to sprite then placeholder. Image binaries are not bundled.",
         }
-        provenance = {
-            name: {
-                "source_ids": [f"pokeapi-csv:{table}"],
-                "verification_status": "verified",
-                "scope": "generic PokéAPI baseline; Champions applicability unknown",
-                "verified_at": next(
-                    s["collected_at"] for s in sources if s["source_id"] == f"pokeapi-csv:{table}"
-                ),
-            }
-            for name, table in [
-                ("names", "pokemon_species_names"),
-                ("types", "pokemon_types"),
-                ("base_stats", "pokemon_stats"),
-                ("abilities", "pokemon_abilities"),
-            ]
-        }
-        pokemon = Pokemon(
-            pokemon_id=f"pokemon:{species_id}",
-            species_id=species_id,
-            name_ko=names.get((species_id, 3)),
-            name_en=names.get((species_id, 9), row["identifier"]),
-            types=[
-                types[r["type_id"]]
-                for r in tables["pokemon_types"]
-                if r["pokemon_id"] == identifier
-            ],
-            base_stats=stats,
-            abilities=[
-                abilities[r["ability_id"]]
-                for r in tables["pokemon_abilities"]
-                if r["pokemon_id"] == identifier
-            ],
-            source_url=f"https://pokeapi.co/api/v2/pokemon/{identifier}/",
-            collected_at=sources[0]["collected_at"],
-            field_provenance=provenance,
-        )
-        own = source.subject(pokemon)
-        if own is None:
-            raise ValueError(f"자체 문서 없음: {pokemon.pokemon_id}")
-        document = source.fetch_document(own)
-        if document is None:
-            raise ValueError(f"자체 문서 본문 없음: {pokemon.pokemon_id}")
-        documents.append(
-            {"pokemon_id": pokemon.pokemon_id, "document": document.model_dump(mode="json")}
-        )
-        records.append(pokemon.model_dump())
-        print(f"자료 준비 {len(records)}/{count}: {pokemon.name_ko or pokemon.name_en}", flush=True)
-    if len(records) < count or len({r["species_id"] for r in records}) != len(records):
-        raise ValueError("고유 기본 항목 수 부족")
-    # Publish complete snapshots only; HTTP cache already preserves partial progress.
+    )
     for path, value in [
         (settings.data_dir / "pokemon.json", records),
         (settings.data_dir / "documents" / "species.json", documents),
@@ -128,20 +235,28 @@ def prepare(settings, count=100):
         temporary = path.with_suffix(".tmp")
         temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
         temporary.replace(path)
-    print(
-        json.dumps(
-            {
-                "metadata_count": len(records),
-                "subject_documents": len(documents),
-                "network_calls": client.network_calls,
-                "cache_hits": client.cache_hits,
-            }
-        )
+    report = {
+        "metadata_count": len(records),
+        "species_count": sum(r["is_default"] for r in records),
+        "alternate_variety_count": sum(not r["is_default"] for r in records),
+        "subject_documents": len(documents),
+        "network_calls": client.network_calls,
+        "cache_hits": client.cache_hits,
+        "scope": "all upstream pokemon rows; cosmetic-only pokemon-form entries without independent stats are not separate chat items",
+    }
+    (settings.data_dir / "catalog_report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     )
+    print(json.dumps(report, ensure_ascii=False), flush=True)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--count", type=int, default=100)
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=None,
+        help="개발용 기본 종 수 제한. 생략하면 원본 전체 종과 별도 능력치 폼 수집",
+    )
     args = parser.parse_args()
     prepare(Settings.from_env(), args.count)

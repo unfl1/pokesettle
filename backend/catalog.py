@@ -11,9 +11,9 @@ class Catalog:
         if path.exists():
             records = [Pokemon.model_validate(row) for row in json.loads(path.read_text())]
             self.items = {row.pokemon_id: row for row in records}
-            if len(records) != len(self.items) or len({p.species_id for p in records}) != len(
-                records
-            ):
+            if len(records) != len(self.items) or len(
+                {p.species_id for p in records if p.is_default}
+            ) != sum(p.is_default for p in records):
                 raise ValueError("포켓몬/종 ID 중복")
 
     def get(self, pokemon_id):
@@ -27,6 +27,7 @@ def metadata_text(pokemon):
     stats = ", ".join(f"{key}={value}" for key, value in pokemon.base_stats.model_dump().items())
     return (
         f"ID: {pokemon.pokemon_id}\n이름 Name: {pokemon.name_ko or '미확인'} / {pokemon.name_en}\n"
+        f"종 ID Species: {pokemon.species_id}; form: {pokemon.form_identifier or 'default'}. Species descriptions are shared; form-specific traits require this form metadata.\n"
         f"타입 Types: {', '.join(pokemon.types)}\n종족값 Base stats: {stats}\n"
         f"특성 Abilities: {', '.join(pokemon.abilities)}\n설명: {pokemon.description or '미확인'}\n"
         "Scope: generic Pokémon reference; NOT verified Pokémon Champions mechanics.\n"

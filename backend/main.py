@@ -251,6 +251,8 @@ def create_app(settings=None, *, service=None):
                 "ready": not missing,
                 "model_configured": settings.model_configured,
                 "metadata_count": vectors.meta.count(),
+                "species_count": len({p.species_id for p in catalog.items.values()}),
+                "alternate_variety_count": sum(not p.is_default for p in catalog.items.values()),
                 "document_chunk_count": vectors.docs.count(),
                 "missing": missing,
                 "regulation_verification_status": "unknown",
@@ -313,6 +315,10 @@ def create_app(settings=None, *, service=None):
                     "types",
                     "champions_eligibility_status",
                     "scope",
+                    "species_id",
+                    "is_default",
+                    "form_identifier",
+                    "images",
                 }
             }
             for p in items[offset : offset + limit]

@@ -5,6 +5,7 @@ import re
 
 from backend.errors import ServiceError
 from backend.models import DiscoveryPlan
+from backend.storage import digest
 
 DISCOVERY_PROMPT = """당신은 포켓몬 도감의 자연어 검색 조건을 구조화합니다.
 지원 필드: name, types, abilities, champions_eligibility_status, base_stats의 hp/attack/defense/sp_attack/sp_defense/speed.
@@ -24,34 +25,48 @@ explanation은 해석한 조건을 짧게 한국어로 설명하며 실제 검�
 
 
 def discover(service, request):
-    plan = service.model.invoke(
-        "discovery",
-        DISCOVERY_PROMPT,
-        {
-            "query": request.query,
-            "available_types": [
-                "normal",
-                "fire",
-                "water",
-                "electric",
-                "grass",
-                "ice",
-                "fighting",
-                "poison",
-                "ground",
-                "flying",
-                "psychic",
-                "bug",
-                "rock",
-                "ghost",
-                "dragon",
-                "dark",
-                "steel",
-                "fairy",
-            ],
-            "scope": "generic PokéAPI baseline; Champions applicability unknown",
-        },
-        DiscoveryPlan,
+    cache_key = digest(
+        [
+            request.query,
+            request.regulation_id,
+            DISCOVERY_PROMPT,
+            service.settings.chat_model,
+            [p.model_dump(mode="json") for p in service.catalog.items.values()],
+        ]
+    )
+    cached = service.store.get("discovery_plan", cache_key)
+    plan = (
+        DiscoveryPlan.model_validate(cached)
+        if cached
+        else service.model.invoke(
+            "discovery",
+            DISCOVERY_PROMPT,
+            {
+                "query": request.query,
+                "available_types": [
+                    "normal",
+                    "fire",
+                    "water",
+                    "electric",
+                    "grass",
+                    "ice",
+                    "fighting",
+                    "poison",
+                    "ground",
+                    "flying",
+                    "psychic",
+                    "bug",
+                    "rock",
+                    "ghost",
+                    "dragon",
+                    "dark",
+                    "steel",
+                    "fairy",
+                ],
+                "scope": "generic PokéAPI baseline; Champions applicability unknown",
+            },
+            DiscoveryPlan,
+        )
     )
     unknowns = list(plan.unresolved_conditions)
     if plan.requires_clarification or not plan.filters or unknowns:
@@ -81,6 +96,8 @@ def discover(service, request):
             if condition.operator not in allowed or not condition.value:
                 raise ServiceError("GENERATION_INVALID", "지원하지 않는 문자열 비교입니다.")
             predicates.append((condition, condition.value.casefold()))
+    if not cached:
+        service.store.put("discovery_plan", cache_key, plan.model_dump(mode="json"))
     ranks = service.vectors.metadata_rank(request.query)
     matches, excluded_unknown = [], 0
     comparators = {
@@ -137,6 +154,10 @@ def result(matches, request, plan, unknowns, excluded_unknown):
         items.append(
             {
                 "pokemon_id": pokemon.pokemon_id,
+                "species_id": pokemon.species_id,
+                "is_default": pokemon.is_default,
+                "form_identifier": pokemon.form_identifier,
+                "images": pokemon.images.model_dump(mode="json") if pokemon.images else None,
                 "name_ko": pokemon.name_ko,
                 "name_en": pokemon.name_en,
                 "types": pokemon.types,

@@ -59,9 +59,9 @@ const post = <T>(path: string, body: unknown) =>
 export const api = {
   status: () => request<Status>('/status'),
   session: () => post<{ active: boolean }>('/session', {}),
-  pokemon: (q = '') =>
+  pokemon: (q = '', offset = 0) =>
     request<Page<PokemonSummary>>(
-      `/pokemon?limit=100${q ? `&q=${encodeURIComponent(q)}` : ''}`,
+      `/pokemon?limit=100&offset=${offset}${q ? `&q=${encodeURIComponent(q)}` : ''}`,
     ),
   detail: (id: string) =>
     request<PokemonDetail>(`/pokemon/${encodeURIComponent(id)}`),
@@ -83,8 +83,8 @@ export const api = {
   },
   newConversation: (pokemonId: string) =>
     post<{ conversationId: string }>('/conversations', { pokemonId }),
-  discover: (query: string) =>
-    post<DiscoveryResult>('/pokemon/search', { query, limit: 100 }),
+  discover: (query: string, offset = 0) =>
+    post<DiscoveryResult>('/pokemon/search', { query, limit: 100, offset }),
   chat: (
     pokemonId: string,
     question: string,

@@ -1,4 +1,16 @@
+export interface PokemonImages {
+  artworkUrl: string | null;
+  spriteUrl: string | null;
+  sourceUrl: string;
+  rightsNotice: string;
+  checkedAt: string;
+  availability: 'checked_on_display';
+}
 export interface PokemonSummary {
+  speciesId?: number;
+  isDefault?: boolean;
+  formIdentifier?: string | null;
+  images?: PokemonImages | null;
   pokemonId: string;
   nameKo: string | null;
   nameEn: string;
@@ -71,6 +83,8 @@ export interface Status {
   ready: boolean;
   modelConfigured: boolean;
   metadataCount: number;
+  speciesCount?: number;
+  alternateVarietyCount?: number;
   documentChunkCount: number;
   missing: string[];
 }

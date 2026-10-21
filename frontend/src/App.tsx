@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   ArrowDown,
   ArrowRight,
@@ -20,6 +20,7 @@ import { api } from './services/api';
 import { useWorkspace } from './hooks/useWorkspace';
 import ChatPanel from './components/ChatPanel';
 import { PokemonProfile, TypeBadge } from './components/PokemonProfile';
+import PokemonImage from './components/PokemonImage';
 import type { PokemonSummary } from './types';
 
 export default function App() {
@@ -31,19 +32,46 @@ export default function App() {
   const [condition, setCondition] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const list = useQuery({
-    queryKey: ['pokemon', name.trim()],
-    queryFn: () => api.pokemon(name.trim()),
-  });
-  const discovery = useMutation({ mutationFn: api.discover });
-  const isDiscovery = mode === 'conditions' && Boolean(discovery.data);
-  const results = isDiscovery
-    ? discovery.data!.items
-    : (list.data?.items ?? []);
-  const total = isDiscovery ? discovery.data!.total : (list.data?.total ?? 0);
-  const listError =
-    mode === 'conditions' ? discovery.error?.message : list.error?.message;
+  const [submittedCondition, setSubmittedCondition] = useState<string | null>(
+    null,
+  );
   const ready = w.status.data?.ready;
+  const list = useInfiniteQuery({
+    queryKey: ['catalog-pages', name.trim(), w.status.data?.metadataCount],
+    queryFn: ({ pageParam }) => api.pokemon(name.trim(), pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const next = (last.offset ?? 0) + last.items.length;
+      return next < last.total && last.items.length ? next : undefined;
+    },
+  });
+  const discovery = useInfiniteQuery({
+    queryKey: [
+      'discovery-pages',
+      submittedCondition,
+      w.status.data?.metadataCount,
+    ],
+    queryFn: ({ pageParam }) => api.discover(submittedCondition!, pageParam),
+    initialPageParam: 0,
+    enabled:
+      submittedCondition !== null && w.session.isSuccess && Boolean(ready),
+    getNextPageParam: (last) => {
+      const next = (last.offset ?? 0) + last.items.length;
+      return next < last.total && last.items.length ? next : undefined;
+    },
+    retry: false,
+  });
+  const isDiscovery = mode === 'conditions' && submittedCondition !== null;
+  const activeList = isDiscovery ? discovery : list;
+  const discoveryResult = discovery.data?.pages[0];
+  const results = activeList.data?.pages.flatMap((page) => page.items) ?? [];
+  const total = activeList.data?.pages[0]?.total ?? 0;
+  const listError = activeList.error?.message;
+  function searchConditions() {
+    if (!condition.trim()) return;
+    if (submittedCondition === condition.trim()) void discovery.refetch();
+    else setSubmittedCondition(condition.trim());
+  }
   function choose(pokemon: PokemonSummary) {
     setParams({ pokemon: pokemon.pokemonId });
     setCatalogOpen(false);
@@ -113,7 +141,12 @@ export default function App() {
               <Database size={15} />
               <span>
                 일반 도감{' '}
-                <strong>{w.status.data?.metadataCount ?? '—'}종</strong>
+                <strong>
+                  {w.status.data?.speciesCount ??
+                    w.status.data?.metadataCount ??
+                    '—'}
+                  종
+                </strong>
               </span>
               <span className="dataset-divider" />
               Champions 적격성 미확인
@@ -234,7 +267,7 @@ export default function App() {
                     className="condition-form"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      if (condition.trim()) discovery.mutate(condition.trim());
+                      if (condition.trim()) searchConditions();
                     }}
                   >
                     <label className="sr-only" htmlFor="pokemon-condition">
@@ -252,42 +285,42 @@ export default function App() {
                       type="submit"
                       disabled={
                         !condition.trim() ||
-                        discovery.isPending ||
+                        discovery.isFetching ||
                         !ready ||
                         !w.session.isSuccess
                       }
                     >
-                      {discovery.isPending ? (
+                      {discovery.isFetching ? (
                         <LoaderCircle size={14} className="spin" />
                       ) : (
                         <SlidersHorizontal size={14} />
                       )}
-                      {discovery.isPending
+                      {discovery.isFetching
                         ? '조건을 확인하고 있어요'
                         : '조건에 맞는 포켓몬 찾기'}
                       <ArrowRight size={14} />
                     </button>
                   </form>
                 )}
-                {isDiscovery && (
+                {isDiscovery && discoveryResult && (
                   <div
-                    className={`discovery-note ${discovery.data!.status === 'needs_clarification' ? 'clarify' : ''}`}
+                    className={`discovery-note ${discoveryResult!.status === 'needs_clarification' ? 'clarify' : ''}`}
                     role="status"
                   >
                     <span className="eyebrow">
-                      {discovery.data!.status === 'needs_clarification'
+                      {discoveryResult!.status === 'needs_clarification'
                         ? '조건 확인이 필요해요'
                         : '해석한 조건'}
                     </span>
-                    <p>{discovery.data!.interpretation}</p>
-                    {discovery.data!.unknownConditions.map((text, i) => (
+                    <p>{discoveryResult!.interpretation}</p>
+                    {discoveryResult!.unknownConditions.map((text, i) => (
                       <p key={i}>{text}</p>
                     ))}
-                    {discovery.data!.excludedUnknownCount > 0 && (
+                    {discoveryResult!.excludedUnknownCount > 0 && (
                       <small>
                         미확인 속성이 있는{' '}
-                        {discovery.data!.excludedUnknownCount}종을 확정 결과에서
-                        제외했습니다.
+                        {discoveryResult!.excludedUnknownCount}종을 확정
+                        결과에서 제외했습니다.
                       </small>
                     )}
                   </div>
@@ -300,7 +333,7 @@ export default function App() {
                       onClick={() =>
                         mode === 'name'
                           ? void list.refetch()
-                          : discovery.mutate(condition)
+                          : void discovery.refetch()
                       }
                     >
                       다시 시도
@@ -316,15 +349,16 @@ export default function App() {
                         : '전체 도감'}
                   </span>
                   <span>
-                    {total}종<ArrowDown size={10} />
+                    {total}개 항목
+                    <ArrowDown size={10} />
                   </span>
                 </div>
                 <div
                   className="pokemon-list"
                   aria-label="포켓몬 목록"
-                  aria-busy={list.isPending || discovery.isPending}
+                  aria-busy={activeList.isFetching}
                 >
-                  {list.isPending ? (
+                  {activeList.isPending ? (
                     <div className="list-loading" role="status">
                       <LoaderCircle size={18} className="spin" />
                       도감을 불러오고 있어요.
@@ -333,7 +367,7 @@ export default function App() {
                     <div className="empty-list">
                       <Search size={25} />
                       <strong>
-                        {discovery.data?.status === 'needs_clarification'
+                        {discoveryResult?.status === 'needs_clarification'
                           ? '조건을 조금 더 알려 주세요.'
                           : '일치하는 포켓몬이 없어요.'}
                       </strong>
@@ -353,8 +387,15 @@ export default function App() {
                         aria-pressed={p.pokemonId === pokemonId}
                       >
                         <span className="pokemon-number">
-                          {p.pokemonId.split(':').at(-1)?.padStart(3, '0')}
+                          {String(
+                            p.speciesId ?? p.pokemonId.split(':').at(-1),
+                          ).padStart(3, '0')}
                         </span>
+                        <PokemonImage
+                          key={p.pokemonId}
+                          pokemon={p}
+                          size="small"
+                        />
                         <span className="pokemon-copy">
                           <strong>{p.nameKo ?? p.nameEn}</strong>
                           <small>{p.nameEn}</small>
@@ -368,10 +409,21 @@ export default function App() {
                       </button>
                     ))
                   )}
+                  {activeList.hasNextPage && (
+                    <button
+                      className="load-more"
+                      onClick={() => void activeList.fetchNextPage()}
+                      disabled={activeList.isFetchingNextPage}
+                    >
+                      {activeList.isFetchingNextPage
+                        ? '더 불러오는 중…'
+                        : `더 보기 (${results.length} / ${total})`}
+                    </button>
+                  )}
                 </div>
                 <div className="catalog-footnote">
                   <Layers size={13} />
-                  <span>일반 도감 · 출처 기반 정보</span>
+                  <span>기본 종·별도 폼 · 일반 도감</span>
                 </div>
               </div>
             </section>
