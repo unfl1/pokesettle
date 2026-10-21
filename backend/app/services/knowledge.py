@@ -1,11 +1,11 @@
 import threading
 import time
 
-from backend.errors import ServiceError
-from backend.models import Candidate, Document, QueryPlan, Selection
-from backend.rag.graph import build_graph
-from backend.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
-from backend.storage import digest
+from backend.app.core.errors import ServiceError
+from backend.app.rag.graph import build_graph
+from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
+from backend.app.schemas import Candidate, Document, QueryPlan, Selection
+from backend.app.storage import digest
 
 
 class KnowledgeService:

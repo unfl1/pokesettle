@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from backend.errors import ServiceError
+from backend.app.core.errors import ServiceError
 
 
 def now():

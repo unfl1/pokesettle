@@ -8,6 +8,8 @@
 
 관련 문서: [요구사항과 단계 계획](REQUIREMENTS.md), [출처 검증](DATA_SOURCES.md), [API 계약](API_SPEC.md).
 
+> 2026-10-22 구조 정리: 실행 코드를 `backend/app`으로 이동하고 기능별 `APIRouter`·공통 의존성·예외 처리·미들웨어를 분리함. 현재 경로와 검증은 [백엔드 구조](BACKEND_STRUCTURE.md) 참조. 단계별 업데이트 문구는 당시 기록으로 유지함.
+
 ## 1. 구조와 책임
 
 ```mermaid
@@ -28,12 +30,12 @@ flowchart TD
 | 영역 / 제안 경로 | 책임 | 경계 |
 |---|---|---|
 | `frontend/src` | 선택·대화·인용·조건 입력·진행 상태 표시 | 외부 모델 키·수집 로직·계산식 보유 금지 |
-| `backend/api`, `models` | 요청 검증, camelCase API 변환, 세션 검증, HTTP 응답 | 문서 수집이나 전투 계산 직접 수행 금지 |
-| `backend/services` | 수집 작업·채팅·가이드·탐색·저장 조정 | RAG 근거와 계산 결과를 구분 |
-| `backend/data_preparation` | 도메인별 원본 수집·ID/명칭 매핑·필드 검증·검색 텍스트 | 일반 검색/생성 모듈에 도메인별 수집 규칙 분산 금지 |
-| `backend/rag` | 컬렉션 접근, splitter, retriever, prompts, graph, 인용 검증 | 원본 진실은 JSON/출처 저장소, 벡터 DB는 파생 색인 |
-| `backend/storage` | SQLite 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
-| `backend/battle` | Phase 3 이후 검증된 상성·적격성·후보 계산 | LLM이 데미지·확률을 산출하지 않음 |
+| `backend/app/api`, `schemas.py` | 요청 검증, camelCase API 변환, 세션 검증, HTTP 응답 | 문서 수집이나 전투 계산 직접 수행 금지 |
+| `backend/app/services` | 수집 작업·채팅·가이드·탐색·저장 조정 | RAG 근거와 계산 결과를 구분 |
+| `backend/app/data_preparation` | 도메인별 원본 수집·ID/명칭 매핑·필드 검증·검색 텍스트 | 일반 검색/생성 모듈에 도메인별 수집 규칙 분산 금지 |
+| `backend/app/rag` | 컬렉션 접근, splitter, retriever, prompts, graph, 인용 검증 | 원본 진실은 JSON/출처 저장소, 벡터 DB는 파생 색인 |
+| `backend/app/storage.py` | SQLite 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
+| `backend/app/battle` | Phase 3 이후 검증된 상성·적격성·후보 계산 | LLM이 데미지·확률을 산출하지 않음 |
 
 초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 SQLite/Chroma 영속 디렉터리임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 SQLite에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
 
@@ -215,8 +217,8 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 
 ## Phase 3 구현 반영
 
-- `backend/battle/models.py`: 팀 초안·멤버·기술·현재 슬롯·HP·공개/가정 상대 타입·교체 봉쇄·메가 상태 요청 계약.
-- `backend/battle/engine.py`: 일반 타입 곱셈·공격 커버리지·방어 대응·20개 선출 조합·공격/교체별 비교·메가 폼 전후 타입 처리. LLM·RAG 호출 없음.
+- `backend/app/battle/models.py`: 팀 초안·멤버·기술·현재 슬롯·HP·공개/가정 상대 타입·교체 봉쇄·메가 상태 요청 계약.
+- `backend/app/battle/engine.py`: 일반 타입 곱셈·공격 커버리지·방어 대응·20개 선출 조합·공격/교체별 비교·메가 폼 전후 타입 처리. LLM·RAG 호출 없음.
 - SQLite `teams`: `id`, `session_id` FK, `name`, `members` JSON 스냅샷, `updated_at`. 기존 DB 생성 경로에서 `CREATE TABLE IF NOT EXISTS`로 추가. 별도 멤버 테이블은 도입하지 않음.
 - 팀 CRUD는 기존 세션 유효성 검사와 소유 세션 조건을 사용함. 타 세션 ID 조회·갱신·삭제는 같은 404 반환.
 - 계산 자료는 `data/type_chart.json`, 수집은 `backend/scripts/prepare_battle_data.py`. 공식 현행 레귤레이션을 하드코딩하지 않고 `regulationId=null`, `scope=generic` 유지.

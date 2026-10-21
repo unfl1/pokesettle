@@ -1,10 +1,10 @@
 import json
 
-from backend.catalog import Catalog, metadata_text
-from backend.config import Settings
-from backend.models import Document
-from backend.rag.vector_store import VectorStore
-from backend.storage import Store
+from backend.app.catalog import Catalog, metadata_text
+from backend.app.core.config import Settings
+from backend.app.rag.vector_store import VectorStore
+from backend.app.schemas import Document
+from backend.app.storage import Store
 
 
 def index(settings):
