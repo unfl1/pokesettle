@@ -34,7 +34,7 @@ Citation의 sourceType은 `metadata/api/wiki/web/pdf/curated` 중 실제 유형�
 
 ## 3. 단계별 엔드포인트
 
-Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획임.
+Phase 1·2 경로와 Phase 3의 일반 타입 시나리오 경로 구현. Champions 현행 규칙 판정과 Phase 4 경로는 미구현임.
 
 | 메서드 / 경로 | 목적 | 예정 단계 |
 |---|---|---|
@@ -223,3 +223,18 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - `images`: `artworkUrl`, `spriteUrl`, `sourceUrl`, `rightsNotice`, `checkedAt`, `availability:checked_on_display`. 주소가 항상 존재한다고 보증하지 않으며 화면에서 실패를 처리함. 이미지 URL이 없어도 포켓몬 선택·대화는 가능함.
 - `/api/status`의 `metadataCount`는 종·별도 폼을 합한 항목 수, `speciesCount`는 고유 종 수, `alternateVarietyCount`는 기본 폼 이외 항목 수임.
 - 종별 설명은 폼 사이에서 공유할 수 있지만 각 폼의 타입·능력치·특성은 선택한 폼의 메타를 사용함. 별도 폼 수록과 Champions 적격성은 별개임.
+
+
+## Phase 3 실행 계약
+
+- 팀 CRUD 및 분석은 기존 익명 세션 필요. 모델 키·벡터 색인 준비 여부와 독립 실행.
+- POST/PUT 팀 본문: `{name, members}`. 멤버: `{pokemonId, moves, hpPercent, item, ability}`. 기술: `{name, type, category}`.
+- 초안은 0–6마리, 기술 0–4개 허용. 빈 팀 이름·알 수 없는 ID·타입·0–100 밖의 HP·같은 종의 중복은 422. 폼이 달라도 종 ID 기준 중복 검사.
+- GET `/api/teams`: `{items,total}`. 생성 201, 조회·갱신 200, 삭제 204(본문 없음). 타 세션 자원은 404, 유효 세션 없으면 401.
+- POST `/api/teams/analyze`: `{own,opponent}`. 각각 1–6마리. 멤버별 `coverage`, `defense`, `sharedWeaknesses`, `roleGaps` 반환.
+- POST `/api/teams/select`: 양쪽 6마리 필수, 쓰러진 멤버 입력 거부. `candidateCount=20`, `scoreKind=heuristic_not_probability`, `candidates`와 점수 구성 반환. 합법 판정·승률 아님.
+- POST `/api/battle/analyze`, `/api/battle/recommend`: 동일 타입 비교 결과. 팀 본문에 `ownActive`, `opponentActive`(0부터 시작), `opponentAttackTypes`, `megaUsed`, `megaTargetId`, `switchBlocked` 추가 가능. 상태 boolean 생략 시 null/미확인.
+- 전투 결과: `options`의 공격/교체별 `comparisonOrder`, `multiplier`, `reason`, `risks`; 메가 `status`, `reason`, `typeComparison`. `recommendedAction=null`, `recommendationStatus=insufficient_battle_information` 유지.
+- 계산 공통: `scope=generic`, `regulationId=null`, `facts`, 문자열 배열 `assumptions`·`unknowns`, 출처 배열 `citations`, `calculation.status=type_only`. `damage`, `koProbability`, `winProbability`는 null. 기존 RAG `GroundedResult`와 별도 타입.
+- 타입 자료 누락은 `TYPE_CHART_NOT_READY` 503. 잘못된 슬롯·중복 종·6마리 미충족·미지원 폼은 안전한 422, 도감 ID 없음은 404.
+- 상세 구현과 미지원 조건은 [Phase 3 결과](PHASE3_RESULTS.md) 참조. 앞의 설계 예시와 이 실행 계약이 다르면 본 절 및 실제 OpenAPI 우선.

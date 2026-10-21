@@ -109,3 +109,13 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 데이터의 이미지 검증 상태도 unknown으로 두며 표시된 이미지로 Champions 적격성을 판단하지 않음.
 
 검증 결과와 한계는 [보완 보고서](CATALOG_EXPANSION.md), 수량은 [수집 보고서](../data/catalog_report.json)를 참조함.
+
+## 9. Phase 3 일반 타입표·규칙 확인 (2026-10-21)
+
+- 타입 자료: PokéAPI 공식 CSV `types.csv`, `type_efficacy.csv`. 18개 일반 타입·324개 공격/방어 관계를 [type_chart.json](../data/type_chart.json)에 저장함.
+- `backend/scripts/prepare_battle_data.py`로 수집·캐시·재실행 가능. 원문 URL·실제 수집 시각·내용 해시·라이선스 URL을 데이터에 기록함.
+- 기존 PokéAPI 라이선스와 원 권리 표기 유지. 현재 Champions 타입 효과의 게임 내 대조 검증은 미실시이므로 `scope=generic`, `champions_verification_status=unknown` 유지.
+- [Champions 공식 gameplay](https://champions.pokemon.com/en-us/gameplay/)와 [일본 공식 배틀 안내](https://www.pokemonchampions.jp/ja/battle/)에서 싱글/더블 구분·레귤레이션별 참가 조건 변경·메가 관련 일반 안내 확인. 두 페이지는 현행 적격 명단이나 상세 전투 공식의 근거로 사용하지 않음.
+- [Apple App Store의 Champions 소개](https://apps.apple.com/gb/iphone/story/id1887456452)에서 팀 6마리 중 싱글 3마리 선택의 일반 형식 확인. 배포 플랫폼 편집 안내이며 현행 레귤레이션 원문을 대체하지 않음.
+- 공식 안내·플랫폼 소개는 링크와 확인 범위만 기록하고 본문·이미지 재배포 또는 RAG 색인 미실시. 확인일 2026-10-21.
+- M-C를 현재 규칙으로 자동 지정하지 않음. 선출은 6→3 준비 시나리오 20개 비교이며 합법 후보 판정 아님. 메가 비교도 도감의 전후 타입만 사용하고 실행 조건 확정 표시 제외.

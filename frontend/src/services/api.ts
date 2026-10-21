@@ -20,7 +20,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+export async function request<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
@@ -35,6 +38,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       true,
     );
   }
+  if (response.status === 204) return undefined as T;
   let body;
   try {
     body = await response.json();
@@ -54,7 +58,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return body.data as T;
 }
 
-const post = <T>(path: string, body: unknown) =>
+export const post = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'POST', body: JSON.stringify(body) });
 export const api = {
   status: () => request<Status>('/status'),

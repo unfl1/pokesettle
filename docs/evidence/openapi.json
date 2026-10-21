@@ -553,10 +553,426 @@
           }
         }
       }
+    },
+    "/api/teams": {
+      "get": {
+        "summary": "Team List",
+        "operationId": "team_list_api_teams_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Team Create",
+        "operationId": "team_create_api_teams_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/teams/{team_id}": {
+      "get": {
+        "summary": "Team Detail",
+        "operationId": "team_detail_api_teams__team_id__get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Team Update",
+        "operationId": "team_update_api_teams__team_id__put",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Team Delete",
+        "operationId": "team_delete_api_teams__team_id__delete",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/teams/analyze": {
+      "post": {
+        "summary": "Analyze Team",
+        "operationId": "analyze_team_api_teams_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamAnalysis"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/teams/select": {
+      "post": {
+        "summary": "Select Team",
+        "operationId": "select_team_api_teams_select_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamAnalysis"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/battle/recommend": {
+      "post": {
+        "summary": "Analyze Battle",
+        "operationId": "analyze_battle_api_battle_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BattleInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/battle/analyze": {
+      "post": {
+        "summary": "Analyze Battle",
+        "operationId": "analyze_battle_api_battle_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BattleInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "BattleInput": {
+        "properties": {
+          "own": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMember"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Own"
+          },
+          "opponent": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMember"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Opponent"
+          },
+          "ownActive": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Ownactive",
+            "default": 0
+          },
+          "opponentActive": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Opponentactive",
+            "default": 0
+          },
+          "opponentAttackTypes": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "fire",
+                "water",
+                "electric",
+                "grass",
+                "ice",
+                "fighting",
+                "poison",
+                "ground",
+                "flying",
+                "psychic",
+                "bug",
+                "rock",
+                "ghost",
+                "dragon",
+                "dark",
+                "steel",
+                "fairy"
+              ]
+            },
+            "type": "array",
+            "maxItems": 18,
+            "title": "Opponentattacktypes"
+          },
+          "megaUsed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Megaused"
+          },
+          "megaTargetId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Megatargetid"
+          },
+          "switchBlocked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Switchblocked"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "own",
+          "opponent"
+        ],
+        "title": "BattleInput"
+      },
       "ChatRequest": {
         "properties": {
           "pokemonId": {
@@ -771,6 +1187,171 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "MoveInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "fire",
+              "water",
+              "electric",
+              "grass",
+              "ice",
+              "fighting",
+              "poison",
+              "ground",
+              "flying",
+              "psychic",
+              "bug",
+              "rock",
+              "ghost",
+              "dragon",
+              "dark",
+              "steel",
+              "fairy"
+            ],
+            "title": "Type"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "special",
+              "status"
+            ],
+            "title": "Category",
+            "default": "physical"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "MoveInput"
+      },
+      "TeamAnalysis": {
+        "properties": {
+          "own": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMember"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Own"
+          },
+          "opponent": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMember"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Opponent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "own",
+          "opponent"
+        ],
+        "title": "TeamAnalysis"
+      },
+      "TeamInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMember"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Members"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "TeamInput"
+      },
+      "TeamMember": {
+        "properties": {
+          "pokemonId": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Pokemonid"
+          },
+          "moves": {
+            "items": {
+              "$ref": "#/components/schemas/MoveInput"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Moves"
+          },
+          "hpPercent": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hppercent"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item"
+          },
+          "ability": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ability"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pokemonId"
+        ],
+        "title": "TeamMember"
       },
       "ValidationError": {
         "properties": {

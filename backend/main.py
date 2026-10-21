@@ -7,10 +7,12 @@ from fastapi import BackgroundTasks, FastAPI, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic.alias_generators import to_camel
 from starlette.exceptions import HTTPException
 
+from backend.battle.engine import BattleEngine
+from backend.battle.models import BattleInput, TeamAnalysis, TeamInput
 from backend.catalog import Catalog
 from backend.config import Settings
 from backend.data_preparation.pokeapi import PokeApiSource
@@ -64,7 +66,7 @@ def create_app(settings=None, *, service=None):
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins),
         allow_credentials=True,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["Content-Type"],
     )
 
@@ -401,6 +403,58 @@ def create_app(settings=None, *, service=None):
     @app.get("/api/jobs/{job_id}")
     def job(request: Request, job_id: str):
         return ok(request, store.job(job_id, session(request)))
+
+    def battle_engine():
+        return BattleEngine(catalog, settings.data_dir)
+
+    def validate_team(body):
+        pokemon = [catalog.get(m.pokemon_id) for m in body.members]
+        if len({p.species_id for p in pokemon}) != len(pokemon):
+            raise ServiceError(
+                "DUPLICATE_SPECIES", "팀 편집에서는 같은 종을 하나씩만 입력하세요.", 422
+            )
+
+    @app.get("/api/teams")
+    def team_list(request: Request):
+        return ok(request, store.teams(session(request)))
+
+    @app.post("/api/teams")
+    def team_create(request: Request, body: TeamInput):
+        session_id = session(request)
+        validate_team(body)
+        return ok(request, store.save_team(session_id, body), 201)
+
+    @app.get("/api/teams/{team_id}")
+    def team_detail(request: Request, team_id: str):
+        return ok(request, store.team(session(request), team_id))
+
+    @app.put("/api/teams/{team_id}")
+    def team_update(request: Request, team_id: str, body: TeamInput):
+        session_id = session(request)
+        store.team(session_id, team_id)
+        validate_team(body)
+        return ok(request, store.save_team(session_id, body, team_id))
+
+    @app.delete("/api/teams/{team_id}")
+    def team_delete(request: Request, team_id: str):
+        store.delete_team(session(request), team_id)
+        return Response(status_code=204)
+
+    @app.post("/api/teams/analyze")
+    def analyze_team(request: Request, body: TeamAnalysis):
+        session(request)
+        return ok(request, battle_engine().team_analysis(body))
+
+    @app.post("/api/teams/select")
+    def select_team(request: Request, body: TeamAnalysis):
+        session(request)
+        return ok(request, battle_engine().selection(body))
+
+    @app.post("/api/battle/analyze")
+    @app.post("/api/battle/recommend")
+    def analyze_battle(request: Request, body: BattleInput):
+        session(request)
+        return ok(request, battle_engine().battle(body))
 
     return app
 
