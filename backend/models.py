@@ -27,9 +27,21 @@ class Stats(Model):
     speed: int = Field(gt=0)
 
 
+class PokemonImages(Model):
+    artwork_url: HttpUrl | None = None
+    sprite_url: HttpUrl | None = None
+    source_url: HttpUrl
+    rights_notice: str
+    checked_at: str
+    availability: Literal["checked_on_display"] = "checked_on_display"
+
+
 class Pokemon(Model):
     pokemon_id: str
     species_id: int = Field(gt=0)
+    is_default: bool = True
+    form_identifier: str | None = None
+    images: PokemonImages | None = None
     name_ko: str | None
     name_en: str
     types: list[str] = Field(min_length=1, max_length=2)
@@ -100,6 +112,13 @@ class Claim(Model):
         description="Actual original game version identifiers in the cited Description entries. For metadata, or when no explicit version applies, return []. Never put scope labels such as generic or unknown here.",
     )
 
+    @field_validator("source_versions")
+    @classmethod
+    def normalize_empty_versions(cls, values):
+        # Some structured providers encode an empty array as [""]. This denotes
+        # absence; nonempty identifiers still undergo citation validation.
+        return [value.strip() for value in values if value.strip()]
+
 
 class Generation(Model):
     answer_status: Literal["answered", "partial", "abstained"]
@@ -128,3 +147,45 @@ class CollectRequest(Model):
     question: str = Field(min_length=1, max_length=2000)
     regulation_id: str | None = Field(default=None, max_length=80)
     client_request_id: UUID
+
+
+class ConversationRequest(Model):
+    pokemon_id: str = Field(min_length=1, max_length=80)
+    regulation_id: str | None = Field(default=None, max_length=80)
+
+
+class GuideRequest(Model):
+    regulation_id: str | None = Field(default=None, max_length=80)
+    conversation_id: str | None = Field(default=None, max_length=80)
+    client_request_id: UUID
+
+
+class DiscoveryRequest(Model):
+    query: str = Field(min_length=1, max_length=2000)
+    regulation_id: str | None = Field(default=None, max_length=80)
+    limit: int = Field(default=20, ge=1, le=100)
+    offset: int = Field(default=0, ge=0)
+
+
+class DiscoveryFilter(Model):
+    field: Literal[
+        "name",
+        "types",
+        "abilities",
+        "champions_eligibility_status",
+        "base_stats.hp",
+        "base_stats.attack",
+        "base_stats.defense",
+        "base_stats.sp_attack",
+        "base_stats.sp_defense",
+        "base_stats.speed",
+    ]
+    operator: Literal["eq", "contains", "gte", "lte", "gt", "lt"]
+    value: str
+
+
+class DiscoveryPlan(Model):
+    filters: list[DiscoveryFilter]
+    requires_clarification: bool
+    unresolved_conditions: list[str]
+    explanation: str

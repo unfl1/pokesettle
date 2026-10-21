@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-PokéCoach AI is a RAG-based Pokémon Champions ranked singles strategy assistant.
+PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 
 - Frontend: React, TypeScript, Vite, Tailwind CSS
 - Backend: Python, FastAPI
@@ -9,7 +9,7 @@ PokéCoach AI is a RAG-based Pokémon Champions ranked singles strategy assistan
 - Storage: JSON and SQLite
 
 ## Sources of truth
-- `AI코어프로젝트_2회차_요구사항정의서.pdf`: mandatory assignment requirements (F2001–F2012 take priority).
+- `요구사항정의.pdf`: mandatory assignment requirements (F2001–F2012 take priority).
 - `PROJECT_SPEC.md`: product scope, architecture, and phased plan.
 - `docs/`: read only the relevant design documents for the task.
 - Verify current Pokémon Champions mechanics and regulation eligibility before coding them. Do not transplant Scarlet/Violet mechanics without verification.
@@ -25,6 +25,7 @@ PokéCoach AI is a RAG-based Pokémon Champions ranked singles strategy assistan
 - Run relevant tests; report failures and unverified behavior rather than claiming completion.
 
 ## Workflow
+- Perform all frontend and backend work on `develop` unless the user explicitly requests another branch.
 - For major changes, state a short plan and implement one phase at a time.
 - Do not start a later phase without a user request.
 - Explain changes, tests, limitations, and next steps in Korean.

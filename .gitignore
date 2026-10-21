@@ -10,8 +10,8 @@ runtime/
 data/raw/
 *.sqlite3*
 .DS_Store
-# Private assignment documents in the project root
-/AI*.pdf
+# Private assignment documents, including renamed or nested copies
+*.pdf
 # Credentials and personal machine configuration
 *.pem
 *.key
@@ -25,3 +25,49 @@ service-account*.json
 .idea/
 .vscode/
 *.log
+# Personal learning notes: local only
+/docs/PHASE1_LEARNING_NOTES.md
+/docs/PHASE*_LEARNING_NOTES.md
+/docs/private/
+/private-notes/
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+# Local browser captures may contain conversations
+/runtime-ui/
+
+.pnpm-store/
+
+# Local secrets, databases, test artifacts, and accidental backups
+.ssh/
+.azure/
+.gcp/
+.secrets/
+secrets/
+.netrc
+.pypirc
+.envrc
+.npmrc.local
+.gitconfig
+id_rsa
+id_ed25519
+.bash_history
+.zsh_history
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.bak
+*.swp
+*.swo
+*.zip
+*.7z
+*.tar
+*.tar.gz
+test-results/
+playwright-report/
+coverage/
+.coverage*
+htmlcov/

@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-21T06:18:57.822Z",
+  "realApi": true,
+  "realModel": true,
+  "pikachuImage": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+  "mewtwoSources": 1,
+  "after100Selected": true,
+  "lateGenerationSelected": true,
+  "alternateFormUrl": "http://127.0.0.1:5173/?pokemon=pokemon%3A10100",
+  "imageCreditVisible": true,
+  "noOverflow": true,
+  "errors": []
+}

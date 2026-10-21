@@ -18,6 +18,7 @@ class StructuredModel:
             )
         model = ChatOpenAI(
             model=self.settings.chat_model,
+            temperature=0 if purpose in {"discovery", "generate"} else None,
             api_key=self.settings.api_key,
             base_url=self.settings.base_url,
             timeout=self.settings.llm_timeout,

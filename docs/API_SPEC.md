@@ -4,6 +4,8 @@
 
 > Phase 1 업데이트: 아래 표는 설계 당시 계획이다. 현재 `/api/status`, `/api/session`, `/api/pokemon`, `/api/pokemon/{id}`, `/api/regulations`, `/api/documents/collect`, `/api/chat`, `/api/jobs/{jobId}`를 구현했다. 대화 저장은 채팅의 최소 내부 기능으로 제공하고 대화 목록·조회 API, 탐색·가이드·UI는 Phase 2에 남겼다. 실제 OpenAPI는 [스냅샷](evidence/openapi.json), 검증은 [TEST_RESULTS.md](TEST_RESULTS.md)를 참조한다. 근거의 적용 범위는 현재 `game`, `battleFormat`, `regulationId` 필드로 표시한다.
 
+> Phase 2 업데이트: 대화 생성·목록·메시지, 조건 검색, 가이드 작업 API와 React 화면을 구현했다. 아래는 설계 계약과 후속 계획을 함께 보존한 문서다. 현재 동작은 [Phase 2 결과](PHASE2_RESULTS.md)와 최신 [OpenAPI](evidence/openapi.json)를 기준으로 확인한다. 팀·전투·SSE 경로는 미구현이다.
+
 관련 문서: [요구사항](REQUIREMENTS.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](DATA_SOURCES.md).
 
 ## 1. 공통 규약
@@ -32,7 +34,7 @@ Citation의 sourceType은 `metadata/api/wiki/web/pdf/curated` 중 실제 유형�
 
 ## 3. 단계별 엔드포인트
 
-표의 단계는 구현 예정이며 이번 작업에서 생성한 엔드포인트는 없다.
+Phase 1·2 경로는 구현했으며 Phase 3 이후 경로는 계획이다.
 
 | 메서드 / 경로 | 목적 | 예정 단계 |
 |---|---|---|
@@ -152,9 +154,9 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 `POST /api/pokemon/search` 요청은 `{query,regulationId?,limit?,offset?}`. 응답 data는:
 
 - `status`: `matched/no_results/needs_clarification`.
-- `interpretedFilters`: 필드·operator·value 배열. 예: `{field:"baseStats.speed",operator:"gte",value:100}`.
+- `interpretedFilters`: 필드·operator·value 배열. 예: `{field:"base_stats.speed",operator:"gte",value:"100"}`.
 - `items`: PokemonSummary + `matchedConditions`, `supportingEvidenceIds`, `conversationTarget:{pokemonId}`.
-- `unknownConditions`, `excludedUnknownCount`, `total`, `limit`, `offset`, `completeness`: `complete_for_structured_filters/limited_semantic_candidates`.
+- `unknownConditions`, `excludedUnknownCount`, `total`, `limit`, `offset`, `completeness`: `complete_for_structured_filters` (LLM 해석의 의미적 정확성까지 보증하지 않음).
 
 정확 조건은 실제 필드로 검증한다. 속성 미확인은 일치 목록에서 제외하고 이유를 표시한다. 모호한 해석은 clarification 안내를 반환하며 뜻을 임의 확정하지 않는다. 유사도 점수는 관련도일 뿐 확률이 아니며, 필요 없으면 UI에 노출하지 않는다.
 
@@ -200,4 +202,22 @@ conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성한
 - 일반 요청이 `TOP_K`·프롬프트·모델 키를 덮어쓰지 못하도록 한다. 설정 변화 검증은 서버 설정에서 수행한다.
 - SSE를 추가한다면 상태·최종 결과·오류와 ID 계약을 polling과 동일하게 유지하고 최종 인용 검증 전의 토큰을 검증된 답변으로 표시하지 않는다.
 
-이번 단계에서는 위 계약의 문서 일관성만 점검하며, API 동작 테스트 통과를 주장하지 않는다.
+Phase 0에서는 문서만 점검했다. Phase 1·2 실행 검증과 남은 한계는 각 결과 문서에서 구분한다.
+
+## Phase 2 구현 세부사항
+
+- 대화 목록은 `pokemonId` 필수, `limit` 기본 20/최대 100, `offset` 기본 0이며 최신 생성 순이다. 메시지는 작성 순으로 기본 50/최대 100이다. 다른 세션의 대화는 404다. 세션 쿠키는 7일 유효하며 이 기간은 장기 보존·삭제 정책을 뜻하지 않는다.
+- guide는 일반 도감의 타입·종족값·문서의 특성 설명을 먼저 요청한다. 문서에 없는 역할·추천 세트·Champions 전용 전략은 미확인으로 남긴다. 결과는 GroundedResult에 `feature:pokemon_guide`, `guideScope:generic_reference`, `guideLimitations`가 추가된다. 대화에는 짧은 사용자 요청과 최종 결과를 저장한다.
+- 조건 필드: `name`, `types`, `abilities`, `champions_eligibility_status`, `base_stats.{hp,attack,defense,sp_attack,sp_defense,speed}`. 필드 식별자 문자열은 snake_case다. 값은 문자열이며 숫자 비교는 질문에 명시된 정수만 허용한다. 이름은 eq/contains, 타입·특성·적격성은 eq, 수치는 eq/gte/lte/gt/lt만 허용한다. OR와 질적 기준·미검증 전투 효과는 확인 요청 대상이다.
+- 메타 컬렉션 전체를 의미 검색한 뒤 전체 도감에 정확 조건을 적용한다. 상위 일부 후보만으로 전체 일치를 주장하지 않는다. 검증된 일치 집합은 의미 순위로 정렬한다. `baseStats`, `sourceUrl`, `matchedConditions`, `supportingEvidenceIds`를 반환한다. 실제 UI는 해석 조건과 미확인 제외 수를 표시하고 항목 선택으로 원문 상세를 연결한다.
+- 현재 확보된 100종은 한 번에 표시한다. API는 페이지를 지원하지만 프론트엔드의 도감·탐색은 첫 100종, 대화 목록도 최신 100개까지 표시한다. 메시지는 모든 페이지를 읽는다. 대규모 카탈로그 확장 시 목록 페이지 UI를 추가해야 한다.
+
+## 전체 도감·이미지 보완 (2026-10-21)
+
+이 절은 앞의 초기 100종 표시 제한을 대체한다. 도감과 조건 검색은 100개 단위로 “더 보기”를 제공하며 전체 항목에 접근한다. 대화 목록은 기존처럼 최신 100개이며 메시지는 모든 페이지를 읽는다. 조건 검색은 동일한 질문·규칙·도감 스냅샷·프롬프트·모델 설정의 구조화 해석을 캐시해 다음 페이지에서 모델을 다시 호출하지 않는다. 정확한 속성 조건은 매번 실제 자료에 대조한다.
+
+- `PokemonSummary`·상세·조건 검색 항목에 `speciesId`, `isDefault`, `formIdentifier`, `images` 추가.
+- `pokemonId`는 pokemon 리소스 ID, `speciesId`는 여러 폼이 공유하는 종 ID다. 기존 기본 종의 ID와 대화는 유지한다.
+- `images`: `artworkUrl`, `spriteUrl`, `sourceUrl`, `rightsNotice`, `checkedAt`, `availability:checked_on_display`. 주소가 항상 존재한다고 보증하지 않으며 화면에서 실패를 처리한다. 이미지 URL이 없어도 포켓몬 선택·대화는 가능하다.
+- `/api/status`의 `metadataCount`는 종·별도 폼을 합한 항목 수, `speciesCount`는 고유 종 수, `alternateVarietyCount`는 기본 폼 이외 항목 수다.
+- 종별 설명은 폼 사이에서 공유할 수 있지만 각 폼의 타입·능력치·특성은 선택한 폼의 메타를 사용한다. 별도 폼 수록과 Champions 적격성은 별개다.

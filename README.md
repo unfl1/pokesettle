@@ -1,8 +1,8 @@
-# PokéCoach AI
+# PokeTact
 
-Pokémon Champions 랭크 싱글 준비·복기를 목표로 하는 근거 기반 지식 서비스입니다. 현재 **Phase 1 데이터·RAG 백엔드**를 구현했습니다. React 화면, 자연어 조건 탐색 UI, 운용 가이드, 팀·전투 계산은 후속 단계입니다.
+Pokémon Champions 랭크 싱글 준비·복기를 목표로 하는 근거 기반 지식 서비스입니다. 현재 **Phase 2 챗봇 중심 화면과 API 통합**까지 구현했습니다. 포켓몬별 대화·기록 복원, 출처 확인, 자연어 조건 검색, 근거 가이드를 제공합니다. 팀·전투 계산은 후속 단계입니다.
 
-현재 데이터는 **일반 PokéAPI 기본 포켓몬 100종**과 종별 설명 문서입니다. Champions 참가 가능 100종이라는 뜻이 아닙니다. 참가 가능 여부·육성·레벨·데미지·승률은 미확인으로 두고 배틀 계산을 제공하지 않습니다.
+현재 데이터는 **일반 PokéAPI 기본 1,025종 + 별도 폼 326개, 총 1,351개 항목**과 종별 설명 문서입니다. 수집 시점 원본의 전체 pokemon 리소스를 포함하며 코드에 도감 상한을 고정하지 않습니다. 독립 능력치가 없는 외형 전용 폼은 별도 채팅 항목으로 나누지 않습니다. Champions 참가 가능 명단이라는 뜻은 아닙니다. 참가 가능 여부·육성·레벨·데미지·승률은 미확인으로 두고 배틀 계산을 제공하지 않습니다.
 
 ## 실행
 
@@ -27,7 +27,8 @@ LANGSMITH_TRACING=false
 
 ```bash
 # 배포된 pokemon.json과 종별 문서가 있으면 수집은 생략할 수 있습니다.
-uv run --frozen python -m backend.scripts.prepare_data --count 100
+# 기본값은 전체 종·별도 폼입니다. --count는 개발용 종 수 제한입니다.
+uv run --frozen python -m backend.scripts.prepare_data
 
 # 첫 실행은 로컬 임베딩 모델 다운로드가 필요합니다.
 uv run --frozen python -m backend.scripts.index_data
@@ -36,6 +37,23 @@ uv run --frozen uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 
 ```
 
 API 문서는 서버 실행 후 [로컬 Swagger UI](http://127.0.0.1:8000/docs)에서 확인할 수 있습니다. 서버는 개인용 로컬 단일 프로세스 기준입니다. 초기 수집·일괄 색인 스크립트와 서버의 쓰기 작업을 동시에 실행하지 마세요.
+
+## 챗봇 화면 실행
+
+Node.js 20.19+ 또는 22.12+와 pnpm을 사용합니다. 검증 환경은 Node.js 24와 pnpm 11입니다. 백엔드를 먼저 실행한 뒤 별도 터미널에서:
+
+```bash
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend dev
+```
+
+[로컬 챗봇](http://127.0.0.1:5173/)에서 포켓몬을 고르고 질문합니다. 대화가 주 화면이며, 도감 수치와 출처는 필요할 때 펼쳐 봅니다. 모바일의 포켓몬 검색도 기본적으로 접혀 있습니다. 이름 검색·조건 검색 결과는 같은 대화 화면으로 연결됩니다.
+
+목록·조건 검색은 “더 보기”로 전체 항목에 접근합니다. 목록에는 스프라이트, 선택 프로필에는 일러스트를 표시하며 실패 시 스프라이트·대체 아이콘 순으로 전환합니다. 같은 종의 별도 폼도 고유 ID·능력치·대화 기록으로 구분합니다.
+
+Vite가 `/api`를 127.0.0.1:8000으로 전달합니다. 키는 백엔드 루트 `.env`에만 두고 `VITE_` 환경변수로 옮기지 않습니다. 개발 서버는 로컬 주소에만 바인딩합니다. 실사용 배포에는 같은 출처에서 화면과 API를 연결할 배포 설정이 필요합니다.
+
+대화는 익명 세션 쿠키와 연결된 서버 SQLite에 저장됩니다. 같은 브라우저에서 새로고침해도 복원되며, 쿠키 만료·삭제 후에는 접근할 수 없습니다. 진행 중 작업 ID만 탭의 sessionStorage에 보관하고 질문·답변 전문은 저장하지 않습니다.
 
 ## API 사용 순서
 
@@ -56,6 +74,12 @@ API 문서는 서버 실행 후 [로컬 Swagger UI](http://127.0.0.1:8000/docs)�
 새 질문마다 새 UUID를 사용합니다. 동일 요청 ID와 본문은 동일 작업을 반환하며, ID가 같고 본문이 다르면 409입니다. 기존 대화를 이어갈 때는 이전 결과의 `conversationId`를 추가합니다. 포켓몬·규칙이 다르면 대화를 분리합니다.
 
 별도 `POST /api/documents/collect`로 질문에 필요한 문서만 준비할 수도 있습니다. `/api/chat`은 이 준비를 자동 수행하므로 선행 호출은 필수가 아닙니다. 현재 규칙 레지스트리는 비어 있으며 등록하지 않은 `regulationId`는 422로 거부합니다. 미검증 M-C 적격 목록을 임의 등록하지 않았습니다.
+
+추가 Phase 2 API:
+
+- `POST /api/conversations`, `GET /api/conversations?pokemonId=...`, `GET /api/conversations/{id}/messages`: 세션·포켓몬별 기록 생성·조회.
+- `POST /api/pokemon/{id}/guide`: `clientRequestId`와 선택적 `conversationId`, `regulationId`. 같은 RAG 흐름으로 일반 도감 가이드를 생성하고 대화에 저장합니다.
+- `POST /api/pokemon/search`: `{query,limit?,offset?}`. 예: “전기 타입이고 스피드 종족값이 90 이상”. 모델 해석을 표시하고 실제 필드로 AND 조건을 검증합니다. “빠른”·기술/면역·전략 등 미지원 조건은 구체화를 요청합니다. 결과의 완전성은 **해석된 구조화 조건과 확보된 도감 범위**에 한정됩니다.
 
 ## RAG와 데이터
 
@@ -86,15 +110,29 @@ uv run --frozen python -m backend.scripts.verify_phase1
 uv run --frozen python -m backend.scripts.verify_phase1 --live
 ```
 
+화면 및 Phase 2 검증:
+
+```bash
+pnpm --dir frontend build
+# 기본 브라우저는 macOS Chrome. 다른 환경은 실행 파일을 지정합니다.
+CHROME_PATH=/path/to/chrome pnpm --dir frontend test:e2e
+# 백엔드 실행 중 실제 공급자 모델 호출
+uv run --frozen python -m backend.scripts.verify_phase2 --live
+```
+
+브라우저 테스트는 결정적 API 대역을 사용합니다. 실제 GMS/API/브라우저 연결은 별도로 검사했습니다. [Phase 2 검증 보고서](docs/PHASE2_RESULTS.md)에 결과와 한계를 기록했습니다.
+
 단위 테스트는 명시적인 테스트 대역을 사용하며 실제 모델 품질을 대신하지 않습니다. 실제 데이터·임베딩·GMS 실행 증거는 [검증 결과](docs/TEST_RESULTS.md)와 [증거 JSON](docs/evidence/phase1.json)에 별도로 기록합니다. API 키나 프롬프트 전문은 증거 파일에 저장하지 않습니다.
 
 ## 출처와 문서
 
-기초 데이터는 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv), 설명은 [PokéAPI v2](https://pokeapi.co/docs/v2)에서 수집했습니다. 출처 URL·수집 시각·해시·이용 조건을 기록하고, 프로젝트 [라이선스 원문](data/licenses/POKEAPI_LICENSE.md)을 보존합니다. Pokémon 이름·원문 설명 등의 권리는 원 권리자에게 있으며 소프트웨어 라이선스를 이미지/상표 등 전체 권리 허가로 해석하지 않습니다. 공식 이미지와 스프라이트는 수집하지 않았습니다.
+전체 기초 데이터와 종별 설명은 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv)로 일괄 수집하며, 질문에 필요한 관련 문서는 [PokéAPI v2](https://pokeapi.co/docs/v2)로 추가 수집합니다. 출처 URL·수집 시각·해시·이용 조건과 원래 게임 버전을 기록하고, 프로젝트 [라이선스 원문](data/licenses/POKEAPI_LICENSE.md)을 보존합니다. 이미지는 [PokéAPI sprites](https://github.com/PokeAPI/sprites)의 원본 주소를 연결하며 이미지 파일을 Git에 넣지 않습니다. 외부 네트워크 연결이 필요합니다. 이미지 저작권이 Pokémon Company에 있음을 화면과 데이터에 명시하며 저장소 라이선스를 캐릭터 권리의 포괄 허가로 해석하지 않습니다.
+
+최신 범위·검증·한계는 [전체 도감·이미지 보완 보고서](docs/CATALOG_EXPANSION.md)를 참조하세요. 초기 100종을 기준으로 한 Phase 1·2 증거는 당시 실행 기록으로 보존합니다.
 
 - [요구사항 및 단계 계획](docs/REQUIREMENTS.md)
 - [아키텍처와 데이터 설계](docs/ARCHITECTURE.md)
-- [API 계약과 Phase 1 구현 범위](docs/API_SPEC.md)
+- [API 계약과 현재 구현 범위](docs/API_SPEC.md)
 - [출처·규칙 검증 기록](docs/DATA_SOURCES.md)
 
-Phase 2는 별도 요청 후 진행합니다. Streamlit은 PDF 준비 기술 목록에 따라 지정 버전의 `assignment-ui` 선택 의존성으로 보존했으며, UI를 구현하지 않은 Phase 1 기본 설치에는 포함하지 않습니다. React 제출 경로의 수용 여부는 여전히 별도 확인 항목입니다.
+Phase 3·4는 아직 시작하지 않았습니다. Streamlit은 PDF 준비 기술 목록에 따라 지정 버전의 `assignment-ui` 선택 의존성으로 보존했으며, UI를 구현하지 않은 Phase 1 기본 설치에는 포함하지 않습니다. React 제출 경로의 수용 여부는 여전히 별도 확인 항목입니다.

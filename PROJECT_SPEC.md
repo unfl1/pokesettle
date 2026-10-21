@@ -1,4 +1,4 @@
-# PokéCoach AI — Project Specification
+# PokeTact — Project Specification
 
 > **Purpose:** Build a Pokémon Champions ranked-singles preparation and battle-review assistant that combines verifiable RAG evidence with deterministic battle analysis.
 >
@@ -192,10 +192,10 @@ Components: `AppLayout`, `PokemonCard`, `PokemonSelector`, `TypeBadge`, `StatsPa
 ## 10. Recommended repository layout
 
 ```text
-pokemon-champions-coach/
+poketact/
 ├── AGENTS.md
 ├── PROJECT_SPEC.md
-├── AI코어프로젝트_2회차_요구사항정의서.pdf
+├── 요구사항정의.pdf
 ├── README.md
 ├── .gitignore
 ├── .env.example
@@ -245,4 +245,4 @@ Each phase requires a concise report: changed files, tests executed/results, com
 
 ## 13. First Codex instruction (Phase 0 only)
 
-Read `AGENTS.md`, this `PROJECT_SPEC.md`, and `AI코어프로젝트_2회차_요구사항정의서.pdf`. Treat mandatory requirements from the original PDF as authoritative. Check external rules/data you can actually verify; list unknowns instead of guessing. Create `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, and `docs/API_SPEC.md` with the F2001–F2012 mapping, regulated Pokémon data plan, two-collection RAG flow, proposed API and phase breakdown. **Do not implement application code in this first task.** Report results and wait for approval of Phase 1.
+Read `AGENTS.md`, this `PROJECT_SPEC.md`, and `요구사항정의.pdf`. Treat mandatory requirements from the original PDF as authoritative. Check external rules/data you can actually verify; list unknowns instead of guessing. Create `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, and `docs/API_SPEC.md` with the F2001–F2012 mapping, regulated Pokémon data plan, two-collection RAG flow, proposed API and phase breakdown. **Do not implement application code in this first task.** Report results and wait for approval of Phase 1.

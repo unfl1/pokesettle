@@ -26,13 +26,22 @@ def verify(live=False):
     records = list(service.catalog.items.values())
     documents = json.loads((settings.data_dir / "documents" / "species.json").read_text())
     assert len(records) >= 100
-    assert len({p.species_id for p in records}) == len(records)
+    assert len({p.pokemon_id for p in records}) == len(records)
+    assert len({p.species_id for p in records if p.is_default}) == sum(
+        p.is_default for p in records
+    )
     before = {"meta": vectors.meta.count(), "docs": vectors.docs.count()}
     vectors.upsert_metadata(records)
     for entry in documents:
         vectors.index_document(entry["pokemon_id"], Document.model_validate(entry["document"]))
     after = {"meta": vectors.meta.count(), "docs": vectors.docs.count()}
-    assert before == after
+    # A source revision may legitimately replace old chunks on the first pass.
+    # Idempotency means a second pass of the same snapshot remains unchanged.
+    vectors.upsert_metadata(records)
+    for entry in documents:
+        vectors.index_document(entry["pokemon_id"], Document.model_validate(entry["document"]))
+    assert after == {"meta": vectors.meta.count(), "docs": vectors.docs.count()}
+    assert after["meta"] == len(records)
     question = "피카츄의 타입과 특성 이름을 알려줘"
     started = time.monotonic()
     found = vectors.retrieve("pokemon:25", "Pikachu electric abilities")
@@ -79,7 +88,7 @@ def verify(live=False):
     }
     with TestClient(app) as client:
         report["status"] = client.get("/api/status").json()["data"]
-        assert report["status"]["metadataCount"] == 100
+        assert report["status"]["metadataCount"] == len(records)
         client.post("/api/session")
         if live:
             assert settings.model_configured, "모델 키·모델 ID 설정 필요"
@@ -125,7 +134,12 @@ def verify(live=False):
                 "repeated_collection": repeated,
             }
     report["final_counts"] = {"meta": vectors.meta.count(), "docs": vectors.docs.count()}
-    output = ROOT / "docs" / "evidence" / "phase1.json"
+    output = (
+        ROOT
+        / "docs"
+        / "evidence"
+        / ("phase1.json" if len(records) == 100 else "phase1-catalog.json")
+    )
     output.parent.mkdir(exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(

@@ -89,3 +89,13 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - GMS 공식 [Quickstart](https://gms.ssafy.io/api/v1/guides/Quickstart)와 [gpt-4.1-mini 안내](https://gms.ssafy.io/api/v1/guides/gpt-4.1-mini)에서 OpenAI 호환 base URL·Bearer 인증을 확인했다. 제공된 키는 로컬 `.env`에만 저장하고, 본 문서·소스·증거 파일에는 넣지 않았다.
 - 모델의 구조화 출력은 [OpenAI 공식 문서](https://developers.openai.com/api/docs/guides/structured-outputs)를 참고하고 LangChain `with_structured_output`으로 검증했다. [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api), [Chroma 임베딩](https://docs.trychroma.com/docs/embeddings/embedding-functions)을 확인해 구현했다.
 - 모든 포켓몬의 Champions 적격성은 `unknown`이며, 육성·데미지·행동 계산이나 현재 규칙 명단을 생성하지 않았다. 기초 자료에서 확인한 사실은 `generic` 범위의 provenance로 제한한다.
+
+## 8. 전체 도감·이미지 보완 (2026-10-21)
+
+앞의 100종은 초기 실행 기록이다. 현재 기본 1,025종과 독립 능력치 폼 326개, 총 1,351개 항목을 수록한다. 현재 PokéAPI 전체 pokemon 목록의 ID와 대조해 누락·추가 ID가 없음을 확인했다. 일괄 수집에 pokemon_forms, pokemon_form_names, pokemon_species_flavor_text, versions CSV를 추가했다. 첫 확장 실행은 기존 7개 CSV 캐시를 사용해 4회 외부 호출, 재실행은 외부 호출 0회·캐시 적중 11회였다.
+
+종 설명은 CSV의 한국어·영어 원문과 원래 버전을 보존하고 해당 CSV URL·내용 해시·수집 시각을 기록한다. 별도 폼은 종 설명을 공유하지만 타입·능력치·특성은 각 pokemon 행에서 가져온다. 독립 능력치가 없는 외형 차이만의 폼은 별도 채팅 항목으로 만들지 않는다.
+
+이미지 출처는 [PokéAPI sprites](https://github.com/PokeAPI/sprites)와 해당 저장소의 [권리 표기](https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt)다. 원본 주소 규칙으로 리소스별 일러스트·스프라이트를 연결하고 출처·권리·확인 시각을 기록한다. 권리 파일은 이미지 저작권이 Pokémon Company에 있다고 명시한다. 저장소의 CC0 표기를 캐릭터 이미지의 포괄적 권리 양도로 해석하지 않는다. 이미지 파일은 Git에 포함하지 않는다. URL의 실제 존재 여부는 이미지 로딩으로 확인하며 일러스트→스프라이트→대체 아이콘으로 실패를 처리한다. 데이터의 이미지 검증 상태도 unknown으로 두며 표시된 이미지로 Champions 적격성을 판단하지 않는다.
+
+검증 결과와 한계는 [보완 보고서](CATALOG_EXPANSION.md), 수량은 [수집 보고서](../data/catalog_report.json)를 참조한다.

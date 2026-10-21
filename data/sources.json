@@ -6,7 +6,7 @@
     "content_hash": "023e3fc18e909f095a2011d8d762ed91c0233eaa2195fa2405a2407ad0c07f4a",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:pokemon_stats",
@@ -15,7 +15,7 @@
     "content_hash": "2e7b417a4e532e8d261f6bba36c00ee92501ca317a5bf2737b65bd7fd1342ded",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:pokemon_types",
@@ -24,7 +24,7 @@
     "content_hash": "bdc48b6aed4f53a24f006f33989e2f805380520710234ffcb542d70a05ab662a",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:types",
@@ -33,7 +33,7 @@
     "content_hash": "5eb7ca41fd8172350198ce1a91b953ddaf05dd7709cec1dcfb92900e47c5d3ff",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:pokemon_abilities",
@@ -42,7 +42,7 @@
     "content_hash": "ab18666d205273054a2e2d584d9631d2b557f61988d02207357d1f7011b41771",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:abilities",
@@ -51,7 +51,7 @@
     "content_hash": "cbae1c2ef7a41accdf6013591b5fbfbf8bc1ff4874926127a75989c6dd45beec",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
   },
   {
     "source_id": "pokeapi-csv:pokemon_species_names",
@@ -60,6 +60,50 @@
     "content_hash": "5d91e593ce768bf92fdded471aaebd5cf5731eb5ac0273f4779e509f1c5507ee",
     "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
     "scope": "generic",
-    "transformation_notes": "CSV rows normalized; images and sprites excluded"
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
+  },
+  {
+    "source_id": "pokeapi-csv:pokemon_forms",
+    "source_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_forms.csv",
+    "collected_at": "2026-10-21T06:13:03.291424+00:00",
+    "content_hash": "59e74143f9d109fdb8bca84ecebf06f1e2ba0c0b9b3f5dab02211c96f085d765",
+    "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+    "scope": "generic",
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
+  },
+  {
+    "source_id": "pokeapi-csv:pokemon_form_names",
+    "source_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_form_names.csv",
+    "collected_at": "2026-10-21T06:13:03.931228+00:00",
+    "content_hash": "db995fd87d487181c31d7ae7110a810203af480928454eeb9e493e3e41ed8e1e",
+    "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+    "scope": "generic",
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
+  },
+  {
+    "source_id": "pokeapi-csv:pokemon_species_flavor_text",
+    "source_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_flavor_text.csv",
+    "collected_at": "2026-10-21T06:14:00.434885+00:00",
+    "content_hash": "e565945ddf819733be5606e0b3f30f2e32b45d7867b6adc03c1593722658a370",
+    "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+    "scope": "generic",
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
+  },
+  {
+    "source_id": "pokeapi-csv:versions",
+    "source_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/versions.csv",
+    "collected_at": "2026-10-21T06:14:00.887833+00:00",
+    "content_hash": "b8284d5684dab54d31586d4b5fdd803517b05dde913c09118134855948589681",
+    "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+    "scope": "generic",
+    "transformation_notes": "Bulk CSV normalized; species shared documents preserve original game versions; each pokemon resource retains its own stats and image identifier"
+  },
+  {
+    "source_id": "pokeapi-sprites",
+    "source_url": "https://github.com/PokeAPI/sprites",
+    "licence_url": "https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "rights_notice": "All image contents are Copyright The Pokémon Company; repository CC0 is not a blanket grant of third-party character rights.",
+    "transformation_notes": "Image URLs use upstream pokemon resource IDs. Availability checked by browser; missing artwork falls back to sprite then placeholder. Image binaries are not bundled."
   }
 ]

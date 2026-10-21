@@ -22,7 +22,7 @@ class Settings:
     llm_timeout: float = 60
     max_retries: int = 2
     request_interval: float = 1
-    allowed_origins: tuple[str, ...] = ("http://localhost:5173",)
+    allowed_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     source_contact: str = ""
 
     def __post_init__(self):
@@ -58,7 +58,9 @@ class Settings:
             request_interval=float(os.getenv("SOURCE_REQUEST_INTERVAL_SECONDS", "1")),
             allowed_origins=tuple(
                 x.strip()
-                for x in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+                for x in os.getenv(
+                    "ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+                ).split(",")
                 if x.strip()
             ),
             source_contact=os.getenv("SOURCE_CONTACT", ""),

@@ -61,9 +61,7 @@ def test_api_keys_empty_index_input_origin_and_safe_errors(setup):
         )
         assert client.post("/api/chat", json=request_body(regulationId="bogus")).status_code == 422
         assert client.get("/api/pokemon/missing").status_code == 404
-        assert (
-            client.post("/api/pokemon/search", json={}).status_code == 405
-        )  # Phase 2 not implemented
+        assert client.post("/api/pokemon/search", json={}).status_code == 422
         setup.vectors.meta.delete(ids=setup.vectors.meta.get()["ids"])
         assert (
             client.post("/api/chat", json=request_body()).json()["error"]["code"]

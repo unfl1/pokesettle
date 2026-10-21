@@ -4,6 +4,8 @@
 
 > Phase 1 업데이트: 아래는 설계 당시의 기준이다. 현재는 데이터 수집·두 컬렉션·LangGraph·API를 구현했다. 실제 저장은 `backend/storage.py`의 SQLite 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시를 사용한다. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 줄였다. 모델 설정과 검증은 [실행 결과](TEST_RESULTS.md)에 기록한다.
 
+> Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당한다. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결한다. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없다. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리했다. [검증 결과](PHASE2_RESULTS.md) 참조.
+
 관련 문서: [요구사항과 단계 계획](REQUIREMENTS.md), [출처 검증](DATA_SOURCES.md), [API 계약](API_SPEC.md).
 
 ## 1. 구조와 책임
