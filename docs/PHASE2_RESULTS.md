@@ -1,5 +1,7 @@
 # Phase 2 구현·검증 결과
 
+> 이 문서의 SQLite 상태 저장은 해당 단계 실행 당시 기록임. RAG의 ChromaDB 사용은 유지하며, 현재 상태 저장과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+
 > 후속 보완: 전체 1,025종·별도 폼 326개 및 이미지 표시는 [전체 도감 보완 결과](CATALOG_EXPANSION.md)를 따름. 아래 100종 제한과 28/8개 테스트는 초기 Phase 2 기록임.
 
 검증일: 2026-10-21. 범위는 `PROJECT_SPEC.md`의 Phase 2임. **챗봇을 주 화면**으로 만들었고 Phase 3·4의 팀·전투 계산은 시작하지 않음.
