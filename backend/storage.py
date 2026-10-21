@@ -26,6 +26,7 @@ class Store:
         with self.connect() as db:
             db.executescript("""
                 PRAGMA journal_mode=WAL;
+                CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), name TEXT NOT NULL, members TEXT NOT NULL, updated_at TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS cache (namespace TEXT, key TEXT, value TEXT NOT NULL, PRIMARY KEY(namespace,key));
                 CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires_at TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), pokemon_id TEXT NOT NULL, regulation_id TEXT);
@@ -251,3 +252,51 @@ class Store:
                         "UPDATE jobs SET payload=? WHERE id=?",
                         (json.dumps(payload, ensure_ascii=False), row["id"]),
                     )
+
+    def teams(self, session_id):
+        with self.connect() as db:
+            rows = db.execute(
+                "SELECT * FROM teams WHERE session_id=? ORDER BY updated_at DESC", (session_id,)
+            ).fetchall()
+        return {"items": [self.team_data(row) for row in rows], "total": len(rows)}
+
+    @staticmethod
+    def team_data(row):
+        return {
+            "team_id": row["id"],
+            "name": row["name"],
+            "members": json.loads(row["members"]),
+            "updated_at": row["updated_at"],
+        }
+
+    def team(self, session_id, team_id):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT * FROM teams WHERE id=? AND session_id=?", (team_id, session_id)
+            ).fetchone()
+        if not row:
+            raise ServiceError("RESOURCE_NOT_FOUND", "팀을 찾을 수 없습니다.", 404)
+        return self.team_data(row)
+
+    def save_team(self, session_id, body, team_id=None):
+        if team_id:
+            self.team(session_id, team_id)
+        else:
+            team_id = str(uuid4())
+        with self.connect() as db:
+            db.execute(
+                "INSERT INTO teams VALUES (?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,members=excluded.members,updated_at=excluded.updated_at WHERE teams.session_id=excluded.session_id",
+                (
+                    team_id,
+                    session_id,
+                    body.name,
+                    json.dumps([m.model_dump() for m in body.members], ensure_ascii=False),
+                    now(),
+                ),
+            )
+        return self.team(session_id, team_id)
+
+    def delete_team(self, session_id, team_id):
+        self.team(session_id, team_id)
+        with self.connect() as db:
+            db.execute("DELETE FROM teams WHERE id=? AND session_id=?", (team_id, session_id))

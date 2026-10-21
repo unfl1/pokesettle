@@ -212,3 +212,14 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 | R11 중간 | 작업 재시작/중복 전송 | 상태 복구·요청 idempotency·완료 manifest. 단일 프로세스 제한 |
 
 위험의 존재는 Phase 0 문서 작성 실패를 뜻하지 않음. 관련 구현을 시작할 때 해결해야 할 조건이며, 기능 실행 검증은 [단계 계획](REQUIREMENTS.md)에 따라 수행함.
+
+## Phase 3 구현 반영
+
+- `backend/battle/models.py`: 팀 초안·멤버·기술·현재 슬롯·HP·공개/가정 상대 타입·교체 봉쇄·메가 상태 요청 계약.
+- `backend/battle/engine.py`: 일반 타입 곱셈·공격 커버리지·방어 대응·20개 선출 조합·공격/교체별 비교·메가 폼 전후 타입 처리. LLM·RAG 호출 없음.
+- SQLite `teams`: `id`, `session_id` FK, `name`, `members` JSON 스냅샷, `updated_at`. 기존 DB 생성 경로에서 `CREATE TABLE IF NOT EXISTS`로 추가. 별도 멤버 테이블은 도입하지 않음.
+- 팀 CRUD는 기존 세션 유효성 검사와 소유 세션 조건을 사용함. 타 세션 ID 조회·갱신·삭제는 같은 404 반환.
+- 계산 자료는 `data/type_chart.json`, 수집은 `backend/scripts/prepare_battle_data.py`. 공식 현행 레귤레이션을 하드코딩하지 않고 `regulationId=null`, `scope=generic` 유지.
+- 프론트는 챗봇 기본 화면을 유지하고 보조 팀·전투 화면으로 진입. 최초 진입 후 편집 상태 유지, 요청 스냅샷과 현재 입력이 다르면 결과 숨김.
+- 챗봇 연결은 사용자 질문 초안 준비이며 자동 모델 실행·계산 결과의 RAG 컨텍스트 주입과 구분함.
+- 자세한 검증·지원 범위는 [Phase 3 결과](PHASE3_RESULTS.md) 참조.
