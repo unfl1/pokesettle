@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from backend.errors import ServiceError
-from backend.models import Pokemon
+from backend.app.core.errors import ServiceError
+from backend.app.schemas import Pokemon
 
 
 class Catalog:

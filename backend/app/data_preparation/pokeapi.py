@@ -1,7 +1,7 @@
 import re
 
-from backend.models import Candidate, Document
-from backend.storage import digest
+from backend.app.schemas import Candidate, Document
+from backend.app.storage import digest
 
 API = "https://pokeapi.co/api/v2"
 LICENCE_URL = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md"

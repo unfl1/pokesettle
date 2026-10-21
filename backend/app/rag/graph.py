@@ -3,10 +3,10 @@ from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from backend.errors import ServiceError
-from backend.models import Generation
-from backend.rag.prompts import GENERATION_PROMPT
-from backend.rag.retriever import retrieve
+from backend.app.core.errors import ServiceError
+from backend.app.rag.prompts import GENERATION_PROMPT
+from backend.app.rag.retriever import retrieve
+from backend.app.schemas import Generation
 
 
 class RagState(TypedDict, total=False):

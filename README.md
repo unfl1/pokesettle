@@ -30,7 +30,7 @@ Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓�
 ```bash
 uv sync --python 3.12 --frozen --group dev
 uv run --frozen python -m backend.scripts.index_data
-uv run --frozen uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
+uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
 별도 터미널에서 화면 실행:
@@ -56,5 +56,6 @@ pnpm --dir frontend dev
 
 - [요구사항](docs/REQUIREMENTS.md) · [아키텍처](docs/ARCHITECTURE.md) · [API 계약](docs/API_SPEC.md)
 - [출처·이용 조건](docs/DATA_SOURCES.md) · [구현·검증 결과](docs/CATALOG_EXPANSION.md)
+- [백엔드 구조·실행 경로](docs/BACKEND_STRUCTURE.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company

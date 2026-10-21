@@ -5,9 +5,9 @@ from chromadb.config import Settings as ChromaSettings
 from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from backend.catalog import metadata_text
-from backend.errors import ServiceError
-from backend.storage import digest
+from backend.app.catalog import metadata_text
+from backend.app.core.errors import ServiceError
+from backend.app.storage import digest
 
 
 class VectorStore:

@@ -3,10 +3,10 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.catalog import Catalog
-from backend.discovery import discover
-from backend.main import create_app
-from backend.models import DiscoveryPlan, DiscoveryRequest, Pokemon
+from backend.app.catalog import Catalog
+from backend.app.main import create_app
+from backend.app.schemas import DiscoveryPlan, DiscoveryRequest, Pokemon
+from backend.app.services.discovery import discover
 from backend.scripts.prepare_data import TABLES, build_snapshots
 from backend.tests.conftest import record
 

@@ -10,12 +10,12 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from backend.config import ROOT, Settings
-from backend.main import create_app
-from backend.models import Document
-from backend.rag.graph import build_graph
-from backend.rag.vector_store import VectorStore
-from backend.storage import now
+from backend.app.core.config import ROOT, Settings
+from backend.app.main import create_app
+from backend.app.rag.graph import build_graph
+from backend.app.rag.vector_store import VectorStore
+from backend.app.schemas import Document
+from backend.app.storage import now
 
 
 def verify(live=False):

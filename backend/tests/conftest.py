@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.catalog import Catalog
-from backend.config import Settings
-from backend.models import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
-from backend.rag.vector_store import VectorStore
-from backend.services import KnowledgeService
-from backend.storage import Store
+from backend.app.catalog import Catalog
+from backend.app.core.config import Settings
+from backend.app.rag.vector_store import VectorStore
+from backend.app.schemas import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
+from backend.app.services.knowledge import KnowledgeService
+from backend.app.storage import Store
 
 
 def embed(texts):

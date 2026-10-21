@@ -4,9 +4,9 @@ import csv
 import io
 import json
 
-from backend.config import Settings
-from backend.http_client import SourceClient
-from backend.storage import Store, digest
+from backend.app.core.config import Settings
+from backend.app.http_client import SourceClient
+from backend.app.storage import Store, digest
 
 ROOT = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv"
 

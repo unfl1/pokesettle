@@ -3,10 +3,10 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.discovery import discover
-from backend.errors import ServiceError
-from backend.main import create_app
-from backend.models import ChatRequest, DiscoveryPlan, DiscoveryRequest
+from backend.app.core.errors import ServiceError
+from backend.app.main import create_app
+from backend.app.schemas import ChatRequest, DiscoveryPlan, DiscoveryRequest
+from backend.app.services.discovery import discover
 
 
 def chat(pokemon_id, conversation_id=None):

@@ -3,9 +3,9 @@
 import operator
 import re
 
-from backend.errors import ServiceError
-from backend.models import DiscoveryPlan
-from backend.storage import digest
+from backend.app.core.errors import ServiceError
+from backend.app.schemas import DiscoveryPlan
+from backend.app.storage import digest
 
 DISCOVERY_PROMPT = """당신은 포켓몬 도감의 자연어 검색 조건을 구조화합니다.
 지원 필드: name, types, abilities, champions_eligibility_status, base_stats의 hp/attack/defense/sp_attack/sp_defense/speed.

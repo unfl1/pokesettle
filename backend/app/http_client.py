@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 
 import requests
 
-from backend.errors import ServiceError
-from backend.storage import digest, now
+from backend.app.core.errors import ServiceError
+from backend.app.storage import digest, now
 
 
 class SourceClient:

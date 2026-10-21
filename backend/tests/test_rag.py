@@ -2,11 +2,11 @@ from dataclasses import replace
 
 import pytest
 
-from backend.catalog import Catalog, metadata_text
-from backend.errors import ServiceError
-from backend.models import Generation
-from backend.rag.graph import build_graph, render_answer
-from backend.rag.vector_store import VectorStore
+from backend.app.catalog import Catalog, metadata_text
+from backend.app.core.errors import ServiceError
+from backend.app.rag.graph import build_graph, render_answer
+from backend.app.rag.vector_store import VectorStore
+from backend.app.schemas import Generation
 from backend.tests.conftest import document, embed
 
 

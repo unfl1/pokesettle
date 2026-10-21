@@ -3,7 +3,7 @@ from itertools import combinations
 from math import prod
 from pathlib import Path
 
-from backend.errors import ServiceError
+from backend.app.core.errors import ServiceError
 
 
 class BattleEngine:

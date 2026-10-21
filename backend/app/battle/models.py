@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from backend.models import Model
+from backend.app.schemas import Model
 
 TypeName = Literal[
     "normal",

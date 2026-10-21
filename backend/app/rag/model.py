@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from openai import APITimeoutError
 
-from backend.errors import ServiceError
+from backend.app.core.errors import ServiceError
 
 
 class StructuredModel:
