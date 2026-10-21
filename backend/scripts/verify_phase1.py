@@ -9,9 +9,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from psycopg import sql
 
 from backend.app.core.config import ROOT, Settings
-from backend.app.main import create_app
+from backend.app.main import create_app, create_service
 from backend.app.rag.graph import build_graph
 from backend.app.rag.vector_store import VectorStore
 from backend.app.schemas import Document
@@ -20,8 +21,8 @@ from backend.app.storage import now
 
 def verify(live=False):
     settings = Settings.from_env()
-    app = create_app(settings)
-    service = app.state.service
+    service = create_service(settings)
+    app = create_app(settings, service=service)
     vectors = service.vectors
     records = list(service.catalog.items.values())
     documents = json.loads((settings.data_dir / "documents" / "species.json").read_text())
@@ -52,16 +53,26 @@ def verify(live=False):
     assert len(found_small) <= 2 < len(found)
     sample_document = Document.model_validate(documents[0]["document"])
     with tempfile.TemporaryDirectory(prefix="poketact-verify-") as directory:
-        isolated = replace(settings, runtime_dir=Path(directory))
-        isolated_store = type(service.store)(isolated.runtime_dir / "state.sqlite3")
-        local = VectorStore(isolated, isolated_store, vectors.embed)
-        default_count = local.index_document("pokemon:1", sample_document)
-        changed = VectorStore(
-            replace(isolated, chunk_size=500, chunk_overlap=100), isolated_store, vectors.embed
+        isolated = replace(
+            settings, database_schema="verify_" + uuid4().hex, runtime_dir=Path(directory)
         )
-        changed_count = changed.index_document("pokemon:1", sample_document)
-        assert default_count != changed_count
-        assert changed.docs.count() == changed_count
+        isolated_store = type(service.store)(isolated.database_url, isolated.database_schema)
+        try:
+            local = VectorStore(isolated, isolated_store, vectors.embed)
+            default_count = local.index_document("pokemon:1", sample_document)
+            changed = VectorStore(
+                replace(isolated, chunk_size=500, chunk_overlap=100), isolated_store, vectors.embed
+            )
+            changed_count = changed.index_document("pokemon:1", sample_document)
+            assert default_count != changed_count
+            assert changed.docs.count() == changed_count
+        finally:
+            with service.store.connect() as db:
+                db.execute(
+                    sql.SQL("DROP SCHEMA {} CASCADE").format(
+                        sql.Identifier(isolated.database_schema)
+                    )
+                )
     graph = build_graph(vectors, service.model)
     report = {
         "verified_at": now(),

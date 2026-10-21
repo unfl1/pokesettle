@@ -30,7 +30,8 @@ P0 takes precedence over visual polish and optional combat features.
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, React Router, Lucide React. Add TanStack Query for server-state; Zustand only if cross-page client state truly requires it.
 - **Backend:** Python 3.10+, FastAPI, Pydantic, Uvicorn, pytest, python-dotenv.
 - **RAG:** LangChain, LangGraph (at minimum `retrieve` and `generate`), ChromaDB, model API configured via environment; LangSmith optional if supported by environment.
-- **Storage:** JSON for curated reference data; SQLite for locally saved teams and conversation state; ChromaDB for semantic indexes.
+- **Storage:** JSON for curated reference data; PostgreSQL for locally saved teams, conversations, jobs, and source caches; ChromaDB for semantic indexes.
+- **Database responsibilities:** PostgreSQL stores application state and document/index manifests; ChromaDB stores RAG metadata and document vectors. Keep the two Chroma collections and the assignment-specified Chroma dependencies.
 - **Calculation:** Python rule engine for validated type/legality checks. Investigate `@smogon/calc` and an optional isolated Node service for Champions-compatible calculations; do not assume generic Gen 9 formulas are sufficient.
 - **Dependency versions:** Check the assignment PDF's specified package versions before installation. Record any justified deviations.
 
@@ -41,7 +42,7 @@ FastAPI (validation, API, app services)
    |-- RAG: LangGraph retrieve -> generate
    |     |-- Chroma: pokemon_meta
    |     `-- Chroma: pokemon_docs
-   |-- structured JSON / SQLite
+   |-- reference JSON / PostgreSQL
    `-- battle analyzer / optional dedicated damage service
 ```
 

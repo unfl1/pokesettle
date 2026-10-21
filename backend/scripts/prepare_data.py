@@ -197,7 +197,7 @@ def build_snapshots(tables, sources, count=None):
 def prepare(settings, count=None):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     (settings.data_dir / "documents").mkdir(exist_ok=True)
-    client = SourceClient(settings, Store(settings.runtime_dir / "state.sqlite3"))
+    client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
     for name in TABLES:
         snapshot = client.fetch(f"{CSV_ROOT}/{name}.csv", expect_json=False)

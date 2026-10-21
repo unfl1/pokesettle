@@ -6,7 +6,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Frontend: React, TypeScript, Vite, Tailwind CSS
 - Backend: Python, FastAPI
 - RAG: LangChain, LangGraph, ChromaDB
-- Storage: JSON and SQLite
+- Storage: JSON reference snapshots and PostgreSQL
 
 ## Sources of truth
 - `요구사항정의.pdf`: mandatory assignment requirements (F2001–F2012 take priority).

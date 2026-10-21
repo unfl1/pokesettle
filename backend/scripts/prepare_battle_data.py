@@ -29,7 +29,7 @@ def build_chart(types, efficacy):
 
 def main():
     settings = Settings.from_env()
-    client = SourceClient(settings, Store(settings.runtime_dir / "state.sqlite3"))
+    client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
     for name in ["types", "type_efficacy"]:
         url = f"{ROOT}/{name}.csv"
