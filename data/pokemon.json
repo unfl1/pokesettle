@@ -1,0 +1,6411 @@
+[
+  {
+    "pokemon_id": "pokemon:1",
+    "species_id": 1,
+    "name_ko": "이상해씨",
+    "name_en": "Bulbasaur",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 45,
+      "attack": 49,
+      "defense": 49,
+      "sp_attack": 65,
+      "sp_defense": 65,
+      "speed": 45
+    },
+    "abilities": [
+      "overgrow",
+      "chlorophyll"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/1/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:2",
+    "species_id": 2,
+    "name_ko": "이상해풀",
+    "name_en": "Ivysaur",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 62,
+      "defense": 63,
+      "sp_attack": 80,
+      "sp_defense": 80,
+      "speed": 60
+    },
+    "abilities": [
+      "overgrow",
+      "chlorophyll"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/2/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:3",
+    "species_id": 3,
+    "name_ko": "이상해꽃",
+    "name_en": "Venusaur",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 82,
+      "defense": 83,
+      "sp_attack": 100,
+      "sp_defense": 100,
+      "speed": 80
+    },
+    "abilities": [
+      "overgrow",
+      "chlorophyll"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/3/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:4",
+    "species_id": 4,
+    "name_ko": "파이리",
+    "name_en": "Charmander",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 39,
+      "attack": 52,
+      "defense": 43,
+      "sp_attack": 60,
+      "sp_defense": 50,
+      "speed": 65
+    },
+    "abilities": [
+      "blaze",
+      "solar-power"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/4/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:5",
+    "species_id": 5,
+    "name_ko": "리자드",
+    "name_en": "Charmeleon",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 58,
+      "attack": 64,
+      "defense": 58,
+      "sp_attack": 80,
+      "sp_defense": 65,
+      "speed": 80
+    },
+    "abilities": [
+      "blaze",
+      "solar-power"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/5/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:6",
+    "species_id": 6,
+    "name_ko": "리자몽",
+    "name_en": "Charizard",
+    "types": [
+      "fire",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 78,
+      "attack": 84,
+      "defense": 78,
+      "sp_attack": 109,
+      "sp_defense": 85,
+      "speed": 100
+    },
+    "abilities": [
+      "blaze",
+      "solar-power"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/6/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:7",
+    "species_id": 7,
+    "name_ko": "꼬부기",
+    "name_en": "Squirtle",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 44,
+      "attack": 48,
+      "defense": 65,
+      "sp_attack": 50,
+      "sp_defense": 64,
+      "speed": 43
+    },
+    "abilities": [
+      "torrent",
+      "rain-dish"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/7/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:8",
+    "species_id": 8,
+    "name_ko": "어니부기",
+    "name_en": "Wartortle",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 59,
+      "attack": 63,
+      "defense": 80,
+      "sp_attack": 65,
+      "sp_defense": 80,
+      "speed": 58
+    },
+    "abilities": [
+      "torrent",
+      "rain-dish"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/8/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:9",
+    "species_id": 9,
+    "name_ko": "거북왕",
+    "name_en": "Blastoise",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 79,
+      "attack": 83,
+      "defense": 100,
+      "sp_attack": 85,
+      "sp_defense": 105,
+      "speed": 78
+    },
+    "abilities": [
+      "torrent",
+      "rain-dish"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/9/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:10",
+    "species_id": 10,
+    "name_ko": "캐터피",
+    "name_en": "Caterpie",
+    "types": [
+      "bug"
+    ],
+    "base_stats": {
+      "hp": 45,
+      "attack": 30,
+      "defense": 35,
+      "sp_attack": 20,
+      "sp_defense": 20,
+      "speed": 45
+    },
+    "abilities": [
+      "shield-dust",
+      "run-away"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/10/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:11",
+    "species_id": 11,
+    "name_ko": "단데기",
+    "name_en": "Metapod",
+    "types": [
+      "bug"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 20,
+      "defense": 55,
+      "sp_attack": 25,
+      "sp_defense": 25,
+      "speed": 30
+    },
+    "abilities": [
+      "shed-skin"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/11/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:12",
+    "species_id": 12,
+    "name_ko": "버터플",
+    "name_en": "Butterfree",
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 45,
+      "defense": 50,
+      "sp_attack": 90,
+      "sp_defense": 80,
+      "speed": 70
+    },
+    "abilities": [
+      "compound-eyes",
+      "tinted-lens"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/12/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:13",
+    "species_id": 13,
+    "name_ko": "뿔충이",
+    "name_en": "Weedle",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 35,
+      "defense": 30,
+      "sp_attack": 20,
+      "sp_defense": 20,
+      "speed": 50
+    },
+    "abilities": [
+      "shield-dust",
+      "run-away"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/13/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:14",
+    "species_id": 14,
+    "name_ko": "딱충이",
+    "name_en": "Kakuna",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 45,
+      "attack": 25,
+      "defense": 50,
+      "sp_attack": 25,
+      "sp_defense": 25,
+      "speed": 35
+    },
+    "abilities": [
+      "shed-skin"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/14/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:15",
+    "species_id": 15,
+    "name_ko": "독침붕",
+    "name_en": "Beedrill",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 90,
+      "defense": 40,
+      "sp_attack": 45,
+      "sp_defense": 80,
+      "speed": 75
+    },
+    "abilities": [
+      "swarm",
+      "sniper"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/15/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:16",
+    "species_id": 16,
+    "name_ko": "구구",
+    "name_en": "Pidgey",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 45,
+      "defense": 40,
+      "sp_attack": 35,
+      "sp_defense": 35,
+      "speed": 56
+    },
+    "abilities": [
+      "keen-eye",
+      "tangled-feet",
+      "big-pecks"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/16/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:17",
+    "species_id": 17,
+    "name_ko": "피죤",
+    "name_en": "Pidgeotto",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 63,
+      "attack": 60,
+      "defense": 55,
+      "sp_attack": 50,
+      "sp_defense": 50,
+      "speed": 71
+    },
+    "abilities": [
+      "keen-eye",
+      "tangled-feet",
+      "big-pecks"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/17/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:18",
+    "species_id": 18,
+    "name_ko": "피죤투",
+    "name_en": "Pidgeot",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 83,
+      "attack": 80,
+      "defense": 75,
+      "sp_attack": 70,
+      "sp_defense": 70,
+      "speed": 101
+    },
+    "abilities": [
+      "keen-eye",
+      "tangled-feet",
+      "big-pecks"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/18/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:19",
+    "species_id": 19,
+    "name_ko": "꼬렛",
+    "name_en": "Rattata",
+    "types": [
+      "normal"
+    ],
+    "base_stats": {
+      "hp": 30,
+      "attack": 56,
+      "defense": 35,
+      "sp_attack": 25,
+      "sp_defense": 35,
+      "speed": 72
+    },
+    "abilities": [
+      "run-away",
+      "guts",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/19/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:20",
+    "species_id": 20,
+    "name_ko": "레트라",
+    "name_en": "Raticate",
+    "types": [
+      "normal"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 81,
+      "defense": 60,
+      "sp_attack": 50,
+      "sp_defense": 70,
+      "speed": 97
+    },
+    "abilities": [
+      "run-away",
+      "guts",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/20/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:21",
+    "species_id": 21,
+    "name_ko": "깨비참",
+    "name_en": "Spearow",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 60,
+      "defense": 30,
+      "sp_attack": 31,
+      "sp_defense": 31,
+      "speed": 70
+    },
+    "abilities": [
+      "keen-eye",
+      "sniper"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/21/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:22",
+    "species_id": 22,
+    "name_ko": "깨비드릴조",
+    "name_en": "Fearow",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 90,
+      "defense": 65,
+      "sp_attack": 61,
+      "sp_defense": 61,
+      "speed": 100
+    },
+    "abilities": [
+      "keen-eye",
+      "sniper"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/22/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:23",
+    "species_id": 23,
+    "name_ko": "아보",
+    "name_en": "Ekans",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 60,
+      "defense": 44,
+      "sp_attack": 40,
+      "sp_defense": 54,
+      "speed": 55
+    },
+    "abilities": [
+      "intimidate",
+      "shed-skin",
+      "unnerve"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/23/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:24",
+    "species_id": 24,
+    "name_ko": "아보크",
+    "name_en": "Arbok",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 95,
+      "defense": 69,
+      "sp_attack": 65,
+      "sp_defense": 79,
+      "speed": 80
+    },
+    "abilities": [
+      "intimidate",
+      "shed-skin",
+      "unnerve"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/24/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:25",
+    "species_id": 25,
+    "name_ko": "피카츄",
+    "name_en": "Pikachu",
+    "types": [
+      "electric"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 55,
+      "defense": 40,
+      "sp_attack": 50,
+      "sp_defense": 50,
+      "speed": 90
+    },
+    "abilities": [
+      "static",
+      "lightning-rod"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/25/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:26",
+    "species_id": 26,
+    "name_ko": "라이츄",
+    "name_en": "Raichu",
+    "types": [
+      "electric"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 90,
+      "defense": 55,
+      "sp_attack": 90,
+      "sp_defense": 80,
+      "speed": 110
+    },
+    "abilities": [
+      "static",
+      "lightning-rod"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/26/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:27",
+    "species_id": 27,
+    "name_ko": "모래두지",
+    "name_en": "Sandshrew",
+    "types": [
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 75,
+      "defense": 85,
+      "sp_attack": 20,
+      "sp_defense": 30,
+      "speed": 40
+    },
+    "abilities": [
+      "sand-veil",
+      "sand-rush"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/27/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:28",
+    "species_id": 28,
+    "name_ko": "고지",
+    "name_en": "Sandslash",
+    "types": [
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 75,
+      "attack": 100,
+      "defense": 110,
+      "sp_attack": 45,
+      "sp_defense": 55,
+      "speed": 65
+    },
+    "abilities": [
+      "sand-veil",
+      "sand-rush"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/28/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:29",
+    "species_id": 29,
+    "name_ko": "니드런♀",
+    "name_en": "Nidoran♀",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 47,
+      "defense": 52,
+      "sp_attack": 40,
+      "sp_defense": 40,
+      "speed": 41
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/29/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:30",
+    "species_id": 30,
+    "name_ko": "니드리나",
+    "name_en": "Nidorina",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 70,
+      "attack": 62,
+      "defense": 67,
+      "sp_attack": 55,
+      "sp_defense": 55,
+      "speed": 56
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/30/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:31",
+    "species_id": 31,
+    "name_ko": "니드퀸",
+    "name_en": "Nidoqueen",
+    "types": [
+      "poison",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 92,
+      "defense": 87,
+      "sp_attack": 75,
+      "sp_defense": 85,
+      "speed": 76
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "sheer-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/31/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:32",
+    "species_id": 32,
+    "name_ko": "니드런♂",
+    "name_en": "Nidoran♂",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 46,
+      "attack": 57,
+      "defense": 40,
+      "sp_attack": 40,
+      "sp_defense": 40,
+      "speed": 50
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/32/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:33",
+    "species_id": 33,
+    "name_ko": "니드리노",
+    "name_en": "Nidorino",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 61,
+      "attack": 72,
+      "defense": 57,
+      "sp_attack": 55,
+      "sp_defense": 55,
+      "speed": 65
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "hustle"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/33/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:34",
+    "species_id": 34,
+    "name_ko": "니드킹",
+    "name_en": "Nidoking",
+    "types": [
+      "poison",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 81,
+      "attack": 102,
+      "defense": 77,
+      "sp_attack": 85,
+      "sp_defense": 75,
+      "speed": 85
+    },
+    "abilities": [
+      "poison-point",
+      "rivalry",
+      "sheer-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/34/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:35",
+    "species_id": 35,
+    "name_ko": "삐삐",
+    "name_en": "Clefairy",
+    "types": [
+      "fairy"
+    ],
+    "base_stats": {
+      "hp": 70,
+      "attack": 45,
+      "defense": 48,
+      "sp_attack": 60,
+      "sp_defense": 65,
+      "speed": 35
+    },
+    "abilities": [
+      "cute-charm",
+      "magic-guard",
+      "friend-guard"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/35/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:36",
+    "species_id": 36,
+    "name_ko": "픽시",
+    "name_en": "Clefable",
+    "types": [
+      "fairy"
+    ],
+    "base_stats": {
+      "hp": 95,
+      "attack": 70,
+      "defense": 73,
+      "sp_attack": 95,
+      "sp_defense": 90,
+      "speed": 60
+    },
+    "abilities": [
+      "cute-charm",
+      "magic-guard",
+      "unaware"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/36/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:37",
+    "species_id": 37,
+    "name_ko": "식스테일",
+    "name_en": "Vulpix",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 38,
+      "attack": 41,
+      "defense": 40,
+      "sp_attack": 50,
+      "sp_defense": 65,
+      "speed": 65
+    },
+    "abilities": [
+      "flash-fire",
+      "drought"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/37/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:38",
+    "species_id": 38,
+    "name_ko": "나인테일",
+    "name_en": "Ninetales",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 73,
+      "attack": 76,
+      "defense": 75,
+      "sp_attack": 81,
+      "sp_defense": 100,
+      "speed": 100
+    },
+    "abilities": [
+      "flash-fire",
+      "drought"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/38/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:39",
+    "species_id": 39,
+    "name_ko": "푸린",
+    "name_en": "Jigglypuff",
+    "types": [
+      "normal",
+      "fairy"
+    ],
+    "base_stats": {
+      "hp": 115,
+      "attack": 45,
+      "defense": 20,
+      "sp_attack": 45,
+      "sp_defense": 25,
+      "speed": 20
+    },
+    "abilities": [
+      "cute-charm",
+      "competitive",
+      "friend-guard"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/39/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:40",
+    "species_id": 40,
+    "name_ko": "푸크린",
+    "name_en": "Wigglytuff",
+    "types": [
+      "normal",
+      "fairy"
+    ],
+    "base_stats": {
+      "hp": 140,
+      "attack": 70,
+      "defense": 45,
+      "sp_attack": 85,
+      "sp_defense": 50,
+      "speed": 45
+    },
+    "abilities": [
+      "cute-charm",
+      "competitive",
+      "frisk"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/40/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:41",
+    "species_id": 41,
+    "name_ko": "주뱃",
+    "name_en": "Zubat",
+    "types": [
+      "poison",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 45,
+      "defense": 35,
+      "sp_attack": 30,
+      "sp_defense": 40,
+      "speed": 55
+    },
+    "abilities": [
+      "inner-focus",
+      "infiltrator"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/41/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:42",
+    "species_id": 42,
+    "name_ko": "골뱃",
+    "name_en": "Golbat",
+    "types": [
+      "poison",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 75,
+      "attack": 80,
+      "defense": 70,
+      "sp_attack": 65,
+      "sp_defense": 75,
+      "speed": 90
+    },
+    "abilities": [
+      "inner-focus",
+      "infiltrator"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/42/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:43",
+    "species_id": 43,
+    "name_ko": "뚜벅쵸",
+    "name_en": "Oddish",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 45,
+      "attack": 50,
+      "defense": 55,
+      "sp_attack": 75,
+      "sp_defense": 65,
+      "speed": 30
+    },
+    "abilities": [
+      "chlorophyll",
+      "run-away"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/43/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:44",
+    "species_id": 44,
+    "name_ko": "냄새꼬",
+    "name_en": "Gloom",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 65,
+      "defense": 70,
+      "sp_attack": 85,
+      "sp_defense": 75,
+      "speed": 40
+    },
+    "abilities": [
+      "chlorophyll",
+      "stench"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/44/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:45",
+    "species_id": 45,
+    "name_ko": "라플레시아",
+    "name_en": "Vileplume",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 75,
+      "attack": 80,
+      "defense": 85,
+      "sp_attack": 110,
+      "sp_defense": 90,
+      "speed": 50
+    },
+    "abilities": [
+      "chlorophyll",
+      "effect-spore"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/45/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:46",
+    "species_id": 46,
+    "name_ko": "파라스",
+    "name_en": "Paras",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 70,
+      "defense": 55,
+      "sp_attack": 45,
+      "sp_defense": 55,
+      "speed": 25
+    },
+    "abilities": [
+      "effect-spore",
+      "dry-skin",
+      "damp"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/46/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:47",
+    "species_id": 47,
+    "name_ko": "파라섹트",
+    "name_en": "Parasect",
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 95,
+      "defense": 80,
+      "sp_attack": 60,
+      "sp_defense": 80,
+      "speed": 30
+    },
+    "abilities": [
+      "effect-spore",
+      "dry-skin",
+      "damp"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/47/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:48",
+    "species_id": 48,
+    "name_ko": "콘팡",
+    "name_en": "Venonat",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 55,
+      "defense": 50,
+      "sp_attack": 40,
+      "sp_defense": 55,
+      "speed": 45
+    },
+    "abilities": [
+      "compound-eyes",
+      "tinted-lens",
+      "run-away"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/48/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:49",
+    "species_id": 49,
+    "name_ko": "도나리",
+    "name_en": "Venomoth",
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 70,
+      "attack": 65,
+      "defense": 60,
+      "sp_attack": 90,
+      "sp_defense": 75,
+      "speed": 90
+    },
+    "abilities": [
+      "shield-dust",
+      "tinted-lens",
+      "wonder-skin"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/49/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:50",
+    "species_id": 50,
+    "name_ko": "디그다",
+    "name_en": "Diglett",
+    "types": [
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 10,
+      "attack": 55,
+      "defense": 25,
+      "sp_attack": 35,
+      "sp_defense": 45,
+      "speed": 95
+    },
+    "abilities": [
+      "sand-veil",
+      "arena-trap",
+      "sand-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/50/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:51",
+    "species_id": 51,
+    "name_ko": "닥트리오",
+    "name_en": "Dugtrio",
+    "types": [
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 100,
+      "defense": 50,
+      "sp_attack": 50,
+      "sp_defense": 70,
+      "speed": 120
+    },
+    "abilities": [
+      "sand-veil",
+      "arena-trap",
+      "sand-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/51/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:52",
+    "species_id": 52,
+    "name_ko": "나옹",
+    "name_en": "Meowth",
+    "types": [
+      "normal"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 45,
+      "defense": 35,
+      "sp_attack": 40,
+      "sp_defense": 40,
+      "speed": 90
+    },
+    "abilities": [
+      "pickup",
+      "technician",
+      "unnerve"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/52/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:53",
+    "species_id": 53,
+    "name_ko": "페르시온",
+    "name_en": "Persian",
+    "types": [
+      "normal"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 70,
+      "defense": 60,
+      "sp_attack": 65,
+      "sp_defense": 65,
+      "speed": 115
+    },
+    "abilities": [
+      "limber",
+      "technician",
+      "unnerve"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/53/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:54",
+    "species_id": 54,
+    "name_ko": "고라파덕",
+    "name_en": "Psyduck",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 52,
+      "defense": 48,
+      "sp_attack": 65,
+      "sp_defense": 50,
+      "speed": 55
+    },
+    "abilities": [
+      "damp",
+      "cloud-nine",
+      "swift-swim"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/54/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:55",
+    "species_id": 55,
+    "name_ko": "골덕",
+    "name_en": "Golduck",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 82,
+      "defense": 78,
+      "sp_attack": 95,
+      "sp_defense": 80,
+      "speed": 85
+    },
+    "abilities": [
+      "damp",
+      "cloud-nine",
+      "swift-swim"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/55/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:56",
+    "species_id": 56,
+    "name_ko": "망키",
+    "name_en": "Mankey",
+    "types": [
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 80,
+      "defense": 35,
+      "sp_attack": 35,
+      "sp_defense": 45,
+      "speed": 70
+    },
+    "abilities": [
+      "vital-spirit",
+      "anger-point",
+      "defiant"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/56/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:57",
+    "species_id": 57,
+    "name_ko": "성원숭",
+    "name_en": "Primeape",
+    "types": [
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 105,
+      "defense": 60,
+      "sp_attack": 60,
+      "sp_defense": 70,
+      "speed": 95
+    },
+    "abilities": [
+      "vital-spirit",
+      "anger-point",
+      "defiant"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/57/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:58",
+    "species_id": 58,
+    "name_ko": "가디",
+    "name_en": "Growlithe",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 70,
+      "defense": 45,
+      "sp_attack": 70,
+      "sp_defense": 50,
+      "speed": 60
+    },
+    "abilities": [
+      "intimidate",
+      "flash-fire",
+      "justified"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/58/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:59",
+    "species_id": 59,
+    "name_ko": "윈디",
+    "name_en": "Arcanine",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 110,
+      "defense": 80,
+      "sp_attack": 100,
+      "sp_defense": 80,
+      "speed": 95
+    },
+    "abilities": [
+      "intimidate",
+      "flash-fire",
+      "justified"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/59/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:60",
+    "species_id": 60,
+    "name_ko": "발챙이",
+    "name_en": "Poliwag",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 50,
+      "defense": 40,
+      "sp_attack": 40,
+      "sp_defense": 40,
+      "speed": 90
+    },
+    "abilities": [
+      "water-absorb",
+      "damp",
+      "swift-swim"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/60/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:61",
+    "species_id": 61,
+    "name_ko": "슈륙챙이",
+    "name_en": "Poliwhirl",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 65,
+      "defense": 65,
+      "sp_attack": 50,
+      "sp_defense": 50,
+      "speed": 90
+    },
+    "abilities": [
+      "water-absorb",
+      "damp",
+      "swift-swim"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/61/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:62",
+    "species_id": 62,
+    "name_ko": "강챙이",
+    "name_en": "Poliwrath",
+    "types": [
+      "water",
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 95,
+      "defense": 95,
+      "sp_attack": 70,
+      "sp_defense": 90,
+      "speed": 70
+    },
+    "abilities": [
+      "water-absorb",
+      "damp",
+      "swift-swim"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/62/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:63",
+    "species_id": 63,
+    "name_ko": "캐이시",
+    "name_en": "Abra",
+    "types": [
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 25,
+      "attack": 20,
+      "defense": 15,
+      "sp_attack": 105,
+      "sp_defense": 55,
+      "speed": 90
+    },
+    "abilities": [
+      "synchronize",
+      "inner-focus",
+      "magic-guard"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/63/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:64",
+    "species_id": 64,
+    "name_ko": "윤겔라",
+    "name_en": "Kadabra",
+    "types": [
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 35,
+      "defense": 30,
+      "sp_attack": 120,
+      "sp_defense": 70,
+      "speed": 105
+    },
+    "abilities": [
+      "synchronize",
+      "inner-focus",
+      "magic-guard"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/64/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:65",
+    "species_id": 65,
+    "name_ko": "후딘",
+    "name_en": "Alakazam",
+    "types": [
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 50,
+      "defense": 45,
+      "sp_attack": 135,
+      "sp_defense": 95,
+      "speed": 120
+    },
+    "abilities": [
+      "synchronize",
+      "inner-focus",
+      "magic-guard"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/65/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:66",
+    "species_id": 66,
+    "name_ko": "알통몬",
+    "name_en": "Machop",
+    "types": [
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 70,
+      "attack": 80,
+      "defense": 50,
+      "sp_attack": 35,
+      "sp_defense": 35,
+      "speed": 35
+    },
+    "abilities": [
+      "guts",
+      "no-guard",
+      "steadfast"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/66/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:67",
+    "species_id": 67,
+    "name_ko": "근육몬",
+    "name_en": "Machoke",
+    "types": [
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 100,
+      "defense": 70,
+      "sp_attack": 50,
+      "sp_defense": 60,
+      "speed": 45
+    },
+    "abilities": [
+      "guts",
+      "no-guard",
+      "steadfast"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/67/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:68",
+    "species_id": 68,
+    "name_ko": "괴력몬",
+    "name_en": "Machamp",
+    "types": [
+      "fighting"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 130,
+      "defense": 80,
+      "sp_attack": 65,
+      "sp_defense": 85,
+      "speed": 55
+    },
+    "abilities": [
+      "guts",
+      "no-guard",
+      "steadfast"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/68/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:69",
+    "species_id": 69,
+    "name_ko": "모다피",
+    "name_en": "Bellsprout",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 75,
+      "defense": 35,
+      "sp_attack": 70,
+      "sp_defense": 30,
+      "speed": 40
+    },
+    "abilities": [
+      "chlorophyll",
+      "gluttony"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/69/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:70",
+    "species_id": 70,
+    "name_ko": "우츠동",
+    "name_en": "Weepinbell",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 90,
+      "defense": 50,
+      "sp_attack": 85,
+      "sp_defense": 45,
+      "speed": 55
+    },
+    "abilities": [
+      "chlorophyll",
+      "gluttony"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/70/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:71",
+    "species_id": 71,
+    "name_ko": "우츠보트",
+    "name_en": "Victreebel",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 105,
+      "defense": 65,
+      "sp_attack": 100,
+      "sp_defense": 70,
+      "speed": 70
+    },
+    "abilities": [
+      "chlorophyll",
+      "gluttony"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/71/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:72",
+    "species_id": 72,
+    "name_ko": "왕눈해",
+    "name_en": "Tentacool",
+    "types": [
+      "water",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 40,
+      "defense": 35,
+      "sp_attack": 50,
+      "sp_defense": 100,
+      "speed": 70
+    },
+    "abilities": [
+      "clear-body",
+      "liquid-ooze",
+      "rain-dish"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/72/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:73",
+    "species_id": 73,
+    "name_ko": "독파리",
+    "name_en": "Tentacruel",
+    "types": [
+      "water",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 70,
+      "defense": 65,
+      "sp_attack": 80,
+      "sp_defense": 120,
+      "speed": 100
+    },
+    "abilities": [
+      "clear-body",
+      "liquid-ooze",
+      "rain-dish"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/73/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:74",
+    "species_id": 74,
+    "name_ko": "꼬마돌",
+    "name_en": "Geodude",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 80,
+      "defense": 100,
+      "sp_attack": 30,
+      "sp_defense": 30,
+      "speed": 20
+    },
+    "abilities": [
+      "rock-head",
+      "sturdy",
+      "sand-veil"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/74/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:75",
+    "species_id": 75,
+    "name_ko": "데구리",
+    "name_en": "Graveler",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 95,
+      "defense": 115,
+      "sp_attack": 45,
+      "sp_defense": 45,
+      "speed": 35
+    },
+    "abilities": [
+      "rock-head",
+      "sturdy",
+      "sand-veil"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/75/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:76",
+    "species_id": 76,
+    "name_ko": "딱구리",
+    "name_en": "Golem",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 120,
+      "defense": 130,
+      "sp_attack": 55,
+      "sp_defense": 65,
+      "speed": 45
+    },
+    "abilities": [
+      "rock-head",
+      "sturdy",
+      "sand-veil"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/76/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:77",
+    "species_id": 77,
+    "name_ko": "포니타",
+    "name_en": "Ponyta",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 85,
+      "defense": 55,
+      "sp_attack": 65,
+      "sp_defense": 65,
+      "speed": 90
+    },
+    "abilities": [
+      "run-away",
+      "flash-fire",
+      "flame-body"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/77/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:78",
+    "species_id": 78,
+    "name_ko": "날쌩마",
+    "name_en": "Rapidash",
+    "types": [
+      "fire"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 100,
+      "defense": 70,
+      "sp_attack": 80,
+      "sp_defense": 80,
+      "speed": 105
+    },
+    "abilities": [
+      "run-away",
+      "flash-fire",
+      "flame-body"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/78/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:79",
+    "species_id": 79,
+    "name_ko": "야돈",
+    "name_en": "Slowpoke",
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 65,
+      "defense": 65,
+      "sp_attack": 40,
+      "sp_defense": 40,
+      "speed": 15
+    },
+    "abilities": [
+      "oblivious",
+      "own-tempo",
+      "regenerator"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/79/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:80",
+    "species_id": 80,
+    "name_ko": "야도란",
+    "name_en": "Slowbro",
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 95,
+      "attack": 75,
+      "defense": 110,
+      "sp_attack": 100,
+      "sp_defense": 80,
+      "speed": 30
+    },
+    "abilities": [
+      "oblivious",
+      "own-tempo",
+      "regenerator"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/80/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:81",
+    "species_id": 81,
+    "name_ko": "코일",
+    "name_en": "Magnemite",
+    "types": [
+      "electric",
+      "steel"
+    ],
+    "base_stats": {
+      "hp": 25,
+      "attack": 35,
+      "defense": 70,
+      "sp_attack": 95,
+      "sp_defense": 55,
+      "speed": 45
+    },
+    "abilities": [
+      "magnet-pull",
+      "sturdy",
+      "analytic"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/81/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:82",
+    "species_id": 82,
+    "name_ko": "레어코일",
+    "name_en": "Magneton",
+    "types": [
+      "electric",
+      "steel"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 60,
+      "defense": 95,
+      "sp_attack": 120,
+      "sp_defense": 70,
+      "speed": 70
+    },
+    "abilities": [
+      "magnet-pull",
+      "sturdy",
+      "analytic"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/82/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:83",
+    "species_id": 83,
+    "name_ko": "파오리",
+    "name_en": "Farfetch’d",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 52,
+      "attack": 90,
+      "defense": 55,
+      "sp_attack": 58,
+      "sp_defense": 62,
+      "speed": 60
+    },
+    "abilities": [
+      "keen-eye",
+      "inner-focus",
+      "defiant"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/83/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:84",
+    "species_id": 84,
+    "name_ko": "두두",
+    "name_en": "Doduo",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 85,
+      "defense": 45,
+      "sp_attack": 35,
+      "sp_defense": 35,
+      "speed": 75
+    },
+    "abilities": [
+      "run-away",
+      "early-bird",
+      "tangled-feet"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/84/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:85",
+    "species_id": 85,
+    "name_ko": "두트리오",
+    "name_en": "Dodrio",
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 110,
+      "defense": 70,
+      "sp_attack": 60,
+      "sp_defense": 60,
+      "speed": 110
+    },
+    "abilities": [
+      "run-away",
+      "early-bird",
+      "tangled-feet"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/85/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:86",
+    "species_id": 86,
+    "name_ko": "쥬쥬",
+    "name_en": "Seel",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 65,
+      "attack": 45,
+      "defense": 55,
+      "sp_attack": 45,
+      "sp_defense": 70,
+      "speed": 45
+    },
+    "abilities": [
+      "thick-fat",
+      "hydration",
+      "ice-body"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/86/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:87",
+    "species_id": 87,
+    "name_ko": "쥬레곤",
+    "name_en": "Dewgong",
+    "types": [
+      "water",
+      "ice"
+    ],
+    "base_stats": {
+      "hp": 90,
+      "attack": 70,
+      "defense": 80,
+      "sp_attack": 70,
+      "sp_defense": 95,
+      "speed": 70
+    },
+    "abilities": [
+      "thick-fat",
+      "hydration",
+      "ice-body"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/87/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:88",
+    "species_id": 88,
+    "name_ko": "질퍽이",
+    "name_en": "Grimer",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 80,
+      "attack": 80,
+      "defense": 50,
+      "sp_attack": 40,
+      "sp_defense": 50,
+      "speed": 25
+    },
+    "abilities": [
+      "stench",
+      "sticky-hold",
+      "poison-touch"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/88/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:89",
+    "species_id": 89,
+    "name_ko": "질뻐기",
+    "name_en": "Muk",
+    "types": [
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 105,
+      "attack": 105,
+      "defense": 75,
+      "sp_attack": 65,
+      "sp_defense": 100,
+      "speed": 50
+    },
+    "abilities": [
+      "stench",
+      "sticky-hold",
+      "poison-touch"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/89/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:90",
+    "species_id": 90,
+    "name_ko": "셀러",
+    "name_en": "Shellder",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 30,
+      "attack": 65,
+      "defense": 100,
+      "sp_attack": 45,
+      "sp_defense": 25,
+      "speed": 40
+    },
+    "abilities": [
+      "shell-armor",
+      "skill-link",
+      "overcoat"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/90/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:91",
+    "species_id": 91,
+    "name_ko": "파르셀",
+    "name_en": "Cloyster",
+    "types": [
+      "water",
+      "ice"
+    ],
+    "base_stats": {
+      "hp": 50,
+      "attack": 95,
+      "defense": 180,
+      "sp_attack": 85,
+      "sp_defense": 45,
+      "speed": 70
+    },
+    "abilities": [
+      "shell-armor",
+      "skill-link",
+      "overcoat"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/91/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:92",
+    "species_id": 92,
+    "name_ko": "고오스",
+    "name_en": "Gastly",
+    "types": [
+      "ghost",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 30,
+      "attack": 35,
+      "defense": 30,
+      "sp_attack": 100,
+      "sp_defense": 35,
+      "speed": 80
+    },
+    "abilities": [
+      "levitate"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/92/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:93",
+    "species_id": 93,
+    "name_ko": "고우스트",
+    "name_en": "Haunter",
+    "types": [
+      "ghost",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 45,
+      "attack": 50,
+      "defense": 45,
+      "sp_attack": 115,
+      "sp_defense": 55,
+      "speed": 95
+    },
+    "abilities": [
+      "levitate"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/93/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:94",
+    "species_id": 94,
+    "name_ko": "팬텀",
+    "name_en": "Gengar",
+    "types": [
+      "ghost",
+      "poison"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 65,
+      "defense": 60,
+      "sp_attack": 130,
+      "sp_defense": 75,
+      "speed": 110
+    },
+    "abilities": [
+      "cursed-body"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/94/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:95",
+    "species_id": 95,
+    "name_ko": "롱스톤",
+    "name_en": "Onix",
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base_stats": {
+      "hp": 35,
+      "attack": 45,
+      "defense": 160,
+      "sp_attack": 30,
+      "sp_defense": 45,
+      "speed": 70
+    },
+    "abilities": [
+      "rock-head",
+      "sturdy",
+      "weak-armor"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/95/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:96",
+    "species_id": 96,
+    "name_ko": "슬리프",
+    "name_en": "Drowzee",
+    "types": [
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 60,
+      "attack": 48,
+      "defense": 45,
+      "sp_attack": 43,
+      "sp_defense": 90,
+      "speed": 42
+    },
+    "abilities": [
+      "insomnia",
+      "forewarn",
+      "inner-focus"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/96/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:97",
+    "species_id": 97,
+    "name_ko": "슬리퍼",
+    "name_en": "Hypno",
+    "types": [
+      "psychic"
+    ],
+    "base_stats": {
+      "hp": 85,
+      "attack": 73,
+      "defense": 70,
+      "sp_attack": 73,
+      "sp_defense": 115,
+      "speed": 67
+    },
+    "abilities": [
+      "insomnia",
+      "forewarn",
+      "inner-focus"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/97/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:98",
+    "species_id": 98,
+    "name_ko": "크랩",
+    "name_en": "Krabby",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 30,
+      "attack": 105,
+      "defense": 90,
+      "sp_attack": 25,
+      "sp_defense": 25,
+      "speed": 50
+    },
+    "abilities": [
+      "hyper-cutter",
+      "shell-armor",
+      "sheer-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/98/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:99",
+    "species_id": 99,
+    "name_ko": "킹크랩",
+    "name_en": "Kingler",
+    "types": [
+      "water"
+    ],
+    "base_stats": {
+      "hp": 55,
+      "attack": 130,
+      "defense": 115,
+      "sp_attack": 50,
+      "sp_defense": 50,
+      "speed": 75
+    },
+    "abilities": [
+      "hyper-cutter",
+      "shell-armor",
+      "sheer-force"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/99/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  },
+  {
+    "pokemon_id": "pokemon:100",
+    "species_id": 100,
+    "name_ko": "찌리리공",
+    "name_en": "Voltorb",
+    "types": [
+      "electric"
+    ],
+    "base_stats": {
+      "hp": 40,
+      "attack": 30,
+      "defense": 50,
+      "sp_attack": 55,
+      "sp_defense": 55,
+      "speed": 100
+    },
+    "abilities": [
+      "soundproof",
+      "static",
+      "aftermath"
+    ],
+    "available_moves": null,
+    "mega_forms": null,
+    "champions_eligibility_status": "unknown",
+    "eligible_regulations": null,
+    "description": null,
+    "source_url": "https://pokeapi.co/api/v2/pokemon/100/",
+    "collected_at": "2026-10-21T04:55:03.532350+00:00",
+    "field_provenance": {
+      "names": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_species_names"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:09.355676+00:00"
+      },
+      "types": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_types"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:05.463285+00:00"
+      },
+      "base_stats": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_stats"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:04.408447+00:00"
+      },
+      "abilities": {
+        "source_ids": [
+          "pokeapi-csv:pokemon_abilities"
+        ],
+        "verification_status": "verified",
+        "scope": "generic PokéAPI baseline; Champions applicability unknown",
+        "verified_at": "2026-10-21T04:55:07.614123+00:00"
+      }
+    },
+    "scope": "generic"
+  }
+]

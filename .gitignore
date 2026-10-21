@@ -1,0 +1,27 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+runtime/
+data/raw/
+*.sqlite3*
+.DS_Store
+# Private assignment documents in the project root
+/AI*.pdf
+# Credentials and personal machine configuration
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+.aws/
+.agents/
+.codex/
+.idea/
+.vscode/
+*.log

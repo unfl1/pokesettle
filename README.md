@@ -1,0 +1,100 @@
+# PokéCoach AI
+
+Pokémon Champions 랭크 싱글 준비·복기를 목표로 하는 근거 기반 지식 서비스입니다. 현재 **Phase 1 데이터·RAG 백엔드**를 구현했습니다. React 화면, 자연어 조건 탐색 UI, 운용 가이드, 팀·전투 계산은 후속 단계입니다.
+
+현재 데이터는 **일반 PokéAPI 기본 포켓몬 100종**과 종별 설명 문서입니다. Champions 참가 가능 100종이라는 뜻이 아닙니다. 참가 가능 여부·육성·레벨·데미지·승률은 미확인으로 두고 배틀 계산을 제공하지 않습니다.
+
+## 실행
+
+Python 3.10 이상(검증 환경 3.12), [uv](https://docs.astral.sh/uv/)를 사용합니다. 과제 PDF 지정 버전은 `pyproject.toml`, 전이 의존성까지 확정한 버전은 `uv.lock`에 있습니다.
+
+```bash
+uv sync --python 3.12 --frozen --group dev
+```
+
+`.env.example`을 참고해 **서버 전용 `.env`**를 설정합니다. 이미 로컬 설정 파일이 있다면 덮어쓰지 마세요. 필요한 값은 API 키, 모델 ID, 공급자의 base URL입니다. 키를 화면·코드·Git에 넣지 않습니다.
+
+GMS 사용 시 공식 [Quickstart](https://gms.ssafy.io/api/v1/guides/Quickstart)에 따라 다음 구성을 사용합니다:
+
+```dotenv
+OPENAI_API_KEY=여기에_본인의_GMS_키를_로컬에서_설정
+OPENAI_BASE_URL=https://gms.ssafy.io/gmsapi/api.openai.com/v1
+CHAT_MODEL=gpt-4.1-mini
+LANGSMITH_TRACING=false
+```
+
+일반 OpenAI 키를 사용하는 경우 `OPENAI_BASE_URL`은 비워 둡니다. 지원하는 구조화 출력 모델을 지정해야 합니다. 모델 호출은 해당 공급자의 크레딧을 사용합니다.
+
+```bash
+# 배포된 pokemon.json과 종별 문서가 있으면 수집은 생략할 수 있습니다.
+uv run --frozen python -m backend.scripts.prepare_data --count 100
+
+# 첫 실행은 로컬 임베딩 모델 다운로드가 필요합니다.
+uv run --frozen python -m backend.scripts.index_data
+
+uv run --frozen uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+API 문서는 서버 실행 후 [로컬 Swagger UI](http://127.0.0.1:8000/docs)에서 확인할 수 있습니다. 서버는 개인용 로컬 단일 프로세스 기준입니다. 초기 수집·일괄 색인 스크립트와 서버의 쓰기 작업을 동시에 실행하지 마세요.
+
+## API 사용 순서
+
+1. `GET /api/status`에서 색인 수와 모델 설정 상태를 확인합니다.
+2. `POST /api/session`으로 HttpOnly 세션 쿠키를 받습니다.
+3. `GET /api/pokemon` 또는 `GET /api/pokemon/pokemon:25`로 항목을 선택합니다.
+4. `POST /api/chat`에 아래 형태로 질문합니다. 응답은 202와 `statusUrl`입니다.
+5. 같은 세션 쿠키로 `GET statusUrl`을 조회해 진행 단계와 완료 결과를 받습니다.
+
+```json
+{
+  "pokemonId": "pokemon:25",
+  "question": "피카츄의 타입과 특성 이름을 알려줘",
+  "clientRequestId": "a7ee1797-1128-462f-95f1-c988973946a2"
+}
+```
+
+새 질문마다 새 UUID를 사용합니다. 동일 요청 ID와 본문은 동일 작업을 반환하며, ID가 같고 본문이 다르면 409입니다. 기존 대화를 이어갈 때는 이전 결과의 `conversationId`를 추가합니다. 포켓몬·규칙이 다르면 대화를 분리합니다.
+
+별도 `POST /api/documents/collect`로 질문에 필요한 문서만 준비할 수도 있습니다. `/api/chat`은 이 준비를 자동 수행하므로 선행 호출은 필수가 아닙니다. 현재 규칙 레지스트리는 비어 있으며 등록하지 않은 `regulationId`는 422로 거부합니다. 미검증 M-C 적격 목록을 임의 등록하지 않았습니다.
+
+## RAG와 데이터
+
+- `pokemon_meta`: 항목당 1개 텍스트, 고정 ID upsert. 선택 포켓몬의 메타는 항상 근거에 포함합니다.
+- `pokemon_docs`: 별도 종별 설명/관련 리소스 청크. 항목·문서·인덱스 버전·순번을 포함하는 ID로 충돌을 막습니다.
+- Prompt 1 검색어 추출 → PokéAPI 리소스 목록에서 후보 검색 → Prompt 2 선별 → 본문 수집·청킹·색인. 자체 문서는 선별·길이 규칙보다 우선해 유지합니다.
+- LangGraph `retrieve → generate`, Prompt 3 근거 기반 생성. 답변에서 실제 인용한 근거만 출처 목록에 남깁니다. 미지원 질문은 유보합니다.
+- HTTP 원문·검색 후보·검색어·문서 선별 완료 상태를 SQLite에 캐시합니다. 청킹 설정 변경은 저장 본문으로 재색인하며 이전 청크를 제거합니다. 같은 검색어라도 질문이 바뀌면 저장 후보를 다시 선별합니다.
+- 백그라운드 작업 상태는 SQLite에 저장하고 재시작 후 진행 중 작업은 `interrupted`로 표시합니다.
+
+현재 외부 검색은 PokéAPI의 종·해당 포켓몬의 특성·타입 **정확한 리소스 이름 검색**입니다. 일반 웹 전략 검색이나 위키백과 수집은 아직 제공하지 않습니다. 종별 본문은 원래 게임 버전 표기를 유지하며 Champions 전용 전략으로 취급하지 않습니다.
+
+`CHUNK_SIZE=1000`, `CHUNK_OVERLAP=200`, `TOP_K=6`이 초기값입니다. Top-k는 선택 메타 1개를 포함한 총 근거 수입니다. `runtime/`에는 SQLite·Chroma·원문 캐시·임베딩 모델이 저장됩니다. 이 경로와 `.env`는 Git 제외 대상입니다.
+
+로컬 ONNX `all-MiniLM-L6-v2`를 사용합니다. 영어 중심 모델이므로 한국어 질문의 검색 품질은 제한이 있습니다. 현재 검색어의 영문 리소스 이름을 질문과 함께 사용하며, 한국어 의미 검색의 충분한 품질을 보장하지 않습니다. 검증된 모델 교체 시에는 별도 저장 경로로 전체 재색인해야 합니다. 지원 모델을 자동으로 바꾸지 않습니다.
+
+## 검증
+
+```bash
+uv run --frozen pytest -q
+uv run --frozen ruff check backend
+uv run --frozen ruff format --check backend
+
+# 실제 데이터와 로컬 임베딩만 검사
+uv run --frozen python -m backend.scripts.verify_phase1
+
+# 설정한 공급자의 실제 모델을 호출: 메타/외부문서 인용·유보·캐시 확인
+uv run --frozen python -m backend.scripts.verify_phase1 --live
+```
+
+단위 테스트는 명시적인 테스트 대역을 사용하며 실제 모델 품질을 대신하지 않습니다. 실제 데이터·임베딩·GMS 실행 증거는 [검증 결과](docs/TEST_RESULTS.md)와 [증거 JSON](docs/evidence/phase1.json)에 별도로 기록합니다. API 키나 프롬프트 전문은 증거 파일에 저장하지 않습니다.
+
+## 출처와 문서
+
+기초 데이터는 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv), 설명은 [PokéAPI v2](https://pokeapi.co/docs/v2)에서 수집했습니다. 출처 URL·수집 시각·해시·이용 조건을 기록하고, 프로젝트 [라이선스 원문](data/licenses/POKEAPI_LICENSE.md)을 보존합니다. Pokémon 이름·원문 설명 등의 권리는 원 권리자에게 있으며 소프트웨어 라이선스를 이미지/상표 등 전체 권리 허가로 해석하지 않습니다. 공식 이미지와 스프라이트는 수집하지 않았습니다.
+
+- [요구사항 및 단계 계획](docs/REQUIREMENTS.md)
+- [아키텍처와 데이터 설계](docs/ARCHITECTURE.md)
+- [API 계약과 Phase 1 구현 범위](docs/API_SPEC.md)
+- [출처·규칙 검증 기록](docs/DATA_SOURCES.md)
+
+Phase 2는 별도 요청 후 진행합니다. Streamlit은 PDF 준비 기술 목록에 따라 지정 버전의 `assignment-ui` 선택 의존성으로 보존했으며, UI를 구현하지 않은 Phase 1 기본 설치에는 포함하지 않습니다. React 제출 경로의 수용 여부는 여전히 별도 확인 항목입니다.
