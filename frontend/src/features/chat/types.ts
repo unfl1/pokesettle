@@ -28,6 +28,7 @@ export interface GroundedResult {
     scope: string;
     state: { ownHpPercent?: number; ownMoves?: string[]; ownAttackTypes?: string[]; requestedDefensiveType?: string };
     recommendation: string;
+    selection?: { candidateCount: number; scoreKind: string };
     switches?: { pokemonId: string; name: string; worstMultiplier: number; comparisonOrder: number; hpPercent: number | null; defense: {type: string; multiplier: number}[] }[];
     knownMoves?: {side: string; name: string; nameKo: string | null; type: string; category: string}[];
     damageComparisons?: {calculation: {damage: {minimum: number; maximum: number}}}[];

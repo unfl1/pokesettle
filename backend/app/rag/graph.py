@@ -181,7 +181,9 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 {
                     "evidence_id": "battle-calculation:" + digest(context),
                     "document_id": "battle-type-scenario",
-                    "title": "일반 타입표로 계산한 현재 대면 · 조건부 판단",
+                    "title": "6대6 선출 비교 · 일반 타입 기준"
+                    if context.get("scope") == "generic_team_selection"
+                    else "일반 타입표로 계산한 현재 대면 · 조건부 판단",
                     "source_type": "calculation",
                     "source_url": source["source_url"],
                     "collected_at": source["collected_at"],
@@ -240,6 +242,10 @@ def build_graph(vector_store, model, stage=lambda _: None):
                             )
                         ]
                         context = state["battle_context"]
+                        if context.get("scope") == "generic_team_selection":
+                            # The selection rank is computed, not an invitation to invent
+                            # per-species abilities or reinterpret unrelated strategy prose.
+                            extra = []
                         if not any(
                             context["state"].get(key) for key in ("own_ability", "opponent_ability")
                         ):
@@ -256,7 +262,11 @@ def build_graph(vector_store, model, stage=lambda _: None):
                         output = Generation(
                             answer_status="partial",
                             claims=[
-                                *calculated.claims,
+                                *[
+                                    claim
+                                    for claim in calculated.claims
+                                    if not claim.text.startswith("주의사항\n")
+                                ],
                                 *[
                                     claim
                                     for claim in extra
@@ -267,6 +277,11 @@ def build_graph(vector_store, model, stage=lambda _: None):
                                         for item in state["evidence"]
                                     )
                                 ][:2],
+                                *[
+                                    claim
+                                    for claim in calculated.claims
+                                    if claim.text.startswith("주의사항\n")
+                                ],
                             ],
                             assumptions=list(dict.fromkeys(calculated.assumptions)),
                             unknowns=list(dict.fromkeys(calculated.unknowns))[:2],

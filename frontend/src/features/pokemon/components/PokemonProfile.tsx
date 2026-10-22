@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, CircleHelp } from 'lucide-react';
+import { ArrowUpRight, CircleHelp } from 'lucide-react';
 import { useState } from 'react';
 import { typeLabels } from '../typeLabels';
 import PokemonImage from './PokemonImage';
@@ -13,15 +13,7 @@ const statLabels: Record<StatName, string> = {
   spDefense: '특수방어',
   speed: '스피드',
 };
-export function PokemonProfile({
-  pokemon,
-  onGuide,
-  disabled,
-}: {
-  pokemon: PokemonDetail;
-  onGuide: () => void;
-  disabled: boolean;
-}) {
+export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
   const [learnMethod, setLearnMethod] = useState('all');
   const [learnType, setLearnType] = useState('all');
   const maximum = Math.max(...Object.values(pokemon.baseStats));
@@ -53,22 +45,18 @@ export function PokemonProfile({
           </div>
         </div>
         <div className="ml-auto border-l border-l-[#2b3644] pl-5.5 text-[10px] max-phone:w-full [&_p]:mx-0 [&_p]:mt-1.5 [&_p]:mb-2.5 [&_p]:text-[11px] [&_p]:text-[#c0cedd]">
-          <span className="text-[9px] text-[#7d91a7]">특성 · 원문 이름</span>
-          <p>{pokemon.abilities.join(' / ')}</p>
+          <span className="text-[10px] text-[#9eafc1]">특성</span>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-2 mb-3">
+            {(pokemon.abilityDetails ?? pokemon.abilities.map(name => ({name, nameKo: null}))).map(ability => <div key={ability.name}>
+              <strong className="block text-[13px] font-semibold text-[#d2e9dc]">{ability.nameKo ?? '한국어 명칭 미등록'}</strong>
+              <span className="block mt-1 text-[10px] text-[#8295a8]">{ability.name}</span>
+            </div>)}
+          </div>
           <span className="gap-[5px] flex items-center text-[9px] text-[#8295a8]">
             <CircleHelp size={12} />
             Champions 적격성 미확인
           </span>
         </div>
-        <button
-          className="px-3 py-2.5 border border-[#a7efc540] gap-2 ml-auto flex items-center rounded-[6px] text-[10px] text-[#b8ddc8] whitespace-nowrap max-tablet:p-[9px] max-tablet:text-[9px] max-phone:w-full max-phone:justify-center"
-          onClick={onGuide}
-          disabled={disabled}
-        >
-          <BookOpen size={15} />
-          근거 운용 가이드
-          <ArrowUpRight size={15} />
-        </button>
       </div>
       <div
         className="border-t border-t-[#283341] [&>summary]:px-5.5 [&>summary]:py-[9px] [&>summary]:flex [&>summary]:items-center [&>summary]:justify-between [&>summary]:text-[#8295a8] [&>summary]:text-[9px] [&>summary]:cursor-pointer [&>summary]:list-none [&[open]>summary_svg]:transform-[rotate(180deg)]"

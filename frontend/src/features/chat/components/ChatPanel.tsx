@@ -47,7 +47,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
   const loading = w.messages.isPending && Boolean(w.conversationId);
   return (
     <section
-      className="border border-[#334150] rounded-[12px] bg-[#171f2a] overflow-hidden"
+      className="border border-[#334150] rounded-[12px] bg-[#171f2a] overflow-hidden max-tablet:order-first"
       aria-label="전략 대화"
     >
       <header className="px-5.5 py-4.5 gap-[11px] flex items-center border-b border-b-[#2b3746] max-desktop:p-[17px] max-phone:gap-2 max-phone:flex-wrap [&_h2]:text-[13px] [&_h2]:font-semibold [&_p]:text-[9px] [&_p]:text-[#8194aa] [&_p]:mt-[5px] max-tablet:[&_p]:text-[8px]">

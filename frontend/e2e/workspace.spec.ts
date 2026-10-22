@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false, coach = false) {
+async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false, coach = false, selection = false) {
   const pokemon = [
     {
       pokemonId: 'pokemon:25',
@@ -95,6 +95,7 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
           speed: 90,
         },
         abilities: ['static', 'lightning-rod'],
+        abilityDetails: [{name: 'static', nameKo: '정전기'}, {name: 'lightning-rod', nameKo: '피뢰침'}],
         description: `${p.nameKo} 도감 설명`,
         descriptionVersion: 'shield',
         learnset: { versionGroup: 'champions', moves: [{ name: '10만볼트', method: 'train', level: 0, type: 'electric', category: 'special', power: 90, accuracy: 100 }, { name: '울음소리', method: 'level-up', level: 1, type: 'normal', category: 'status', power: null, accuracy: 100 }] },
@@ -188,7 +189,7 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
         unknowns: curated ? [{ field: 'team', reason: '현재 HP와 네 기술을 알려주세요.' }] : [],
         feature: j.kind,
         conversationId: j.conversationId,
-        ...(coach ? { battleContext: {
+        ...(selection ? {battleContext: {scope: 'generic_team_selection', state: {}, recommendation: 'recommend_three', selection: {candidateCount: 20, scoreKind: 'heuristic_not_probability'}}} : coach ? { battleContext: {
           ownName: '이상해꽃', opponentName: '리자몽', scope: 'generic_type_scenario',
           state: { ownHpPercent: 40, requestedDefensiveType: 'water' },
           recommendation: 'consider_switch_first',
@@ -262,18 +263,12 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
 });
 
-test('가이드도 대화에 표시하고 자연어 검색은 명확화·빈 결과를 구분', async ({
+test('도감 가이드 버튼 제거와 자연어 검색의 명확화·빈 결과 구분', async ({
   page,
 }) => {
   await fixture(page);
   await page.goto('/');
-  await page.getByRole('button', { name: '근거 운용 가이드' }).click();
-  await expect(
-    page.getByText('근거 기반 운용 가이드', { exact: true }).last(),
-  ).toBeVisible();
-  await expect(page.locator('[data-testid="answer-label"]')).toContainText(
-    '근거 기반 운용 가이드',
-  );
+  await expect(page.getByRole('button', { name: '근거 운용 가이드', exact: true })).toHaveCount(0);
   await page
     .getByRole('button', { name: '조건으로 찾기', exact: true })
     .click();
@@ -327,7 +322,7 @@ for (const missing of ['MODEL_KEY_MISSING', 'INDEX_NOT_READY'])
     await expect(
       page.getByRole('button', { name: '질문 보내기' }),
     ).toBeEnabled();
-    await expect(page.getByRole('button', { name: '근거 운용 가이드', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '근거 운용 가이드', exact: true })).toHaveCount(0);
   });
 
 test('모바일 화면에 가로 넘침 없음', async ({ page }) => {
@@ -626,7 +621,10 @@ test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복�
   await page.goto('/');
   await expect(page.getByText('피카츄 도감 설명', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '종족값', exact: true })).toBeVisible();
-  await expect(page.getByText('static / lightning-rod', { exact: true })).toBeVisible();
+  await expect(page.getByText('정전기', { exact: true })).toBeVisible();
+  await expect(page.getByText('피뢰침', { exact: true })).toBeVisible();
+  await expect(page.getByText('static', { exact: true })).toBeVisible();
+  await expect(page.getByText('lightning-rod', { exact: true })).toBeVisible();
   await expect(page.getByTestId('pokemon-learnset')).toContainText('10만볼트');
   await expect(page.getByTestId('pokemon-learnset')).toContainText('트레이닝');
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
@@ -653,4 +651,16 @@ test('습득 기술을 타입별 카드로 표시하고 습득 방법으로 필�
   await expect(electric).toContainText('10만볼트');
   await page.getByRole('button', { name: '전체', exact: true }).click();
   await expect(normal).toBeVisible();
+});
+
+
+test('챗봇 선출 결과는 6대6 조합 수를 표시하고 대면 미확인으로 표시하지 않음', async ({page}) => {
+  await fixture(page, [], false, false, false, false, true);
+  await page.goto('/');
+  await page.getByLabel('포켓몬 질문').fill('내 팀과 상대 팀 6마리로 3마리 선출 추천해줘');
+  await page.getByRole('button', {name: '질문 보내기'}).click();
+  const context = page.getByLabel('현재 전투 입력');
+  await expect(context).toContainText('6대6 엔트리 비교 · 20개 선출 조합 평가');
+  await expect(context).not.toContainText('내 포켓몬 미확인');
+  await expect(context).not.toContainText('상대 미확인');
 });

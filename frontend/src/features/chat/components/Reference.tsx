@@ -134,7 +134,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
       </div>
       {result.battleContext && (
         <div className="mb-3 rounded-[6px] border border-[#344253] p-3 text-[11px] leading-[1.9] text-[#a3b2c3]" aria-label="현재 전투 입력">
-          <p>현재 입력: {result.battleContext.ownName ?? '내 포켓몬 미확인'} / 상대 {result.battleContext.opponentName ?? '미확인'}</p>
+          {result.battleContext.scope === 'generic_team_selection' ? <p>6대6 엔트리 비교{result.battleContext.selection ? ` · ${result.battleContext.selection.candidateCount}개 선출 조합 평가` : ' · 엔트리 확인 필요'}</p> : <p>현재 입력: {result.battleContext.ownName ?? '내 포켓몬 미확인'} / 상대 {result.battleContext.opponentName ?? '미확인'}</p>}
           {result.battleContext.state.ownHpPercent !== undefined && <p>내 남은 HP: {result.battleContext.state.ownHpPercent}%</p>}
           {result.battleContext.state.ownMoves?.length ? <p>입력한 기술: {result.battleContext.state.ownMoves.join(', ')}</p> : null}
           {result.battleContext.state.requestedDefensiveType && <p>요청한 방어 타입: {result.battleContext.state.requestedDefensiveType} · 가정 비교, 실제 사용 확정 아님</p>}
