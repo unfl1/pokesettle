@@ -2,7 +2,7 @@
 
 확인일: 2026-10-21 (Asia/Seoul). 이 날짜는 웹 문서 **확인일**임. 실제 데이터셋 수집일이나 100건 확보일이 아님. 현재 수집·색인 데이터는 0건임.
 
-> 위 문장은 Phase 0 조사 당시 기록임. **Phase 1에서는 실제 100종과 자체 설명 문서 100개를 확보했다.** 현재 수집 내역은 아래 7절 및 [실행 결과](TEST_RESULTS.md)를 따름. 공식 Champions 규칙의 미확인 사항은 해소된 것으로 간주하지 않음.
+> 위 문장은 Phase 0 조사 당시 기록임. **Phase 1에서는 실제 100종과 자체 설명 문서 100개를 확보했다.** 현재 수집 내역은 아래 7절 및 [실행 결과](../reports/TEST_RESULTS.md)를 따름. 공식 Champions 규칙의 미확인 사항은 해소된 것으로 간주하지 않음.
 
 ## 1. 출처 등록부
 
@@ -80,11 +80,11 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 ## 7. Phase 1 실제 수집·연동 기록
 
-- 수집일: 2026-10-21. 기초 자료는 PokéAPI 공식 저장소의 `data/v2/csv/` 내 pokemon, pokemon_stats, pokemon_types, types, pokemon_abilities, abilities, pokemon_species_names 7개 CSV임. URL·정규화 전 원문 해시·실제 UTC 수집 시각은 [`data/sources.json`](../data/sources.json)에 있음.
-- 기본 종 ID 1~100의 기본 폼만 선별해 [`data/pokemon.json`](../data/pokemon.json)에 100건을 저장함. 한국어 이름은 공급자의 한국어 언어 ID 3 매핑을 사용함. 원문에 없는 한국어 특성/기술명은 추가하지 않음.
-- 외부 자체 문서는 `https://pokeapi.co/api/v2/pokemon-species/{id}/`의 종별 API 응답을 텍스트로 변환함. 원본 해시·시각·URL·권리·원래 게임 버전이 있는 [`data/documents/species.json`](../data/documents/species.json)에 항목별 연결 100건을 저장함. 위키백과 문서를 수집한 것으로 표시하지 않음.
+- 수집일: 2026-10-21. 기초 자료는 PokéAPI 공식 저장소의 `data/v2/csv/` 내 pokemon, pokemon_stats, pokemon_types, types, pokemon_abilities, abilities, pokemon_species_names 7개 CSV임. URL·정규화 전 원문 해시·실제 UTC 수집 시각은 [`data/sources.json`](../../data/sources.json)에 있음.
+- 기본 종 ID 1~100의 기본 폼만 선별해 [`data/pokemon.json`](../../data/pokemon.json)에 100건을 저장함. 한국어 이름은 공급자의 한국어 언어 ID 3 매핑을 사용함. 원문에 없는 한국어 특성/기술명은 추가하지 않음.
+- 외부 자체 문서는 `https://pokeapi.co/api/v2/pokemon-species/{id}/`의 종별 API 응답을 텍스트로 변환함. 원본 해시·시각·URL·권리·원래 게임 버전이 있는 [`data/documents/species.json`](../../data/documents/species.json)에 항목별 연결 100건을 저장함. 위키백과 문서를 수집한 것으로 표시하지 않음.
 - API의 공개 리소스 목록(`pokemon-species`, `ability`, `type`)을 후보 이름/URL 검색에 사용함. 본문은 LLM 선별 후에만 받음. 종 자체 문서는 선별에 관계없이 수집함. 최초 데이터 준비는 모델을 사용하지 않는 자체 문서 일괄 확보이며, 실시간 질문 경로에서는 세 프롬프트를 모두 거침.
-- PokéAPI fair-use의 로컬 캐시·교육용 사용 취지에 따라 직렬 수집함. [프로젝트 라이선스 원문](../data/licenses/POKEAPI_LICENSE.md)을 보존하고 설명·이름 등의 원 권리를 별도로 명시함. 승인된 수집 범위는 이 출처의 교육용 로컬 데이터 이용이며 공식 이미지·게임 원문 전체 재배포의 포괄 허가를 뜻하지 않음.
+- PokéAPI fair-use의 로컬 캐시·교육용 사용 취지에 따라 직렬 수집함. [프로젝트 라이선스 원문](../../data/licenses/POKEAPI_LICENSE.md)을 보존하고 설명·이름 등의 원 권리를 별도로 명시함. 승인된 수집 범위는 이 출처의 교육용 로컬 데이터 이용이며 공식 이미지·게임 원문 전체 재배포의 포괄 허가를 뜻하지 않음.
 - 최초 107회 외부 호출(7 CSV+100종 문서), 동일 데이터 준비 재실행은 외부 호출 0회·캐시 적중 207회였음. 실제 모델 질의의 관련 특성 문서는 같은 API 출처에서 추가 수집할 수 있음.
 - GMS 공식 [Quickstart](https://gms.ssafy.io/api/v1/guides/Quickstart)와 [gpt-4.1-mini 안내](https://gms.ssafy.io/api/v1/guides/gpt-4.1-mini)에서 OpenAI 호환 base URL·Bearer 인증을 확인함. 제공된 키는 로컬 `.env`에만 저장하고, 본 문서·소스·증거 파일에는 넣지 않음.
 - 모델의 구조화 출력은 [OpenAI 공식 문서](https://developers.openai.com/api/docs/guides/structured-outputs)를 참고하고 LangChain `with_structured_output`으로 검증함. [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api), [Chroma 임베딩](https://docs.trychroma.com/docs/embeddings/embedding-functions)을 확인해 구현함.
@@ -108,11 +108,11 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - URL의 실제 존재 여부는 이미지 로딩으로 확인하며 일러스트→스프라이트→대체 아이콘으로 실패를 처리함.
 - 데이터의 이미지 검증 상태도 unknown으로 두며 표시된 이미지로 Champions 적격성을 판단하지 않음.
 
-검증 결과와 한계는 [보완 보고서](CATALOG_EXPANSION.md), 수량은 [수집 보고서](../data/catalog_report.json)를 참조함.
+검증 결과와 한계는 [보완 보고서](../reports/CATALOG_EXPANSION.md), 수량은 [수집 보고서](../../data/catalog_report.json)를 참조함.
 
 ## 9. Phase 3 일반 타입표·규칙 확인 (2026-10-21)
 
-- 타입 자료: PokéAPI 공식 CSV `types.csv`, `type_efficacy.csv`. 18개 일반 타입·324개 공격/방어 관계를 [type_chart.json](../data/type_chart.json)에 저장함.
+- 타입 자료: PokéAPI 공식 CSV `types.csv`, `type_efficacy.csv`. 18개 일반 타입·324개 공격/방어 관계를 [type_chart.json](../../data/type_chart.json)에 저장함.
 - `backend/scripts/prepare_battle_data.py`로 수집·캐시·재실행 가능. 원문 URL·실제 수집 시각·내용 해시·라이선스 URL을 데이터에 기록함.
 - 기존 PokéAPI 라이선스와 원 권리 표기 유지. 현재 Champions 타입 효과의 게임 내 대조 검증은 미실시이므로 `scope=generic`, `champions_verification_status=unknown` 유지.
 - [Champions 공식 gameplay](https://champions.pokemon.com/en-us/gameplay/)와 [일본 공식 배틀 안내](https://www.pokemonchampions.jp/ja/battle/)에서 싱글/더블 구분·레귤레이션별 참가 조건 변경·메가 관련 일반 안내 확인. 두 페이지는 현행 적격 명단이나 상세 전투 공식의 근거로 사용하지 않음.

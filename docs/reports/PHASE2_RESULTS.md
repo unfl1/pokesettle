@@ -1,10 +1,10 @@
 # Phase 2 구현·검증 결과
 
-> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](../guides/POSTGRESQL_MIGRATION.md) 참조.
 
 > 후속 보완: 전체 1,025종·별도 폼 326개 및 이미지 표시는 [전체 도감 보완 결과](CATALOG_EXPANSION.md)를 따름. 아래 100종 제한과 28/8개 테스트는 초기 Phase 2 기록임.
 
-검증일: 2026-10-21. 범위는 `PROJECT_SPEC.md`의 Phase 2임. **챗봇을 주 화면**으로 만들었고 Phase 3·4의 팀·전투 계산은 시작하지 않음.
+검증일: 2026-10-21. 범위는 `docs/design/PROJECT_SPEC.md`의 Phase 2임. **챗봇을 주 화면**으로 만들었고 Phase 3·4의 팀·전투 계산은 시작하지 않음.
 
 ## 구현
 
@@ -24,10 +24,10 @@
 | Ruff 검사·형식 | 통과 | `ruff check backend`, `ruff format --check backend` |
 | TypeScript 엄격 검사·Vite 배포 빌드 | 통과 | `pnpm --dir frontend build` |
 | 브라우저 통합 테스트 | 8개 통과, 실제 설치 Chrome / API 대역 | `frontend/e2e/workspace.spec.ts` |
-| 실제 GMS 조건 검색 | 전기 타입 AND 스피드 종족값 ≥90: 피카츄·라이츄·찌리리공 3종, 도감 원본과 집합 일치 | [실제 실행](evidence/phase2.json) |
+| 실제 GMS 조건 검색 | 전기 타입 AND 스피드 종족값 ≥90: 피카츄·라이츄·찌리리공 3종, 도감 원본과 집합 일치 | [실제 실행](../evidence/phase2.json) |
 | 모호·미지원 조건 실제 모델 | “빠르고 땅 공격 무효”에 확정 결과를 내지 않고 구체화 요청 | 같은 실행의 `ambiguous_and_unsupported_clarified` |
 | 실제 GMS 가이드 | `partial`, 실제 사용 근거 6개, 미확인 2개, 대화 저장·항목 분리 확인 | 같은 실행의 `guide` |
-| 실제 브라우저↔FastAPI↔GMS | 기본 질문 답변, 인용 링크, A→B→A, 새로고침, 모바일 넘침 및 브라우저 오류 확인 | [브라우저 요약](evidence/phase2-browser.json) |
+| 실제 브라우저↔FastAPI↔GMS | 기본 질문 답변, 인용 링크, A→B→A, 새로고침, 모바일 넘침 및 브라우저 오류 확인 | [브라우저 요약](../evidence/phase2-browser.json) |
 | 민감정보 검사 | Git 대상 후보 파일과 프론트 빌드에서 실제 모델 키 문자열 발견 없음 | 로컬 검사. 키 값은 증거에 남기지 않음 |
 
 브라우저 8개 시나리오는 기록 분리·새로고침/새 대화·출처 링크, 가이드 표시·조건 검색, 네트워크 재시도·진행 중 새로고침·HTML 비실행, 키 누락, 색인 누락, 모바일 넘침, 이름 검색 빈 결과·무인용 안내, 모바일 챗봇 우선 배치를 검증함. 결정적 대역 테스트와 실제 모델 실행은 구분함.

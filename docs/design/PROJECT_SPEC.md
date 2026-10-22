@@ -195,7 +195,6 @@ Components: `AppLayout`, `PokemonCard`, `PokemonSelector`, `TypeBadge`, `StatsPa
 ```text
 poketact/
 ├── AGENTS.md
-├── PROJECT_SPEC.md
 ├── 요구사항정의.pdf
 ├── README.md
 ├── .gitignore
@@ -213,14 +212,19 @@ poketact/
 │   └── tests/
 ├── damage_service/           # optional; add only if needed
 ├── data/{regulations,documents}/
-└── docs/{REQUIREMENTS.md,ARCHITECTURE.md,API_SPEC.md,DATA_SOURCES.md,TEST_RESULTS.md}
+└── docs/
+    ├── README.md
+    ├── design/{PROJECT_SPEC.md,REQUIREMENTS.md,ARCHITECTURE.md,API_SPEC.md,BACKEND_STRUCTURE.md}
+    ├── guides/{DATA_SOURCES.md,POSTGRESQL_MIGRATION.md}
+    ├── reports/                 # phase and validation reports
+    └── evidence/                # original execution snapshots
 ```
 
 Do not create empty boilerplate directories unnecessarily. Start small and evolve as features are implemented.
 
 ## 11. Implementation phases
 
-**Phase 0 — Plan only:** inspect repository and PDF, map F2001–F2012 and NF items, verify Champions sources/mechanics/usage conditions, define data schemas, API contract and technical risk register. Output `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, `docs/API_SPEC.md`. **Stop before implementation.**
+**Phase 0 — Plan only:** inspect repository and PDF, map F2001–F2012 and NF items, verify Champions sources/mechanics/usage conditions, define data schemas, API contract and technical risk register. Output `docs/design/REQUIREMENTS.md`, `docs/design/ARCHITECTURE.md`, `docs/guides/DATA_SOURCES.md`, `docs/design/API_SPEC.md`. **Stop before implementation.**
 
 **Phase 1 — Mandatory RAG data and backend:** 100+ validated records; both PostgreSQL/pgvector logical collections; three prompts; outside documents + selection + caching + chunking; LangGraph retrieval/generation and source citations; tests F2001–F2008.
 
@@ -246,4 +250,4 @@ Each phase requires a concise report: changed files, tests executed/results, com
 
 ## 13. First Codex instruction (Phase 0 only)
 
-Read `AGENTS.md`, this `PROJECT_SPEC.md`, and `요구사항정의.pdf`. Treat mandatory requirements from the original PDF as authoritative. Check external rules/data you can actually verify; list unknowns instead of guessing. Create `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, and `docs/API_SPEC.md` with the F2001–F2012 mapping, regulated Pokémon data plan, two-collection RAG flow, proposed API and phase breakdown. **Do not implement application code in this first task.** Report results and wait for approval of Phase 1.
+Read `AGENTS.md`, this `docs/design/PROJECT_SPEC.md`, and `요구사항정의.pdf`. Treat mandatory requirements from the original PDF as authoritative. Check external rules/data you can actually verify; list unknowns instead of guessing. Create `docs/design/REQUIREMENTS.md`, `docs/design/ARCHITECTURE.md`, `docs/guides/DATA_SOURCES.md`, and `docs/design/API_SPEC.md` with the F2001–F2012 mapping, regulated Pokémon data plan, two-collection RAG flow, proposed API and phase breakdown. **Do not implement application code in this first task.** Report results and wait for approval of Phase 1.

@@ -1,6 +1,6 @@
 # Phase 1 구현 및 검증 결과
 
-> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](../guides/POSTGRESQL_MIGRATION.md) 참조.
 
 검증일: 2026-10-21 (Asia/Seoul). 범위: 필수 RAG 데이터·백엔드. **Phase 2 UI와 Phase 3·4 배틀/심화 기능은 시작하지 않았다.**
 
@@ -19,11 +19,11 @@
 
 | 검증 | 결과 | 증거 |
 |---|---|---|
-| PDF 지정 의존성 해결·설치 | 성공, 기본 백엔드 의존성 지정 버전 유지 | `pyproject.toml`, `uv.lock`, [환경 스냅샷](evidence/environment.json) |
-| 실제 데이터 준비 | 100 고유 종 / 한국어 이름 100 / 자체 문서 100 | [메타](../data/pokemon.json), [종별 문서](../data/documents/species.json), [출처](../data/sources.json) |
+| PDF 지정 의존성 해결·설치 | 성공, 기본 백엔드 의존성 지정 버전 유지 | `pyproject.toml`, `uv.lock`, [환경 스냅샷](../evidence/environment.json) |
+| 실제 데이터 준비 | 100 고유 종 / 한국어 이름 100 / 자체 문서 100 | [메타](../../data/pokemon.json), [종별 문서](../../data/documents/species.json), [출처](../../data/sources.json) |
 | 동일 데이터 재수집 | 외부 호출 0회, HTTP 캐시 적중 207회 | 최초 107회(7 CSV+100종 API)와 재실행 출력 대조 |
-| 실제 의미 임베딩·초기 색인 | 메타 100개, 종별 문서 461청크 | [초기 색인 보고서](../data/index_report.json) |
-| 라이브 질의 후 색인 | 메타 100개, 전체 외부 문서 462청크. 추가 특성 문서 포함 | [실행 증거](evidence/phase1.json)의 `final_counts` |
+| 실제 의미 임베딩·초기 색인 | 메타 100개, 종별 문서 461청크 | [초기 색인 보고서](../../data/index_report.json) |
+| 라이브 질의 후 색인 | 메타 100개, 전체 외부 문서 462청크. 추가 특성 문서 포함 | [실행 증거](../evidence/phase1.json)의 `final_counts` |
 | 전체 자료 재색인 | 메타 100→100, 외부 462→462. 동적 관련 문서를 보존 | 실행 증거의 `before_rerun`, `after_rerun` |
 | 실제 원문 청킹 설정 변경 | 첫 종 문서 1000/200=3청크, 500/100=6청크, 이전 청크 제거 | 실행 증거의 `chunk_comparison`. 별도 임시 색인으로 검사 |
 | 실제 Top-k 변경 | 동일 피카츄 질문에 총 근거 6개→2개, 두 경우 모두 선택 메타 보존 | 실행 증거의 `top_k_comparison`, `sample_evidence` |
@@ -32,9 +32,9 @@
 | 실제 GMS 외부 문서 질문 | 볼·꼬리 설명에 종별 API 청크 인용 | 실행 증거의 `live_model.cases[1]`. 해당 청크 본문과 주장 수동 대조 |
 | 실제 GMS 미지원 질문 | Champions 경기 승률을 생성하지 않고 `abstained`, 인용 없음 안내 | 실행 증거의 마지막 case |
 | 동일 질문 문서 준비 재실행 | 외부 호출 0회 | 실행 증거의 `repeated_collection.cache` |
-| 자동 테스트 | 22개 통과 | [테스트 출력](evidence/pytest.txt), `backend/tests/` |
+| 자동 테스트 | 22개 통과 | [테스트 출력](../evidence/pytest.txt), `backend/tests/` |
 | 정적 검사·형식·컴파일·의존성 검사 | Ruff 검사·형식 검사·Python 컴파일 통과, 설치된 118개 패키지 호환 | `ruff check`, `ruff format --check`, `compileall`, `uv pip check` |
-| API 계약 | 실제 생성된 OpenAPI 스냅샷 저장 | [OpenAPI](evidence/openapi.json) |
+| API 계약 | 실제 생성된 OpenAPI 스냅샷 저장 | [OpenAPI](../evidence/openapi.json) |
 
 자동 테스트에서는 명시적인 임베딩·모델·외부 출처 대역을 사용함. 이 테스트들은 결정적 오류 처리를 검증하며 실제 모델 품질의 증거로 간주하지 않음. 실제 100건·ONNX 임베딩·GMS 실행은 별도 `verify_phase1 --live`로 검사함. 실행 증거에는 키·프롬프트 전문을 넣지 않음.
 
@@ -85,6 +85,6 @@
 
 ## 5. 재현과 다음 단계
 
-실행·재현 명령은 [README](../README.md)에 있음. 실제 모델 검증은 `verify_phase1 --live`로 별도 선택하며 공급자 크레딧을 사용함. 성공한 과거 답변은 대화 스냅샷으로 보존하지만, 모델의 다음 응답 문장은 달라질 수 있음.
+실행·재현 명령은 [README](../../README.md)에 있음. 실제 모델 검증은 `verify_phase1 --live`로 별도 선택하며 공급자 크레딧을 사용함. 성공한 과거 답변은 대화 스냅샷으로 보존하지만, 모델의 다음 응답 문장은 달라질 수 있음.
 
 Phase 2는 별도 요청 후 시작함. 다음 범위는 React 화면, 항목별 기록 조회, 자연어 탐색, 근거 운용 가이드, 진행/오류 화면 및 필수 전체 통합 검증임.

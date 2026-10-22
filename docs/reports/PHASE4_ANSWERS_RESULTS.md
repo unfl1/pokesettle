@@ -93,7 +93,7 @@ uv run --frozen python -m backend.scripts.compare_answers \
 - 유보 때문에 사실 정확도를 채점할 주장이 없는 사례는 `not_applicable`로 표시하고 유보 적절성을 별도 판정
 - 메가 X 참가 가능 여부의 미확인은 제공 자료 범위로 해석, 전 세계에 정보가 없다는 의미로 확대 금지
 
-[원시 실행 결과](evidence/phase4-answers.json)·[원문 대조 판정](evidence/phase4-answers-review.json)·[요약](evidence/phase4-answers-summary.json) 보존
+[원시 실행 결과](../evidence/phase4-answers.json)·[원문 대조 판정](../evidence/phase4-answers-review.json)·[요약](../evidence/phase4-answers-summary.json) 보존
 원시 모델 응답은 문체 교정 없이 그대로 기록
 
 ## 검증과 한계
@@ -102,7 +102,7 @@ uv run --frozen python -m backend.scripts.compare_answers \
 - 비RAG 입력 분리·호출 순서·실패/키 노출 방지·기준/색인 불일치 거부·질문 수·검토 fingerprint·교정 피드백 검증
 - 실제 검토 JSON을 CLI로 연결하고 유형·판정 집계 확인
 - Ruff 검사·포맷 검사·Git 공백 검사·uv 잠금 파일 정합성 검사 통과
-- [테스트 기록](evidence/phase4-answers-tests.json) 참조
+- [테스트 기록](../evidence/phase4-answers-tests.json) 참조
 - 원시 실행 이후 기준/색인 사전 검사와 검증 피드백 진단을 보강, 실제 생성 응답 재실행·교체 없음
 - 원시 결과의 인용 0건에 대한 ID 검사 true는 공집합 검사 결과이며 인용 성공 건수로 집계하지 않음, 현재 도구는 인용 없음에 null 사용
 - 작은 단일 실행·선정 질문 묶음의 결과이며 전체 도감·모델 일반 성능·Champions 정확도로 일반화 금지

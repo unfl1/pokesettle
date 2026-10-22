@@ -69,7 +69,7 @@ uv run --frozen python -m backend.scripts.compare_retrieval
 - 기대 주제어는 원문에서 확인한 영어 문자열, 외부 청크의 단순 포함 여부만 측정
 - 주제어 포함 비율은 확률·정답률·사람의 관련성 판정과 구분
 - 후보가 Top-k보다 적거나 같은 경우 선택 집합이 같을 수 있으며 정상 동작
-- [기본 설정 원시 결과](evidence/phase4-mmr.json)·[다양성 예시 원시 결과](evidence/phase4-mmr-diversity.json) 보존
+- [기본 설정 원시 결과](../evidence/phase4-mmr.json)·[다양성 예시 원시 결과](../evidence/phase4-mmr-diversity.json) 보존
 
 ## 검증
 
@@ -81,7 +81,7 @@ uv run --frozen python -m backend.scripts.compare_retrieval
 - 동일 색인의 선택 차이·주제어 포함 비율·코사인 지표·비교 중 색인 변경 거부 검증
 - Ruff 검사·포맷 검사·Git 공백 검사·uv 잠금 파일 정합성 검사 통과
 - 실제 비교에서 외부 수집·모델 공급자 호출 없음
-- [테스트 요약](evidence/phase4-tests.json) 참조
+- [테스트 요약](../evidence/phase4-tests.json) 참조
 
 ```bash
 POKETACT_TEST_DATABASE_URL="$DATABASE_URL" uv run --frozen pytest -q
@@ -106,5 +106,5 @@ uv run --frozen ruff format --check backend
 
 - [LangChain MMR 구현](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/vectorstores/utils.py): 설치된 `langchain-core==1.6.0`의 구현과 파라미터 대조
 - [pgvector 공식 문서](https://github.com/pgvector/pgvector): 기존 L2 검색·저장 벡터 재사용, PostgreSQL License
-- [PokéAPI](https://pokeapi.co/docs/v2): 원문·수집일·권리 기록은 [데이터 출처](DATA_SOURCES.md)와 `data/sources.json` 유지
+- [PokéAPI](https://pokeapi.co/docs/v2): 원문·수집일·권리 기록은 [데이터 출처](../guides/DATA_SOURCES.md)와 `data/sources.json` 유지
 - 기본 주제어는 기존 `data/documents/species.json` 원문에서 직접 확인, 게임별 설명을 Champions 사실로 승격하지 않음
