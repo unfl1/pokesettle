@@ -96,7 +96,7 @@ export default function App() {
         <a
           className="border-[2px] border-accent w-7.5 h-7.5 rounded-full grid place-items-center relative before:[content:''] before:absolute before:left-0 before:right-0 before:border-t-[2px] before:border-t-accent [&_span]:border-[2px] [&_span]:border-accent [&_span]:w-2.5 [&_span]:h-2.5 [&_span]:rounded-full [&_span]:bg-[#121820] [&_span]:z-[1]"
           href="/"
-          aria-label="PokéCoach 홈"
+          aria-label="PokeTact 홈"
         >
           <span />
         </a>
@@ -146,7 +146,7 @@ export default function App() {
             href="/"
             className="text-[19px] font-bold tracking-[-0.7px] max-phone:text-[17px] [&_span]:px-1 [&_span]:py-[3px] [&_span]:border [&_span]:border-[#a7efc544] [&_span]:text-accent [&_span]:text-[10px] [&_span]:ml-1.5 [&_span]:rounded-[3px] [&_span]:align-middle"
           >
-            PokéCoach<span>AI</span>
+            PokeTact<span>AI</span>
           </a>
           <span className="h-[17px] border-l border-l-[#344151] max-tablet:hidden" />
           <span className="text-[11px] text-[#8997aa] max-tablet:hidden">
@@ -542,9 +542,10 @@ export default function App() {
                   ) : (
                     selectedDetail.data && (
                       <PokemonProfile
+                        key={selectedDetail.data.pokemonId}
                         pokemon={selectedDetail.data}
                         onGuide={() => w.submit('guide')}
-                        disabled={!w.canSend || pokemonId !== chatPokemonId}
+                        disabled={!w.canSend || !w.status.data?.ready || pokemonId !== chatPokemonId}
                       />
                     )
                   )}
@@ -566,7 +567,7 @@ export default function App() {
                       <ShieldCheck size={12} />
                       확인된 범위 안에서, 근거와 함께.
                     </span>
-                    <span>PokéCoach AI · 비공식 학습 프로젝트</span>
+                    <span>PokeTact · 비공식 학습 프로젝트</span>
                   </footer>
                 </div>
               </div>

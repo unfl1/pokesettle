@@ -78,7 +78,7 @@ def pokemon_list(
 
 @router.get("/pokemon/{pokemon_id}")
 def detail(request: Request, pokemon_id: str, *, catalog: CatalogDep):
-    return ok(request, catalog.get(pokemon_id).model_dump())
+    return ok(request, catalog.profile(pokemon_id))
 
 
 @router.post("/pokemon/search")

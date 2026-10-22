@@ -1,5 +1,6 @@
 from backend.app.api.responses import ok
 from backend.app.api.validation import check_scope, ensure_ready, session
+from backend.app.services.catalog_answers import catalog_question
 from backend.app.services.jobs import run_job
 
 
@@ -7,7 +8,8 @@ def submit(request, background, body, kind, service, settings):
     store = service.store
     session_id = session(request, store)
     check_scope(body, service, settings)
-    ensure_ready(service, settings)
+    if kind != "chat" or not catalog_question(service.catalog, body.pokemon_id, body.question):
+        ensure_ready(service, settings)
     if kind in {"chat", "guide"} and body.conversation_id:
         store.conversation(session_id, body.pokemon_id, body.regulation_id, body.conversation_id)
     job_id, created = store.create_job(

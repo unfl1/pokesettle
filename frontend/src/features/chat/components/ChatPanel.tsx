@@ -18,6 +18,8 @@ import type { useWorkspace } from '../hooks/useWorkspace';
 type Workspace = ReturnType<typeof useWorkspace>;
 const stages: Record<string, string> = {
   validating: '질문을 확인하고 있어요',
+  catalog_lookup: '도감 기본 정보를 확인하고 있어요',
+  interpreting_battle: '말씀한 전투 상황을 정리하고 있어요',
   extracting_queries: '검색할 내용을 정리하고 있어요',
   searching: '관련 자료를 찾고 있어요',
   filtering: '질문에 맞는 문서를 고르고 있어요',
@@ -233,7 +235,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[9px] [&>span]:text-[#6f879c] max-phone:[&>span]:text-[8px]">
           <span>
             <CircleHelp size={12} />
-            Champions 전용 규칙은 확인된 근거가 필요해요.
+            {w.status.data?.ready ? 'Champions 전용 규칙은 확인된 근거가 필요해요.' : '도감 기본 질문은 바로 확인 가능 · 전략 답변은 모델·색인 준비 필요'}
           </span>
           <button
             className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-[#17382b] shrink-0"

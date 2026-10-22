@@ -33,7 +33,7 @@ def create_app(settings=None, *, service=None):
         app.state.service.store.recover_jobs()
         yield
 
-    app = FastAPI(title="PokéCoach AI", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="PokeTact", version="0.1.0", lifespan=lifespan)
     app.state.service = service
     app.state.settings = settings
     configure_middleware(app, settings)

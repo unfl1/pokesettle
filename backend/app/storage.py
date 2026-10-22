@@ -106,13 +106,18 @@ class Store:
             )
         return conversation_id
 
-    def save_exchange(self, conversation_id, question, answer):
+    def save_exchange(self, conversation_id, question, answer, *, battle_state=None):
         ids = [str(uuid4()), str(uuid4())]
         with self.connect() as db:
             for mid, role, content in zip(ids, ["user", "assistant"], [question, answer]):
                 db.execute(
                     "INSERT INTO messages (id,conversation_id,role,content,created_at) VALUES (%s,%s,%s,%s,%s)",
                     (mid, conversation_id, role, json.dumps(content, ensure_ascii=False), now()),
+                )
+            if battle_state is not None:
+                db.execute(
+                    "INSERT INTO cache VALUES (%s,%s,%s) ON CONFLICT(namespace,key) DO UPDATE SET value=excluded.value",
+                    ("battle_state", conversation_id, json.dumps(battle_state, ensure_ascii=False)),
                 )
         return ids
 

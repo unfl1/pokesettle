@@ -1,30 +1,20 @@
 import { typeLabels } from '../typeLabels';
 
-const typeColors: Record<string, string> = {
-  normal: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  fire: 'text-[#e6a080] bg-[#e6a08016]',
-  water: 'text-[#8bb5d9] bg-[#8bb5d916]',
-  electric: 'text-[#e5c96e] bg-[#e5c96e16]',
-  grass: 'text-[#a1c982] bg-[#a1c98216]',
-  ice: 'text-[#8bb5d9] bg-[#8bb5d916]',
-  fighting: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  poison: 'text-[#b6a0d1] bg-[#b6a0d116]',
-  ground: 'text-[#c6b48e] bg-[#c6b48e16]',
-  flying: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  psychic: 'text-[#b6a0d1] bg-[#b6a0d116]',
-  bug: 'text-[#a1c982] bg-[#a1c98216]',
-  rock: 'text-[#c6b48e] bg-[#c6b48e16]',
-  ghost: 'text-[#b6a0d1] bg-[#b6a0d116]',
-  dragon: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  dark: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  steel: 'text-[#a6b5c7] bg-[#a6b5c714]',
-  fairy: 'text-[#d5a5bf] bg-[#d5a5bf16]',
+export const typeColors: Record<string, string> = {
+  normal: '#A8A77A', fire: '#EE8130', water: '#6390F0',
+  electric: '#F7D02C', grass: '#7AC74C', ice: '#96D9D6',
+  fighting: '#C22E28', poison: '#A33EA1', ground: '#E2BF65',
+  flying: '#A98FF3', psychic: '#F95587', bug: '#A6B91A',
+  rock: '#B6A136', ghost: '#735797', dragon: '#6F35FC',
+  dark: '#705746', steel: '#B7B7CE', fairy: '#D685AD',
 };
+const lightTextTypes = new Set(['fighting', 'poison', 'ghost', 'dragon', 'dark']);
 
 export function TypeBadge({ type }: { type: string }) {
   return (
     <span
-      className={`px-[7px] py-[3px] text-[9px] leading-[1.3] rounded-[4px] whitespace-nowrap ${typeColors[type] ?? typeColors.normal}`}
+      className="inline-flex items-center px-2 py-1 text-[10px] font-semibold leading-[1.3] rounded-[4px] whitespace-nowrap"
+      style={{ backgroundColor: typeColors[type] ?? '#8492a3', color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}
     >
       {typeLabels[type] ?? type}
     </span>

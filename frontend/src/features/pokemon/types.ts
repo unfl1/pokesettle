@@ -32,6 +32,10 @@ export interface PokemonDetail extends PokemonSummary {
   baseStats: Record<StatName, number>;
   abilities: string[];
   description: string | null;
+  descriptionVersion?: string;
+  learnset?: { versionGroup: string; moves: { name: string; method: string; level: number; type?: string | null; category?: string | null; power?: number | null; accuracy?: number | null }[] } | null;
+  learnsetSources?: { url: string; collectedAt: string; contentHash: string }[];
+  learnsetLicenceUrl?: string | null;
   availableMoves: string[] | null;
   sourceUrl: string;
   collectedAt: string;

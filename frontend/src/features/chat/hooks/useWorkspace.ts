@@ -228,7 +228,6 @@ export function useWorkspace(pokemonId: string) {
     },
     canSend: Boolean(
       session.isSuccess &&
-        status.data?.ready &&
         detail.data &&
         conversations.isSuccess &&
         !messages.isError &&

@@ -1,11 +1,20 @@
 import threading
 import time
 
+from backend.app.battle.conversation import (
+    STATE_PROMPT,
+    BattleUpdate,
+    evaluate_state,
+    grounded_update,
+    merge_state,
+    needs_battle_update,
+)
 from backend.app.core.errors import ServiceError
 from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
+from backend.app.services.catalog_answers import answer_catalog, catalog_question
 from backend.app.services.topics import mentioned_pokemon
 from backend.app.storage import digest
 
@@ -162,15 +171,96 @@ class KnowledgeService:
         conversation_id = self.store.conversation(
             session_id, request.pokemon_id, request.regulation_id, request.conversation_id
         )
+        direct = (
+            catalog_question(self.catalog, request.pokemon_id, request.question)
+            if feature is None
+            else None
+        )
+        if direct:
+            stage("catalog_lookup")
+            result = answer_catalog(*direct, regulation_id=request.regulation_id)
+            stage("saving")
+            user_id, assistant_id = self.store.save_exchange(
+                conversation_id, request.question, result
+            )
+            return {
+                **result,
+                "conversation_id": conversation_id,
+                "user_message_id": user_id,
+                "assistant_message_id": assistant_id,
+            }
+        previous_battle = self.store.get("battle_state", conversation_id) or {}
+        battle_state, battle_context = previous_battle, None
+        if feature is None and needs_battle_update(request.question, previous_battle):
+            stage("interpreting_battle")
+            candidate_ids = list(
+                dict.fromkeys(
+                    [
+                        *mentioned_pokemon(self.catalog, request.question, limit=8),
+                        *[
+                            previous_battle.get(key)
+                            for key in ("own_id", "opponent_id")
+                            if previous_battle.get(key)
+                        ],
+                        *previous_battle.get("bench_ids", []),
+                    ]
+                )
+            )
+            update = self.model.invoke(
+                "battle_state",
+                STATE_PROMPT,
+                {
+                    "question": request.question,
+                    "previous_user_inputs": previous_battle,
+                    "candidate_pokemon": [
+                        {
+                            "pokemon_id": pid,
+                            "name_ko": self.catalog.get(pid).name_ko,
+                            "name_en": self.catalog.get(pid).name_en,
+                        }
+                        for pid in candidate_ids
+                    ],
+                },
+                BattleUpdate,
+            )
+            update = grounded_update(
+                BattleUpdate.model_validate(update), request.question, previous_battle, self.catalog
+            )
+            battle_state = merge_state(previous_battle, update, set(candidate_ids), self.catalog)
+            if update.relevant:
+                battle_context = evaluate_state(
+                    battle_state, self.catalog, self.settings.data_dir, self.settings
+                )
         collection = self.collect(
             request.pokemon_id, request.question, request.regulation_id, stage
         )
+        if battle_context and battle_state.get("opponent_id") not in {None, request.pokemon_id}:
+            opponent_collection = self.collect(
+                battle_state["opponent_id"], request.question, request.regulation_id, stage
+            )
+            collection["queries"] = list(
+                dict.fromkeys([*collection["queries"], *opponent_collection["queries"]])
+            )
         context_ids = mentioned_pokemon(self.catalog, request.question) if feature is None else []
+        if battle_context:
+            context_ids = list(
+                dict.fromkeys(
+                    [
+                        *[
+                            battle_state[key]
+                            for key in ("own_id", "opponent_id")
+                            if battle_state.get(key)
+                        ],
+                        *context_ids,
+                    ]
+                )
+            )[:2]
         graph = build_graph(self.vectors, self.model, stage)
         state = graph.invoke(
             {
                 "pokemon_id": request.pokemon_id,
                 "context_pokemon_ids": context_ids,
+                "battle_context": battle_context,
                 "question": request.question,
                 "retrieval_query": request.question + " " + " ".join(collection["queries"]),
                 "regulation_id": request.regulation_id,
@@ -193,6 +283,8 @@ class KnowledgeService:
                 )
                 or result
             )
+        if battle_context:
+            result["battle_context"] = battle_context
         result["retrieval"] = self.vectors.retrieval_settings
         if feature:
             result["feature"] = feature
@@ -204,7 +296,12 @@ class KnowledgeService:
         display_question = (
             "근거 기반 운용 가이드를 작성해 줘." if feature == "pokemon_guide" else request.question
         )
-        user_id, assistant_id = self.store.save_exchange(conversation_id, display_question, result)
+        user_id, assistant_id = self.store.save_exchange(
+            conversation_id,
+            display_question,
+            result,
+            battle_state=battle_state if feature is None else None,
+        )
         return {
             **result,
             "conversation_id": conversation_id,
