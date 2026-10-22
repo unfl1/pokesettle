@@ -179,6 +179,11 @@ def test_api_auth_validation_and_no_model_or_vector_requirement(setup, actual_en
         assert data["inGameVerified"] is False
         assert data["calculation"]["damage"]["attackerStats"]["spAttack"] == 102
         assert data["calculation"]["koProbability"] is None
+        ko_response = client.post("/api/battle/damage", json=request_body(defenderCurrentHp=84))
+        assert ko_response.json()["data"]["calculation"]["conditionalKo"]["qualifyingRolls"] == 16
+        invalid_hp = client.post("/api/battle/damage", json=request_body(defenderCurrentHp=155))
+        assert invalid_hp.status_code == 422
+        assert invalid_hp.json()["error"]["code"] == "DAMAGE_HP_OUT_OF_RANGE"
         assert (
             client.post("/api/battle/damage", json=request_body(terrain="Electric")).status_code
             == 422
@@ -188,3 +193,44 @@ def test_api_auth_validation_and_no_model_or_vector_requirement(setup, actual_en
             == 422
         )
     assert setup.model.calls == []
+
+
+@pytest.mark.parametrize("hp", [0, -1, True, 1.5, "84"])
+def test_current_hp_rejects_invalid_values(hp):
+    with pytest.raises(ValidationError):
+        DamageInput.model_validate(request_body(defenderCurrentHp=hp))
+
+
+def test_conditional_ko_boundaries_and_full_hp_default(actual_engine):
+    settings, catalog = actual_engine
+
+    def calculate(hp=None):
+        return calculate_damage(
+            DamageInput.model_validate(request_body(defenderCurrentHp=hp)), catalog, settings
+        )["calculation"]
+
+    full = calculate()
+    assert full["conditional_ko"]["current_hp"] == 154
+    assert full["conditional_ko"]["hp_basis"] == "full_hp_assumed"
+    rolls = full["damage"]["rolls"]
+    for hp in [1, min(rolls), min(rolls) + 1, max(rolls), max(rolls) + 1, 154]:
+        result = calculate(hp)
+        ko = result["conditional_ko"]
+        assert ko["qualifying_rolls"] == sum(n >= hp for n in rolls)
+        assert ko["total_rolls"] == 16
+        assert ko["hp_basis"] == "provided"
+        assert result["ko_probability"] is None
+    assert calculate(84)["conditional_ko"]["outcome"] == "all"
+    assert calculate(85)["conditional_ko"]["outcome"] == "some"
+    assert calculate(103)["conditional_ko"]["outcome"] == "none"
+    with pytest.raises(ServiceError) as error:
+        calculate(155)
+    assert error.value.code == "DAMAGE_HP_OUT_OF_RANGE"
+
+
+def test_immune_target_never_meets_positive_hp_ko(actual_engine):
+    settings, catalog = actual_engine
+    body = request_body(defenderCurrentHp=1)
+    body["defender"]["pokemonId"] = "pokemon:445"
+    result = calculate_damage(DamageInput.model_validate(body), catalog, settings)
+    assert result["calculation"]["conditional_ko"]["qualifying_rolls"] == 0

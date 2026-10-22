@@ -67,15 +67,18 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
   const [defender, setDefender] = useState(initial);
   const [move, setMove] = useState('Thunderbolt');
   const [neutral, setNeutral] = useState(false);
+  const [currentHp, setCurrentHp] = useState('');
+  const hpValid = currentHp === '' || (Number.isSafeInteger(Number(currentHp)) && Number(currentHp) >= 1);
   // Removed team members must invalidate a submitted scenario immediately.
   const payload = {
     attacker: { ...attacker, pokemonId: own.some((m) => m.pokemonId === attacker.pokemonId) ? attacker.pokemonId : '' },
     defender: { ...defender, pokemonId: opponent.some((m) => m.pokemonId === defender.pokemonId) ? defender.pokemonId : '' },
     move, neutralConditions: neutral,
+    defenderCurrentHp: currentHp === '' ? null : Number(currentHp),
   };
   const result = useAnalysis<DamageResult>('/battle/damage', payload);
   const valid = sessionReady && payload.attacker.pokemonId && payload.defender.pokemonId
-    && neutral && validPoints(attacker) && validPoints(defender);
+    && neutral && hpValid && validPoints(attacker) && validPoints(defender);
   const damage = result.data?.calculation.damage;
   return <section aria-label="참조 데미지 계산" className="mt-4 rounded-[12px] border border-[#2b3441] bg-[#151c26] p-4">
     <h2 className="text-[14px] font-semibold">참조 데미지 계산</h2>
@@ -92,6 +95,12 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
         {moves.map(([id, name]) => <option value={id} key={id}>{name} · {id}</option>)}
       </select>
     </label>
+    <label className="my-3 flex flex-col gap-1 text-[11px]">방어자 남은 HP (실수치)
+      <input aria-label="방어자 남은 HP (실수치)" className={control} type="number" min={1} step={1} value={currentHp}
+        placeholder="비우면 최대 HP 가정" onChange={(e) => setCurrentHp(e.target.value)} />
+      <span className="text-[#8295a8]">퍼센트가 아닌 정수 HP 입력 · 비우면 계산된 최대 HP 가정 · 최대 HP 초과 시 서버에서 거부</span>
+    </label>
+    {!hpValid && <p role="alert" className="text-[11px] text-[#d3b97c]">남은 HP는 1 이상의 정수로 입력하세요.</p>}
     <label className="my-3 flex items-start gap-2 text-[11px] leading-[1.9] text-[#c4b38f]">
       <input type="checkbox" className="mt-1" checked={neutral} onChange={(e) => setNeutral(e.target.checked)} />
       특성·도구·상태·날씨·필드·능력치 변화 없이, 명중·단일 타격·비급소 조건으로 계산
@@ -103,6 +112,12 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
     {damage && result.data && <div className="mt-4 border-t border-[#344253] pt-3 text-[11px] leading-[1.9]">
       <h3 className="text-[14px] text-accent">참조 피해 범위: {damage.minimum}–{damage.maximum} HP</h3>
       <p>방어자 최대 HP: {damage.defenderStats.hp} · {damage.move.name} · 위력 {damage.move.power}</p>
+      {result.data.calculation.conditionalKo && <div className="my-2" aria-label="조건부 KO 결과">
+        <p>단일 타격 KO 조건 충족: {result.data.calculation.conditionalKo.qualifyingRolls} / {result.data.calculation.conditionalKo.totalRolls}개 피해 후보</p>
+        <p>기준 HP: {result.data.calculation.conditionalKo.currentHp} / {result.data.calculation.conditionalKo.maximumHp}
+          {result.data.calculation.conditionalKo.hpBasis === 'full_hp_assumed' ? ' · 최대 HP 가정' : ' · 직접 입력'}</p>
+        <p>후보 개수 비교이며 실제 KO 확률이 아닙니다. 명중·특성·도구·후속 피해는 반영하지 않습니다.</p>
+      </div>}
       <p>KO 확률·승률 미제공 · 실제 게임 대조 미검증</p>
       <details className="mt-2"><summary className="cursor-pointer">피해 후보 16개·계산 가정·출처</summary>
         <p className="mt-2 wrap-anywhere">피해 후보: {damage.rolls.join(', ')}</p>

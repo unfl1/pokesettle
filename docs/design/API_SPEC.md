@@ -287,7 +287,11 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 미등록 도감 ID는 404, 엔진 미지원 종/폼·기술은 `DAMAGE_UNSUPPORTED_INPUT` 422, 잘못된 육성·조건은 422
 - 응답: `scope=champions_reference_scenario`, `verificationStatus=assumed`, `inGameVerified=false`, `legalityVerified=false`
 - `engine`에 이름·버전·generation·level, `inputs`에 요청 조건, `calculation.damage`에 최소/최대·16개 정수 피해값·양측 참조 능력치·기술 속성 포함
-- `calculation.status=reference_scenario`, `koProbability`·`winProbability`는 null, 피해 분포를 승률로 변환하지 않음
+- `defenderCurrentHp`: 선택 입력, 1 이상의 정수 실수치 HP, null·생략 시 참조 최대 HP 가정
+- 계산된 방어자 최대 HP 초과 시 `DAMAGE_HP_OUT_OF_RANGE` 422, 0·소수·문자열·불리언 거부
+- `calculation.conditionalKo`: `currentHp`·`maximumHp`·`hpBasis`(`provided`/`full_hp_assumed`)·`qualifyingRolls`·`totalRolls`·`outcome`(`all`/`some`/`none`)·`scope=single_hit_reference_candidates`
+- 조건부 KO 비교식: 피해 후보 >= 기준 HP인 후보 개수 / 전체 16개 후보, 중복 피해값도 각각 보존
+- `calculation.status=reference_scenario`, `koProbability`·`winProbability`는 null 유지, 후보 개수를 실제 확률로 변환하지 않음
 - 타입 무효는 16개 0으로 반환, 미지원 출력은 성공으로 변환하지 않음
 - 5초 실행 제한, 시간 초과는 `DAMAGE_ENGINE_TIMEOUT` 504, 원본 stderr·서버 경로·환경 키는 응답 제외
 - 출력 수치는 고정 참조 엔진의 계산 결과, 실제 게임 실측·레귤레이션 합법성·기술 습득 확인과 구분
