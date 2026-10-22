@@ -158,7 +158,7 @@ class FakeSource:
 def pg_store():
     database_url = os.getenv("POKETACT_TEST_DATABASE_URL")
     if not database_url:
-        pytest.skip("POKETACT_TEST_DATABASE_URL 설정 필요: 실제 PostgreSQL + ChromaDB 통합 테스트")
+        pytest.skip("POKETACT_TEST_DATABASE_URL 설정 필요: 실제 PostgreSQL + pgvector 통합 테스트")
     store = Store(database_url, "test_" + uuid4().hex)
     try:
         yield store

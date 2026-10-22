@@ -1,12 +1,11 @@
 import threading
 
-import chromadb
-from chromadb.config import Settings as ChromaSettings
-from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from backend.app.catalog import metadata_text
 from backend.app.core.errors import ServiceError
+from backend.app.rag.embeddings import LocalEmbeddings
+from backend.app.rag.pgvector import PgVectorCollection, initialize_vectors
 from backend.app.storage import digest
 
 
@@ -17,27 +16,12 @@ class VectorStore:
         if embed is None:
             if settings.embedding_model != "all-MiniLM-L6-v2":
                 raise ValueError("지원하는 로컬 임베딩 모델은 all-MiniLM-L6-v2입니다.")
-            embed = ONNXMiniLM_L6_V2()
-            embed.ort.disable_telemetry_events()
-            embed.DOWNLOAD_PATH = settings.runtime_dir / "embedding_model"
+            embed = LocalEmbeddings(settings.runtime_dir / "embedding_model")
         self.embed = embed
         self.embedding_identity = embedding_identity or settings.embedding_model
-        self.client = chromadb.PersistentClient(
-            path=str(settings.runtime_dir / "chroma"),
-            settings=ChromaSettings(anonymized_telemetry=False),
-        )
-        self.meta = self._collection("pokemon_meta")
-        self.docs = self._collection("pokemon_docs")
-
-    def _collection(self, name):
-        collection = self.client.get_or_create_collection(
-            name, embedding_function=None, metadata={"embedding_identity": self.embedding_identity}
-        )
-        if collection.metadata.get("embedding_identity") != self.embedding_identity:
-            raise ValueError(
-                "임베딩 모델이 기존 색인과 다릅니다. 별도 저장 경로로 전체 재색인하세요."
-            )
-        return collection
+        initialize_vectors(store)
+        self.meta = PgVectorCollection(store, "pokemon_meta", self.embedding_identity)
+        self.docs = PgVectorCollection(store, "pokemon_docs", self.embedding_identity)
 
     def upsert_metadata(self, records):
         with self.lock:

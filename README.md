@@ -16,12 +16,12 @@ Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓�
 |---|---|
 | 프론트엔드 | React, TypeScript, Vite, Tailwind CSS |
 | 백엔드 | Python, FastAPI |
-| RAG | LangChain, LangGraph, ChromaDB |
+| RAG | LangChain, LangGraph, pgvector |
 | 저장 | PostgreSQL, JSON 기준 자료 |
 
 ## 로컬 실행
 
-필요 환경: Python 3.10 이상·3.14 미만, Node.js 20.19+ 또는 22.12+, uv, pnpm, PostgreSQL 또는 Docker Compose.
+필요 환경: Python 3.10 이상·3.14 미만, Node.js 20.19+ 또는 22.12+, uv, pnpm, PostgreSQL + pgvector 또는 Docker Compose.
 
 1. 의존성 설치 및 `.env.example`을 참고한 서버 전용 `.env` 설정
 2. 모델 키·모델 이름·공급자 연결 주소를 개인 환경에 설정
