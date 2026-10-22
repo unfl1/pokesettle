@@ -1,12 +1,15 @@
+import json
 import re
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from backend.app.battle.conversation import coach_fallback
 from backend.app.core.errors import ServiceError
 from backend.app.rag.prompts import GENERATION_PROMPT
 from backend.app.rag.retriever import retrieve
 from backend.app.schemas import Generation
+from backend.app.storage import digest
 
 
 class RagState(TypedDict, total=False):
@@ -17,6 +20,7 @@ class RagState(TypedDict, total=False):
     history: list
     evidence: list
     context_pokemon_ids: list[str]
+    battle_context: dict | None
     result: dict
 
 
@@ -169,8 +173,28 @@ def build_graph(vector_store, model, stage=lambda _: None):
             return 5
 
         documents.sort(key=priority)
+        calculations = []
+        context = state.get("battle_context")
+        if context and context.get("sources"):
+            source = context["sources"][-1]
+            calculations = [
+                {
+                    "evidence_id": "battle-calculation:" + digest(context),
+                    "document_id": "battle-type-scenario",
+                    "title": "일반 타입표로 계산한 현재 대면 · 조건부 판단",
+                    "source_type": "calculation",
+                    "source_url": source["source_url"],
+                    "collected_at": source["collected_at"],
+                    "licence": source.get("licence"),
+                    "licence_url": source.get("licence_url"),
+                    "game": "generic",
+                    "battle_format": "singles",
+                    "verification_status": "assumed",
+                    "text": json.dumps(context, ensure_ascii=False),
+                }
+            ]
         combined, seen = [], set()
-        for item in [*metadata, *documents]:
+        for item in [*metadata, *calculations, *documents]:
             if item["evidence_id"] not in seen:
                 combined.append(item)
                 seen.add(item["evidence_id"])
@@ -188,6 +212,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
         else:
             payload = {
                 "question": state["question"],
+                "battle_context_from_user_inputs_and_type_tool": state.get("battle_context"),
                 "history_for_interpretation_only": state.get("history", []),
                 "regulation_id": state.get("regulation_id"),
                 "evidence": state["evidence"],
@@ -201,6 +226,41 @@ def build_graph(vector_store, model, stage=lambda _: None):
             for attempt in range(2):
                 output = model.invoke("generate", GENERATION_PROMPT, payload, Generation)
                 stage("validating_citations")
+                if state.get("battle_context"):
+                    calculated = coach_fallback(state["battle_context"], state["evidence"])
+                    if calculated:
+                        # Numerical type multipliers are rendered from the rule engine only.
+                        # Keep non-numerical sourced explanations after the action-first lead.
+                        extra = [
+                            claim
+                            for claim in output.claims
+                            if not re.search(
+                                r"(?:\d+(?:\.\d+)?\s*(?:배|[×x])|[×x]\s*\d|(?:두|네|반)\s*배)",
+                                claim.text,
+                            )
+                        ]
+                        context = state["battle_context"]
+                        if not any(
+                            context["state"].get(key) for key in ("own_ability", "opponent_ability")
+                        ):
+                            ability_evidence = {
+                                item["evidence_id"]
+                                for item in state["evidence"]
+                                if item.get("document_id", "").startswith("pokeapi:ability:")
+                            }
+                            extra = [
+                                claim
+                                for claim in extra
+                                if not ability_evidence.intersection(claim.evidence_ids)
+                            ]
+                        output = Generation(
+                            answer_status="partial",
+                            claims=[*calculated.claims, *extra],
+                            assumptions=list(
+                                dict.fromkeys([*calculated.assumptions, *output.assumptions])
+                            ),
+                            unknowns=list(dict.fromkeys([*calculated.unknowns, *output.unknowns])),
+                        )
                 try:
                     return {
                         "result": render_answer(
@@ -218,6 +278,8 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 assumptions=[],
                 unknowns=["검증 가능한 인용·버전 표기를 만들지 못했습니다."],
             )
+        if output.answer_status == "abstained" and state.get("battle_context"):
+            output = coach_fallback(state["battle_context"], state["evidence"]) or output
         stage("validating_citations")
         return {"result": render_answer(output, state["evidence"], state.get("regulation_id"))}
 

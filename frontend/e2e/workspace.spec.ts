@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false) {
+async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false, coach = false) {
   const pokemon = [
     {
       pokemonId: 'pokemon:25',
@@ -95,6 +95,9 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
           speed: 90,
         },
         abilities: ['static', 'lightning-rod'],
+        description: `${p.nameKo} 도감 설명`,
+        descriptionVersion: 'shield',
+        learnset: { versionGroup: 'champions', moves: [{ name: '10만볼트', method: 'train', level: 0, type: 'electric', category: 'special', power: 90, accuracy: 100 }, { name: '울음소리', method: 'level-up', level: 1, type: 'normal', category: 'status', power: null, accuracy: 100 }] },
         sourceUrl: 'https://pokeapi.co/api/v2/pokemon/25/',
       });
     }
@@ -185,6 +188,12 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
         unknowns: curated ? [{ field: 'team', reason: '현재 HP와 네 기술을 알려주세요.' }] : [],
         feature: j.kind,
         conversationId: j.conversationId,
+        ...(coach ? { battleContext: {
+          ownName: '이상해꽃', opponentName: '리자몽', scope: 'generic_type_scenario',
+          state: { ownHpPercent: 40, requestedDefensiveType: 'water' },
+          recommendation: 'consider_switch_first',
+          switches: [{ pokemonId: 'pokemon:9', name: '거북왕', worstMultiplier: 0.5, comparisonOrder: 1, hpPercent: 80, defense: [{type: 'fire', multiplier: 0.5}] }],
+        } } : {}),
       };
       if (abstain) {
         result.answer = '수집된 문서에서 확인되지 않습니다.';
@@ -237,7 +246,7 @@ test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링�
   ).toBeVisible();
   await expect(
     page.locator('[data-testid="profile-details"]'),
-  ).not.toHaveAttribute('open');
+  ).toBeVisible();
   await page.getByLabel('포켓몬 질문').fill('피카츄 타입');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.getByText('원문 자료를 확인하고 있어요')).toBeVisible();
@@ -330,16 +339,17 @@ test('네트워크 재시도, 진행 중 새로고침, HTML은 텍스트로 표�
 });
 
 for (const missing of ['MODEL_KEY_MISSING', 'INDEX_NOT_READY'])
-  test(`${missing} 안내와 전송 비활성`, async ({ page }) => {
+  test(`${missing} 안내와 도감 질문 전송 허용`, async ({ page }) => {
     await fixture(page, [missing]);
     await page.goto('/');
     await expect(page.getByRole('alert')).toContainText(
       missing === 'INDEX_NOT_READY' ? '색인이 준비되지' : '모델 연결 설정',
     );
-    await page.getByLabel('포켓몬 질문').fill('질문');
+    await page.getByLabel('포켓몬 질문').fill('타입 알려줘');
     await expect(
       page.getByRole('button', { name: '질문 보내기' }),
-    ).toBeDisabled();
+    ).toBeEnabled();
+    await expect(page.getByRole('button', { name: '근거 운용 가이드', exact: true })).toBeDisabled();
   });
 
 test('모바일 화면에 가로 넘침 없음', async ({ page }) => {
@@ -528,7 +538,7 @@ for (const missingSprite of [false, true])
       await expect(
         page.getByRole('img', { name: '피카츄 이미지', exact: true }),
       ).toHaveAttribute('src', `${root}/25.png`);
-    await page.getByText('종족값과 출처 확인', { exact: true }).click();
+    await expect(page.getByRole('heading', { name: '종족값', exact: true })).toBeVisible();
     await expect(
       page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
     ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
@@ -614,4 +624,55 @@ test('조건부 전략 출처·라이선스와 추가 질문을 기본 표시', 
   await expect(page.getByRole('link', { name: /PokeTact original conditional analysis/ })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/');
   await expect(page.getByText('현재 HP와 네 기술을 알려주세요.')).toBeVisible();
   await expect(page.getByTestId('answer-state')).toHaveText('일부 확인');
+});
+
+
+test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복원', async ({ page }) => {
+  await fixture(page, [], false, false, false, true);
+  await page.goto('/');
+  await page.getByLabel('포켓몬 질문').fill('내 선봉 이상해꽃 상대 리자몽');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  const context = page.getByLabel('현재 전투 입력');
+  await expect(context).toContainText('이상해꽃 / 상대 리자몽');
+  await expect(context).toContainText('내 남은 HP: 40%');
+  await expect(context).toContainText('가정 비교, 실제 사용 확정 아님');
+  await expect(context).not.toContainText('입력한 기술:');
+  await expect(page.getByLabel('교체 후보 비교')).toContainText('거북왕');
+  await expect(page.getByLabel('교체 후보 비교')).toContainText('최대 피격 배율 0.5배');
+  await page.reload();
+  await expect(context).toContainText('내 남은 HP: 40%');
+});
+
+ test('포켓몬 선택만으로 기본 정보와 습득 기술 표시', async ({ page }) => {
+  await fixture(page, ['model', 'index']);
+  await page.goto('/');
+  await expect(page.getByText('피카츄 도감 설명', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '종족값', exact: true })).toBeVisible();
+  await expect(page.getByText('static / lightning-rod', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('pokemon-learnset')).toContainText('10만볼트');
+  await expect(page.getByTestId('pokemon-learnset')).toContainText('트레이닝');
+  await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await expect(page.getByText('이상해씨 도감 설명', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-testid="user-message"]')).toHaveCount(0);
+});
+
+test('습득 기술을 타입별 카드로 표시하고 습득 방법으로 필터', async ({ page }) => {
+  await fixture(page);
+  await page.goto('/');
+  const electric = page.getByRole('region', { name: '전기 타입 기술' });
+  const normal = page.getByRole('region', { name: '노말 타입 기술' });
+  await expect(electric).toContainText('10만볼트');
+  await expect(electric).toContainText('위력 90');
+  await expect(electric).toContainText('명중 100%');
+  await expect(electric).toContainText('특수');
+  await expect(normal).toContainText('울음소리');
+  await page.getByLabel('기술 타입 필터').selectOption('electric');
+  await expect(normal).toHaveCount(0);
+  await expect(electric).toContainText('10만볼트');
+  await page.getByLabel('기술 타입 필터').selectOption('all');
+  await page.getByRole('button', { name: '트레이닝', exact: true }).click();
+  await expect(normal).toHaveCount(0);
+  await expect(electric).toContainText('10만볼트');
+  await page.getByRole('button', { name: '전체', exact: true }).click();
+  await expect(normal).toBeVisible();
 });

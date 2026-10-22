@@ -74,6 +74,8 @@ export function EvidenceCard({
           <small>
             {citation.sourceType === 'metadata'
               ? '도감 메타데이터'
+              : citation.sourceType === 'calculation'
+                ? '일반 타입 계산 · 조건부 판단'
               : citation.sourceType === 'curated'
                 ? '직접 작성한 조건부 전략 · 가정 포함'
               : citation.sourceType === 'wiki'
@@ -115,6 +117,8 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         <span>
           {result.feature === 'pokemon_guide'
             ? '근거 기반 운용 가이드'
+            : result.feature === 'catalog_reference'
+              ? '도감 바로 답변'
             : 'PokeTact'}
         </span>
         <span
@@ -128,6 +132,22 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
               : '근거 포함'}
         </span>
       </div>
+      {result.battleContext && (
+        <div className="mb-3 rounded-[6px] border border-[#344253] p-3 text-[11px] leading-[1.9] text-[#a3b2c3]" aria-label="현재 전투 입력">
+          <p>현재 입력: {result.battleContext.ownName ?? '내 포켓몬 미확인'} / 상대 {result.battleContext.opponentName ?? '미확인'}</p>
+          {result.battleContext.state.ownHpPercent !== undefined && <p>내 남은 HP: {result.battleContext.state.ownHpPercent}%</p>}
+          {result.battleContext.state.ownMoves?.length ? <p>입력한 기술: {result.battleContext.state.ownMoves.join(', ')}</p> : null}
+          {result.battleContext.state.requestedDefensiveType && <p>요청한 방어 타입: {result.battleContext.state.requestedDefensiveType} · 가정 비교, 실제 사용 확정 아님</p>}
+          {result.battleContext.switches?.length ? <div className="mt-2" aria-label="교체 후보 비교">
+            <p className="font-medium">교체 후보 · 타입 저항 기준 비교</p>
+            {result.battleContext.switches.map(option => <p key={option.pokemonId}>
+              {option.comparisonOrder}. {option.name} · 최대 피격 배율 {option.worstMultiplier}배{option.hpPercent != null ? ` · HP ${option.hpPercent}%` : ' · HP 미입력'}
+            </p>)}
+            <p>같은 배율은 공동 순위 · 실제 생존·최선 행동 순위 아님</p>
+          </div> : null}
+          {result.battleContext.damageComparisons?.length ? <p>명시한 중립 조건의 참조 피해 계산 포함 · 실제 게임 검증과 구분</p> : <p>타입 기반 비교 · 실제 피해·선공·승률 미검증</p>}
+        </div>
+      )}
       <div
         className="text-[14px] leading-[1.95] text-[#c5d2e1] whitespace-pre-wrap wrap-anywhere max-tablet:text-[13px]"
         data-testid="answer-text"
