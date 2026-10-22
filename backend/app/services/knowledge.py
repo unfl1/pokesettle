@@ -3,8 +3,10 @@ import time
 
 from backend.app.core.errors import ServiceError
 from backend.app.rag.graph import build_graph
+from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
+from backend.app.services.topics import mentioned_pokemon
 from backend.app.storage import digest
 
 
@@ -40,6 +42,9 @@ class KnowledgeService:
             queries = [" ".join(q.casefold().split()) for q in queries]
             reports = []
             subject_found = False
+            pending = []
+            all_candidates = {}
+            collected_documents = {}
             client = self.source.client
             calls_before, hits_before = client.network_calls, client.cache_hits
             for query in dict.fromkeys(queries):
@@ -71,23 +76,27 @@ class KnowledgeService:
                     self.store.put(
                         "search_candidates", search_key, [c.model_dump() for c in candidates]
                     )
+                pending.append((query, key, candidates, own))
+                all_candidates.update({c.candidate_id: c for c in candidates})
+            if pending:
                 stage("filtering")
                 selection = self.model.invoke(
                     "selection",
                     SELECTION_PROMPT,
                     {
                         "question": question,
-                        "candidates": [c.model_dump() for c in candidates],
+                        "candidates": [c.model_dump() for c in all_candidates.values()],
                     },
                     Selection,
                 )
-                available = {c.candidate_id for c in candidates}
+                available = set(all_candidates)
                 if not set(selection.selected_candidate_ids).issubset(available) or any(
                     d.candidate_id not in available for d in selection.decisions
                 ):
                     raise ServiceError(
                         "GENERATION_INVALID", "후보 선별 결과에 없는 문서 ID가 포함되었습니다."
                     )
+            for query, key, candidates, own in pending:
                 chosen = set(selection.selected_candidate_ids) | {own.candidate_id}
                 documents, decisions = [], []
                 reasons = {d.candidate_id: d.reason for d in selection.decisions}
@@ -108,7 +117,9 @@ class KnowledgeService:
                     if not accepted:
                         continue
                     stage("collecting")
-                    document = self.source.fetch_document(candidate)
+                    document = collected_documents.get(candidate.candidate_id)
+                    if document is None:
+                        document = self.source.fetch_document(candidate)
                     if not document:
                         raise ServiceError(
                             "SUBJECT_DOCUMENT_UNAVAILABLE"
@@ -117,8 +128,10 @@ class KnowledgeService:
                             "선별한 문서를 확보하지 못했습니다.",
                             retryable=True,
                         )
-                    stage("indexing")
-                    self.vectors.index_document(pokemon_id, document)
+                    if candidate.candidate_id not in collected_documents:
+                        stage("indexing")
+                        self.vectors.index_document(pokemon_id, document)
+                        collected_documents[candidate.candidate_id] = document
                     documents.append(document.model_dump(mode="json"))
                 subject_found = True
                 report = {"query": query, "cache_hit": False, "decisions": decisions}
@@ -152,10 +165,12 @@ class KnowledgeService:
         collection = self.collect(
             request.pokemon_id, request.question, request.regulation_id, stage
         )
+        context_ids = mentioned_pokemon(self.catalog, request.question) if feature is None else []
         graph = build_graph(self.vectors, self.model, stage)
         state = graph.invoke(
             {
                 "pokemon_id": request.pokemon_id,
+                "context_pokemon_ids": context_ids,
                 "question": request.question,
                 "retrieval_query": request.question + " " + " ".join(collection["queries"]),
                 "regulation_id": request.regulation_id,
@@ -164,6 +179,20 @@ class KnowledgeService:
         )
         stage("saving")
         result = state["result"]
+        if (
+            feature == "pokemon_guide"
+            and result["answer_status"] == "abstained"
+            and any(
+                item["reason"] == "검증 가능한 인용·버전 표기를 만들지 못했습니다."
+                for item in result["unknowns"]
+            )
+        ):
+            result = (
+                metadata_guide(
+                    self.catalog.get(request.pokemon_id), state["evidence"], request.regulation_id
+                )
+                or result
+            )
         result["retrieval"] = self.vectors.retrieval_settings
         if feature:
             result["feature"] = feature

@@ -74,6 +74,8 @@ export function EvidenceCard({
           <small>
             {citation.sourceType === 'metadata'
               ? '도감 메타데이터'
+              : citation.sourceType === 'curated'
+                ? '직접 작성한 조건부 전략 · 가정 포함'
               : citation.sourceType === 'wiki'
                 ? '위키 백과 자료'
                 : '외부 설명 자료'}{' '}
@@ -82,7 +84,7 @@ export function EvidenceCard({
         </span>
         <ArrowUpRight size={15} aria-hidden="true" />
       </a>
-      {citation.sourceType === 'wiki' && citation.licence && (
+      {['wiki', 'curated'].includes(citation.sourceType) && citation.licence && (
         <p className="mt-1 text-[9px] text-[#8295a8] wrap-anywhere">
           <a
             href={sourceHref(citation.licenceUrl ?? null)}
@@ -145,7 +147,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         </div>
       )}
       {result.unknowns.length > 0 && (
-        <details className="text-[10px] text-[#a99b7e] mt-[13px] leading-[1.9] [&_summary]:gap-[5px] [&_summary]:flex [&_summary]:items-center [&_summary]:cursor-pointer [&_p]:mt-[7px]">
+        <details open={result.answerStatus !== 'answered'} className="text-[10px] text-[#a99b7e] mt-[13px] leading-[1.9] [&_summary]:gap-[5px] [&_summary]:flex [&_summary]:items-center [&_summary]:cursor-pointer [&_p]:mt-[7px]">
           <summary>
             <CircleHelp size={14} />
             미확인 정보 {result.unknowns.length}개

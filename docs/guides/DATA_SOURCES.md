@@ -141,3 +141,14 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - npm 배포 체크섬은 `backend/calculator/pnpm-lock.yaml`에 고정, 별도 공개 게임 데이터 수집 없이 설치 패키지의 참조 자료 사용
 - 원문 MIT 저작권·허가문은 [라이선스](../../backend/calculator/LICENSE.smogon-calc)에 보존
 - 코드 라이선스와 포켓몬 원문·캐릭터·이미지 권리 구분, 라이브러리 지원을 공식 게임 결과 검증으로 표시 금지
+
+## 조건부 전략 RAG 초기 자료
+
+- 확인일: 2026-10-22
+- 원본: `data/strategy/notes.json`, PokeTact가 직접 작성한 조건부 분석, CC BY 4.0
+- 범위: 기본 망나뇽·이상해꽃·리자몽 3종, 일반 메커니즘 기반 육성 방향·대면 판단·추가 입력 질문
+- 기초 근거: PokéAPI의 종·특성·기술 리소스, 문서 안에 개별 URL 기록
+- 분석의 `verification_status=assumed`·`game=generic` 유지, Champions 합법성·정확한 추천 세트·실전 성과 보장 없음
+- Smogon·상업 공략·커뮤니티 전략 원문 복제 없음, 외부 분석을 수집한 것으로 표시하지 않음
+- 명령: `python -m backend.scripts.index_strategy`, 기초 메커니즘의 원문·라이선스·수집 시각과 직접 작성한 분석을 분리 색인
+- 질문에 명시된 포켓몬의 자료도 함께 검색하되 기존 대화 항목·선택 메타 유지, 다른 폼의 전략 자동 적용 없음

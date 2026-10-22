@@ -16,6 +16,7 @@ class RagState(TypedDict, total=False):
     regulation_id: str | None
     history: list
     evidence: list
+    context_pokemon_ids: list[str]
     result: dict
 
 
@@ -59,9 +60,13 @@ def render_answer(generated, evidence, regulation_id):
         facts.append(
             {
                 "text": claim.text,
-                "verification_status": "unknown"
-                if any(e.get("verification_status") != "verified" for e in selected)
-                else "verified",
+                "verification_status": (
+                    "assumed"
+                    if any(e.get("verification_status") == "assumed" for e in selected)
+                    else "unknown"
+                    if any(e.get("verification_status") != "verified" for e in selected)
+                    else "verified"
+                ),
                 "origin": "source",
                 "scope": selected[0].get("game", "generic"),
                 "evidence_ids": ids,
@@ -94,7 +99,12 @@ def render_answer(generated, evidence, regulation_id):
         "answer_status": "partial"
         if generated.claims and generated.unknowns
         else generated.answer_status,
-        "answer": "\n\n".join(sentences) or "수집된 문서에서 확인되지 않습니다.",
+        "answer": "\n\n".join(sentences)
+        or (
+            "답변의 인용·버전 표기를 검증하지 못했습니다. 다시 요청해 주세요."
+            if "검증 가능한 인용·버전 표기를 만들지 못했습니다." in generated.unknowns
+            else "수집된 문서에서 확인되지 않습니다."
+        ),
         "facts": facts,
         "assumptions": [
             {
@@ -125,14 +135,49 @@ def render_answer(generated, evidence, regulation_id):
 def build_graph(vector_store, model, stage=lambda _: None):
     def retrieve_node(state):
         stage("retrieving")
-        return {
-            "evidence": retrieve(
-                vector_store,
-                state["pokemon_id"],
-                state.get("retrieval_query") or state["question"],
-                state.get("regulation_id"),
-            )
-        }
+        query = state.get("retrieval_query") or state["question"]
+        ids = list(dict.fromkeys([state["pokemon_id"], *state.get("context_pokemon_ids", [])]))
+        groups = [retrieve(vector_store, pid, query, state.get("regulation_id")) for pid in ids]
+        # Preserve selected metadata and explicitly mentioned metadata within total Top-k.
+        metadata = [group[0] for group in groups if group]
+        documents = [item for group in groups for item in group[1:]]
+        if not state.get("regulation_id"):
+            for pid in ids:
+                curated = vector_store.docs.get(where={"pokemon_id": pid})
+                for eid, text, meta in zip(
+                    curated["ids"], curated["documents"], curated["metadatas"]
+                ):
+                    if not meta["document_id"].startswith(
+                        ("poketact:strategy:", "pokeapi:ability:", "pokeapi:move:")
+                    ):
+                        continue
+                    manifest = vector_store.store.get("manifest", f"{pid}:{meta['document_id']}")
+                    if manifest and eid in manifest["ids"]:
+                        documents.append(vector_store.evidence(eid, text, meta))
+        # Species strategy notes have their own retrieval lane so Pokédex prose cannot crowd them out.
+        context_ids = set(state.get("context_pokemon_ids", []) or [state["pokemon_id"]])
+
+        def priority(item):
+            doc_id = item.get("document_id", "")
+            first_chunk = item.get("chunk_index", 0) == 0
+            if doc_id.startswith("poketact:strategy:"):
+                return 0 if first_chunk else 2
+            if item.get("pokemon_id") in context_ids:
+                if doc_id.startswith(("pokeapi:ability:", "pokeapi:move:")):
+                    return 1 if first_chunk else 3
+                return 4
+            return 5
+
+        documents.sort(key=priority)
+        combined, seen = [], set()
+        for item in [*metadata, *documents]:
+            if item["evidence_id"] not in seen:
+                combined.append(item)
+                seen.add(item["evidence_id"])
+        combined = combined[: vector_store.settings.top_k]
+        for number, item in enumerate(combined, 1):
+            item["number"] = number
+        return {"evidence": combined}
 
     def generate_node(state):
         stage("generating")

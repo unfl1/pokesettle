@@ -217,3 +217,56 @@ def test_blank_version_placeholder_is_absence_but_unknown_id_still_rejected(setu
     generation.claims[0].source_versions = ["invented-version"]
     with pytest.raises(ServiceError):
         render_answer(generation, setup.vectors.retrieve("pokemon:1", "test"), None)
+
+
+def test_multiple_candidate_batches_share_one_selection_per_question(setup, monkeypatch):
+    from backend.app.schemas import QueryPlan
+
+    original = setup.model.invoke
+    selections = []
+
+    def invoke(purpose, system, payload, schema):
+        if purpose == "queries":
+            return QueryPlan(
+                queries=[
+                    {"query": "alpha", "language": "en"},
+                    {"query": "beta", "language": "en"},
+                ]
+            )
+        if purpose == "selection":
+            selections.append(payload)
+        return original(purpose, system, payload, schema)
+
+    monkeypatch.setattr(setup.model, "invoke", invoke)
+    original_search = setup.source.search
+    monkeypatch.setattr(
+        setup.source,
+        "search",
+        lambda query, pokemon: [
+            original_search(query, pokemon)[0].model_copy(update={"candidate_id": "extra-" + query})
+        ],
+    )
+    result = setup.service.collect("pokemon:1", "first question")
+    assert len(result["reports"]) == 3
+    assert len(selections) == 1
+    assert len(selections[0]["candidates"]) == 4  # Three distinct candidates plus the subject.
+    assert setup.source.fetches == 1  # Repeated subject fetched only once.
+    setup.service.collect("pokemon:1", "different question")
+    assert len(selections) == 2  # A new question must get a fresh decision.
+
+
+def test_invalid_citation_abstention_is_not_reported_as_missing_documents(setup):
+    from types import SimpleNamespace
+
+    invalid = Generation(
+        answer_status="answered",
+        claims=[{"text": "unsupported", "evidence_ids": ["invented"]}],
+        assumptions=[],
+        unknowns=[],
+    )
+    result = build_graph(setup.vectors, SimpleNamespace(invoke=lambda *args: invalid)).invoke(
+        {"pokemon_id": "pokemon:1", "question": "test"}
+    )["result"]
+    assert result["answer_status"] == "abstained"
+    assert "인용·버전" in result["answer"]
+    assert "수집된 문서에서 확인되지 않습니다" not in result["answer"]
