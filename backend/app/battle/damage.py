@@ -63,6 +63,7 @@ class DamageInput(Model):
     defender: DamageMember
     move: str = Field(min_length=1, max_length=80)
     neutral_conditions: bool = Field(strict=True)
+    defender_current_hp: int | None = Field(default=None, ge=1, strict=True)
 
     @field_validator("neutral_conditions")
     @classmethod
@@ -118,12 +119,21 @@ def calculate_damage(body, catalog, settings):
         rolls = damage["rolls"]
         if len(rolls) != 16 or any(type(n) is not int or n < 0 for n in rolls):
             raise ValueError
+        maximum_hp = damage["defender_stats"]["hp"]
+        if type(maximum_hp) is not int or maximum_hp < 1:
+            raise ValueError
         if damage["minimum"] != min(rolls) or damage["maximum"] != max(rolls):
             raise ValueError
     except (ValueError, TypeError, KeyError, AttributeError):
         raise ServiceError(
             "DAMAGE_ENGINE_NOT_READY", "계산기 설치·버전·응답 형식을 확인하세요.", 503
         ) from None
+    current_hp = body.defender_current_hp if body.defender_current_hp is not None else maximum_hp
+    if current_hp > maximum_hp:
+        raise ServiceError(
+            "DAMAGE_HP_OUT_OF_RANGE", "방어자 남은 HP가 계산된 최대 HP를 초과합니다.", 422
+        )
+    ko_count = sum(value >= current_hp for value in rolls)
     return {
         "scope": "champions_reference_scenario",
         "verification_status": "assumed",
@@ -134,12 +144,24 @@ def calculate_damage(body, catalog, settings):
         "calculation": {
             "status": "reference_scenario",
             "damage": damage,
+            "conditional_ko": {
+                "current_hp": current_hp,
+                "maximum_hp": maximum_hp,
+                "hp_basis": "provided"
+                if body.defender_current_hp is not None
+                else "full_hp_assumed",
+                "qualifying_rolls": ko_count,
+                "total_rolls": len(rolls),
+                "outcome": "all" if ko_count == len(rolls) else "none" if ko_count == 0 else "some",
+                "scope": "single_hit_reference_candidates",
+            },
             "ko_probability": None,
             "win_probability": None,
         },
         "assumptions": [
             "참조 엔진 레벨 50·싱글·명중·단일 타격·비급소, 특성·도구·상태·날씨·필드·능력치 변화 효과 없음",
             "기술의 부가 효과·반동·이후 턴 변화는 계산 대상에서 제외",
+            "조건부 KO는 피해 후보와 남은 HP의 정수 비교, 후보별 발생 확률·실제 게임 KO 확률 검증 아님",
         ],
         "unknowns": ["실제 게임 피해 대조·현행 레귤레이션 적격성·기술 습득 여부 미검증"],
         "citations": [

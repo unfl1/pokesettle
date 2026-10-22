@@ -285,6 +285,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
     expect(body.attacker.alignment).toBe('Modest');
     expect(body.neutralConditions).toBe(true);
     expect(body.move).toBe('Thunderbolt');
+    expect(body.defenderCurrentHp).toBeNull();
     expect(body.attacker).not.toHaveProperty('ability');
     if (calls === 1) return route.fulfill({ status: 503, json: {
       error: { code: 'DAMAGE_ENGINE_NOT_READY', message: '계산기 연결 확인' },
@@ -292,7 +293,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
     // Synthetic UI fixture only; not an in-game measurement.
     return route.fulfill({ json: { data: {
       engine: { name: '@smogon/calc', version: '0.12.0', level: 50 },
-      calculation: { damage: { minimum: 10, maximum: 20, rolls: Array(16).fill(10),
+      calculation: { conditionalKo: { currentHp: 150, maximumHp: 150, hpBasis: 'full_hp_assumed', qualifyingRolls: 0, totalRolls: 16, outcome: 'none' }, damage: { minimum: 10, maximum: 20, rolls: Array(16).fill(10),
         defenderStats: { hp: 150 }, move: { name: 'Thunderbolt', power: 90 } } },
       assumptions: ['테스트 조건'], unknowns: ['실측 미검증'],
       citations: [{ title: 'Smogon', sourceUrl: 'https://github.com/smogon/damage-calc', version: '0.12.0' }],
@@ -311,6 +312,11 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
   await expect(submit).toBeDisabled();
   await panel.getByRole('checkbox').check();
+  await panel.getByLabel('방어자 남은 HP (실수치)', { exact: true }).fill('0');
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('방어자 남은 HP (실수치)', { exact: true }).fill('1.5');
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('방어자 남은 HP (실수치)', { exact: true }).fill('');
   await panel.getByLabel('공격자 HP', { exact: true }).fill('33');
   await expect(submit).toBeDisabled();
   await panel.getByLabel('공격자 HP', { exact: true }).fill('32');
