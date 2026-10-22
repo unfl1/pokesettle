@@ -29,9 +29,9 @@ P0 takes precedence over visual polish and optional combat features.
 
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, React Router, Lucide React. Add TanStack Query for server-state; Zustand only if cross-page client state truly requires it.
 - **Backend:** Python 3.10+, FastAPI, Pydantic, Uvicorn, pytest, python-dotenv.
-- **RAG:** LangChain, LangGraph (at minimum `retrieve` and `generate`), ChromaDB, model API configured via environment; LangSmith optional if supported by environment.
-- **Storage:** JSON for curated reference data; PostgreSQL for locally saved teams, conversations, jobs, and source caches; ChromaDB for semantic indexes.
-- **Database responsibilities:** PostgreSQL stores application state and document/index manifests; ChromaDB stores RAG metadata and document vectors. Keep the two Chroma collections and the assignment-specified Chroma dependencies.
+- **RAG:** LangChain, LangGraph (at minimum `retrieve` and `generate`), PostgreSQL + pgvector, model API configured via environment; LangSmith optional if supported by environment.
+- **Storage:** JSON for curated reference data; PostgreSQL for locally saved teams, conversations, jobs, source caches, and pgvector semantic indexes.
+- **Database responsibilities:** PostgreSQL stores application state, document/index manifests, and both logical vector collections through pgvector. The user explicitly chose this database-specific deviation after confirming that the assignment PDF specifies ChromaDB; assignment-side substitution approval is not assumed.
 - **Calculation:** Python rule engine for validated type/legality checks. Investigate `@smogon/calc` and an optional isolated Node service for Champions-compatible calculations; do not assume generic Gen 9 formulas are sufficient.
 - **Dependency versions:** Check the assignment PDF's specified package versions before installation. Record any justified deviations.
 
@@ -40,8 +40,8 @@ React (Vite) UI
    | REST / optional SSE
 FastAPI (validation, API, app services)
    |-- RAG: LangGraph retrieve -> generate
-   |     |-- Chroma: pokemon_meta
-   |     `-- Chroma: pokemon_docs
+   |     |-- PostgreSQL/pgvector: pokemon_meta
+   |     `-- PostgreSQL/pgvector: pokemon_docs
    |-- reference JSON / PostgreSQL
    `-- battle analyzer / optional dedicated damage service
 ```
@@ -109,7 +109,7 @@ Store unknown fields as `null`/unknown, not guessed values. Baseline species pro
 
 ### 5.3 Vector collections
 
-**`pokemon_meta`**: one idempotently indexed entry per Pokémon. Search text should include the attributes users ask about, not just the name. Chroma metadata values must be flattened to supported scalar forms as needed.
+**`pokemon_meta`**: one idempotently indexed entry per Pokémon. Search text should include the attributes users ask about, not just the name. Store vector metadata as JSONB, with exact equality filters and collection-level embedding identity/dimension validation.
 
 **`pokemon_docs`**: chunked explanations/strategy sources with `pokemon_id`, `document_id`, `title`, `source_type`, `source_url`, `battle_format`, `regulation_id`, `collected_at`, `chunk_index`, `licence` when available. Stable IDs such as `pokemon_id:document_id:chunk_index` avoid overwriting other item-document associations.
 
@@ -222,7 +222,7 @@ Do not create empty boilerplate directories unnecessarily. Start small and evolv
 
 **Phase 0 — Plan only:** inspect repository and PDF, map F2001–F2012 and NF items, verify Champions sources/mechanics/usage conditions, define data schemas, API contract and technical risk register. Output `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, `docs/API_SPEC.md`. **Stop before implementation.**
 
-**Phase 1 — Mandatory RAG data and backend:** 100+ validated records; both Chroma collections; three prompts; outside documents + selection + caching + chunking; LangGraph retrieval/generation and source citations; tests F2001–F2008.
+**Phase 1 — Mandatory RAG data and backend:** 100+ validated records; both PostgreSQL/pgvector logical collections; three prompts; outside documents + selection + caching + chunking; LangGraph retrieval/generation and source citations; tests F2001–F2008.
 
 **Phase 2 — Mandatory UX and integration:** React/Vite setup, Pokédex and chat, item-specific history, conditional discovery, a cited Pokémon-specific service feature, progress/empty/error states, API integration; test F2009–F2012 and full mandatory suite.
 

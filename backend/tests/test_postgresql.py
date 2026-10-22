@@ -87,7 +87,7 @@ def test_migration_rolls_back_on_invalid_foreign_key(tmp_path, pg_store):
         assert db.execute("SELECT COUNT(*) AS count FROM sessions").fetchone()["count"] == 0
 
 
-def test_chroma_index_and_postgresql_manifest_survive_restart(setup):
+def test_pgvector_index_and_manifest_survive_restart(setup):
     from backend.app.rag.vector_store import VectorStore
     from backend.tests.conftest import document, embed
 
@@ -98,9 +98,12 @@ def test_chroma_index_and_postgresql_manifest_survive_restart(setup):
     assert restarted_vectors.docs.count() == count
     assert len(restarted_vectors.retrieve("pokemon:1", "alpha")) > 1
     assert restarted_store.get("manifest", "pokemon:1:subject")["ids"]
-    assert (setup.settings.runtime_dir / "chroma" / "chroma.sqlite3").is_file()
+    assert not (setup.settings.runtime_dir / "chroma").exists()
     with restarted_store.connect() as db:
-        assert db.execute("SELECT to_regclass('vector_entries') AS name").fetchone()["name"] is None
+        assert (
+            db.execute("SELECT to_regclass('vector_entries') AS name").fetchone()["name"]
+            is not None
+        )
 
 
 def test_reindex_preserves_migrated_document_revision_over_bundled_snapshot(setup, monkeypatch):
@@ -128,3 +131,32 @@ def test_reindex_preserves_migrated_document_revision_over_bundled_snapshot(setu
     found = setup.vectors.retrieve("pokemon:1", "migrated revision")
     assert any(e["text"] == migrated.body for e in found)
     assert all(e["text"] != bundled.body for e in found)
+
+
+def test_vector_distance_filter_and_dimension_validation(setup):
+    collection = setup.vectors.docs
+    collection.upsert(
+        ids=["far", "near", "other"],
+        documents=["far", "near", "other"],
+        embeddings=[[2, 2], [1, 0], [0, 0]],
+        metadatas=[{"pokemon_id": "p"}, {"pokemon_id": "p"}, {"pokemon_id": "other"}],
+    )
+    assert collection.query(query_embeddings=[[0, 0]], n_results=2, where={"pokemon_id": "p"})[
+        "ids"
+    ] == [["near", "far"]]
+    with pytest.raises(ValueError, match="차원"):
+        collection.upsert(ids=["bad"], documents=["bad"], embeddings=[[1, 2, 3]], metadatas=[{}])
+    with pytest.raises(ValueError, match="유한"):
+        collection.upsert(
+            ids=["bad"], documents=["bad"], embeddings=[[float("nan"), 1]], metadatas=[{}]
+        )
+    assert collection.count() == 3
+
+
+def test_migration_rejects_populated_vector_index(tmp_path, setup):
+    path = tmp_path / "legacy.sqlite3"
+    legacy_database(path)
+    with pytest.raises(ValueError, match="벡터 색인"):
+        migrate(path, setup.store)
+    with setup.store.connect() as db:
+        assert db.execute("SELECT COUNT(*) AS count FROM sessions").fetchone()["count"] == 0

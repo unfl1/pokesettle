@@ -4,7 +4,7 @@
 
 > 현재 구현 상태: Phase 0의 아래 “미확인” 표기는 당시 설계 기록임. Phase 1 데이터·RAG와 Phase 2 대화 UI·통합을 실행 검증했으며 최신 판정은 [Phase 2 결과](PHASE2_RESULTS.md)를 참조함. Champions 규칙·적격성과 외부 상호 점검은 여전히 미확인임.
 
-> 2026-10-22 변경: SQLite 상태 저장을 PostgreSQL로 전환하고 RAG 벡터 검색은 ChromaDB로 유지함. 교체된 원본 PDF 5쪽의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정 확인함. 기존 기능 ID·두 컬렉션·검색/생성 요구사항 유지함. [전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+> 2026-10-22 변경: 사용자 결정으로 SQLite·Chroma를 PostgreSQL + pgvector로 통합함. 원본 PDF 5쪽의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정과 다른 기술 선택임을 명시함. 과제 측 대체 허용 확인과 사용자 결정을 구분함. 기존 기능 ID·두 논리 컬렉션·검색/생성 기능 유지함. [전환 기록](POSTGRESQL_MIGRATION.md) 참조.
 
 ## 1. 기준과 현재 상태
 

@@ -122,5 +122,5 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 ## PostgreSQL 전환 관련 출처 (2026-10-22)
 
-- 상태 저장을 PostgreSQL로 변경하고 RAG 벡터 검색은 ChromaDB로 유지함. 포켓몬 원본 출처·수집일·이용 조건 유지함.
-- Chroma의 기존 로컬 ONNX 임베딩을 유지함. 모델·ONNX export 라이선스는 [전환 기록](POSTGRESQL_MIGRATION.md#출처라이선스) 참조.
+- 상태 저장과 RAG 벡터 검색을 PostgreSQL + pgvector로 통합함. 포켓몬 원본 출처·수집일·이용 조건 유지함.
+- 기존 로컬 ONNX 모델을 독립 임베딩 모듈에서 재사용함. 모델·ONNX export 라이선스는 [전환 기록](POSTGRESQL_MIGRATION.md#출처라이선스) 참조.

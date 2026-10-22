@@ -35,6 +35,10 @@ def migrate(source_path, store):
                     raise ValueError(
                         "이전 대상 스키마가 비어 있지 않습니다. 별도 DATABASE_SCHEMA를 사용하세요."
                     )
+            if db.execute("SELECT to_regclass('vector_entries') AS name").fetchone()["name"]:
+                db.execute("LOCK TABLE vector_entries IN EXCLUSIVE MODE")
+                if db.execute("SELECT 1 FROM vector_entries LIMIT 1").fetchone():
+                    raise ValueError("벡터 색인이 존재합니다. 빈 스키마로 이전하세요.")
             existing = {
                 r[0] for r in source.execute("SELECT name FROM sqlite_master WHERE type='table'")
             }
@@ -51,7 +55,7 @@ def migrate(source_path, store):
                     f"SELECT {','.join(columns)} FROM {table} ORDER BY rowid"
                 ).fetchall()
                 if table == "cache":
-                    # Rebuild manifests only after verifying the actual Chroma index.
+                    # Rebuild manifests only after verifying the actual PostgreSQL vector index.
                     rows = [r for r in rows if r[0] not in {"manifest", "query_complete"}]
                 statement = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
                     sql.Identifier(table),

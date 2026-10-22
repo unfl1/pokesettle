@@ -17,8 +17,8 @@ flowchart TD
     UI[React / TypeScript / Vite UI] --> API[FastAPI: 검증·세션·오류·작업 상태]
     API --> APP[응용 서비스: 채팅·가이드·조건 탐색]
     APP --> GRAPH[LangGraph: retrieve → generate]
-    GRAPH --> META[Chroma pokemon_meta]
-    GRAPH --> DOCS[Chroma pokemon_docs]
+    GRAPH --> META[pgvector pokemon_meta]
+    GRAPH --> DOCS[pgvector pokemon_docs]
     APP --> SQL[PostgreSQL: 대화·작업·캐시·문서 연결]
     PREP[데이터 준비: 수집·정규화·청킹·색인] --> META
     PREP --> DOCS
@@ -37,7 +37,7 @@ flowchart TD
 | `backend/app/storage.py` | PostgreSQL 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
 | `backend/app/battle` | Phase 3 이후 검증된 상성·적격성·후보 계산 | LLM이 데미지·확률을 산출하지 않음 |
 
-초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 PostgreSQL 서버·로컬 Chroma 영속 디렉터리임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 PostgreSQL에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
+초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 PostgreSQL + pgvector 서버임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 PostgreSQL에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
 
 ## 2. 수집·색인 경로
 
@@ -47,7 +47,7 @@ flowchart TD
 4. 후보 ID·제목·요약을 Prompt 2에 전달함. 모델 선택과 별개로 식별이 확인된 자체 문서는 반드시 채택함. 본문 길이가 짧아도 임의 제외하지 않음.
 5. 사용 조건을 확인한 원문 본문·출처·버전을 저장함. 자체 문서 부재/접근 실패/권리 미확인은 `missing_subject_document`로 보고하며 수집 완료로 기록하지 않음. 수집 불가능한 원문을 조작하거나 이용 제한을 우회하지 않음.
 6. 설정에 따라 청킹함. `pokemon_docs`에 항목별 연결을 포함해 upsert하고, 이전 인덱스 버전의 불필요한 청크는 제거함.
-7. 문서/청크 manifest와 실제 Chroma ID를 대조한 후에만 작업을 완료 처리함. 재시도 시 이미 완료한 문서는 재사용함.
+7. 문서/청크 manifest와 실제 PostgreSQL 벡터 ID를 대조한 후에만 작업을 완료 처리함. 재시도 시 이미 완료한 문서는 재사용함.
 
 검색어 캐시의 상태는 `pending`/`partial`/`complete`/`failed`임. `complete`는 필요한 본문 수집과 해당 색인의 성공까지 확인한 경우임. 원문 캐시와 색인 상태는 별도여서 색인만 실패하면 다운로드 없이 재색인함. 청킹 설정 변경도 저장된 본문만으로 처리함. 명시적 새 규칙 스냅샷/갱신 외에는 동일 성공 검색어를 다시 수집하지 않음.
 
@@ -128,7 +128,7 @@ F2010의 MVP는 **근거 기반 운용 가이드**임. 문서가 뒷받침하는
 
 구성 순서: 내부 ID→한/영 이름→타입→종족값 각 이름과 수치→특성 이름/확인된 설명→설명→게임/포맷→규칙 적격 상태와 근거 날짜. 기술·메가 정보는 확인된 범위만 추가함. 알 수 없는 부분은 '미확인'으로 표기함. 필터링은 이 문자열을 다시 파싱하지 않고 정규화 필드를 사용함.
 
-### 6.3 Chroma 두 컬렉션
+### 6.3 pgvector 두 논리 컬렉션
 
 | 항목 | `pokemon_meta` | `pokemon_docs` |
 |---|---|---|
@@ -139,7 +139,7 @@ F2010의 MVP는 **근거 기반 운용 가이드**임. 문서가 뒷받침하는
 
 `document_id`는 출처의 안정 ID 또는 정규 URL의 해시, 원문 버전은 별도임. `index_version`은 원문 해시·splitter 버전·청킹 설정으로 결정함. 재색인 때 같은 항목·문서의 이전 버전 manifest를 조회해 stale 청크를 제거하며, 다른 항목 연결을 지우지 않음. 중간 실패는 작업을 partial로 남기고 재시도함. 검색은 완료된 활성 버전만 사용함.
 
-Chroma 필터는 스칼라로 평탄화함. 배열·중첩 객체·null은 원본 JSON/PostgreSQL 캐시에 보관함. `regulation_id` 미확인은 명시적 `unknown` 문자열로 보관함. 두 컬렉션은 기존 MiniLM 임베딩과 모델 식별자 검증을 유지함.
+벡터 메타데이터는 PostgreSQL JSONB로 저장하고 `@>` 동등 필터를 적용함. `vector_entries.collection`으로 `pokemon_meta`·`pokemon_docs`를 분리함. `vector_collections`에서 임베딩 모델·차원을 검증함. 검색은 `<->` 정확 L2 거리와 ID 동률 정렬을 사용하며 근사 색인은 미도입임.
 
 같은 문서가 여러 포켓몬에 관련되면 원문은 하나로 보관하고 연결은 여러 개로 저장함. 컬렉션 ID에 항목을 넣어 다른 종의 청크를 덮어쓰지 않음. 메타와 문서 컬렉션은 동일 임베딩 모델·차원·버전을 사용하고 변경 시 재색인함.
 
@@ -158,7 +158,7 @@ Chroma 필터는 스칼라로 평탄화함. 배열·중첩 객체·null은 원�
 | `jobs` | `job_id` PK, `session_id` FK, kind, stage, status, request ID, 결과 참조·안전한 오류·시각 |
 | `teams` / `team_members` | Phase 3에서만 추가. 팀 소유 세션·규칙·슬롯과 세트 스냅샷 |
 
-FK와 uniqueness를 사용함. Chroma 벡터와 PostgreSQL 상태 저장은 단일 원자 트랜잭션을 공유하지 않음. 문서 청크 배치·원문 캐시·manifest를 대조하고 재실행 가능한 작업으로 복구함. 메시지·인용 스냅샷은 하나의 PostgreSQL 트랜잭션으로 저장함. 사용자 기록은 공용 벡터 컬렉션에 자동 색인하지 않음.
+FK와 uniqueness를 사용함. 벡터와 상태는 같은 PostgreSQL 스키마에 저장함. 현재 청크 배치·원문·manifest는 개별 트랜잭션으로 게시하므로 대조·재실행으로 중간 실패 복구함. 메시지·인용 스냅샷은 하나의 PostgreSQL 트랜잭션으로 저장함. 사용자 기록은 공용 벡터 컬렉션에 자동 색인하지 않음.
 
 ### 6.5 후속 전투 모델
 
@@ -184,7 +184,7 @@ FK와 uniqueness를 사용함. Chroma 벡터와 PostgreSQL 상태 저장은 단�
 
 검증 제약: `0 <= overlap < chunk_size`, `2 <= TOP_K <= 20`(메타 1+외부 공간 확보), 양의 timeout, 제한된 재시도. 청크 비교는 동일 원문에 1000/200과 500/100 등을 적용하고 건수·내용 차이를 기록함. Top-k도 같은 질문/색인으로 비교함.
 
-교체된 원본 PDF 5쪽 판독·화면 대조 완료함. 「필수 라이브러리/오픈소스」의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정을 유지함. 상태 저장은 psycopg 기반 PostgreSQL로 변경함:
+원본 PDF 5쪽의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정 확인함. 사용자가 해당 지정을 확인한 뒤 PostgreSQL + pgvector 통합을 선택함. 아래는 원본 지정 목록이며 현재 설치 목록과 구분함. Chroma 관련 두 의존성은 제거하고 psycopg·독립 ONNX 임베딩을 사용함:
 
 | 필수 목록 | PDF 지정 버전 |
 |---|---|
@@ -229,7 +229,8 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 ## PostgreSQL 전환 반영 (2026-10-22)
 
 - `backend/app/storage.py`: psycopg 연결·세션·대화·팀·작업·캐시 저장 구현함.
-- `backend/app/rag/vector_store.py`: Chroma `pokemon_meta`·`pokemon_docs`·고정 ID upsert·기존 ONNX MiniLM 임베딩 유지함.
+- `backend/app/rag/pgvector.py`: 두 논리 컬렉션·JSONB 필터·정확 L2 검색·고정 ID upsert 구현함.
+- `backend/app/rag/embeddings.py`: 기존 MiniLM 모델·256토큰·평균 풀링·정규화를 독립 실행함.
 - 대화·메시지 순서는 identity `seq`로 유지함. 작업 중복 요청은 PostgreSQL 트랜잭션 advisory lock, 상태 갱신은 행 잠금으로 보호함.
-- JSON은 기준 데이터·출처 스냅샷으로 유지함. 런타임 상태는 PostgreSQL, 벡터는 `runtime/chroma`에 저장함.
+- JSON은 기준 데이터·출처 스냅샷으로 유지함. 런타임 상태와 벡터는 PostgreSQL에 저장함. `runtime`은 로컬 임베딩 모델 캐시에 사용함.
 - 이전·실행·검증과 한계는 [PostgreSQL 전환 안내](POSTGRESQL_MIGRATION.md) 참조.
