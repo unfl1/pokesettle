@@ -17,13 +17,14 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from 'lucide-react';
-import { api } from './services/api';
-import { useWorkspace } from './hooks/useWorkspace';
-import ChatPanel from './components/ChatPanel';
-import TeamWorkspace from './components/TeamWorkspace';
-import { PokemonProfile, TypeBadge } from './components/PokemonProfile';
-import PokemonImage from './components/PokemonImage';
-import type { PokemonSummary } from './types';
+import { pokemonApi } from '../features/pokemon/api';
+import { useWorkspace } from '../features/chat/hooks/useWorkspace';
+import ChatPanel from '../features/chat/components/ChatPanel';
+import TeamWorkspace from '../features/team/components/TeamWorkspace';
+import { PokemonProfile } from '../features/pokemon/components/PokemonProfile';
+import { TypeBadge } from '../features/pokemon/components/TypeBadge';
+import PokemonImage from '../features/pokemon/components/PokemonImage';
+import type { PokemonSummary } from '../features/pokemon/types';
 
 export default function App() {
   const [params, setParams] = useSearchParams();
@@ -42,7 +43,7 @@ export default function App() {
   const ready = w.status.data?.ready;
   const list = useInfiniteQuery({
     queryKey: ['catalog-pages', name.trim(), w.status.data?.metadataCount],
-    queryFn: ({ pageParam }) => api.pokemon(name.trim(), pageParam),
+    queryFn: ({ pageParam }) => pokemonApi.pokemon(name.trim(), pageParam),
     initialPageParam: 0,
     getNextPageParam: (last) => {
       const next = (last.offset ?? 0) + last.items.length;
@@ -55,7 +56,7 @@ export default function App() {
       submittedCondition,
       w.status.data?.metadataCount,
     ],
-    queryFn: ({ pageParam }) => api.discover(submittedCondition!, pageParam),
+    queryFn: ({ pageParam }) => pokemonApi.discover(submittedCondition!, pageParam),
     initialPageParam: 0,
     enabled:
       submittedCondition !== null && w.session.isSuccess && Boolean(ready),
