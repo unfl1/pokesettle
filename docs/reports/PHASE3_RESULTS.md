@@ -1,6 +1,6 @@
 # Phase 3 팀·전투 보조 구현 결과
 
-> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](../guides/POSTGRESQL_MIGRATION.md) 참조.
 
 > 후속 MMR 검색 구현·검증은 [Phase 4 결과](PHASE4_MMR_RESULTS.md) 참조
 
@@ -45,7 +45,7 @@
 | 실제 모바일 화면 | 390×844, 기술 입력 펼침 상태의 가로 넘침 없음·브라우저 런타임 오류 없음 |
 | 타입표 재수집 | 최초 외부 호출 1회·캐시 1회, 재실행 외부 호출 0회·캐시 2회 |
 
-실제 로컬 연결 검증 요약은 [phase3.json](evidence/phase3.json)에 기록함. API 대역 테스트와 실제 SQLite·도감·계산 API 연결 검증을 구분함. 실제 연결 검증에서는 모델 호출 없음. 검증용 저장 팀은 종료 후 삭제함. 화면 캡처·실행 스크립트는 Git 제외 경로 `runtime-ui/`에 보관함.
+실제 로컬 연결 검증 요약은 [phase3.json](../evidence/phase3.json)에 기록함. API 대역 테스트와 실제 SQLite·도감·계산 API 연결 검증을 구분함. 실제 연결 검증에서는 모델 호출 없음. 검증용 저장 팀은 종료 후 삭제함. 화면 캡처·실행 스크립트는 Git 제외 경로 `runtime-ui/`에 보관함.
 
 ## 원인 → 수정 → 결과
 

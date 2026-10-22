@@ -20,7 +20,7 @@
 - 원본 PDF 5쪽의 Chroma 지정은 확인된 사실임. 사용자가 PostgreSQL + pgvector 통합을 선택함. 과제 측 대체 허용 확인과 구분함.
 - 기존 `runtime/embedding_model` 캐시 재사용함. ChromaDB·langchain-chroma 의존성과 런타임 저장 경로 제거함.
 - 메타데이터는 JSONB 동등 필터, 벡터는 `<->` 정확 L2 검색 적용함. 모델·차원 불일치와 비유한 벡터 입력 거부함.
-- `PROJECT_SPEC.md`, `AGENTS.md`, README, 아키텍처·요구사항 문서의 저장 기술 갱신함.
+- `docs/design/PROJECT_SPEC.md`, `AGENTS.md`, README, 아키텍처·요구사항 문서의 저장 기술 갱신함.
 
 ## 실행
 
@@ -76,7 +76,7 @@ uv run --frozen ruff format --check backend
 - PostgreSQL 18 + pgvector 0.8.1에서 전체 회귀 테스트 53개 통과함. 동시 요청·SQLite 이전·롤백·대화 순서·세션 격리·팀 CRUD·벡터/manifest 재시작 복원·거리/필터/차원 검증·기존 색인 이전 거부·이전 원문 버전 보존 검증함.
 - 실제 메타 1,351건·문서 청크 3,505건 색인·근거 6건 검색·API 상태 조회 확인함. 원본 SQLite 해시 동일함.
 - Ruff 검사·포맷 검사·Git 공백 검사·uv 잠금 파일 정합성 검사 통과함.
-- 현재 통합 구성은 [pgvector 검증 기록](evidence/postgresql-pgvector.json) 참조. 기존 [Chroma 병행 검증](evidence/postgresql.json)은 해당 구성 당시 결과로 보존함.
+- 현재 통합 구성은 [pgvector 검증 기록](../evidence/postgresql-pgvector.json) 참조. 기존 [Chroma 병행 검증](../evidence/postgresql.json)은 해당 구성 당시 결과로 보존함.
 
 ## 한계
 

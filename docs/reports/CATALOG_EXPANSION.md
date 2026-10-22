@@ -5,7 +5,7 @@
 ## 구현 결과
 
 - 고정된 100종 기본값과 1,025종 상한을 제거함. 기본 실행은 원본 전체 pokemon 행을 수집함. 현재 **기본 1,025종 + 별도 폼 326개 = 1,351개 항목**임.
-- 현재 PokéAPI pokemon 목록 1,351개와 ID 집합이 완전히 일치함. 누락 0개, CSV만의 추가 ID 0개임. [대조 증거](evidence/catalog-coverage.json)
+- 현재 PokéAPI pokemon 목록 1,351개와 ID 집합이 완전히 일치함. 누락 0개, CSV만의 추가 ID 0개임. [대조 증거](../evidence/catalog-coverage.json)
 - 종 ID와 pokemon 리소스 ID를 분리함. 기본 포켓몬 ID·기존 대화는 유지하며, 별도 폼은 자기 타입·종족값·특성과 이미지 ID를 보유함. 같은 종의 설명은 공유하되 이를 다른 폼의 능력치 근거로 사용하지 않도록 안내함.
 - 종 설명은 한국어·영어 CSV와 원래 게임 버전을 보존해 일괄 준비함. 항목 연결 문서 1,351개, 초기 색인은 메타 1,351개·문서 3,501청크임. 추가 질문의 관련 문서 수집에 따라 문서 청크 수는 변할 수 있음.
 - 이름 목록과 자연어 조건 검색에 100개 단위 “더 보기”를 추가함. 조건 해석 캐시는 다음 페이지의 불필요한 모델 호출을 막고 도감·프롬프트·모델 설정 변경 시 새로 해석함. 실제 필드 조건 검증은 유지함.
@@ -28,7 +28,7 @@
 | 실제 전체 API 페이지 | 1,351개 ID를 중복·누락 없이 읽음 |
 | 실제 Chrome·API·GMS | 100번 이후 뮤츠 선택·출처 포함 답변, 타부자고 검색·선택, 알로라 라이츄 별도 폼 선택, 이미지와 권리 안내, 모바일 가로 넘침 없음·브라우저 오류 없음 확인 |
 
-- [실제 조건 검색](evidence/catalog-discovery.json), [수집 수량](../data/catalog_report.json), [초기 색인](../data/index_report.json), [실제 브라우저 증거](evidence/catalog-browser.json)를 보존함.
+- [실제 조건 검색](../evidence/catalog-discovery.json), [수집 수량](../../data/catalog_report.json), [초기 색인](../../data/index_report.json), [실제 브라우저 증거](../evidence/catalog-browser.json)를 보존함.
 - 자동 브라우저 테스트는 API 대역을 사용하며 실제 브라우저/GMS 실행과 구분함.
 - 화면 캡처는 대화가 포함될 수 있어 Git 제외 경로 runtime-ui/에만 보관함.
 
