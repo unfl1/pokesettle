@@ -134,3 +134,10 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - [API 접근 정책](https://www.mediawiki.org/wiki/Wikimedia_APIs/Access_policy): 저장소 URL을 포함한 User-Agent·직렬 요청·대기·재시도·로컬 캐시 적용, `SOURCE_CONTACT`로 실제 관리 연락처 지정 가능
 - 일반 종 배경만 지원, 폼별 전투 수치·Champions 규칙·참가 가능 여부의 확인 근거로 사용 금지
 - 수집일·revision·원문 해시는 수집한 Document에 보존, [문서 모델](../../backend/app/schemas.py)·[Wikipedia 수집기](../../backend/app/data_preparation/wikipedia.py) 참조
+
+## 참조 데미지 계산 의존성
+
+- [Smogon damage-calc](https://github.com/smogon/damage-calc)·`@smogon/calc 0.12.0`의 Champions 전용 모드 사용, 확인일 2026-10-22
+- npm 배포 체크섬은 `backend/calculator/pnpm-lock.yaml`에 고정, 별도 공개 게임 데이터 수집 없이 설치 패키지의 참조 자료 사용
+- 원문 MIT 저작권·허가문은 [라이선스](../../backend/calculator/LICENSE.smogon-calc)에 보존
+- 코드 라이선스와 포켓몬 원문·캐릭터·이미지 권리 구분, 라이브러리 지원을 공식 게임 결과 검증으로 표시 금지

@@ -51,6 +51,16 @@ pnpm --dir frontend dev
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행
 
+선택형 참조 데미지 API 사용 시 계산 의존성 설치:
+
+```bash
+pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
+```
+
+- API: `POST /api/battle/damage`, [입력·지원 범위](docs/design/API_SPEC.md#참조-데미지-계산-api) 참조
+- Node.js가 PATH에 없으면 `.env`의 `DAMAGE_NODE_BINARY`에 실행 파일 절대 경로 지정
+- 특성·도구·상태·필드 효과 없는 조건을 명시한 참조 계산, 실제 게임 피해·적격성·KO/승률 검증과 구분
+
 ## 사용 범위
 
 - 일반 도감 수록 여부와 Champions 참가 가능 여부 구분
