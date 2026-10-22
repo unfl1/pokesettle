@@ -1,0 +1,63 @@
+{
+  "version": "phase4-answers-v1",
+  "created_on": "2026-10-22",
+  "scope": "generic Pokémon reference, not verified Champions mechanics",
+  "reference_source": "Existing data/pokemon.json and data/documents/species.json snapshots; original provenance retained",
+  "cases": [
+    {
+      "case_id": "pikachu-metadata", "pokemon_id": "pokemon:25",
+      "question": "피카츄(Pikachu)의 일반 도감 타입과 스피드 종족값을 알려줘. Champions의 실전 능력치와 구분해 줘.",
+      "reference_kind": "metadata", "reference_fields": {"types": ["electric"], "base_stats.speed": 90},
+      "reference_terms": [], "reference_document_id": null,
+      "expected_patterns": ["전기|electric", "(?:스피드|speed)[^\\d]{0,40}90(?:\\D|$)|90[^\\n]{0,20}(?:스피드|speed)"],
+      "expected_behavior": "answer", "requires_external_citation": false,
+      "review_focus": "일반 타입 electric·스피드 종족값 90과 Champions 실전 능력치 구분"
+    },
+    {
+      "case_id": "mega-charizard-x-form", "pokemon_id": "pokemon:10034",
+      "question": "메가리자몽 X(charizard-mega-x)의 일반 도감 타입과 스피드 종족값을 알려줘. 기본 리자몽과 폼을 혼동하지 말고 Champions 참가 가능 여부는 따로 구분해 줘.",
+      "reference_kind": "metadata", "reference_fields": {"types": ["fire", "dragon"], "base_stats.speed": 100},
+      "reference_terms": [], "reference_document_id": null,
+      "expected_patterns": ["불꽃|fire", "드래곤|dragon", "(?:스피드|speed)[^\\d]{0,40}100(?:\\D|$)|100[^\\n]{0,20}(?:스피드|speed)"],
+      "expected_behavior": "answer", "requires_external_citation": false,
+      "review_focus": "메가 X의 fire/dragon·스피드 100과 기본 리자몽의 flying 타입 구분"
+    },
+    {
+      "case_id": "gengar-ability", "pokemon_id": "pokemon:94",
+      "question": "팬텀(Gengar)의 일반 도감 데이터에 있는 특성을 영문 이름으로 알려줘. 이 정보를 Champions에서의 특성 허용 여부와 동일시하지 마.",
+      "reference_kind": "metadata", "reference_fields": {"abilities": ["cursed-body"]},
+      "reference_terms": [], "reference_document_id": null,
+      "expected_patterns": ["cursed[ -]body"],
+      "expected_behavior": "answer", "requires_external_citation": false,
+      "review_focus": "cursed-body 확인, 과거 작품의 levitate와 현행 Champions 허용 여부 혼동 여부"
+    },
+    {
+      "case_id": "pikachu-description", "pokemon_id": "pokemon:25",
+      "question": "피카츄(Pikachu)의 볼(cheek)에 전기를 저장하는 설명과 꼬리(tail)로 주변을 살피는 도감 설명을 알려줘. 원래 게임 버전도 구분하고 Champions 전용 정보로 해석하지 마.",
+      "reference_kind": "document", "reference_fields": {},
+      "reference_terms": ["stores electricity", "cheeks", "tail raised to monitor"],
+      "reference_document_id": "pokeapi:pokemon-species:25",
+      "expected_patterns": ["볼|뺨|cheek", "전기|electric", "꼬리|tail"],
+      "expected_behavior": "answer", "requires_external_citation": true,
+      "review_focus": "볼 전기 저장과 yellow의 꼬리 관찰 설명, 실제 인용한 게임 버전·범위 대조"
+    },
+    {
+      "case_id": "garchomp-description", "pokemon_id": "pokemon:445",
+      "question": "한카리아스(Garchomp)가 제트기(jet plane)처럼 난다는 도감 설명을 원래 게임 버전과 함께 알려줘. Champions의 실제 이동 속도 수치로 바꾸지 마.",
+      "reference_kind": "document", "reference_fields": {},
+      "reference_terms": ["jet plane", "flies"],
+      "reference_document_id": "pokeapi:pokemon-species:445",
+      "expected_patterns": ["제트|jet", "날|비행|fly|flies"],
+      "expected_behavior": "answer", "requires_external_citation": true,
+      "review_focus": "원문 작품별 설명 인용과 Champions 이동 속도·승률 등의 임의 수치 배제"
+    },
+    {
+      "case_id": "unsupported-champions-win-rate", "pokemon_id": "pokemon:25",
+      "question": "Pokémon Champions M-C에서 피카츄(Pikachu)의 정확한 경기 승률은 몇 퍼센트야? 현재 제공된 자료로 확인할 수 없으면 확인되지 않는다고 답해 줘.",
+      "reference_kind": "unavailable", "reference_fields": {},
+      "reference_terms": [], "reference_document_id": null,
+      "expected_patterns": [], "expected_behavior": "abstain", "requires_external_citation": false,
+      "review_focus": "현재 평가 자료에 경기 통계 없음, 수치 생성 대신 유보 확인"
+    }
+  ]
+}
