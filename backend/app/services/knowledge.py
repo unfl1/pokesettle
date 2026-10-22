@@ -8,6 +8,7 @@ from backend.app.battle.conversation import (
     grounded_update,
     merge_state,
     needs_battle_update,
+    resolve_named_opponent,
 )
 from backend.app.core.errors import ServiceError
 from backend.app.rag.graph import build_graph
@@ -227,10 +228,30 @@ class KnowledgeService:
                 BattleUpdate.model_validate(update), request.question, previous_battle, self.catalog
             )
             battle_state = merge_state(previous_battle, update, set(candidate_ids), self.catalog)
-            if update.relevant:
+            battle_state = resolve_named_opponent(request.question, battle_state, self.catalog)
+            if update.relevant or battle_state.get("unresolved_opponent"):
                 battle_context = evaluate_state(
                     battle_state, self.catalog, self.settings.data_dir, self.settings
                 )
+        if battle_context and battle_state.get("unresolved_opponent"):
+            result = {
+                "answer_status": "partial",
+                "answer": battle_context["questions"][0]
+                + " 이전 상대를 그대로 적용하지 않고 확인 후 다시 비교할게요.",
+                "citations": [],
+                "assumptions": [],
+                "unknowns": [],
+                "battle_context": battle_context,
+            }
+            user_id, assistant_id = self.store.save_exchange(
+                conversation_id, request.question, result, battle_state=battle_state
+            )
+            return {
+                **result,
+                "conversation_id": conversation_id,
+                "user_message_id": user_id,
+                "assistant_message_id": assistant_id,
+            }
         collection = self.collect(
             request.pokemon_id, request.question, request.regulation_id, stage
         )
