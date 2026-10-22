@@ -15,20 +15,22 @@ from backend.app.services.knowledge import KnowledgeService
 from backend.app.storage import Store
 
 
+def create_service(settings):
+    store = Store(settings.database_url, settings.database_schema)
+    catalog = Catalog(settings.data_dir / "pokemon.json")
+    vectors = VectorStore(settings, store)
+    source = PokeApiSource(SourceClient(settings, store))
+    return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings))
+
+
 def create_app(settings=None, *, service=None):
     settings = settings or Settings.from_env()
-    if service is None:
-        store = Store(settings.runtime_dir / "state.sqlite3")
-        catalog = Catalog(settings.data_dir / "pokemon.json")
-        vectors = VectorStore(settings, store)
-        source = PokeApiSource(SourceClient(settings, store))
-        service = KnowledgeService(
-            settings, catalog, store, vectors, source, StructuredModel(settings)
-        )
 
     @asynccontextmanager
     async def lifespan(app):
-        service.store.recover_jobs()
+        # Importing the module must not open a database connection.
+        app.state.service = service if service is not None else create_service(settings)
+        app.state.service.store.recover_jobs()
         yield
 
     app = FastAPI(title="PokéCoach AI", version="0.1.0", lifespan=lifespan)

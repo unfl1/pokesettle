@@ -1,5 +1,7 @@
 # Phase 3 팀·전투 보조 구현 결과
 
+> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+
 검증일: 2026-10-21. 작업 브랜치: `develop`. 범위: 일반 도감·타입표 기반 팀 준비와 전투 시나리오 비교. 챗봇 기본 화면 유지. Champions 현행 레귤레이션의 합법 판정과 정밀 전투 계산은 미지원임.
 
 ## 구현

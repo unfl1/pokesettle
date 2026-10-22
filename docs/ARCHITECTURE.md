@@ -2,7 +2,7 @@
 
 작성일: 2026-10-21. Phase 0 제안 계약임. 아래 경로·모델·설정은 향후 구현 설계이며 실제 모듈이나 데이터베이스를 생성하지 않음.
 
-> Phase 1 업데이트: 아래는 설계 당시의 기준임. 현재는 데이터 수집·두 컬렉션·LangGraph·API를 구현함. 실제 저장은 `backend/storage.py`의 SQLite 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시를 사용함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정과 검증은 [실행 결과](TEST_RESULTS.md)에 기록함.
+> 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정과 검증은 [실행 결과](TEST_RESULTS.md)에 기록함.
 
 > Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [검증 결과](PHASE2_RESULTS.md) 참조.
 
@@ -17,9 +17,9 @@ flowchart TD
     UI[React / TypeScript / Vite UI] --> API[FastAPI: 검증·세션·오류·작업 상태]
     API --> APP[응용 서비스: 채팅·가이드·조건 탐색]
     APP --> GRAPH[LangGraph: retrieve → generate]
-    GRAPH --> META[Chroma pokemon_meta]
-    GRAPH --> DOCS[Chroma pokemon_docs]
-    APP --> SQL[SQLite: 대화·작업·캐시·문서 연결]
+    GRAPH --> META[pgvector pokemon_meta]
+    GRAPH --> DOCS[pgvector pokemon_docs]
+    APP --> SQL[PostgreSQL: 대화·작업·캐시·문서 연결]
     PREP[데이터 준비: 수집·정규화·청킹·색인] --> META
     PREP --> DOCS
     PREP --> JSON[JSON: 기준 데이터·규칙·출처]
@@ -34,10 +34,10 @@ flowchart TD
 | `backend/app/services` | 수집 작업·채팅·가이드·탐색·저장 조정 | RAG 근거와 계산 결과를 구분 |
 | `backend/app/data_preparation` | 도메인별 원본 수집·ID/명칭 매핑·필드 검증·검색 텍스트 | 일반 검색/생성 모듈에 도메인별 수집 규칙 분산 금지 |
 | `backend/app/rag` | 컬렉션 접근, splitter, retriever, prompts, graph, 인용 검증 | 원본 진실은 JSON/출처 저장소, 벡터 DB는 파생 색인 |
-| `backend/app/storage.py` | SQLite 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
+| `backend/app/storage.py` | PostgreSQL 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
 | `backend/app/battle` | Phase 3 이후 검증된 상성·적격성·후보 계산 | LLM이 데미지·확률을 산출하지 않음 |
 
-초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 SQLite/Chroma 영속 디렉터리임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 SQLite에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
+초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 PostgreSQL + pgvector 서버임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 PostgreSQL에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
 
 ## 2. 수집·색인 경로
 
@@ -47,7 +47,7 @@ flowchart TD
 4. 후보 ID·제목·요약을 Prompt 2에 전달함. 모델 선택과 별개로 식별이 확인된 자체 문서는 반드시 채택함. 본문 길이가 짧아도 임의 제외하지 않음.
 5. 사용 조건을 확인한 원문 본문·출처·버전을 저장함. 자체 문서 부재/접근 실패/권리 미확인은 `missing_subject_document`로 보고하며 수집 완료로 기록하지 않음. 수집 불가능한 원문을 조작하거나 이용 제한을 우회하지 않음.
 6. 설정에 따라 청킹함. `pokemon_docs`에 항목별 연결을 포함해 upsert하고, 이전 인덱스 버전의 불필요한 청크는 제거함.
-7. 문서/청크 manifest와 실제 Chroma ID를 대조한 후에만 작업을 완료 처리함. 재시도 시 이미 완료한 문서는 재사용함.
+7. 문서/청크 manifest와 실제 PostgreSQL 벡터 ID를 대조한 후에만 작업을 완료 처리함. 재시도 시 이미 완료한 문서는 재사용함.
 
 검색어 캐시의 상태는 `pending`/`partial`/`complete`/`failed`임. `complete`는 필요한 본문 수집과 해당 색인의 성공까지 확인한 경우임. 원문 캐시와 색인 상태는 별도여서 색인만 실패하면 다운로드 없이 재색인함. 청킹 설정 변경도 저장된 본문만으로 처리함. 명시적 새 규칙 스냅샷/갱신 외에는 동일 성공 검색어를 다시 수집하지 않음.
 
@@ -98,7 +98,7 @@ F2010의 MVP는 **근거 기반 운용 가이드**임. 문서가 뒷받침하는
 
 ## 6. 데이터 공통 규칙
 
-- 내부 Python·JSON·SQLite는 snake_case, TypeScript·REST JSON은 camelCase. API 경계에서 명시적으로 변환함.
+- 내부 Python·JSON·PostgreSQL는 snake_case, TypeScript·REST JSON은 camelCase. API 경계에서 명시적으로 변환함.
 - 논리 ID는 문자열로 취급함. 종 ID와 폼 ID를 분리하고 외부 API 숫자 ID와 내부 ID를 매핑함. 기본 항목은 `pokemon_id`, 변형은 별도 `form_id`로 참조함.
 - `null`=미확인/미수집, `[]`=확인된 빈 목록임. 확인하지 않은 기술 목록을 빈 목록으로 저장하지 않음.
 - `verification_status`: `verified`/`assumed`/`unknown`. 검증된 정보도 `scope`와 provenance 필수. 사용자 입력은 `origin=user_input`으로 표시해 공식 검증과 구별함.
@@ -128,7 +128,7 @@ F2010의 MVP는 **근거 기반 운용 가이드**임. 문서가 뒷받침하는
 
 구성 순서: 내부 ID→한/영 이름→타입→종족값 각 이름과 수치→특성 이름/확인된 설명→설명→게임/포맷→규칙 적격 상태와 근거 날짜. 기술·메가 정보는 확인된 범위만 추가함. 알 수 없는 부분은 '미확인'으로 표기함. 필터링은 이 문자열을 다시 파싱하지 않고 정규화 필드를 사용함.
 
-### 6.3 Chroma 두 컬렉션
+### 6.3 pgvector 두 논리 컬렉션
 
 | 항목 | `pokemon_meta` | `pokemon_docs` |
 |---|---|---|
@@ -139,11 +139,11 @@ F2010의 MVP는 **근거 기반 운용 가이드**임. 문서가 뒷받침하는
 
 `document_id`는 출처의 안정 ID 또는 정규 URL의 해시, 원문 버전은 별도임. `index_version`은 원문 해시·splitter 버전·청킹 설정으로 결정함. 재색인 때 같은 항목·문서의 이전 버전 manifest를 조회해 stale 청크를 제거하며, 다른 항목 연결을 지우지 않음. 중간 실패는 작업을 partial로 남기고 재시도함. 검색은 완료된 활성 버전만 사용함.
 
-Chroma 필터는 스칼라로 평탄화함. 배열·중첩 객체·null은 그대로 메타에 넣지 않고 원본 JSON/SQLite에 보관함. 필요한 타입별 boolean·숫자 필드만 별도 투영함. `regulation_id` 미확인은 명시적 `unknown` 문자열을 쓰고 원본 null과 변환 규칙을 기록함. 라이브러리별 지원 타입은 Phase 1 고정 버전에서 확인함.
+벡터 메타데이터는 PostgreSQL JSONB로 저장하고 `@>` 동등 필터를 적용함. `vector_entries.collection`으로 `pokemon_meta`·`pokemon_docs`를 분리함. `vector_collections`에서 임베딩 모델·차원을 검증함. 검색은 `<->` 정확 L2 거리와 ID 동률 정렬을 사용하며 근사 색인은 미도입임.
 
 같은 문서가 여러 포켓몬에 관련되면 원문은 하나로 보관하고 연결은 여러 개로 저장함. 컬렉션 ID에 항목을 넣어 다른 종의 청크를 덮어쓰지 않음. 메타와 문서 컬렉션은 동일 임베딩 모델·차원·버전을 사용하고 변경 시 재색인함.
 
-### 6.4 SQLite 논리 테이블
+### 6.4 PostgreSQL 논리 테이블
 
 | 테이블 | 키·참조 및 주요 필드 |
 |---|---|
@@ -158,7 +158,7 @@ Chroma 필터는 스칼라로 평탄화함. 배열·중첩 객체·null은 그�
 | `jobs` | `job_id` PK, `session_id` FK, kind, stage, status, request ID, 결과 참조·안전한 오류·시각 |
 | `teams` / `team_members` | Phase 3에서만 추가. 팀 소유 세션·규칙·슬롯과 세트 스냅샷 |
 
-FK와 uniqueness를 사용함. Chroma와 SQLite는 단일 원자 트랜잭션을 공유하지 않으므로 manifest 검증 및 재실행 가능한 작업으로 복구함. 메시지·인용 스냅샷은 한 SQLite 트랜잭션으로 저장함. 사용자 기록은 공용 벡터 컬렉션에 자동 색인하지 않음.
+FK와 uniqueness를 사용함. 벡터와 상태는 같은 PostgreSQL 스키마에 저장함. 현재 청크 배치·원문·manifest는 개별 트랜잭션으로 게시하므로 대조·재실행으로 중간 실패 복구함. 메시지·인용 스냅샷은 하나의 PostgreSQL 트랜잭션으로 저장함. 사용자 기록은 공용 벡터 컬렉션에 자동 색인하지 않음.
 
 ### 6.5 후속 전투 모델
 
@@ -184,7 +184,7 @@ FK와 uniqueness를 사용함. Chroma와 SQLite는 단일 원자 트랜잭션을
 
 검증 제약: `0 <= overlap < chunk_size`, `2 <= TOP_K <= 20`(메타 1+외부 공간 확보), 양의 timeout, 제한된 재시도. 청크 비교는 동일 원문에 1000/200과 500/100 등을 적용하고 건수·내용 차이를 기록함. Top-k도 같은 질문/색인으로 비교함.
 
-PDF 5~6쪽의 버전 목록을 설치 전 기준으로 보존함:
+원본 PDF 5쪽의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정 확인함. 사용자가 해당 지정을 확인한 뒤 PostgreSQL + pgvector 통합을 선택함. 아래는 원본 지정 목록이며 현재 설치 목록과 구분함. Chroma 관련 두 의존성은 제거하고 psycopg·독립 ONNX 임베딩을 사용함:
 
 | 필수 목록 | PDF 지정 버전 |
 |---|---|
@@ -219,9 +219,18 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 
 - `backend/app/battle/models.py`: 팀 초안·멤버·기술·현재 슬롯·HP·공개/가정 상대 타입·교체 봉쇄·메가 상태 요청 계약.
 - `backend/app/battle/engine.py`: 일반 타입 곱셈·공격 커버리지·방어 대응·20개 선출 조합·공격/교체별 비교·메가 폼 전후 타입 처리. LLM·RAG 호출 없음.
-- SQLite `teams`: `id`, `session_id` FK, `name`, `members` JSON 스냅샷, `updated_at`. 기존 DB 생성 경로에서 `CREATE TABLE IF NOT EXISTS`로 추가. 별도 멤버 테이블은 도입하지 않음.
+- PostgreSQL `teams`: `id`, `session_id` FK, `name`, `members` JSON 스냅샷, `updated_at`. 기존 DB 생성 경로에서 `CREATE TABLE IF NOT EXISTS`로 추가. 별도 멤버 테이블은 도입하지 않음.
 - 팀 CRUD는 기존 세션 유효성 검사와 소유 세션 조건을 사용함. 타 세션 ID 조회·갱신·삭제는 같은 404 반환.
 - 계산 자료는 `data/type_chart.json`, 수집은 `backend/scripts/prepare_battle_data.py`. 공식 현행 레귤레이션을 하드코딩하지 않고 `regulationId=null`, `scope=generic` 유지.
 - 프론트는 챗봇 기본 화면을 유지하고 보조 팀·전투 화면으로 진입. 최초 진입 후 편집 상태 유지, 요청 스냅샷과 현재 입력이 다르면 결과 숨김.
 - 챗봇 연결은 사용자 질문 초안 준비이며 자동 모델 실행·계산 결과의 RAG 컨텍스트 주입과 구분함.
 - 자세한 검증·지원 범위는 [Phase 3 결과](PHASE3_RESULTS.md) 참조.
+
+## PostgreSQL 전환 반영 (2026-10-22)
+
+- `backend/app/storage.py`: psycopg 연결·세션·대화·팀·작업·캐시 저장 구현함.
+- `backend/app/rag/pgvector.py`: 두 논리 컬렉션·JSONB 필터·정확 L2 검색·고정 ID upsert 구현함.
+- `backend/app/rag/embeddings.py`: 기존 MiniLM 모델·256토큰·평균 풀링·정규화를 독립 실행함.
+- 대화·메시지 순서는 identity `seq`로 유지함. 작업 중복 요청은 PostgreSQL 트랜잭션 advisory lock, 상태 갱신은 행 잠금으로 보호함.
+- JSON은 기준 데이터·출처 스냅샷으로 유지함. 런타임 상태와 벡터는 PostgreSQL에 저장함. `runtime`은 로컬 임베딩 모델 캐시에 사용함.
+- 이전·실행·검증과 한계는 [PostgreSQL 전환 안내](POSTGRESQL_MIGRATION.md) 참조.

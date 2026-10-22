@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[3]
 class Settings:
     data_dir: Path = ROOT / "data"
     runtime_dir: Path = ROOT / "runtime"
+    database_url: str = field(default="postgresql://localhost:5432/poketact", repr=False)
+    database_schema: str = "poketact"
     api_key: str = field(default="", repr=False)
     chat_model: str = ""
     base_url: str | None = None
@@ -45,6 +47,8 @@ class Settings:
         return cls(
             data_dir=Path(os.getenv("DATA_DIR", str(ROOT / "data"))),
             runtime_dir=Path(os.getenv("RUNTIME_DIR", str(ROOT / "runtime"))),
+            database_url=os.getenv("DATABASE_URL", "postgresql://localhost:5432/poketact"),
+            database_schema=os.getenv("DATABASE_SCHEMA", "poketact"),
             api_key=os.getenv("OPENAI_API_KEY", ""),
             chat_model=os.getenv("CHAT_MODEL", ""),
             base_url=os.getenv("OPENAI_BASE_URL") or None,

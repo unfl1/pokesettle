@@ -128,7 +128,7 @@ def test_restart_reuses_success_cache_and_recovers_jobs(setup):
     session_id = setup.store.new_session()
     setup.store.put("http", "test", {"body": "cached"})
     job_id, _ = setup.store.create_job(session_id, "chat", "id", {})
-    restarted = Store(setup.store.path)
+    restarted = Store(setup.store.database_url, setup.store.schema)
     restarted.recover_jobs()
     assert restarted.get("http", "test")["body"] == "cached"
     assert restarted.job(job_id, session_id)["status"] == "interrupted"

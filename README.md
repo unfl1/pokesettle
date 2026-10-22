@@ -16,18 +16,19 @@ Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓�
 |---|---|
 | 프론트엔드 | React, TypeScript, Vite, Tailwind CSS |
 | 백엔드 | Python, FastAPI |
-| RAG | LangChain, LangGraph, ChromaDB |
-| 저장 | JSON, SQLite |
+| RAG | LangChain, LangGraph, pgvector |
+| 저장 | PostgreSQL, JSON 기준 자료 |
 
 ## 로컬 실행
 
-필요 환경: Python 3.10 이상·3.14 미만, Node.js 20.19+ 또는 22.12+, uv, pnpm.
+필요 환경: Python 3.10 이상·3.14 미만, Node.js 20.19+ 또는 22.12+, uv, pnpm, PostgreSQL + pgvector 또는 Docker Compose.
 
 1. 의존성 설치 및 `.env.example`을 참고한 서버 전용 `.env` 설정
 2. 모델 키·모델 이름·공급자 연결 주소를 개인 환경에 설정
-3. 데이터 색인 후 백엔드와 프론트엔드 실행
+3. PostgreSQL 준비 후 데이터 색인 및 백엔드·프론트엔드 실행
 
 ```bash
+docker compose up -d --wait postgres
 uv sync --python 3.12 --frozen --group dev
 uv run --frozen python -m backend.scripts.index_data
 uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
@@ -42,6 +43,8 @@ pnpm --dir frontend dev
 
 - 접속: [로컬 챗봇](http://127.0.0.1:5173/)
 - API 확인: [로컬 Swagger UI](http://127.0.0.1:8000/docs)
+- DB 연결: `.env`의 `DATABASE_URL`·`DATABASE_SCHEMA` 설정, Compose 사용 시 `POSTGRES_PASSWORD` 설정 필수
+- 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/POSTGRESQL_MIGRATION.md) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행
 

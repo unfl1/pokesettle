@@ -1,10 +1,13 @@
 import hashlib
 import json
-import sqlite3
+import re
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
+
+import psycopg
+from psycopg import sql
+from psycopg.rows import dict_row
 
 from backend.app.core.errors import ServiceError
 
@@ -20,42 +23,47 @@ def digest(value):
 
 
 class Store:
-    def __init__(self, path: Path):
-        path.parent.mkdir(parents=True, exist_ok=True)
-        self.path = path
+    def __init__(self, database_url: str, schema: str = "poketact"):
+        if not re.fullmatch(r"[a-z_][a-z0-9_]{0,62}", schema):
+            raise ValueError("DATABASE_SCHEMA는 소문자 영문·숫자·밑줄만 사용해야 합니다.")
+        if not database_url:
+            raise ValueError("DATABASE_URL 설정이 필요합니다.")
+        self.database_url, self.schema = database_url, schema
+        with psycopg.connect(database_url, connect_timeout=10) as db:
+            db.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(schema)))
         with self.connect() as db:
-            db.executescript("""
-                PRAGMA journal_mode=WAL;
-                CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), name TEXT NOT NULL, members TEXT NOT NULL, updated_at TEXT NOT NULL);
-                CREATE TABLE IF NOT EXISTS cache (namespace TEXT, key TEXT, value TEXT NOT NULL, PRIMARY KEY(namespace,key));
-                CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires_at TEXT NOT NULL);
-                CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), pokemon_id TEXT NOT NULL, regulation_id TEXT);
-                CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES conversations(id), role TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT NOT NULL);
-                CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), kind TEXT NOT NULL, client_id TEXT NOT NULL, request_hash TEXT NOT NULL, payload TEXT NOT NULL, UNIQUE(session_id,kind,client_id));
-            """)
+            for statement in (
+                "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires_at TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS cache (namespace TEXT, key TEXT, value TEXT NOT NULL, PRIMARY KEY(namespace,key))",
+                "CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), pokemon_id TEXT NOT NULL, regulation_id TEXT, seq BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE)",
+                "CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES conversations(id), role TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT NOT NULL, seq BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE)",
+                "CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), kind TEXT NOT NULL, client_id TEXT NOT NULL, request_hash TEXT NOT NULL, payload TEXT NOT NULL, UNIQUE(session_id,kind,client_id))",
+                "CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), name TEXT NOT NULL, members TEXT NOT NULL, updated_at TEXT NOT NULL)",
+                "CREATE INDEX IF NOT EXISTS conversations_owner ON conversations(session_id,pokemon_id,seq DESC)",
+                "CREATE INDEX IF NOT EXISTS messages_conversation ON messages(conversation_id,seq)",
+                "CREATE INDEX IF NOT EXISTS teams_owner ON teams(session_id)",
+            ):
+                db.execute(statement)
 
     @contextmanager
     def connect(self):
-        db = sqlite3.connect(self.path, timeout=30)
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA foreign_keys=ON")
-        try:
-            with db:
-                yield db
-        finally:
-            db.close()
+        with psycopg.connect(self.database_url, connect_timeout=10, row_factory=dict_row) as db:
+            db.execute(
+                sql.SQL("SET LOCAL search_path TO {}, public").format(sql.Identifier(self.schema))
+            )
+            yield db
 
     def get(self, namespace, key):
         with self.connect() as db:
             row = db.execute(
-                "SELECT value FROM cache WHERE namespace=? AND key=?", (namespace, key)
+                "SELECT value FROM cache WHERE namespace=%s AND key=%s", (namespace, key)
             ).fetchone()
-        return json.loads(row[0]) if row else None
+        return json.loads(row["value"]) if row else None
 
     def put(self, namespace, key, value):
         with self.connect() as db:
             db.execute(
-                "INSERT OR REPLACE INTO cache VALUES (?,?,?)",
+                "INSERT INTO cache VALUES (%s,%s,%s) ON CONFLICT(namespace,key) DO UPDATE SET value=excluded.value",
                 (namespace, key, json.dumps(value, ensure_ascii=False)),
             )
 
@@ -65,7 +73,7 @@ class Store:
         with self.connect() as db:
             return (
                 db.execute(
-                    "SELECT 1 FROM sessions WHERE id=? AND expires_at>?", (session_id, now())
+                    "SELECT 1 FROM sessions WHERE id=%s AND expires_at>%s", (session_id, now())
                 ).fetchone()
                 is not None
             )
@@ -74,14 +82,14 @@ class Store:
         session_id = str(uuid4())
         expires = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
         with self.connect() as db:
-            db.execute("INSERT INTO sessions VALUES (?,?)", (session_id, expires))
+            db.execute("INSERT INTO sessions VALUES (%s,%s)", (session_id, expires))
         return session_id
 
     def conversation(self, session_id, pokemon_id, regulation_id, conversation_id=None):
         with self.connect() as db:
             if conversation_id:
                 row = db.execute(
-                    "SELECT * FROM conversations WHERE id=? AND session_id=?",
+                    "SELECT * FROM conversations WHERE id=%s AND session_id=%s",
                     (conversation_id, session_id),
                 ).fetchone()
                 if not row:
@@ -93,7 +101,7 @@ class Store:
                 return conversation_id
             conversation_id = str(uuid4())
             db.execute(
-                "INSERT INTO conversations VALUES (?,?,?,?)",
+                "INSERT INTO conversations (id,session_id,pokemon_id,regulation_id) VALUES (%s,%s,%s,%s)",
                 (conversation_id, session_id, pokemon_id, regulation_id),
             )
         return conversation_id
@@ -103,7 +111,7 @@ class Store:
         with self.connect() as db:
             for mid, role, content in zip(ids, ["user", "assistant"], [question, answer]):
                 db.execute(
-                    "INSERT INTO messages VALUES (?,?,?,?,?)",
+                    "INSERT INTO messages (id,conversation_id,role,content,created_at) VALUES (%s,%s,%s,%s,%s)",
                     (mid, conversation_id, role, json.dumps(content, ensure_ascii=False), now()),
                 )
         return ids
@@ -111,16 +119,16 @@ class Store:
     def conversations(self, session_id, pokemon_id, limit=20, offset=0):
         with self.connect() as db:
             total = db.execute(
-                "SELECT COUNT(*) FROM conversations WHERE session_id=? AND pokemon_id=?",
+                "SELECT COUNT(*) AS total FROM conversations WHERE session_id=%s AND pokemon_id=%s",
                 (session_id, pokemon_id),
-            ).fetchone()[0]
+            ).fetchone()["total"]
             rows = db.execute(
                 """SELECT c.*, COALESCE(MAX(m.created_at),'') AS updated_at,
-                (SELECT content FROM messages WHERE conversation_id=c.id AND role='user' ORDER BY rowid LIMIT 1) AS first_question,
+                (SELECT content FROM messages WHERE conversation_id=c.id AND role='user' ORDER BY seq LIMIT 1) AS first_question,
                 COUNT(m.id) AS message_count
                 FROM conversations c LEFT JOIN messages m ON m.conversation_id=c.id
-                WHERE c.session_id=? AND c.pokemon_id=? GROUP BY c.id
-                ORDER BY c.rowid DESC LIMIT ? OFFSET ?""",
+                WHERE c.session_id=%s AND c.pokemon_id=%s GROUP BY c.id
+                ORDER BY c.seq DESC LIMIT %s OFFSET %s""",
                 (session_id, pokemon_id, limit, offset),
             ).fetchall()
         return {
@@ -145,16 +153,17 @@ class Store:
     def messages(self, session_id, conversation_id, limit=50, offset=0):
         with self.connect() as db:
             owner = db.execute(
-                "SELECT * FROM conversations WHERE id=? AND session_id=?",
+                "SELECT * FROM conversations WHERE id=%s AND session_id=%s",
                 (conversation_id, session_id),
             ).fetchone()
             if not owner:
                 raise ServiceError("RESOURCE_NOT_FOUND", "대화를 찾을 수 없습니다.", 404)
             total = db.execute(
-                "SELECT COUNT(*) FROM messages WHERE conversation_id=?", (conversation_id,)
-            ).fetchone()[0]
+                "SELECT COUNT(*) AS total FROM messages WHERE conversation_id=%s",
+                (conversation_id,),
+            ).fetchone()["total"]
             rows = db.execute(
-                "SELECT * FROM messages WHERE conversation_id=? ORDER BY rowid LIMIT ? OFFSET ?",
+                "SELECT * FROM messages WHERE conversation_id=%s ORDER BY seq LIMIT %s OFFSET %s",
                 (conversation_id, limit, offset),
             ).fetchall()
         return {
@@ -177,7 +186,7 @@ class Store:
     def history(self, conversation_id):
         with self.connect() as db:
             rows = db.execute(
-                "SELECT role,content FROM messages WHERE conversation_id=? ORDER BY rowid DESC LIMIT 12",
+                "SELECT role,content FROM messages WHERE conversation_id=%s ORDER BY seq DESC LIMIT 12",
                 (conversation_id,),
             ).fetchall()
         return [
@@ -187,9 +196,12 @@ class Store:
     def create_job(self, session_id, kind, client_id, request):
         request_hash = digest(request)
         with self.connect() as db:
-            db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                (json.dumps([session_id, kind, client_id]),),
+            )
             row = db.execute(
-                "SELECT id,request_hash FROM jobs WHERE session_id=? AND kind=? AND client_id=?",
+                "SELECT id,request_hash FROM jobs WHERE session_id=%s AND kind=%s AND client_id=%s",
                 (session_id, kind, client_id),
             ).fetchone()
             if row:
@@ -209,7 +221,7 @@ class Store:
                 "updated_at": now(),
             }
             db.execute(
-                "INSERT INTO jobs VALUES (?,?,?,?,?,?)",
+                "INSERT INTO jobs VALUES (%s,%s,%s,%s,%s,%s)",
                 (job_id, session_id, kind, client_id, request_hash, json.dumps(payload)),
             )
         return job_id, True
@@ -217,19 +229,21 @@ class Store:
     def job(self, job_id, session_id):
         with self.connect() as db:
             row = db.execute(
-                "SELECT payload FROM jobs WHERE id=? AND session_id=?", (job_id, session_id)
+                "SELECT payload FROM jobs WHERE id=%s AND session_id=%s", (job_id, session_id)
             ).fetchone()
         if not row:
             raise ServiceError("RESOURCE_NOT_FOUND", "작업을 찾을 수 없습니다.", 404)
-        return json.loads(row[0])
+        return json.loads(row["payload"])
 
     def update_job(self, job_id, **fields):
         with self.connect() as db:
-            row = db.execute("SELECT payload FROM jobs WHERE id=?", (job_id,)).fetchone()
-            payload = json.loads(row[0])
+            row = db.execute(
+                "SELECT payload FROM jobs WHERE id=%s FOR UPDATE", (job_id,)
+            ).fetchone()
+            payload = json.loads(row["payload"])
             payload.update(fields, updated_at=now())
             db.execute(
-                "UPDATE jobs SET payload=? WHERE id=?",
+                "UPDATE jobs SET payload=%s WHERE id=%s",
                 (json.dumps(payload, ensure_ascii=False), job_id),
             )
 
@@ -249,14 +263,14 @@ class Store:
                         ).as_dict(),
                     )
                     db.execute(
-                        "UPDATE jobs SET payload=? WHERE id=?",
+                        "UPDATE jobs SET payload=%s WHERE id=%s",
                         (json.dumps(payload, ensure_ascii=False), row["id"]),
                     )
 
     def teams(self, session_id):
         with self.connect() as db:
             rows = db.execute(
-                "SELECT * FROM teams WHERE session_id=? ORDER BY updated_at DESC", (session_id,)
+                "SELECT * FROM teams WHERE session_id=%s ORDER BY updated_at DESC", (session_id,)
             ).fetchall()
         return {"items": [self.team_data(row) for row in rows], "total": len(rows)}
 
@@ -272,7 +286,7 @@ class Store:
     def team(self, session_id, team_id):
         with self.connect() as db:
             row = db.execute(
-                "SELECT * FROM teams WHERE id=? AND session_id=?", (team_id, session_id)
+                "SELECT * FROM teams WHERE id=%s AND session_id=%s", (team_id, session_id)
             ).fetchone()
         if not row:
             raise ServiceError("RESOURCE_NOT_FOUND", "팀을 찾을 수 없습니다.", 404)
@@ -285,7 +299,7 @@ class Store:
             team_id = str(uuid4())
         with self.connect() as db:
             db.execute(
-                "INSERT INTO teams VALUES (?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,members=excluded.members,updated_at=excluded.updated_at WHERE teams.session_id=excluded.session_id",
+                "INSERT INTO teams VALUES (%s,%s,%s,%s,%s) ON CONFLICT(id) DO UPDATE SET name=excluded.name,members=excluded.members,updated_at=excluded.updated_at WHERE teams.session_id=excluded.session_id",
                 (
                     team_id,
                     session_id,
@@ -299,4 +313,4 @@ class Store:
     def delete_team(self, session_id, team_id):
         self.team(session_id, team_id)
         with self.connect() as db:
-            db.execute("DELETE FROM teams WHERE id=? AND session_id=?", (team_id, session_id))
+            db.execute("DELETE FROM teams WHERE id=%s AND session_id=%s", (team_id, session_id))
