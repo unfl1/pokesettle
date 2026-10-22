@@ -1,5 +1,7 @@
 import threading
 
+import numpy as np
+from langchain_core.vectorstores.utils import maximal_marginal_relevance
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from backend.app.catalog import metadata_text
@@ -22,6 +24,15 @@ class VectorStore:
         initialize_vectors(store)
         self.meta = PgVectorCollection(store, "pokemon_meta", self.embedding_identity)
         self.docs = PgVectorCollection(store, "pokemon_docs", self.embedding_identity)
+
+    @property
+    def retrieval_settings(self):
+        return {
+            "search_mode": self.settings.search_mode,
+            "top_k": self.settings.top_k,
+            "mmr_fetch_k": self.settings.mmr_fetch_k,
+            "mmr_lambda_mult": self.settings.mmr_lambda_mult,
+        }
 
     def upsert_metadata(self, records):
         with self.lock:
@@ -138,14 +149,17 @@ class VectorStore:
                 self.docs.get(where={"pokemon_id": pokemon_id}, include=[])["ids"]
             )
             if associated_count:
+                use_mmr = self.settings.search_mode == "mmr"
+                query_embedding = self.embed([query])
                 result = self.docs.query(
-                    query_embeddings=self.embed([query]),
+                    query_embeddings=query_embedding,
                     n_results=associated_count,
                     where={"pokemon_id": pokemon_id},
+                    include_embeddings=use_mmr,
                 )
-                seen = set()
-                for eid, text, meta in zip(
-                    result["ids"][0], result["documents"][0], result["metadatas"][0]
+                candidates, candidate_embeddings, seen = [], [], set()
+                for index, (eid, text, meta) in enumerate(
+                    zip(result["ids"][0], result["documents"][0], result["metadatas"][0])
                 ):
                     manifest = self.store.get("manifest", f"{pokemon_id}:{meta['document_id']}")
                     if not manifest or eid not in manifest["ids"]:
@@ -160,9 +174,23 @@ class VectorStore:
                     if content_hash in seen:
                         continue
                     seen.add(content_hash)
-                    evidence.append(self.evidence(eid, text, meta))
-                    if len(evidence) >= self.settings.top_k:
+                    candidates.append(self.evidence(eid, text, meta))
+                    if use_mmr:
+                        candidate_embeddings.append(result["embeddings"][0][index])
+                    # Filter active revisions/scope and duplicates BEFORE limiting the pool.
+                    target = self.settings.mmr_fetch_k if use_mmr else self.settings.top_k - 1
+                    if len(candidates) >= target:
                         break
+                if use_mmr:
+                    selected = maximal_marginal_relevance(
+                        np.asarray(query_embedding[0], dtype=np.float32),
+                        candidate_embeddings,
+                        lambda_mult=self.settings.mmr_lambda_mult,
+                        k=self.settings.top_k - 1,
+                    )
+                    evidence.extend(candidates[i] for i in selected)
+                else:
+                    evidence.extend(candidates)
             for number, item in enumerate(evidence, 1):
                 item["number"] = number
             return evidence
