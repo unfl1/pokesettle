@@ -56,3 +56,19 @@ def test_real_profile_has_stats_description_and_labelled_moves():
     assert thunderbolt["type"] == "electric"
     assert thunderbolt["power"] == 90
     assert profile["learnset_sources"][0]["collected_at"]
+
+
+def test_localized_ability_names_preserve_source_identifiers():
+    from backend.app.catalog import Catalog
+    from backend.app.core.config import ROOT
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    profile = catalog.profile("pokemon:1")
+    assert profile["abilities"] == ["overgrow", "chlorophyll"]
+    assert profile["ability_details"] == [
+        {"name": "overgrow", "name_ko": "심록"},
+        {"name": "chlorophyll", "name_ko": "엽록소"},
+    ]
+    assert any(
+        source["url"].endswith("/ability_names.csv") for source in catalog.details["sources"]
+    )

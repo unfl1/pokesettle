@@ -40,6 +40,10 @@ class Catalog:
     def profile(self, pokemon_id):
         pokemon = self.get(pokemon_id)
         result = pokemon.model_dump()
+        result["ability_details"] = [
+            {"name": name, "name_ko": self.details.get("ability_names", {}).get(name)}
+            for name in pokemon.abilities
+        ]
         description = self.descriptions.get(pokemon_id)
         if description:
             label, text = description.split("): ", 1)

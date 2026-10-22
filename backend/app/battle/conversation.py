@@ -7,7 +7,7 @@ from pydantic import Field
 
 from backend.app.battle.damage import DamageInput, calculate_damage
 from backend.app.battle.engine import BattleEngine
-from backend.app.battle.models import TeamMember, TypeName
+from backend.app.battle.models import TeamAnalysis, TeamMember, TypeName
 from backend.app.core.errors import ServiceError
 from backend.app.schemas import Generation, Model
 
@@ -21,6 +21,8 @@ class BattleUpdate(Model):
     input_evidence: list[InputEvidence] = Field(default_factory=list, max_length=30)
     relevant: bool = False
     reset: bool = False
+    own_team_ids: list[str] | None = Field(default=None, max_length=6)
+    opponent_team_ids: list[str] | None = Field(default=None, max_length=6)
     own_id: str | None = None
     opponent_id: str | None = None
     own_hp_percent: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
@@ -45,6 +47,7 @@ class BattleUpdate(Model):
 
 STATE_PROMPT = """사용자 전투 입력의 변경분만 추출하세요.
 추천한 행동을 실제 실행으로 기록하지 마세요. 교체 후보의 HP 정정은 bench_members에만 기록하고 own_id를 바꾸지 마세요.
+양쪽 전체 엔트리는 own_team_ids·opponent_team_ids에 각각 기록하세요. 6마리 팀을 현재 선봉이나 5마리 이하 교체 후보로 대신 기록하지 마세요.
 내/상대 ID 이외의 각 입력 필드에는 input_evidence 목록에 field=필드명, quote=해당 값을 직접 명시한 이번 질문의 정확한 원문 구절을 복사하세요. 원문 근거가 없으면 필드는 null로 두세요.
 HP 기본값은 절대로 100으로 채우지 마세요. 내 기술을 상대 기술에 복사하지 마세요. 조언이나 추측을 하지 마세요.
 명시된 내 포켓몬과 상대 포켓몬의 역할을 구분하고 candidate_pokemon의 ID만 사용하세요.
@@ -68,7 +71,7 @@ damage_scenarios는 사용자가 양쪽 육성 포인트 전체·성격(원본 �
 def needs_battle_update(question, previous):
     return bool(previous) or bool(
         re.search(
-            r"선봉|상대|대면|교체|테라|남은\s*HP|현재\s*HP|내\s*(?:포켓몬|파티)|battle|opponent|switch",
+            r"선출|엔트리|6\s*(?:vs|대)\s*6|선봉|상대|대면|교체|테라|남은\s*HP|현재\s*HP|내\s*(?:포켓몬|파티)|battle|opponent|switch",
             question,
             re.I,
         )
@@ -157,6 +160,9 @@ def merge_state(previous, update, allowed_ids, catalog):
     for key in ("own_id", "opponent_id"):
         if key in fields and fields[key] not in allowed_ids:
             fields.pop(key)
+    for key in ("own_team_ids", "opponent_team_ids"):
+        if key in fields:
+            fields[key] = [pid for pid in fields[key] if pid in allowed_ids]
     if "bench_ids" in fields:
         fields["bench_ids"] = list(
             dict.fromkeys(pid for pid in fields["bench_ids"] if pid in allowed_ids)
@@ -254,7 +260,8 @@ def resolve_named_opponent(question, state, catalog):
             state = {
                 k: v
                 for k, v in state.items()
-                if not k.startswith("opponent_") and k != "damage_scenarios"
+                if (not k.startswith("opponent_") or k == "opponent_team_ids")
+                and k != "damage_scenarios"
             }
             state["opponent_id"] = resolved
         state.pop("unresolved_opponent", None)
@@ -271,7 +278,9 @@ def resolve_named_opponent(question, state, catalog):
     if tail and not re.match(r"(?:나왔|나와|선봉|인데|어케|어떻게|[?.!])", tail):
         return state
     state = {
-        k: v for k, v in state.items() if not k.startswith("opponent_") and k != "damage_scenarios"
+        k: v
+        for k, v in state.items()
+        if (not k.startswith("opponent_") or k == "opponent_team_ids") and k != "damage_scenarios"
     }
     suggestions = get_close_matches(
         token, [name for name in names if not name.isascii()], n=1, cutoff=0.65
@@ -283,7 +292,53 @@ def resolve_named_opponent(question, state, catalog):
     return state
 
 
+def evaluate_selection(state, catalog, data_dir):
+    engine = BattleEngine(catalog, data_dir)
+    context = {
+        "state": state,
+        "scope": "generic_team_selection",
+        "recommendation": "need_six_per_team",
+        "probability": None,
+        "assumptions": [],
+        "questions": [],
+        "attacks": [],
+        "defense": [],
+        "switches": [],
+        "sources": engine.data["sources"],
+    }
+    own, opponent = state.get("own_team_ids", []), state.get("opponent_team_ids", [])
+    if len(own) != 6 or len(opponent) != 6:
+        context["questions"] = [
+            f"내 팀과 상대 엔트리를 각각 6마리 알려주세요. 현재 내 팀 {len(own)}마리, 상대 {len(opponent)}마리입니다."
+        ]
+        return context
+    try:
+        result = engine.selection(
+            TeamAnalysis(
+                own=[TeamMember(pokemon_id=pid) for pid in own],
+                opponent=[TeamMember(pokemon_id=pid) for pid in opponent],
+            )
+        )
+    except ServiceError as error:
+        context["questions"] = [error.message]
+        return context
+    context.update(
+        recommendation="recommend_three",
+        selection={
+            "candidate_count": result["candidate_count"],
+            "score_kind": result["score_kind"],
+            "candidates": result["candidates"][:3],
+        },
+    )
+    context["selection"]["names"] = {
+        pid: catalog.get(pid).name_ko or catalog.get(pid).name_en for pid in [*own, *opponent]
+    }
+    return context
+
+
 def evaluate_state(state, catalog, data_dir, settings=None):
+    if state.get("selection_requested"):
+        return evaluate_selection(state, catalog, data_dir)
     context = {
         "state": state,
         "scope": "generic_type_scenario",
@@ -511,6 +566,27 @@ def coach_fallback(context, evidence):
     )
     if calculation is None:
         return None
+    if context.get("scope") == "generic_team_selection":
+        if context["recommendation"] == "need_six_per_team":
+            return Generation(
+                answer_status="partial", claims=[], assumptions=[], unknowns=context["questions"]
+            )
+        selection = context["selection"]
+        best = selection["candidates"][0]
+        names = selection["names"]
+        team = ", ".join(names[pid] for pid in best["pokemon_ids"])
+        parts = best["components"]
+        texts = [
+            f"일반적인 타입 상성 기준으로 {team} 선출을 추천합니다. 선봉 후보는 {names[best['lead_id']]}입니다.",
+            f"이 조합은 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 공격 타입을 포함하며, 상대의 가정 공격을 반감·무효화할 수 있는 대응 시나리오는 {parts['resisted_scenarios']}개입니다.",
+            "주의사항\n기술을 입력하지 않은 멤버는 자신의 타입 공격을 가진 일반적인 상황으로 비교했습니다. 특성·도구·실제 기술·속도와 상대 선출에 따라 추천은 달라질 수 있습니다. 비교 점수는 승률이 아닙니다.",
+        ]
+        return Generation(
+            answer_status="partial",
+            claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],
+            assumptions=[],
+            unknowns=[],
+        )
     type_labels = dict(
         zip(
             [
@@ -557,11 +633,11 @@ def coach_fallback(context, evidence):
     )
     directions = {
         "need_new_opponent": "상대가 쓰러진 상태로 입력됐습니다. 다음 상대를 알려주시면 대면을 다시 비교하겠습니다.",
-        "consider_switch_first": "일반 타입 시나리오에서는 불리한 공격을 받을 수 있어 교체 후보를 우선 검토하는 방향을 추천합니다. 실제 최선 행동 확정은 아닙니다.",
+        "consider_switch_first": "일반적인 대면에서는 상대 공격을 받아줄 수 있는 포켓몬으로 교체하는 것을 추천합니다.",
         "replacement_required": "입력한 HP가 0%이므로 현재 포켓몬의 공격보다 다음에 내보낼 포켓몬을 확인해야 합니다.",
         "compare_attacks_switch_blocked": "교체가 봉쇄됐다고 입력했으므로 공격·보조 기술 선택을 비교해야 합니다.",
-        "consider_attack_if_available": "유리한 공격 타입의 기술이 있다면 공격을 우선 검토하세요.",
-        "consider_attack_with_speed_and_hp_check": "약점을 찌르는 보유 기술로 공격을 우선 검토하세요. 선공과 생존 여부에 따라 선택은 달라질 수 있습니다.",
+        "consider_attack_if_available": "일반적으로 상대 약점을 찌르는 공격을 추천합니다.",
+        "consider_attack_with_speed_and_hp_check": "일반적으로 약점을 찌르는 보유 기술로 공격하는 것을 추천합니다.",
         "compare_attacks_and_switches": "타입만으로 교체를 우선할 근거가 충분하지 않아 보유 기술과 교체 후보를 함께 비교해야 합니다.",
     }
     direction = directions.get(context["recommendation"])
@@ -573,21 +649,45 @@ def coach_fallback(context, evidence):
         if item["pokemon_id"] in context.get("preferred_switch_ids", [])
     ]
     if preferred and context["recommendation"] in {"consider_switch_first", "replacement_required"}:
-        direction = f"현재 공개·가정 공격의 타입 상성만 비교하면 {', '.join(item['name'] for item in preferred)} 교체를 우선 검토하세요. 실제 생존과 선공을 확인한 추천은 아닙니다."
+        direction = f"일반적으로 {', '.join(item['name'] for item in preferred)} 교체를 추천합니다. 상대 공격을 더 유리한 타입 상성으로 받을 수 있습니다."
+    favorable = sorted(
+        [item for item in context["attacks"] if item["multiplier"] > 1],
+        key=lambda item: -item["multiplier"],
+    )
+    if (
+        context["recommendation"]
+        in {
+            "consider_attack_if_available",
+            "consider_attack_with_speed_and_hp_check",
+            "compare_attacks_and_switches",
+        }
+        and favorable
+    ):
+        attack_type = favorable[0]["type"]
+        move = next(
+            (
+                move
+                for move in context.get("known_moves", [])
+                if move["side"] == "own"
+                and move["type"] == attack_type
+                and move["category"] != "status"
+            ),
+            None,
+        )
+        label = (
+            (move.get("name_ko") or move["name"])
+            if move
+            else type_labels[attack_type] + " 타입 기술"
+        )
+        direction = f"일반적으로 {label}로 공격하는 것을 추천합니다."
     texts = [direction]
+    warnings = []
     for item in context["switches"]:
         comparison = ", ".join(
             f"{type_labels.get(entry['type'], entry['type'])} {entry['multiplier']:g}배"
             for entry in item["defense"]
         )
-        texts.append(
-            f"교체 후보 {item['name']}: 상대 공격에 {comparison}입니다. 최대 배율 {item['worst_multiplier']:g}배를 기준으로 비교했으며 HP·특성·도구·진입 피해는 별도 확인해야 합니다."
-        )
-    for move in context.get("known_moves", []):
-        if move["side"] == "own" and move["category"] != "status":
-            texts.append(
-                f"입력한 보유 기술 {move.get('name_ko') or move['name']}을 기준으로 공격 상성을 비교했습니다."
-            )
+        texts.append(f"교체 후보 {item['name']}: 상대 공격에 {comparison}입니다.")
     for result in context.get("damage_comparisons", []):
         damage = result["calculation"]["damage"]
         inputs = result["inputs"]
@@ -598,7 +698,7 @@ def coach_fallback(context, evidence):
         context["state"].get("opponent_attack_stage") is not None
         or context["state"].get("opponent_speed_stage") is not None
     ):
-        texts.append(
+        warnings.append(
             "상대 능력치 변화 입력이 있으므로 기본 종족값만으로 선공·생존을 판단할 수 없습니다. 실제 스피드와 변화가 반영된 피해 비교가 필요합니다."
         )
     favorable = sorted(
@@ -611,11 +711,13 @@ def coach_fallback(context, evidence):
             f"{context['opponent_name']}는 {name} 공격에 {item['multiplier']:g}배 약점입니다."
         )
         if item.get("ground_switch_immunity"):
-            texts.append("상대 엔트리에 땅 타입이 있다면 전기 기술을 무효화하는 교체에 주의하세요.")
+            warnings.append(
+                "상대 엔트리에 땅 타입이 있다면 전기 기술을 무효화하는 교체에 주의하세요."
+            )
     risks = [item for item in context["defense"] if item["multiplier"] > 1]
     if risks:
-        texts.append(
-            "반대로 상대의 "
+        warnings.append(
+            "상대의 "
             + ", ".join(
                 f"{type_labels.get(item['type'], item['type'])} 공격은 {item['multiplier']:g}배"
                 for item in risks
@@ -624,18 +726,22 @@ def coach_fallback(context, evidence):
         )
     if context.get("type_change"):
         change = context["type_change"]
-        texts.append(
+        warnings.append(
             "방어 타입을 "
             + change["type"]
             + "로만 바꾼 가정에서는 "
             + ", ".join(f"{item['type']} 공격 {item['multiplier']}배" for item in change["defense"])
             + "입니다. 실제 사용 가능 여부와 해당 타입 기술 보유는 별도 확인이 필요합니다."
         )
+    if any(item.get("basis") == "if_available" for item in favorable):
+        warnings.append("추천한 타입의 기술을 실제로 보유한 경우의 일반적인 판단입니다.")
+    warnings.append(
+        "남은 HP·선공 여부·특성·도구에 따라 선택은 달라질 수 있으며, 타입 배율이 KO나 승률을 뜻하지는 않습니다."
+    )
+    texts.append("주의사항\n" + "\n".join(warnings))
     return Generation(
         answer_status="partial",
         claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],
-        assumptions=[
-            "타입 기준의 조건부 판단이며, 실제 피해·선공·특성·도구 효과는 별도 확인이 필요합니다."
-        ],
-        unknowns=context["questions"],
+        assumptions=[],
+        unknowns=[question for question in context["questions"] if question.startswith("기술 '")],
     )

@@ -50,6 +50,8 @@ def prepare(settings):
     client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
     for name in [
+        "abilities",
+        "ability_names",
         "types",
         "moves",
         "move_names",
@@ -68,6 +70,14 @@ def prepare(settings):
         "licence_url": LICENCE_URL,
         "scope": "Original game version reference; Champions learnsets unverified",
         "pokemon": build_details(tables),
+    }
+    ability_names = {
+        r["ability_id"]: r["name"] for r in tables["ability_names"] if r["local_language_id"] == "3"
+    }
+    result["ability_names"] = {
+        r["identifier"]: ability_names[r["id"]]
+        for r in tables["abilities"]
+        if r["id"] in ability_names
     }
     type_names = {r["id"]: r["identifier"] for r in tables["types"]}
     ko_names = {

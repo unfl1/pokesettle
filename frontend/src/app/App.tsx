@@ -543,8 +543,6 @@ export default function App() {
                       <PokemonProfile
                         key={selectedDetail.data.pokemonId}
                         pokemon={selectedDetail.data}
-                        onGuide={() => w.submit('guide', pokemonId)}
-                        disabled={!w.canSend || !w.status.data?.ready}
                       />
                     )
                   )}

@@ -133,7 +133,7 @@ def test_real_pipeline_persists_user_state_and_supplies_citable_calculation(setu
     first = setup.service.chat(
         request("내 선봉은 이상해꽃이고 상대는 리자몽, 교체 후보는 거북왕"), session
     )
-    assert "거북왕 교체를 우선 검토" in first["answer"]
+    assert "거북왕 교체를 추천" in first["answer"]
     assert first["battle_context"]["switches"][0]["pokemon_id"] == "pokemon:9"
     cid = first["conversation_id"]
     assert first["battle_context"]["state"]["own_id"] == "pokemon:3"
@@ -178,11 +178,12 @@ def test_abstained_model_can_still_explain_cited_type_calculation(setup):
         }
     )["result"]
     assert output["answer_status"] == "partial"
-    assert "교체 후보를 우선 검토" in output["answer"]
+    assert "교체하는 것을 추천" in output["answer"]
     assert output["citations"][0]["source_type"] == "calculation"
     assert output["facts"][0]["verification_status"] == "assumed"
     assert "70%" not in output["answer"]
-    assert output["unknowns"]
+    assert output["unknowns"] == []
+    assert "주의사항" in output["answer"]
 
 
 def test_pikachu_gyarados_product_and_action_first_output_rejects_model_two_times(setup):
@@ -227,7 +228,7 @@ def test_pikachu_gyarados_product_and_action_first_output_rejects_model_two_time
     )["result"]
     assert "4배 약점" in result["answer"]
     assert "전기 공격은 갸라도스에게 2배입니다" not in result["answer"]
-    assert result["answer"].startswith("유리한 공격 타입의 기술이 있다면")
+    assert result["answer"].startswith("일반적으로 전기 타입 기술로 공격")
     assert "땅 타입" in result["answer"] and "교체에 주의" in result["answer"]
     assert result["citations"][0]["source_type"] == "calculation"
 
@@ -447,8 +448,8 @@ def test_coach_answer_is_concise_and_all_type_names_are_korean():
     )
     answer = coach_fallback(context, [{"evidence_id": "calc", "source_type": "calculation"}])
     assert len(answer.claims) <= 3
-    assert len(answer.unknowns) == 1
-    assert len(answer.assumptions) == 1
+    assert len(answer.unknowns) == 0
+    assert len(answer.assumptions) == 0
     assert "water" not in str(answer) and "flying" not in str(answer)
 
 
@@ -483,3 +484,20 @@ def test_unknown_new_opponent_is_saved_without_searching_old_opponent(setup, mon
     assert "라우드본" in result["answer"]
     assert "갸라도스" not in result["answer"]
     assert "opponent_id" not in setup.store.get("battle_state", cid)
+
+
+def test_general_recommendation_precedes_cautions_without_routine_questions():
+    from backend.app.battle.conversation import coach_fallback
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    context = evaluate_state(
+        {"own_id": "pokemon:25", "opponent_id": "pokemon:130", "own_moves": ["10만볼트"]},
+        catalog,
+        ROOT / "data",
+    )
+    answer = coach_fallback(context, [{"evidence_id": "calc", "source_type": "calculation"}])
+    assert answer.claims[0].text == "일반적으로 10만볼트로 공격하는 것을 추천합니다."
+    assert "4배" in answer.claims[1].text
+    assert answer.claims[-1].text.startswith("주의사항\n")
+    assert "땅 타입" in answer.claims[-1].text
+    assert answer.unknowns == []

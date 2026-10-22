@@ -1,3 +1,4 @@
+import re
 import threading
 import time
 
@@ -233,13 +234,15 @@ class KnowledgeService:
             candidate_ids = list(
                 dict.fromkeys(
                     [
-                        *mentioned_pokemon(self.catalog, request.question, limit=8),
+                        *mentioned_pokemon(self.catalog, request.question, limit=16),
                         *[
                             previous_battle.get(key)
                             for key in ("own_id", "opponent_id")
                             if previous_battle.get(key)
                         ],
                         *previous_battle.get("bench_ids", []),
+                        *previous_battle.get("own_team_ids", []),
+                        *previous_battle.get("opponent_team_ids", []),
                     ]
                 )
             )
@@ -264,16 +267,53 @@ class KnowledgeService:
                 BattleUpdate.model_validate(update), request.question, previous_battle, self.catalog
             )
             battle_state = merge_state(previous_battle, update, set(candidate_ids), self.catalog)
-            battle_state = resolve_named_opponent(request.question, battle_state, self.catalog)
-            if update.relevant or battle_state.get("unresolved_opponent"):
+            for side, marker in (
+                ("own", r"내\s*(?:팀|파티|엔트리)"),
+                ("opponent", r"상대\s*(?:팀|파티|엔트리)"),
+            ):
+                match = re.search(marker, request.question)
+                if match:
+                    text = request.question[match.end() :]
+                    other = re.search(r"(?:내|상대)\s*(?:팀|파티|엔트리)", text)
+                    if other:
+                        text = text[: other.start()]
+                    roster = mentioned_pokemon(self.catalog, text, limit=7)
+                    if roster:
+                        battle_state[f"{side}_team_ids"] = roster
+            battle_state["selection_requested"] = bool(
+                re.search(
+                    r"선출|3\s*(?:마리|명)|세\s*마리|선봉\s*(?:추천|(?:은|을)?\s*(?:누구|뭐|어떤))",
+                    request.question,
+                )
+                or (
+                    previous_battle.get("selection_requested")
+                    and not re.search(r"냈|내보냈|지금|대면|공격|교체", request.question)
+                )
+            )
+            if not battle_state["selection_requested"]:
+                battle_state = resolve_named_opponent(request.question, battle_state, self.catalog)
+            else:
+                battle_state.pop("unresolved_opponent", None)
+            if (
+                update.relevant
+                or battle_state.get("unresolved_opponent")
+                or battle_state["selection_requested"]
+            ):
                 battle_context = evaluate_state(
                     battle_state, self.catalog, self.settings.data_dir, self.settings
                 )
-        if battle_context and battle_state.get("unresolved_opponent"):
+        if battle_context and (
+            battle_state.get("unresolved_opponent")
+            or battle_context.get("recommendation") == "need_six_per_team"
+        ):
             result = {
                 "answer_status": "partial",
                 "answer": battle_context["questions"][0]
-                + " 이전 상대를 그대로 적용하지 않고 확인 후 다시 비교할게요.",
+                + (
+                    " 엔트리를 확인한 뒤 선출을 비교할게요."
+                    if battle_context.get("recommendation") == "need_six_per_team"
+                    else " 이전 상대를 그대로 적용하지 않고 확인 후 다시 비교할게요."
+                ),
                 "citations": [],
                 "assumptions": [],
                 "unknowns": [],
@@ -288,10 +328,19 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
-        collection = self.collect(
-            request.pokemon_id, request.question, request.regulation_id, stage
-        )
-        if battle_context and battle_state.get("opponent_id") not in {None, request.pokemon_id}:
+        # Team selection already has local roster/type inputs; use the prepared RAG
+        # index instead of repeating external query planning and document collection.
+        if battle_context and battle_context.get("scope") == "generic_team_selection":
+            collection = {"queries": [], "source": "prepared_local_index"}
+        else:
+            collection = self.collect(
+                request.pokemon_id, request.question, request.regulation_id, stage
+            )
+        if (
+            battle_context
+            and battle_context.get("scope") != "generic_team_selection"
+            and battle_state.get("opponent_id") not in {None, request.pokemon_id}
+        ):
             opponent_collection = self.collect(
                 battle_state["opponent_id"], request.question, request.regulation_id, stage
             )
