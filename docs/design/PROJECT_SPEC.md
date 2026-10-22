@@ -215,9 +215,7 @@ poketact/
 └── docs/
     ├── README.md
     ├── design/{PROJECT_SPEC.md,REQUIREMENTS.md,ARCHITECTURE.md,API_SPEC.md,BACKEND_STRUCTURE.md}
-    ├── guides/{DATA_SOURCES.md,POSTGRESQL_MIGRATION.md}
-    ├── reports/                 # phase and validation reports
-    └── evidence/                # original execution snapshots
+    └── guides/{DATA_SOURCES.md,POSTGRESQL_MIGRATION.md}
 ```
 
 Do not create empty boilerplate directories unnecessarily. Start small and evolve as features are implemented.

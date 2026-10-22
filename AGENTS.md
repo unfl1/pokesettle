@@ -30,6 +30,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - For major changes, state a short plan and implement one phase at a time.
 - Do not start a later phase without a user request.
 - Explain changes, tests, limitations, and next steps in Korean.
+- Keep conceptual study notes and explanations of completed work local under ignored `docs/private/`; explain what changed, why it changed, concepts to study, and relevant code paths.
 
 ## Documentation and PR style
 - Apply this style to all project-authored Korean Markdown, README files, design documents, reports, result summaries, and pull request titles/descriptions, including newly created files.
@@ -40,5 +41,6 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Keep PR descriptions focused on the final diff and reviewer-relevant validation; omit conversational history and unrelated details.
 - Include only changes and validation in PR descriptions; omit limitations and improvement sections. Prefer concise noun endings without final periods.
 - Keep README public-facing: project overview, key features, minimal setup, essential usage constraints, and documentation/source links. Keep phase progress, assignment interpretations, detailed implementation notes, and validation reports in dedicated documents.
+- Do not add submission packets, phase reports, raw execution snapshots, or personal learning notes to Git by default. Keep new public documentation limited to current setup, architecture, API contracts, and source/license information unless explicitly requested.
 - Preserve verbatim quotations, third-party source/license text, raw execution logs, generated evidence snapshots, code examples, and UI/prompt text in their original context rather than changing them solely to satisfy documentation style.
 - Do not edit `docs/design/PROJECT_SPEC.md` or unrelated instructions in this file solely to standardize prose unless the user explicitly requests it.

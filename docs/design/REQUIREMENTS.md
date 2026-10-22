@@ -1,8 +1,8 @@
 # 요구사항 분석 및 단계별 개발 계획
 
-작성일: 2026-10-21 (Asia/Seoul). 이 문서는 Phase 0 설계 기준임. **Phase 1 구현·실행 결과는 [TEST_RESULTS.md](../reports/TEST_RESULTS.md)를 참조한다.** 아래 '구현 전' 기록은 Phase 0 당시의 상태이며 현재 상태와 구별함.
+작성일: 2026-10-21 (Asia/Seoul). 이 문서는 Phase 0 설계 기준임. 아래 '구현 전' 기록은 Phase 0 당시의 상태이며 현재 상태와 구별함.
 
-> 현재 구현 상태: Phase 0의 아래 “미확인” 표기는 당시 설계 기록임. Phase 1 데이터·RAG와 Phase 2 대화 UI·통합을 실행 검증했으며 최신 판정은 [Phase 2 결과](../reports/PHASE2_RESULTS.md)를 참조함. Champions 규칙·적격성과 외부 상호 점검은 여전히 미확인임.
+> 현재 구현 상태: Phase 0의 아래 “미확인” 표기는 당시 설계 기록임. Phase 1 데이터·RAG와 Phase 2 대화 UI·통합을 실행 검증했으며 현재 구현 경로는 [API 계약](API_SPEC.md)과 [수집·대화 서비스](../../backend/app/services/knowledge.py) 참조 Champions 규칙·적격성과 외부 상호 점검은 여전히 미확인임.
 
 > 2026-10-22 변경: 사용자 결정으로 SQLite·Chroma를 PostgreSQL + pgvector로 통합함. 원본 PDF 5쪽의 `langchain-chroma 1.1.0`·`ChromaDB 1.5.9` 지정과 다른 기술 선택임을 명시함. 과제 측 대체 허용 확인과 사용자 결정을 구분함. 기존 기능 ID·두 논리 컬렉션·검색/생성 기능 유지함. [전환 기록](../guides/POSTGRESQL_MIGRATION.md) 참조.
 
@@ -103,7 +103,7 @@ PDF의 '1일차 16시까지 100건 확보 실패 시 영화 팩 전환'은 교�
 - 사용자 선택: MMR 검색·검색 품질 검증 우선
 - F2014: 유사도/MMR 설정·동일 색인 비교·근거 중복 억제 검증
 - F2015·F2016·정밀 전투 계산은 이번 구현 범위 밖
-- [구현·검증·한계](../reports/PHASE4_MMR_RESULTS.md) 참조
+- [검색 비교 명령](../../backend/scripts/compare_retrieval.py) 참조
 
 
 ## Phase 4 답변 비교 진행
@@ -111,11 +111,11 @@ PDF의 '1일차 16시까지 100건 확보 실패 시 영화 팩 전환'은 교�
 - F2015: 대표 질문 6개·실제 RAG/비RAG 응답 12개 비교와 원문 대조 수행
 - 문구 일치·인용 ID·응답/유보 검사와 의미 정확도·출처 지지 검토 분리
 - 실제 RAG 설명 답변 실패 1건 보존, 품질 향상으로 단정하지 않음
-- [비교 조건·결과·한계](../reports/PHASE4_ANSWERS_RESULTS.md) 참조
+- [답변 비교 명령](../../backend/scripts/compare_answers.py) 참조
 
 ## Phase 4 복수 외부 출처 진행
 
 - F2016: PokéAPI `api`와 Wikipedia `wiki` 문서의 후보 선별·색인·검색·인용 연결
 - Wikipedia 지원 범위: 명시적으로 매핑한 피카츄·리자몽 종 배경 문서, 기본 설정 비활성
 - 실제 두 종·두 출처 수집·검색 및 반복 수집 캐시 재사용 검증
-- [구현·실행 조건·검증 결과](../reports/PHASE4_SOURCES_RESULTS.md) 참조
+- [출처·구성 안내](../guides/DATA_SOURCES.md) 참조

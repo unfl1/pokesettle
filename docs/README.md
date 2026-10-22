@@ -19,22 +19,6 @@
 
 최소 실행 절차는 [프로젝트 README](../README.md) 참조
 
-## 구현·검증 기록
-
-| 문서 | 내용 |
-|---|---|
-| [초기 RAG 검증](reports/TEST_RESULTS.md) | Phase 1 데이터·검색·생성 검증 |
-| [대화 UI 검증](reports/PHASE2_RESULTS.md) | Phase 2 탐색·가이드·대화 화면 |
-| [도감 확장 검증](reports/CATALOG_EXPANSION.md) | 전체 종·별도 폼·이미지 지원 |
-| [팀·전투 분석 검증](reports/PHASE3_RESULTS.md) | Phase 3 팀 관리·상성·선출 비교 |
-| [MMR 검색 비교](reports/PHASE4_MMR_RESULTS.md) | Phase 4 검색 방식·다양성 비교 |
-| [RAG·비RAG 답변 비교](reports/PHASE4_ANSWERS_RESULTS.md) | Phase 4 생성 답변·출처 검토 |
-| [복수 외부 출처 검증](reports/PHASE4_SOURCES_RESULTS.md) | Phase 4 PokéAPI·Wikipedia 수집·색인·인용 |
-| [실행 증거](evidence/) | 원시 실행 결과·테스트·API 스냅샷 |
-
-- 단계별 문서는 해당 실행 당시 기록으로 보존
-- 현재 저장 구성은 PostgreSQL·pgvector, 과거 SQLite·Chroma 기록과 구분
-
 ## 디렉토리 기준
 
 ```text
@@ -47,9 +31,7 @@ poketact/
 └── docs/
     ├── README.md      # 문서 색인
     ├── design/        # 요구사항·명세·설계
-    ├── guides/        # 운영·자료 안내
-    ├── reports/       # 구현·검증 기록
-    └── evidence/      # 원시 실행 증거
+    └── guides/        # 운영·자료 안내
 ```
 
 실행·의존성 설정은 루트 유지: `.env.example`, `.gitignore`, `compose.yaml`, `pyproject.toml`, `uv.lock`

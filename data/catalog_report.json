@@ -1,9 +1,0 @@
-{
-  "metadata_count": 1351,
-  "species_count": 1025,
-  "alternate_variety_count": 326,
-  "subject_documents": 1351,
-  "network_calls": 0,
-  "cache_hits": 11,
-  "scope": "all upstream pokemon rows; cosmetic-only pokemon-form entries without independent stats are not separate chat items"
-}

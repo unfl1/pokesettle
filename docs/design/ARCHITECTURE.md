@@ -1,12 +1,12 @@
 # 아키텍처 및 데이터 구조 설계
 
-> 복수 출처 업데이트: `WIKIPEDIA_ENABLED=true`에서 PokéAPI 후보와 검토한 Wikipedia 종 문서 후보 통합, 세부 구성은 [복수 출처 검증](../reports/PHASE4_SOURCES_RESULTS.md) 참조
+> 복수 출처 업데이트: `WIKIPEDIA_ENABLED=true`에서 PokéAPI 후보와 검토한 Wikipedia 종 문서 후보 통합, 세부 구성은 [출처·설정 안내](../guides/DATA_SOURCES.md) 참조
 
 작성일: 2026-10-21. Phase 0 제안 계약임. 아래 경로·모델·설정은 향후 구현 설계이며 실제 모듈이나 데이터베이스를 생성하지 않음.
 
-> 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정과 검증은 [실행 결과](../reports/TEST_RESULTS.md)에 기록함.
+> 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정은 [설정 예시](../../.env.example), 동작 검증은 [RAG 테스트](../../backend/tests/test_rag.py) 참조
 
-> Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [검증 결과](../reports/PHASE2_RESULTS.md) 참조.
+> Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [대화·검색 테스트](../../backend/tests/test_phase2.py) 참조.
 
 관련 문서: [요구사항과 단계 계획](REQUIREMENTS.md), [출처 검증](../guides/DATA_SOURCES.md), [API 계약](API_SPEC.md).
 
@@ -227,7 +227,7 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 계산 자료는 `data/type_chart.json`, 수집은 `backend/scripts/prepare_battle_data.py`. 공식 현행 레귤레이션을 하드코딩하지 않고 `regulationId=null`, `scope=generic` 유지.
 - 프론트는 챗봇 기본 화면을 유지하고 보조 팀·전투 화면으로 진입. 최초 진입 후 편집 상태 유지, 요청 스냅샷과 현재 입력이 다르면 결과 숨김.
 - 챗봇 연결은 사용자 질문 초안 준비이며 자동 모델 실행·계산 결과의 RAG 컨텍스트 주입과 구분함.
-- 자세한 검증·지원 범위는 [Phase 3 결과](../reports/PHASE3_RESULTS.md) 참조.
+- 자세한 검증·지원 범위는 [전투 계산 구현](../../backend/app/battle/engine.py) 참조.
 
 ## PostgreSQL 전환 반영 (2026-10-22)
 
@@ -244,7 +244,7 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - pgvector의 저장 벡터를 선택적으로 조회해 LangChain MMR에 전달, 원문 재임베딩 없음
 - 메타 고정·활성 manifest·포켓몬/규칙 범위·완전 중복 제거 후 후보 풀 제한
 - 상태 API와 저장 답변의 `retrieval`에 실행 설정 스냅샷 기록
-- 기본 L2 유사도와 MMR 비교는 [Phase 4 결과](../reports/PHASE4_MMR_RESULTS.md) 참조
+- 기본 L2 유사도와 MMR 비교는 [검색 비교 명령](../../backend/scripts/compare_retrieval.py) 참조
 
 
 ## Phase 4 답변 비교 평가
@@ -252,4 +252,4 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - `compare_answers.py`는 평가용 CLI이며 서비스 API·대화 저장과 분리
 - 기준 자료·색인 사전 확인, 비RAG는 질문만 전달하고 RAG는 기존 LangGraph 생성/검증 사용
 - 실제 모델 호출은 `--live`로 선택, 실행 결과·검토자 유형·fingerprint로 검토 연결
-- [실제 비교·실패 사례·한계](../reports/PHASE4_ANSWERS_RESULTS.md) 참조
+- [답변 비교 명령](../../backend/scripts/compare_answers.py) 참조

@@ -93,7 +93,7 @@ if __name__ == "__main__":
     if not args.live:
         parser.error("--live is required; this check calls the configured model")
     evidence = verify(args.base_url.rstrip("/"))
-    Path("docs/evidence/phase2.json").write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2) + "\n"
-    )
+    output = Path("docs/evidence/phase2.json")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(evidence, ensure_ascii=False, indent=2))
