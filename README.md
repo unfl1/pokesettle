@@ -46,7 +46,7 @@ pnpm --dir frontend dev
 - API 확인: [로컬 Swagger UI](http://127.0.0.1:8000/docs)
 - DB 연결: `.env`의 `DATABASE_URL`·`DATABASE_SCHEMA` 설정, Compose 사용 시 `POSTGRES_PASSWORD` 설정 필수
 - 검색 방식: 기본 유사도 검색, `.env`의 `SEARCH_MODE=mmr` 설정으로 다양성을 고려한 검색 선택
-- 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/POSTGRESQL_MIGRATION.md) 참조
+- 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/guides/POSTGRESQL_MIGRATION.md) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행
 
@@ -59,8 +59,9 @@ pnpm --dir frontend dev
 
 ## 문서와 출처
 
-- [요구사항](docs/REQUIREMENTS.md) · [아키텍처](docs/ARCHITECTURE.md) · [API 계약](docs/API_SPEC.md)
-- [출처·이용 조건](docs/DATA_SOURCES.md) · [구현·검증 결과](docs/CATALOG_EXPANSION.md)
-- [백엔드 구조·실행 경로](docs/BACKEND_STRUCTURE.md)
+- [전체 문서](docs/README.md) · [프로젝트 명세](docs/design/PROJECT_SPEC.md)
+- [요구사항](docs/design/REQUIREMENTS.md) · [아키텍처](docs/design/ARCHITECTURE.md) · [API 계약](docs/design/API_SPEC.md)
+- [출처·이용 조건](docs/guides/DATA_SOURCES.md) · [구현·검증 결과](docs/reports/CATALOG_EXPANSION.md)
+- [백엔드 구조·실행 경로](docs/design/BACKEND_STRUCTURE.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company

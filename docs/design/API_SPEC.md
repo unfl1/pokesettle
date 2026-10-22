@@ -2,11 +2,11 @@
 
 작성일: 2026-10-21. Phase 0 계약 초안. 실행 가능한 서버·Pydantic 모델·OpenAPI 파일은 아직 작성하지 않음. 예시 ID와 문장은 형식 설명용이며 실제 수집·분석 결과가 아님.
 
-> Phase 1 업데이트: 아래 표는 설계 당시 계획임. 현재 `/api/status`, `/api/session`, `/api/pokemon`, `/api/pokemon/{id}`, `/api/regulations`, `/api/documents/collect`, `/api/chat`, `/api/jobs/{jobId}`를 구현함. 대화 저장은 채팅의 최소 내부 기능으로 제공하고 대화 목록·조회 API, 탐색·가이드·UI는 Phase 2에 남김. 실제 OpenAPI는 [스냅샷](evidence/openapi.json), 검증은 [TEST_RESULTS.md](TEST_RESULTS.md)를 참조함. 근거의 적용 범위는 현재 `game`, `battleFormat`, `regulationId` 필드로 표시함.
+> Phase 1 업데이트: 아래 표는 설계 당시 계획임. 현재 `/api/status`, `/api/session`, `/api/pokemon`, `/api/pokemon/{id}`, `/api/regulations`, `/api/documents/collect`, `/api/chat`, `/api/jobs/{jobId}`를 구현함. 대화 저장은 채팅의 최소 내부 기능으로 제공하고 대화 목록·조회 API, 탐색·가이드·UI는 Phase 2에 남김. 실제 OpenAPI는 [스냅샷](../evidence/openapi.json), 검증은 [TEST_RESULTS.md](../reports/TEST_RESULTS.md)를 참조함. 근거의 적용 범위는 현재 `game`, `battleFormat`, `regulationId` 필드로 표시함.
 
-> Phase 2 업데이트: 대화 생성·목록·메시지, 조건 검색, 가이드 작업 API와 React 화면을 구현함. 아래는 설계 계약과 후속 계획을 함께 보존한 문서임. 현재 동작은 [Phase 2 결과](PHASE2_RESULTS.md)와 최신 [OpenAPI](evidence/openapi.json)를 기준으로 확인함. 팀·전투·SSE 경로는 미구현임.
+> Phase 2 업데이트: 대화 생성·목록·메시지, 조건 검색, 가이드 작업 API와 React 화면을 구현함. 아래는 설계 계약과 후속 계획을 함께 보존한 문서임. 현재 동작은 [Phase 2 결과](../reports/PHASE2_RESULTS.md)와 최신 [OpenAPI](../evidence/openapi.json)를 기준으로 확인함. 팀·전투·SSE 경로는 미구현임.
 
-관련 문서: [요구사항](REQUIREMENTS.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](DATA_SOURCES.md).
+관련 문서: [요구사항](REQUIREMENTS.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](../guides/DATA_SOURCES.md).
 
 ## 1. 공통 규약
 
@@ -237,7 +237,7 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 전투 결과: `options`의 공격/교체별 `comparisonOrder`, `multiplier`, `reason`, `risks`; 메가 `status`, `reason`, `typeComparison`. `recommendedAction=null`, `recommendationStatus=insufficient_battle_information` 유지.
 - 계산 공통: `scope=generic`, `regulationId=null`, `facts`, 문자열 배열 `assumptions`·`unknowns`, 출처 배열 `citations`, `calculation.status=type_only`. `damage`, `koProbability`, `winProbability`는 null. 기존 RAG `GroundedResult`와 별도 타입.
 - 타입 자료 누락은 `TYPE_CHART_NOT_READY` 503. 잘못된 슬롯·중복 종·6마리 미충족·미지원 폼은 안전한 422, 도감 ID 없음은 404.
-- 상세 구현과 미지원 조건은 [Phase 3 결과](PHASE3_RESULTS.md) 참조. 앞의 설계 예시와 이 실행 계약이 다르면 본 절 및 실제 OpenAPI 우선.
+- 상세 구현과 미지원 조건은 [Phase 3 결과](../reports/PHASE3_RESULTS.md) 참조. 앞의 설계 예시와 이 실행 계약이 다르면 본 절 및 실제 OpenAPI 우선.
 
 
 ## Phase 4 검색 설정 응답
@@ -257,4 +257,4 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 검색 방식은 서버 환경변수로 설정, 요청별 임의 설정 변경 없음
 - 원시 임베딩·DB 연결 문자열·서버 경로는 API 응답에 포함하지 않음
 - 기존 답변·인용·페이지 조회 필드 유지, 기존 메시지에 `retrieval`이 없을 수 있음
-- [검색 검증 결과](PHASE4_MMR_RESULTS.md) 참조
+- [검색 검증 결과](../reports/PHASE4_MMR_RESULTS.md) 참조

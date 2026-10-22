@@ -10,7 +10,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 
 ## Sources of truth
 - `요구사항정의.pdf`: mandatory assignment requirements (F2001–F2012 take priority).
-- `PROJECT_SPEC.md`: product scope, architecture, and phased plan.
+- `docs/design/PROJECT_SPEC.md`: product scope, architecture, and phased plan.
 - `docs/`: read only the relevant design documents for the task.
 - Verify current Pokémon Champions mechanics and regulation eligibility before coding them. Do not transplant Scarlet/Violet mechanics without verification.
 
@@ -39,4 +39,4 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Keep PR descriptions focused on the final diff and reviewer-relevant validation; omit conversational history and unrelated details.
 - Keep README public-facing: project overview, key features, minimal setup, essential usage constraints, and documentation/source links. Keep phase progress, assignment interpretations, detailed implementation notes, and validation reports in dedicated documents.
 - Preserve verbatim quotations, third-party source/license text, raw execution logs, generated evidence snapshots, code examples, and UI/prompt text in their original context rather than changing them solely to satisfy documentation style.
-- Do not edit `PROJECT_SPEC.md` or unrelated instructions in this file solely to standardize prose unless the user explicitly requests it.
+- Do not edit `docs/design/PROJECT_SPEC.md` or unrelated instructions in this file solely to standardize prose unless the user explicitly requests it.
