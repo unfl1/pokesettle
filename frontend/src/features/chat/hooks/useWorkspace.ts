@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, ApiError } from '../services/api';
+import { ApiError } from '../../../lib/apiClient';
+import { systemApi } from '../../../lib/systemApi';
+import { pokemonApi } from '../../pokemon/api';
+import { chatApi } from '../api';
 import type { PendingJob } from '../types';
 
 interface SendRequest {
@@ -39,22 +42,22 @@ export function useWorkspace(pokemonId: string) {
   const cache = useQueryClient();
   const session = useQuery({
     queryKey: ['session'],
-    queryFn: api.session,
+    queryFn: systemApi.session,
     staleTime: Infinity,
     retry: false,
   });
   const status = useQuery({
     queryKey: ['status'],
-    queryFn: api.status,
+    queryFn: systemApi.status,
     refetchInterval: 15000,
   });
   const detail = useQuery({
     queryKey: ['detail', pokemonId, status.data?.metadataCount],
-    queryFn: () => api.detail(pokemonId),
+    queryFn: () => pokemonApi.detail(pokemonId),
   });
   const conversations = useQuery({
     queryKey: ['conversations', pokemonId],
-    queryFn: () => api.conversations(pokemonId),
+    queryFn: () => chatApi.conversations(pokemonId),
     enabled: session.isSuccess,
   });
   const [choices, setChoices] = useState<Record<string, string | null>>({});
@@ -63,7 +66,7 @@ export function useWorkspace(pokemonId: string) {
     : (conversations.data?.items[0]?.conversationId ?? null);
   const messages = useQuery({
     queryKey: ['messages', conversationId],
-    queryFn: () => api.messages(conversationId!),
+    queryFn: () => chatApi.messages(conversationId!),
     enabled: session.isSuccess && Boolean(conversationId),
   });
   const [jobs, setJobs] = useState(readPending);
@@ -96,8 +99,8 @@ export function useWorkspace(pokemonId: string) {
   const send = useMutation({
     mutationFn: (body: SendRequest) =>
       body.kind === 'guide'
-        ? api.guide(body.pokemonId, body.conversationId, body.clientRequestId)
-        : api.chat(
+        ? chatApi.guide(body.pokemonId, body.conversationId, body.clientRequestId)
+        : chatApi.chat(
             body.pokemonId,
             body.question,
             body.conversationId,
@@ -132,7 +135,7 @@ export function useWorkspace(pokemonId: string) {
 
   const job = useQuery({
     queryKey: ['job', pending?.jobId],
-    queryFn: () => api.job(pending!.jobId),
+    queryFn: () => chatApi.job(pending!.jobId),
     enabled: session.isSuccess && Boolean(pending),
     retry: 1,
     refetchInterval: (query) =>
@@ -196,7 +199,7 @@ export function useWorkspace(pokemonId: string) {
   }, [job.error, pending, pokemonId]);
 
   const createConversation = useMutation({
-    mutationFn: (id: string) => api.newConversation(id),
+    mutationFn: (id: string) => chatApi.newConversation(id),
     onSuccess: (data, id) => {
       setChoices((previous) => ({ ...previous, [id]: data.conversationId }));
       void cache.invalidateQueries({ queryKey: ['conversations', id] });

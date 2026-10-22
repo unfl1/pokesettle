@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
-import { api } from '../services/api';
-import type { TeamMember, MoveInput } from '../services/battle';
-import { TypeBadge, typeLabels } from './PokemonProfile';
-import PokemonImage from './PokemonImage';
+import { pokemonApi } from '../../pokemon/api';
+import type { TeamMember, MoveInput } from '../types';
+import { TypeBadge } from '../../pokemon/components/TypeBadge';
+import { typeLabels } from '../../pokemon/typeLabels';
+import PokemonImage from '../../pokemon/components/PokemonImage';
 
 export const control =
   'rounded-[6px] border border-[#344253] bg-[#111a25] px-3 py-2 text-[11px] text-[#c5d2e1] min-w-0';
@@ -24,7 +25,7 @@ function MemberCard({
 }) {
   const detail = useQuery({
     queryKey: ['team-pokemon', member.pokemonId],
-    queryFn: () => api.detail(member.pokemonId),
+    queryFn: () => pokemonApi.detail(member.pokemonId),
     staleTime: 60000,
   });
   const p = detail.data;
@@ -216,7 +217,7 @@ export default function TeamEditor({
   const [open, setOpen] = useState(false);
   const found = useQuery({
     queryKey: ['team-search', query, offset],
-    queryFn: () => api.pokemon(query, offset),
+    queryFn: () => pokemonApi.pokemon(query, offset),
     enabled: open,
   });
   return (
