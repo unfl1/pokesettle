@@ -76,3 +76,12 @@ pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
 - [백엔드 구조·실행 경로](docs/design/BACKEND_STRUCTURE.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company
+
+조건부 전략 RAG의 초기 자료 색인:
+
+```bash
+uv run --frozen python -m backend.scripts.index_strategy
+```
+
+- 현재 망나뇽·기본 이상해꽃·기본 리자몽 3종의 직접 작성한 조건부 전략과 기초 기술·특성 자료 지원
+- 전략 설명은 일반 규칙 기반 가정이며 실전 검증·현행 Champions 추천 세트와 구분

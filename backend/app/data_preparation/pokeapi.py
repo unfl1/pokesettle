@@ -67,6 +67,10 @@ class PokeApiSource:
             candidate = self.candidate("pokemon-species", query.lower())
             if candidate:
                 results.append(candidate)
+            else:
+                move = self.candidate("move", query.lower())
+                if move:
+                    results.append(move)
         for term in terms:
             if term in allowed_abilities:
                 candidate = self.candidate("ability", term)
@@ -105,9 +109,31 @@ class PokeApiSource:
                     )
                     seen.add(text)
         elif resource == "ability":
+            for entry in data.get("names", []):
+                if entry["language"]["name"] in {"en", "ko"}:
+                    lines.append(f"Name ({entry['language']['name']}): {entry['name']}")
             for entry in data.get("effect_entries", []):
                 if entry["language"]["name"] in {"en", "ko"}:
                     lines.append(f"Effect ({entry['language']['name']}): {entry['effect']}")
+        elif resource == "move":
+            lines.append(f"Type: {data['type']['name']}; category: {data['damage_class']['name']}")
+            lines.append(
+                f"Power: {data.get('power')}; accuracy: {data.get('accuracy')}; priority: {data.get('priority')}"
+            )
+            for entry in data.get("names", []):
+                if entry["language"]["name"] in {"en", "ko"}:
+                    lines.append(f"Name ({entry['language']['name']}): {entry['name']}")
+            for entry in data.get("effect_entries", []):
+                if entry["language"]["name"] == "en":
+                    lines.append(
+                        "Effect (en): "
+                        + entry["effect"].replace("$effect_chance", str(data.get("effect_chance")))
+                    )
+            for change in data.get("stat_changes", []):
+                lines.append(f"Stat change: {change['stat']['name']} {change['change']}")
+            lines.append(
+                "Move mechanics only; not evidence of this Pokémon's learnset or current Champions legality."
+            )
         elif resource == "type":
             # No type effectiveness transplanted into Champions calculations.
             lines.append(
@@ -125,7 +151,7 @@ class PokeApiSource:
             source_url=result["url"],
             body=self.render(candidate.resource, result["body"]),
             collected_at=result["collected_at"],
-            revision_id=digest(result["body"]),
+            revision_id=digest(["pokeapi-render-v2", result["body"]]),
             licence="PokéAPI project terms; Pokémon names and original text rights reserved to their owners",
             licence_url=LICENCE_URL,
         )

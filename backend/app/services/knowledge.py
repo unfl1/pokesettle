@@ -6,6 +6,7 @@ from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
+from backend.app.services.topics import mentioned_pokemon
 from backend.app.storage import digest
 
 
@@ -164,10 +165,12 @@ class KnowledgeService:
         collection = self.collect(
             request.pokemon_id, request.question, request.regulation_id, stage
         )
+        context_ids = mentioned_pokemon(self.catalog, request.question) if feature is None else []
         graph = build_graph(self.vectors, self.model, stage)
         state = graph.invoke(
             {
                 "pokemon_id": request.pokemon_id,
+                "context_pokemon_ids": context_ids,
                 "question": request.question,
                 "retrieval_query": request.question + " " + " ".join(collection["queries"]),
                 "regulation_id": request.regulation_id,

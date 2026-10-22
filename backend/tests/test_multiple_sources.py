@@ -5,7 +5,6 @@ import pytest
 
 from backend.app.core.config import Settings
 from backend.app.core.errors import ServiceError
-from backend.app.data_preparation.pokeapi import PokeApiSource
 from backend.app.data_preparation.sources import CombinedSource, build_source
 from backend.app.data_preparation.wikipedia import WikipediaSource
 from backend.app.http_client import SourceClient
@@ -91,7 +90,8 @@ def test_unmapped_candidate_is_rejected_before_network_and_404_is_absent():
 
 def test_sources_are_opt_in_with_distinct_cache_identity():
     client = client_for(summary())
-    assert isinstance(build_source(Settings(), client), PokeApiSource)
+    assert isinstance(build_source(Settings(), client), CombinedSource)
+    assert not build_source(Settings(), client).wikipedia_enabled
     combined = build_source(Settings(wikipedia_enabled=True), client)
     assert isinstance(combined, CombinedSource)
     assert combined.client is combined.wikipedia.client is combined.primary.client

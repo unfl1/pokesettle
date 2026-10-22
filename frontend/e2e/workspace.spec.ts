@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false) {
+async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false) {
   const pokemon = [
     {
       pokemonId: 'pokemon:25',
@@ -163,17 +163,18 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
           stage: j.polls === 1 ? 'collecting' : 'generating',
         });
       const result = {
-        answerStatus: abstain ? 'abstained' : 'answered',
+        answerStatus: abstain ? 'abstained' : curated ? 'partial' : 'answered',
         answer: `${j.question}에 대한 확인된 도감 설명입니다. [근거 1]`,
         citations: [
           {
             number: 1,
             evidenceId: 'metadata-25',
             title: wiki ? 'Pikachu — English Wikipedia' : '피카츄 일반 도감',
-            sourceType: wiki ? 'wiki' : 'metadata',
+            sourceType: curated ? 'curated' : wiki ? 'wiki' : 'metadata',
             sourceUrl: wiki
               ? 'https://en.wikipedia.org/w/index.php?title=Pikachu&oldid=123'
               : 'https://pokeapi.co/api/v2/pokemon/25/',
+            ...(curated ? { licence: 'PokeTact original conditional analysis · CC BY 4.0', licenceUrl: 'https://creativecommons.org/licenses/by/4.0/' } : {}),
             ...(wiki ? {
               licence: 'Wikipedia contributors · CC BY-SA 4.0 · original extract unchanged',
               licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -181,7 +182,7 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
           },
         ],
         assumptions: [],
-        unknowns: [],
+        unknowns: curated ? [{ field: 'team', reason: '현재 HP와 네 기술을 알려주세요.' }] : [],
         feature: j.kind,
         conversationId: j.conversationId,
       };
@@ -601,4 +602,16 @@ test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', as
   await expect(spinner).toHaveCSS('animation-duration', '1.1s');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(spinner).toHaveCSS('animation-name', 'none');
+});
+
+
+test('조건부 전략 출처·라이선스와 추가 질문을 기본 표시', async ({ page }) => {
+  await fixture(page, [], false, false, true);
+  await page.goto('/');
+  await page.getByLabel('포켓몬 질문').fill('육성 방향을 알려줘');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  await expect(page.getByTestId('evidence-card')).toContainText('직접 작성한 조건부 전략 · 가정 포함');
+  await expect(page.getByRole('link', { name: /PokeTact original conditional analysis/ })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/');
+  await expect(page.getByText('현재 HP와 네 기술을 알려주세요.')).toBeVisible();
+  await expect(page.getByTestId('answer-state')).toHaveText('일부 확인');
 });
