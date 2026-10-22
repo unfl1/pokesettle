@@ -255,3 +255,39 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 원시 임베딩·DB 연결 문자열·서버 경로는 API 응답에 포함하지 않음
 - 기존 답변·인용·페이지 조회 필드 유지, 기존 메시지에 `retrieval`이 없을 수 있음
 - [검색 비교 명령](../../backend/scripts/compare_retrieval.py) 참조
+
+## 참조 데미지 계산 API
+
+- `POST /api/battle/damage`, 기존 세션 필요, 모델 키·벡터 색인과 독립 실행
+- `backend/calculator` 의존성 설치와 Node.js 필요, 미설치·버전 불일치는 `DAMAGE_ENGINE_NOT_READY` 503
+- 계산 엔진: `@smogon/calc 0.12.0`·Champions `generation=0`·참조 레벨 50, SV 모드로 대체 없음
+- 싱글·명중·단일 타격·비급소·효과 없는 시나리오만 지원, `neutralConditions=true` 명시 필수
+- 특성·도구·상태·필드·능력치 변화 및 기술의 부가 효과·반동·후속 턴 계산 제외, 관련 추가 필드 요청은 422
+
+```json
+{
+  "attacker": {
+    "pokemonId": "pokemon:25",
+    "statPoints": {"hp": 0, "attack": 0, "defense": 0, "spAttack": 32, "spDefense": 0, "speed": 0},
+    "alignment": "Hardy"
+  },
+  "defender": {
+    "pokemonId": "pokemon:9",
+    "statPoints": {"hp": 0, "attack": 0, "defense": 0, "spAttack": 0, "spDefense": 0, "speed": 0},
+    "alignment": "Hardy"
+  },
+  "move": "Thunderbolt",
+  "neutralConditions": true
+}
+```
+
+- `statPoints`는 6개 필드 모두 필요, 각 값 정수 0–32·합계 66 이하, 본가 EV·IV·레벨 입력과 구분
+- `alignment`는 참조 엔진의 25개 영문 정렬 식별자, 허용 값은 Swagger 스키마 참조
+- 기술: Tackle·Body Slam·Thunderbolt·Flamethrower·Surf·Ice Beam·Psychic·Shadow Ball·Energy Ball·Dragon Claw·Crunch·Earthquake
+- 미등록 도감 ID는 404, 엔진 미지원 종/폼·기술은 `DAMAGE_UNSUPPORTED_INPUT` 422, 잘못된 육성·조건은 422
+- 응답: `scope=champions_reference_scenario`, `verificationStatus=assumed`, `inGameVerified=false`, `legalityVerified=false`
+- `engine`에 이름·버전·generation·level, `inputs`에 요청 조건, `calculation.damage`에 최소/최대·16개 정수 피해값·양측 참조 능력치·기술 속성 포함
+- `calculation.status=reference_scenario`, `koProbability`·`winProbability`는 null, 피해 분포를 승률로 변환하지 않음
+- 타입 무효는 16개 0으로 반환, 미지원 출력은 성공으로 변환하지 않음
+- 5초 실행 제한, 시간 초과는 `DAMAGE_ENGINE_TIMEOUT` 504, 원본 stderr·서버 경로·환경 키는 응답 제외
+- 출력 수치는 고정 참조 엔진의 계산 결과, 실제 게임 실측·레귤레이션 합법성·기술 습득 확인과 구분

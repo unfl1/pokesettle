@@ -30,7 +30,8 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - For major changes, state a short plan and implement one phase at a time.
 - Do not start a later phase without a user request.
 - Explain changes, tests, limitations, and next steps in Korean.
-- Keep conceptual study notes and explanations of completed work local under ignored `docs/private/`; explain what changed, why it changed, concepts to study, and relevant code paths.
+- After each completed task, update a relevant local learning note under ignored `docs/private/` with what changed, why it changed, concepts the user should study, and relevant code paths. Prefer updating an existing note over creating another document.
+- Do not create standalone work reports, submission documents, or checklists unless the user explicitly requests them. The default task document is the local learning note, not a public repository artifact.
 
 ## Documentation and PR style
 - Apply this style to all project-authored Korean Markdown, README files, design documents, reports, result summaries, and pull request titles/descriptions, including newly created files.

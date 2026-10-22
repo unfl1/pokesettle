@@ -30,6 +30,7 @@ class Settings:
     allowed_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     source_contact: str = ""
     wikipedia_enabled: bool = False
+    damage_node_binary: str = "node"
 
     def __post_init__(self):
         if not 0 <= self.chunk_overlap < self.chunk_size:
@@ -82,4 +83,5 @@ class Settings:
             ),
             source_contact=os.getenv("SOURCE_CONTACT", ""),
             wikipedia_enabled=os.getenv("WIKIPEDIA_ENABLED", "false").lower() == "true",
+            damage_node_binary=os.getenv("DAMAGE_NODE_BINARY", "node"),
         )
