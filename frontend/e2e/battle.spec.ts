@@ -272,3 +272,66 @@ test('모바일 전투 비교·메가 사용 상태·가로 넘침 없음', asyn
     0,
   );
 });
+
+test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결과 숨김', async ({ page }) => {
+  await fixture(page);
+  let calls = 0;
+  await page.route('**/api/battle/damage', async (route) => {
+    calls++;
+    const body = route.request().postDataJSON();
+    expect(body.attacker.pokemonId).toBe('pokemon:1');
+    expect(body.defender.pokemonId).toBe('pokemon:2');
+    expect(body.attacker.statPoints.spAttack).toBe(32);
+    expect(body.attacker.alignment).toBe('Modest');
+    expect(body.neutralConditions).toBe(true);
+    expect(body.move).toBe('Thunderbolt');
+    expect(body.attacker).not.toHaveProperty('ability');
+    if (calls === 1) return route.fulfill({ status: 503, json: {
+      error: { code: 'DAMAGE_ENGINE_NOT_READY', message: '계산기 연결 확인' },
+    } });
+    // Synthetic UI fixture only; not an in-game measurement.
+    return route.fulfill({ json: { data: {
+      engine: { name: '@smogon/calc', version: '0.12.0', level: 50 },
+      calculation: { damage: { minimum: 10, maximum: 20, rolls: Array(16).fill(10),
+        defenderStats: { hp: 150 }, move: { name: 'Thunderbolt', power: 90 } } },
+      assumptions: ['테스트 조건'], unknowns: ['실측 미검증'],
+      citations: [{ title: 'Smogon', sourceUrl: 'https://github.com/smogon/damage-calc', version: '0.12.0' }],
+    } } });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openTeams(page);
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
+  const submit = panel.getByRole('button', { name: '참조 피해 계산', exact: true });
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
+  await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:2');
+  await panel.getByLabel('공격자 성향').selectOption('Modest');
+  await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
+  await expect(submit).toBeDisabled();
+  await panel.getByRole('checkbox').check();
+  await panel.getByLabel('공격자 HP', { exact: true }).fill('33');
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('공격자 HP', { exact: true }).fill('32');
+  await panel.getByLabel('공격자 공격', { exact: true }).fill('3');
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('공격자 공격', { exact: true }).fill('');
+  await expect(submit).toBeDisabled();
+  await panel.getByLabel('공격자 공격', { exact: true }).fill('0');
+  await submit.click();
+  await expect(panel.getByRole('alert')).toContainText('계산기 연결 확인');
+  await submit.click();
+  await expect(panel.getByRole('heading', { name: '참조 피해 범위: 10–20 HP' })).toBeVisible();
+  await expect(panel.getByText('KO 확률·승률 미제공 · 실제 게임 대조 미검증')).toBeVisible();
+  await panel.getByText('피해 후보 16개·계산 가정·출처').click();
+  await expect(panel.getByRole('link', { name: 'Smogon' })).toHaveAttribute('href', 'https://github.com/smogon/damage-calc');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await panel.getByLabel('방어자 성향').selectOption('Bold');
+  await expect(panel.getByText('참조 피해 범위:', { exact: false })).toHaveCount(0);
+  await panel.getByLabel('방어자 성향').selectOption('Hardy');
+  await expect(panel.getByText('참조 피해 범위:', { exact: false })).toBeVisible();
+  await page.getByRole('region', { name: '내 팀', exact: true }).getByRole('button', { name: '1번 멤버 제거', exact: true }).click();
+  await expect(submit).toBeDisabled();
+  await expect(panel.getByText('참조 피해 범위:', { exact: false })).toHaveCount(0);
+});
