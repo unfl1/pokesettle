@@ -1,5 +1,7 @@
 # Phase 4 — MMR 검색과 검색 품질 검증
 
+> 후속 F2015 답변 비교는 [RAG·비RAG 결과](PHASE4_ANSWERS_RESULTS.md) 참조, 아래 미실행 표기는 MMR 묶음 검증 당시 기준
+
 검증일: 2026-10-22 (Asia/Seoul)
 범위: 사용자 선택에 따른 Phase 4 첫 구현 묶음, F2014 MMR 검색과 동일 색인 비교
 

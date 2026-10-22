@@ -243,3 +243,11 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 메타 고정·활성 manifest·포켓몬/규칙 범위·완전 중복 제거 후 후보 풀 제한
 - 상태 API와 저장 답변의 `retrieval`에 실행 설정 스냅샷 기록
 - 기본 L2 유사도와 MMR 비교는 [Phase 4 결과](PHASE4_MMR_RESULTS.md) 참조
+
+
+## Phase 4 답변 비교 평가
+
+- `compare_answers.py`는 평가용 CLI이며 서비스 API·대화 저장과 분리
+- 기준 자료·색인 사전 확인, 비RAG는 질문만 전달하고 RAG는 기존 LangGraph 생성/검증 사용
+- 실제 모델 호출은 `--live`로 선택, 실행 결과·검토자 유형·fingerprint로 검토 연결
+- [실제 비교·실패 사례·한계](PHASE4_ANSWERS_RESULTS.md) 참조
