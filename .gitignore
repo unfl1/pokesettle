@@ -30,6 +30,11 @@ service-account*.json
 /docs/PHASE*_LEARNING_NOTES.md
 /docs/private/
 /private-notes/
+# Local work reports and generated evaluation evidence
+/docs/reports/
+/docs/evidence/
+/data/catalog_report.json
+/data/index_report.json
 node_modules/
 frontend/dist/
 frontend/test-results/

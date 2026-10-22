@@ -1,7 +1,0 @@
-{
-  "metadata_count": 1351,
-  "document_chunk_count": 3501,
-  "metadata_rerun_idempotent": true,
-  "sample_metadata_text": "ID: pokemon:1\n이름 Name: 이상해씨 / Bulbasaur\n종 ID Species: 1; form: default. Species descriptions are shared; form-specific traits require this form metadata.\n타입 Types: grass, poison\n종족값 Base stats: hp=45, attack=49, defense=49, sp_attack=65, sp_defense=65, speed=45\n특성 Abilities: overgrow, chlorophyll\n설명: 미확인\nScope: generic Pokémon reference; NOT verified Pokémon Champions mechanics.\nChampions eligibility: unknown\nChampions moves, training and Mega forms: 미확인 / unknown\nSource: https://pokeapi.co/api/v2/pokemon/1/\nCollected: 2026-10-21T04:55:03.532350+00:00",
-  "embedding_model": "all-MiniLM-L6-v2"
-}

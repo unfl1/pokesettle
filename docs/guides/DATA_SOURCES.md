@@ -2,7 +2,7 @@
 
 확인일: 2026-10-21 (Asia/Seoul). 이 날짜는 웹 문서 **확인일**임. 실제 데이터셋 수집일이나 100건 확보일이 아님. 현재 수집·색인 데이터는 0건임.
 
-> 위 문장은 Phase 0 조사 당시 기록임. **Phase 1에서는 실제 100종과 자체 설명 문서 100개를 확보했다.** 현재 수집 내역은 아래 7절 및 [실행 결과](../reports/TEST_RESULTS.md)를 따름. 공식 Champions 규칙의 미확인 사항은 해소된 것으로 간주하지 않음.
+> 위 문장은 Phase 0 조사 당시 기록임. **Phase 1에서는 실제 100종과 자체 설명 문서 100개를 확보했다.** 현재 수집 내역은 아래 7절 및 [출처 기록](../../data/sources.json)를 따름. 공식 Champions 규칙의 미확인 사항은 해소된 것으로 간주하지 않음.
 
 ## 1. 출처 등록부
 
@@ -108,7 +108,7 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - URL의 실제 존재 여부는 이미지 로딩으로 확인하며 일러스트→스프라이트→대체 아이콘으로 실패를 처리함.
 - 데이터의 이미지 검증 상태도 unknown으로 두며 표시된 이미지로 Champions 적격성을 판단하지 않음.
 
-검증 결과와 한계는 [보완 보고서](../reports/CATALOG_EXPANSION.md), 수량은 [수집 보고서](../../data/catalog_report.json)를 참조함.
+자료 구성은 [데이터 준비 스크립트](../../backend/scripts/prepare_data.py), 현재 입력은 [도감 메타데이터](../../data/pokemon.json)·[종별 문서](../../data/documents/species.json) 참조
 
 ## 9. Phase 3 일반 타입표·규칙 확인 (2026-10-21)
 
@@ -129,7 +129,8 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 - [Wikipedia 요약 API](https://www.mediawiki.org/wiki/Page_Content_Service): 등록한 피카츄·리자몽 문서의 평문 요약만 선택 수집, 사진·HTML·문서 전체 수집 제외
 - 항목 연결: 종 ID 25 → Pikachu/Q9351, 종 ID 6 → Charizard/Q844940, 응답의 제목·Wikidata ID·언어·표준 문서 유형 검증
+- 설정: `WIKIPEDIA_ENABLED=true`로 후보 수집 활성화, 기본 false, 서버 재시작 후 질문 관련성 선별을 통과한 후보만 본문 수집
 - [이용 조건](https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#7._Licensing_of_Content): Wikipedia 기여자·원문 영구 링크·[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)·추가한 범위/출처 헤더 표시, 평문 요약 본문 유지
 - [API 접근 정책](https://www.mediawiki.org/wiki/Wikimedia_APIs/Access_policy): 저장소 URL을 포함한 User-Agent·직렬 요청·대기·재시도·로컬 캐시 적용, `SOURCE_CONTACT`로 실제 관리 연락처 지정 가능
 - 일반 종 배경만 지원, 폼별 전투 수치·Champions 규칙·참가 가능 여부의 확인 근거로 사용 금지
-- 실제 수집일·revision·원문 해시는 [실행 증거](../evidence/phase4-sources.json), 검증 범위는 [복수 출처 보고서](../reports/PHASE4_SOURCES_RESULTS.md) 참조
+- 수집일·revision·원문 해시는 수집한 Document에 보존, [문서 모델](../../backend/app/schemas.py)·[Wikipedia 수집기](../../backend/app/data_preparation/wikipedia.py) 참조
