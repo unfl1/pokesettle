@@ -225,10 +225,10 @@ def test_pikachu_gyarados_product_and_action_first_output_rejects_model_two_time
             "battle_context": context,
         }
     )["result"]
-    assert "4배로 계산" in result["answer"]
+    assert "4배 약점" in result["answer"]
     assert "전기 공격은 갸라도스에게 2배입니다" not in result["answer"]
-    assert result["answer"].startswith("유리한 공격 타입의 기술을 가지고 있다면")
-    assert "땅 타입" in result["answer"] and "교체할 가능성" in result["answer"]
+    assert result["answer"].startswith("유리한 공격 타입의 기술이 있다면")
+    assert "땅 타입" in result["answer"] and "교체에 주의" in result["answer"]
     assert result["citations"][0]["source_type"] == "calculation"
 
 
@@ -408,3 +408,78 @@ def test_explicit_move_possession_and_bench_hp_have_separate_owners():
     )
     assert update.own_hp_percent is None
     assert update.bench_members[0].hp_percent == 0
+
+
+def test_new_unknown_opponent_clears_old_pair_and_confirms_spelling():
+    from backend.app.battle.conversation import resolve_named_opponent
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    previous = {
+        "own_id": "pokemon:908",
+        "opponent_id": "pokemon:130",
+        "opponent_moves": ["폭포오르기"],
+        "opponent_hp_percent": 80,
+    }
+    state = resolve_named_opponent(
+        "이번엔 내가 마스카나를 냈는데 상대가 라운드본이 나왔어 어케해?", previous, catalog
+    )
+    assert "opponent_id" not in state
+    assert "opponent_moves" not in state
+    assert state["unresolved_opponent"]["suggestion"] == "라우드본"
+    result = evaluate_state(state, catalog, ROOT / "data")
+    assert "라우드본" in result["questions"][0]
+    assert "갸라도스" not in str(result)
+    confirmed = resolve_named_opponent("ㅇㅇ", state, catalog)
+    assert catalog.get(confirmed["opponent_id"]).name_ko == "라우드본"
+    assert "unresolved_opponent" not in confirmed
+    exact = resolve_named_opponent(
+        "상대가 라우드본이 나왔어", {"opponent_id": "pokemon:130"}, catalog
+    )
+    assert catalog.get(exact["opponent_id"]).name_ko == "라우드본"
+
+
+def test_coach_answer_is_concise_and_all_type_names_are_korean():
+    from backend.app.battle.conversation import coach_fallback
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    context = evaluate_state(
+        {"own_id": "pokemon:25", "opponent_id": "pokemon:130"}, catalog, ROOT / "data"
+    )
+    answer = coach_fallback(context, [{"evidence_id": "calc", "source_type": "calculation"}])
+    assert len(answer.claims) <= 3
+    assert len(answer.unknowns) == 1
+    assert len(answer.assumptions) == 1
+    assert "water" not in str(answer) and "flying" not in str(answer)
+
+
+def test_unknown_new_opponent_is_saved_without_searching_old_opponent(setup, monkeypatch):
+    from backend.app.battle.conversation import BattleUpdate
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    setup.service.catalog = catalog
+    session = setup.store.new_session()
+    cid = setup.store.conversation(session, "pokemon:1", None)
+    setup.store.put("battle_state", cid, {"own_id": "pokemon:25", "opponent_id": "pokemon:130"})
+    monkeypatch.setattr(
+        setup.model,
+        "invoke",
+        lambda *args: BattleUpdate(relevant=True, own_id="pokemon:908", opponent_id="pokemon:130"),
+    )
+    monkeypatch.setattr(
+        setup.service,
+        "collect",
+        lambda *args: (_ for _ in ()).throw(AssertionError("must not search old opponent")),
+    )
+    question = "이번엔 내가 마스카나를 냈는데 상대가 라운드본이 나왔어 어케해?"
+    result = setup.service.chat(
+        ChatRequest(
+            pokemon_id="pokemon:1",
+            question=question,
+            conversation_id=cid,
+            client_request_id=uuid4(),
+        ),
+        session,
+    )
+    assert "라우드본" in result["answer"]
+    assert "갸라도스" not in result["answer"]
+    assert "opponent_id" not in setup.store.get("battle_state", cid)

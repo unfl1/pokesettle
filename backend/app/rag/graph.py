@@ -255,11 +255,21 @@ def build_graph(vector_store, model, stage=lambda _: None):
                             ]
                         output = Generation(
                             answer_status="partial",
-                            claims=[*calculated.claims, *extra],
-                            assumptions=list(
-                                dict.fromkeys([*calculated.assumptions, *output.assumptions])
-                            ),
-                            unknowns=list(dict.fromkeys([*calculated.unknowns, *output.unknowns])),
+                            claims=[
+                                *calculated.claims,
+                                *[
+                                    claim
+                                    for claim in extra
+                                    if any(
+                                        item["evidence_id"] in claim.evidence_ids
+                                        and item.get("source_type")
+                                        not in {"metadata", "calculation"}
+                                        for item in state["evidence"]
+                                    )
+                                ][:2],
+                            ],
+                            assumptions=list(dict.fromkeys(calculated.assumptions)),
+                            unknowns=list(dict.fromkeys(calculated.unknowns))[:2],
                         )
                 try:
                     return {
