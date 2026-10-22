@@ -56,29 +56,45 @@ export function EvidenceCard({
 }) {
   const href = sourceHref(citation.sourceUrl);
   return (
-    <a
-      id={`${prefix}-${citation.number}`}
-      className="px-3 py-[11px] border border-[#324052] gap-2.5 flex items-center bg-[#131c27] rounded-[7px] scroll-m-[15px] target:border-accent [&>svg]:ml-auto [&>svg]:text-[#78968d]"
-      data-testid="evidence-card"
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={`근거 ${citation.number} 원문 열기`}
-    >
-      <span className="border border-[#a7efc52e] grid place-items-center text-accent rounded-[4px] w-[21px] h-[21px] text-[9px]">
-        {citation.number}
-      </span>
-      <span className="min-w-0 [&_strong]:text-[10px] [&_strong]:font-medium [&_strong]:block [&_strong]:wrap-anywhere [&_small]:block [&_small]:text-[9px] [&_small]:text-[#728aa2] [&_small]:mt-[5px]">
-        <strong>{citation.title}</strong>
-        <small>
-          {citation.sourceType === 'metadata'
-            ? '도감 메타데이터'
-            : '외부 설명 자료'}{' '}
-          · 일반 도감 기준
-        </small>
-      </span>
-      <ArrowUpRight size={15} aria-hidden="true" />
-    </a>
+    <div>
+      <a
+        id={`${prefix}-${citation.number}`}
+        className="px-3 py-[11px] border border-[#324052] gap-2.5 flex items-center bg-[#131c27] rounded-[7px] scroll-m-[15px] target:border-accent [&>svg]:ml-auto [&>svg]:text-[#78968d]"
+        data-testid="evidence-card"
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`근거 ${citation.number} 원문 열기`}
+      >
+        <span className="border border-[#a7efc52e] grid place-items-center text-accent rounded-[4px] w-[21px] h-[21px] text-[9px]">
+          {citation.number}
+        </span>
+        <span className="min-w-0 [&_strong]:text-[10px] [&_strong]:font-medium [&_strong]:block [&_strong]:wrap-anywhere [&_small]:block [&_small]:text-[9px] [&_small]:text-[#728aa2] [&_small]:mt-[5px]">
+          <strong>{citation.title}</strong>
+          <small>
+            {citation.sourceType === 'metadata'
+              ? '도감 메타데이터'
+              : citation.sourceType === 'wiki'
+                ? '위키 백과 자료'
+                : '외부 설명 자료'}{' '}
+            · 일반 도감 기준
+          </small>
+        </span>
+        <ArrowUpRight size={15} aria-hidden="true" />
+      </a>
+      {citation.sourceType === 'wiki' && citation.licence && (
+        <p className="mt-1 text-[9px] text-[#8295a8] wrap-anywhere">
+          <a
+            href={sourceHref(citation.licenceUrl ?? null)}
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            {citation.licence}
+          </a>
+        </p>
+      )}
+    </div>
   );
 }
 

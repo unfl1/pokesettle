@@ -7,7 +7,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import Settings
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.middleware import configure_middleware
-from backend.app.data_preparation.pokeapi import PokeApiSource
+from backend.app.data_preparation.sources import build_source
 from backend.app.http_client import SourceClient
 from backend.app.rag.model import StructuredModel
 from backend.app.rag.vector_store import VectorStore
@@ -19,7 +19,7 @@ def create_service(settings):
     store = Store(settings.database_url, settings.database_schema)
     catalog = Catalog(settings.data_dir / "pokemon.json")
     vectors = VectorStore(settings, store)
-    source = PokeApiSource(SourceClient(settings, store))
+    source = build_source(settings, SourceClient(settings, store))
     return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings))
 
 

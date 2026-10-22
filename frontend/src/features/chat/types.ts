@@ -10,6 +10,7 @@ export interface Citation {
   game?: string;
   battleFormat?: string;
   licence?: string;
+  licenceUrl?: string | null;
 }
 export interface GroundedResult {
   answerStatus: 'answered' | 'partial' | 'abstained';

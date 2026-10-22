@@ -83,6 +83,7 @@ def render_answer(generated, evidence, regulation_id):
                     "revision_id",
                     "collected_at",
                     "licence",
+                    "licence_url",
                     "game",
                     "battle_format",
                     "regulation_id",

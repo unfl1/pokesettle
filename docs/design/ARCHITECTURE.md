@@ -1,5 +1,7 @@
 # 아키텍처 및 데이터 구조 설계
 
+> 복수 출처 업데이트: `WIKIPEDIA_ENABLED=true`에서 PokéAPI 후보와 검토한 Wikipedia 종 문서 후보 통합, 세부 구성은 [복수 출처 검증](../reports/PHASE4_SOURCES_RESULTS.md) 참조
+
 작성일: 2026-10-21. Phase 0 제안 계약임. 아래 경로·모델·설정은 향후 구현 설계이며 실제 모듈이나 데이터베이스를 생성하지 않음.
 
 > 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정과 검증은 [실행 결과](../reports/TEST_RESULTS.md)에 기록함.

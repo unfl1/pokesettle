@@ -22,17 +22,24 @@ class SourceClient:
         self.network_calls = 0
         self.cache_hits = 0
         self.session = requests.Session()
-        contact = f" ({settings.source_contact})" if settings.source_contact else ""
-        self.session.headers["User-Agent"] = f"PokeCoachAI/0.1 educational local research{contact}"
+        contact = settings.source_contact or "https://github.com/unfl1/poketact"
+        self.session.headers["User-Agent"] = f"PokeTact/0.1 ({contact}) educational local research"
 
     def fetch(self, url, *, expect_json=True):
         parsed = urlparse(url)
         if parsed.scheme != "https" or parsed.hostname not in {
             "pokeapi.co",
             "raw.githubusercontent.com",
+            "en.wikipedia.org",
         }:
             raise ServiceError(
                 "SOURCE_NOT_ALLOWED", "등록된 데이터 출처만 사용할 수 있습니다.", 422
+            )
+        if parsed.hostname == "en.wikipedia.org" and not parsed.path.startswith(
+            "/api/rest_v1/page/summary/"
+        ):
+            raise ServiceError(
+                "SOURCE_NOT_ALLOWED", "Wikipedia 요약 API만 사용할 수 있습니다.", 422
             )
         key = digest(url)
         with self.lock:

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, missing: string[] = [], abstain = false) {
+async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false) {
   const pokemon = [
     {
       pokemonId: 'pokemon:25',
@@ -169,9 +169,15 @@ async function fixture(page: Page, missing: string[] = [], abstain = false) {
           {
             number: 1,
             evidenceId: 'metadata-25',
-            title: '피카츄 일반 도감',
-            sourceType: 'metadata',
-            sourceUrl: 'https://pokeapi.co/api/v2/pokemon/25/',
+            title: wiki ? 'Pikachu — English Wikipedia' : '피카츄 일반 도감',
+            sourceType: wiki ? 'wiki' : 'metadata',
+            sourceUrl: wiki
+              ? 'https://en.wikipedia.org/w/index.php?title=Pikachu&oldid=123'
+              : 'https://pokeapi.co/api/v2/pokemon/25/',
+            ...(wiki ? {
+              licence: 'Wikipedia contributors · CC BY-SA 4.0 · original extract unchanged',
+              licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+            } : {}),
           },
         ],
         assumptions: [],
@@ -204,6 +210,21 @@ async function fixture(page: Page, missing: string[] = [], abstain = false) {
     },
   };
 }
+
+test('위키 인용의 원문 버전·기여자·라이선스 표시와 기록 복원', async ({ page }) => {
+  await fixture(page, [], false, true);
+  await page.goto('/');
+  await page.getByLabel('포켓몬 질문').fill('피카츄 배경 설명');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  const source = page.getByTestId('evidence-card');
+  await expect(source).toHaveAttribute('href', /oldid=123/);
+  await expect(source).toContainText('위키 백과 자료');
+  const licence = page.getByRole('link', { name: /Wikipedia contributors · CC BY-SA 4.0/ });
+  await expect(licence).toHaveAttribute('href', 'https://creativecommons.org/licenses/by-sa/4.0/');
+  await page.reload();
+  await expect(source).toBeVisible();
+  await expect(licence).toBeVisible();
+});
 
 test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링크', async ({
   page,

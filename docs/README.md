@@ -29,6 +29,7 @@
 | [팀·전투 분석 검증](reports/PHASE3_RESULTS.md) | Phase 3 팀 관리·상성·선출 비교 |
 | [MMR 검색 비교](reports/PHASE4_MMR_RESULTS.md) | Phase 4 검색 방식·다양성 비교 |
 | [RAG·비RAG 답변 비교](reports/PHASE4_ANSWERS_RESULTS.md) | Phase 4 생성 답변·출처 검토 |
+| [복수 외부 출처 검증](reports/PHASE4_SOURCES_RESULTS.md) | Phase 4 PokéAPI·Wikipedia 수집·색인·인용 |
 | [실행 증거](evidence/) | 원시 실행 결과·테스트·API 스냅샷 |
 
 - 단계별 문서는 해당 실행 당시 기록으로 보존

@@ -26,6 +26,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 
 ## Workflow
 - Perform all frontend and backend work on `develop` unless the user explicitly requests another branch.
+- Treat a request to create a PR as one workflow: commit the requested changes locally, push `develop` to GitHub, then create or update a `develop` → `main` PR. Leave merging to the user unless explicitly requested.
 - For major changes, state a short plan and implement one phase at a time.
 - Do not start a later phase without a user request.
 - Explain changes, tests, limitations, and next steps in Korean.
@@ -37,6 +38,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Describe development work as concrete changes and resulting behavior. Separate implementation, validation, limitations, and next steps when relevant.
 - Describe resolved issues in `원인 → 수정 → 결과` order, preferably as table columns. Keep unverified behavior and remaining limitations explicit; never invent a successful result.
 - Keep PR descriptions focused on the final diff and reviewer-relevant validation; omit conversational history and unrelated details.
+- Include only changes and validation in PR descriptions; omit limitations and improvement sections. Prefer concise noun endings without final periods.
 - Keep README public-facing: project overview, key features, minimal setup, essential usage constraints, and documentation/source links. Keep phase progress, assignment interpretations, detailed implementation notes, and validation reports in dedicated documents.
 - Preserve verbatim quotations, third-party source/license text, raw execution logs, generated evidence snapshots, code examples, and UI/prompt text in their original context rather than changing them solely to satisfy documentation style.
 - Do not edit `docs/design/PROJECT_SPEC.md` or unrelated instructions in this file solely to standardize prose unless the user explicitly requests it.
