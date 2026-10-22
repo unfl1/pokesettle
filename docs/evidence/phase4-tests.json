@@ -1,0 +1,38 @@
+{
+  "verified_on": "2026-10-22",
+  "scope": "Phase 4 MMR retrieval and search comparison; F2014 only",
+  "environment": {
+    "postgresql_major": 18,
+    "pgvector": "0.8.1",
+    "regression_embeddings": "synthetic test double",
+    "real_comparison_embeddings": "all-MiniLM-L6-v2 ONNX, 384 dimensions"
+  },
+  "pytest": {
+    "passed": 68,
+    "failed": 0,
+    "elapsed_seconds": 4.43
+  },
+  "static_checks": {
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check": "passed"
+  },
+  "real_comparison": {
+    "pokemon_count": 5,
+    "metadata_count": 5,
+    "chunk_count": 22,
+    "query_count": 5,
+    "reports": [
+      "phase4-mmr.json",
+      "phase4-mmr-diversity.json"
+    ]
+  },
+  "not_evaluated": [
+    "generated answer accuracy",
+    "RAG vs no-RAG comparison (F2015)",
+    "multiple external source types (F2016)",
+    "Korean retrieval quality",
+    "Champions damage and KO calculations"
+  ]
+}

@@ -1,17 +1,21 @@
 import hashlib
 import json
+import os
 import re
 from dataclasses import replace
 from types import SimpleNamespace
+from uuid import uuid4
 
+import psycopg
 import pytest
+from psycopg import sql
 
-from backend.catalog import Catalog
-from backend.config import Settings
-from backend.models import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
-from backend.rag.vector_store import VectorStore
-from backend.services import KnowledgeService
-from backend.storage import Store
+from backend.app.catalog import Catalog
+from backend.app.core.config import Settings
+from backend.app.rag.vector_store import VectorStore
+from backend.app.schemas import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
+from backend.app.services.knowledge import KnowledgeService
+from backend.app.storage import Store
 
 
 def embed(texts):
@@ -151,12 +155,27 @@ class FakeSource:
 
 
 @pytest.fixture
-def setup(tmp_path):
+def pg_store():
+    database_url = os.getenv("POKETACT_TEST_DATABASE_URL")
+    if not database_url:
+        pytest.skip("POKETACT_TEST_DATABASE_URL 설정 필요: 실제 PostgreSQL + pgvector 통합 테스트")
+    store = Store(database_url, "test_" + uuid4().hex)
+    try:
+        yield store
+    finally:
+        with psycopg.connect(database_url) as db:
+            db.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(store.schema)))
+
+
+@pytest.fixture
+def setup(tmp_path, pg_store):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     (data_dir / "pokemon.json").write_text(json.dumps([record(i) for i in range(1, 101)]))
     settings = Settings(
         data_dir=data_dir,
+        database_url=pg_store.database_url,
+        database_schema=pg_store.schema,
         runtime_dir=tmp_path / "runtime",
         api_key="test-key-not-real",
         chat_model="test-model",
@@ -164,7 +183,7 @@ def setup(tmp_path):
         chunk_overlap=20,
         request_interval=0,
     )
-    store = Store(settings.runtime_dir / "state.sqlite3")
+    store = pg_store
     catalog = Catalog(data_dir / "pokemon.json")
     vectors = VectorStore(settings, store, embed=embed, embedding_identity="synthetic-test-32")
     vectors.upsert_metadata(list(catalog.items.values()))

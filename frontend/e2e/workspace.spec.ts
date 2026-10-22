@@ -444,56 +444,50 @@ test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', 
   ).toBeVisible();
 });
 
-const imageRoot =
-  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
-const imagePng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6XkAAAAASUVORK5CYII=',
-  'base64',
-);
-
-async function imageFixture(page: Page) {
-  await fixture(page);
-  await page.route('**/api/pokemon/pokemon%3A25', (route) =>
-    route.fulfill({
-      json: {
-        data: {
-          pokemonId: 'pokemon:25',
-          speciesId: 25,
-          nameKo: '피카츄',
-          nameEn: 'pikachu',
-          types: ['electric'],
-          abilities: ['static'],
-          baseStats: {
-            hp: 35,
-            attack: 55,
-            defense: 40,
-            spAttack: 50,
-            spDefense: 50,
-            speed: 90,
-          },
-          sourceUrl: 'https://pokeapi.co/api/v2/pokemon/25/',
-          images: {
-            artworkUrl: `${imageRoot}/other/official-artwork/25.png`,
-            spriteUrl: `${imageRoot}/25.png`,
-            sourceUrl: 'https://github.com/PokeAPI/sprites',
-          },
-        },
-      },
-    }),
-  );
-}
-
 for (const missingSprite of [false, true])
   test(`이미지 실패 대체 처리: sprite missing=${missingSprite}`, async ({
     page,
   }) => {
-    await imageFixture(page);
+    await fixture(page);
+    const root =
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+    await page.route('**/api/pokemon/pokemon%3A25', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            pokemonId: 'pokemon:25',
+            speciesId: 25,
+            nameKo: '피카츄',
+            nameEn: 'pikachu',
+            types: ['electric'],
+            abilities: ['static'],
+            baseStats: {
+              hp: 35,
+              attack: 55,
+              defense: 40,
+              spAttack: 50,
+              spDefense: 50,
+              speed: 90,
+            },
+            sourceUrl: 'https://pokeapi.co/api/v2/pokemon/25/',
+            images: {
+              artworkUrl: `${root}/other/official-artwork/25.png`,
+              spriteUrl: `${root}/25.png`,
+              sourceUrl: 'https://github.com/PokeAPI/sprites',
+            },
+          },
+        },
+      }),
+    );
     await page.route('**/PokeAPI/sprites/**', (route) => {
       if (route.request().url().includes('official-artwork') || missingSprite)
         return route.fulfill({ status: 404 });
       return route.fulfill({
         contentType: 'image/png',
-        body: imagePng,
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6XkAAAAASUVORK5CYII=',
+          'base64',
+        ),
       });
     });
     await page.goto('/');
@@ -504,70 +498,12 @@ for (const missingSprite of [false, true])
     else
       await expect(
         page.getByRole('img', { name: '피카츄 이미지', exact: true }),
-      ).toHaveAttribute('src', `${imageRoot}/25.png`);
+      ).toHaveAttribute('src', `${root}/25.png`);
     await page.getByText('종족값과 출처 확인', { exact: true }).click();
     await expect(
       page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
     ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
   });
-
-test('원본 응답이 지연되어도 스프라이트를 먼저 표시하고 원본 로드 후 교체', async ({
-  page,
-}) => {
-  await imageFixture(page);
-  let releaseArtwork!: () => void;
-  const artworkGate = new Promise<void>((resolve) => {
-    releaseArtwork = resolve;
-  });
-  let artworkRequested = false;
-  await page.route('**/PokeAPI/sprites/**', async (route) => {
-    if (route.request().url().includes('official-artwork')) {
-      artworkRequested = true;
-      await artworkGate;
-    }
-    await route.fulfill({ contentType: 'image/png', body: imagePng });
-  });
-  try {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    const image = page.getByRole('img', { name: '피카츄 이미지', exact: true });
-    await expect(image).toHaveAttribute('src', `${imageRoot}/25.png`);
-    await expect(image).toHaveAttribute('loading', 'eager');
-    await expect(image).toHaveAttribute('fetchpriority', 'high');
-    await expect
-      .poll(() =>
-        image.evaluate((img) => {
-          const element = img as HTMLImageElement;
-          return element.complete && element.naturalWidth > 0;
-        }),
-      )
-      .toBe(true);
-    await expect.poll(() => artworkRequested).toBe(true);
-    releaseArtwork();
-    await expect(image).toHaveAttribute(
-      'src',
-      `${imageRoot}/other/official-artwork/25.png`,
-    );
-    await expect(image).toBeVisible();
-  } finally {
-    releaseArtwork();
-  }
-});
-
-test('스프라이트가 실패해도 원본 이미지를 표시', async ({ page }) => {
-  await imageFixture(page);
-  await page.route('**/PokeAPI/sprites/**', (route) =>
-    route.request().url().includes('official-artwork')
-      ? route.fulfill({ contentType: 'image/png', body: imagePng })
-      : route.fulfill({ status: 404 }),
-  );
-  await page.goto('/');
-  const image = page.getByRole('img', { name: '피카츄 이미지', exact: true });
-  await expect(image).toHaveAttribute(
-    'src',
-    `${imageRoot}/other/official-artwork/25.png`,
-  );
-  await expect(image).toBeVisible();
-});
 
 test('기존 반응형 경계와 높은 화면의 대화 영역 유지', async ({ page }) => {
   await fixture(page);

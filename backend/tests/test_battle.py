@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.battle.engine import BattleEngine
-from backend.battle.models import BattleInput, TeamAnalysis
-from backend.errors import ServiceError
-from backend.main import create_app
-from backend.models import Pokemon
+from backend.app.battle.engine import BattleEngine
+from backend.app.battle.models import BattleInput, TeamAnalysis
+from backend.app.core.errors import ServiceError
+from backend.app.main import create_app
+from backend.app.schemas import Pokemon
 from backend.scripts.prepare_battle_data import build_chart
 from backend.tests.conftest import record
 

@@ -4,9 +4,9 @@ import csv
 import io
 import json
 
-from backend.config import Settings
-from backend.http_client import SourceClient
-from backend.storage import Store, digest
+from backend.app.core.config import Settings
+from backend.app.http_client import SourceClient
+from backend.app.storage import Store, digest
 
 ROOT = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv"
 
@@ -29,7 +29,7 @@ def build_chart(types, efficacy):
 
 def main():
     settings = Settings.from_env()
-    client = SourceClient(settings, Store(settings.runtime_dir / "state.sqlite3"))
+    client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
     for name in ["types", "type_efficacy"]:
         url = f"{ROOT}/{name}.csv"

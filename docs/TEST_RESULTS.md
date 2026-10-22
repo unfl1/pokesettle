@@ -1,5 +1,7 @@
 # Phase 1 구현 및 검증 결과
 
+> 이 문서의 SQLite·Chroma 사용은 해당 단계 실행 당시 기록임. 현재 PostgreSQL + pgvector 저장·검색과 검증은 [PostgreSQL 전환 기록](POSTGRESQL_MIGRATION.md) 참조.
+
 검증일: 2026-10-21 (Asia/Seoul). 범위: 필수 RAG 데이터·백엔드. **Phase 2 UI와 Phase 3·4 배틀/심화 기능은 시작하지 않았다.**
 
 ## 1. 구현 결과

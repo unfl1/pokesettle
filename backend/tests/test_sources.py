@@ -5,9 +5,9 @@ from types import SimpleNamespace
 import pytest
 import requests
 
-from backend.data_preparation.pokeapi import PokeApiSource
-from backend.errors import ServiceError
-from backend.http_client import SourceClient
+from backend.app.core.errors import ServiceError
+from backend.app.data_preparation.pokeapi import PokeApiSource
+from backend.app.http_client import SourceClient
 
 
 def response(code=200, data=None, headers=None):
@@ -45,7 +45,7 @@ def test_http_success_cache_404_and_forbidden_are_separate(setup, monkeypatch):
 def test_retry_after_and_timeout_retries(setup, monkeypatch):
     client = SourceClient(setup.settings, setup.store)
     sleeps = []
-    monkeypatch.setattr("backend.http_client.time.sleep", sleeps.append)
+    monkeypatch.setattr("backend.app.http_client.time.sleep", sleeps.append)
     responses = iter([response(429, headers={"Retry-After": "3"}), response()])
     monkeypatch.setattr(client.session, "get", lambda *args, **kwargs: next(responses))
     client.fetch("https://pokeapi.co/api/v2/ability/1/")
@@ -123,12 +123,12 @@ def test_pokeapi_subject_body_preserves_source_version_scope(setup):
 
 
 def test_restart_reuses_success_cache_and_recovers_jobs(setup):
-    from backend.storage import Store
+    from backend.app.storage import Store
 
     session_id = setup.store.new_session()
     setup.store.put("http", "test", {"body": "cached"})
     job_id, _ = setup.store.create_job(session_id, "chat", "id", {})
-    restarted = Store(setup.store.path)
+    restarted = Store(setup.store.database_url, setup.store.schema)
     restarted.recover_jobs()
     assert restarted.get("http", "test")["body"] == "cached"
     assert restarted.job(job_id, session_id)["status"] == "interrupted"

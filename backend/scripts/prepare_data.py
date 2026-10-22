@@ -6,11 +6,11 @@ import io
 import json
 from collections import defaultdict
 
-from backend.config import Settings
-from backend.data_preparation.pokeapi import LICENCE_URL, PokeApiSource
-from backend.http_client import SourceClient
-from backend.models import Document, Pokemon
-from backend.storage import Store, digest
+from backend.app.core.config import Settings
+from backend.app.data_preparation.pokeapi import LICENCE_URL, PokeApiSource
+from backend.app.http_client import SourceClient
+from backend.app.schemas import Document, Pokemon
+from backend.app.storage import Store, digest
 
 CSV_ROOT = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv"
 SPRITES_ROOT = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
@@ -197,7 +197,7 @@ def build_snapshots(tables, sources, count=None):
 def prepare(settings, count=None):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     (settings.data_dir / "documents").mkdir(exist_ok=True)
-    client = SourceClient(settings, Store(settings.runtime_dir / "state.sqlite3"))
+    client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
     for name in TABLES:
         snapshot = client.fetch(f"{CSV_ROOT}/{name}.csv", expect_json=False)

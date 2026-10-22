@@ -1,0 +1,44 @@
+{
+  "verified_on": "2026-10-22",
+  "scope": "F2015 answer comparison tooling and live paired evaluation",
+  "pytest": {
+    "passed": 78,
+    "failed": 0,
+    "elapsed_seconds": 4.94
+  },
+  "environment": {
+    "postgresql_major": 18,
+    "pgvector": "0.8.1",
+    "unit_model": "synthetic test double",
+    "live_model": "gpt-4.1-mini"
+  },
+  "static_checks": {
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check": "passed"
+  },
+  "live_run": {
+    "case_count": 6,
+    "completed_responses": 12,
+    "tool_failures": 0,
+    "rag_generation_validation_abstentions": 1,
+    "independent_human_review": false
+  },
+  "checks": [
+    "no-RAG receives only question",
+    "alternating execution order and no shared history",
+    "provider exceptions sanitized",
+    "inconsistent baseline rejected",
+    "reference snapshot validation",
+    "active index preflight",
+    "five distinct question/case requirement",
+    "review fingerprint and row completeness",
+    "human vs assistant audit distinction",
+    "retry feedback diagnostics"
+  ],
+  "limitations": [
+    "Passing tool tests does not mean every generated answer is correct",
+    "Live response snapshot predates later preflight and diagnostic improvements; original outputs retained"
+  ]
+}
