@@ -1,0 +1,105 @@
+{
+  "verified_at": "2026-10-22T01:02:07.055307+00:00",
+  "selection": "deterministic accept-all registered candidates, not a model relevance judgment",
+  "answer_generation": "not run",
+  "embedding": "local all-MiniLM-L6-v2 ONNX",
+  "database": "temporary PostgreSQL 18 + pgvector 0.8.1 schema",
+  "cases": [
+    {
+      "pokemon_id": "pokemon:25",
+      "indexed_document_count": 2,
+      "indexed_chunk_count": 8,
+      "documents": [
+        {
+          "document_id": "pokeapi:pokemon-species:25",
+          "source_type": "api",
+          "source_url": "https://pokeapi.co/api/v2/pokemon-species/25/",
+          "revision_id": "ee6a589b9e5c6565026bb9d55c0364b8679f8af9635d911c7f55871d85f504f5",
+          "licence": "PokéAPI project terms; Pokémon names and original text rights reserved to their owners",
+          "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+          "collected_at": "2026-10-22T01:02:03.948889+00:00",
+          "game": "generic",
+          "verification_status": "unknown",
+          "body_hash": "0148ad146210d69feae73e2471005f1078f486ba2434822354cae1d7b927f353"
+        },
+        {
+          "document_id": "wikipedia:en:Pikachu",
+          "source_type": "wiki",
+          "source_url": "https://en.wikipedia.org/w/index.php?title=Pikachu&oldid=1376110365",
+          "revision_id": "1376110365:b2604d4de33f06673bcbc724e06963b64a1fdf46d70ad937c42adb292f33a630",
+          "licence": "Wikipedia contributors · CC BY-SA 4.0 · original extract unchanged",
+          "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "collected_at": "2026-10-22T01:02:05.177989+00:00",
+          "game": "generic",
+          "verification_status": "unknown",
+          "body_hash": "e7247d387210ec7b322844231badc113980a8e8c661489ac65e3e1d4c7ef1023"
+        }
+      ],
+      "retrieved_types": [
+        "metadata",
+        "wiki",
+        "api"
+      ],
+      "retrieved_evidence_ids": [
+        "pokemon:25",
+        "pokemon:25:wikipedia:en:Pikachu:4a213ab771d99ceb:0",
+        "pokemon:25:wikipedia:en:Pikachu:4a213ab771d99ceb:1",
+        "pokemon:25:pokeapi:pokemon-species:25:44f712a372572f31:0",
+        "pokemon:25:pokeapi:pokemon-species:25:44f712a372572f31:4",
+        "pokemon:25:pokeapi:pokemon-species:25:44f712a372572f31:3"
+      ],
+      "repeat_network_calls": 0,
+      "repeat_count_unchanged": true,
+      "champions_filter_excludes_generic_documents": true
+    },
+    {
+      "pokemon_id": "pokemon:6",
+      "indexed_document_count": 2,
+      "indexed_chunk_count": 6,
+      "documents": [
+        {
+          "document_id": "pokeapi:pokemon-species:6",
+          "source_type": "api",
+          "source_url": "https://pokeapi.co/api/v2/pokemon-species/6/",
+          "revision_id": "3771455b80876465e50eb0a661871187616764cce9be07b139e1c166e0c6c18e",
+          "licence": "PokéAPI project terms; Pokémon names and original text rights reserved to their owners",
+          "licence_url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md",
+          "collected_at": "2026-10-22T01:02:05.915920+00:00",
+          "game": "generic",
+          "verification_status": "unknown",
+          "body_hash": "0585a5c159f45f7f117d6f0d5b38e28bfcb1fb76cc5dbd16d31c7a2d593ef903"
+        },
+        {
+          "document_id": "wikipedia:en:Charizard",
+          "source_type": "wiki",
+          "source_url": "https://en.wikipedia.org/w/index.php?title=Charizard&oldid=1381029260",
+          "revision_id": "1381029260:ba1842733beb72a9818a3948e6b72d136d2ccb5e2360cffcf863db536b872b8d",
+          "licence": "Wikipedia contributors · CC BY-SA 4.0 · original extract unchanged",
+          "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "collected_at": "2026-10-22T01:02:06.920645+00:00",
+          "game": "generic",
+          "verification_status": "unknown",
+          "body_hash": "ac699aa4f2fa71ef782e7c6d84c62925b7781af2af75f19dd7b5290d4bb4be91"
+        }
+      ],
+      "retrieved_types": [
+        "metadata",
+        "wiki",
+        "api"
+      ],
+      "retrieved_evidence_ids": [
+        "pokemon:6",
+        "pokemon:6:wikipedia:en:Charizard:e3ec270d8d8b9c2b:0",
+        "pokemon:6:wikipedia:en:Charizard:e3ec270d8d8b9c2b:1",
+        "pokemon:6:pokeapi:pokemon-species:6:ff5a720d02c8bcaa:3",
+        "pokemon:6:pokeapi:pokemon-species:6:ff5a720d02c8bcaa:0",
+        "pokemon:6:pokeapi:pokemon-species:6:ff5a720d02c8bcaa:2"
+      ],
+      "repeat_network_calls": 0,
+      "repeat_count_unchanged": true,
+      "champions_filter_excludes_generic_documents": true
+    }
+  ],
+  "network_calls": 5,
+  "chunk_count": 14
+}

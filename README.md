@@ -46,6 +46,7 @@ pnpm --dir frontend dev
 - API 확인: [로컬 Swagger UI](http://127.0.0.1:8000/docs)
 - DB 연결: `.env`의 `DATABASE_URL`·`DATABASE_SCHEMA` 설정, Compose 사용 시 `POSTGRES_PASSWORD` 설정 필수
 - 검색 방식: 기본 유사도 검색, `.env`의 `SEARCH_MODE=mmr` 설정으로 다양성을 고려한 검색 선택
+- 추가 출처: `WIKIPEDIA_ENABLED=true` 설정 시 피카츄·리자몽 종 배경용 Wikipedia 후보 수집 지원, [구성 안내](docs/reports/PHASE4_SOURCES_RESULTS.md) 참조
 - 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/guides/POSTGRESQL_MIGRATION.md) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행

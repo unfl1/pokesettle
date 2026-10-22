@@ -124,3 +124,12 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 - 상태 저장과 RAG 벡터 검색을 PostgreSQL + pgvector로 통합함. 포켓몬 원본 출처·수집일·이용 조건 유지함.
 - 기존 로컬 ONNX 모델을 독립 임베딩 모듈에서 재사용함. 모델·ONNX export 라이선스는 [전환 기록](POSTGRESQL_MIGRATION.md#출처라이선스) 참조.
+
+## 복수 외부 출처 추가 (2026-10-22)
+
+- [Wikipedia 요약 API](https://www.mediawiki.org/wiki/Page_Content_Service): 등록한 피카츄·리자몽 문서의 평문 요약만 선택 수집, 사진·HTML·문서 전체 수집 제외
+- 항목 연결: 종 ID 25 → Pikachu/Q9351, 종 ID 6 → Charizard/Q844940, 응답의 제목·Wikidata ID·언어·표준 문서 유형 검증
+- [이용 조건](https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#7._Licensing_of_Content): Wikipedia 기여자·원문 영구 링크·[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)·추가한 범위/출처 헤더 표시, 평문 요약 본문 유지
+- [API 접근 정책](https://www.mediawiki.org/wiki/Wikimedia_APIs/Access_policy): 저장소 URL을 포함한 User-Agent·직렬 요청·대기·재시도·로컬 캐시 적용, `SOURCE_CONTACT`로 실제 관리 연락처 지정 가능
+- 일반 종 배경만 지원, 폼별 전투 수치·Champions 규칙·참가 가능 여부의 확인 근거로 사용 금지
+- 실제 수집일·revision·원문 해시는 [실행 증거](../evidence/phase4-sources.json), 검증 범위는 [복수 출처 보고서](../reports/PHASE4_SOURCES_RESULTS.md) 참조
