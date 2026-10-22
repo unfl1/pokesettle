@@ -176,7 +176,8 @@ FK와 uniqueness를 사용함. 벡터와 상태는 같은 PostgreSQL 스키마�
 | 설정 | 제안값 / 이유 |
 |---|---|
 | `CHUNK_SIZE`, `CHUNK_OVERLAP` | 1000자, 200자. PDF 예시와 문맥 보존을 출발점으로 삼되 최적값이라는 뜻은 아님 |
-| `TOP_K`, `SEARCH_MODE` | 총 6, similarity. 필수 범위를 먼저 검증. MMR은 Phase 4 선택 |
+| `TOP_K`, `SEARCH_MODE` | 총 6(메타 포함), 기본 similarity. Phase 4에서 mmr 선택 지원 |
+| `MMR_FETCH_K`, `MMR_LAMBDA_MULT` | 유효·중복 제거 후보 30개, lambda 0.5. 범위·manifest 확인 후 외부 근거만 MMR 선택 |
 | `HTTP_TIMEOUT_SECONDS`, `MAX_RETRIES` | 15초, 재시도 2회. 출처 정책/Retry-After 우선 |
 | `SOURCE_REQUEST_INTERVAL_SECONDS` | 출처별 초기 1초. 공식 제한 수치가 아닌 자체 설정 |
 | `LLM_TIMEOUT_SECONDS` | 초기 60초, 초과 시 작업 실패·재시도 안내. 실측 후 조정 |
@@ -234,3 +235,11 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 대화·메시지 순서는 identity `seq`로 유지함. 작업 중복 요청은 PostgreSQL 트랜잭션 advisory lock, 상태 갱신은 행 잠금으로 보호함.
 - JSON은 기준 데이터·출처 스냅샷으로 유지함. 런타임 상태와 벡터는 PostgreSQL에 저장함. `runtime`은 로컬 임베딩 모델 캐시에 사용함.
 - 이전·실행·검증과 한계는 [PostgreSQL 전환 안내](POSTGRESQL_MIGRATION.md) 참조.
+
+
+## Phase 4 MMR 반영
+
+- pgvector의 저장 벡터를 선택적으로 조회해 LangChain MMR에 전달, 원문 재임베딩 없음
+- 메타 고정·활성 manifest·포켓몬/규칙 범위·완전 중복 제거 후 후보 풀 제한
+- 상태 API와 저장 답변의 `retrieval`에 실행 설정 스냅샷 기록
+- 기본 L2 유사도와 MMR 비교는 [Phase 4 결과](PHASE4_MMR_RESULTS.md) 참조

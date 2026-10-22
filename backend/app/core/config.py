@@ -20,6 +20,9 @@ class Settings:
     chunk_size: int = 1000
     chunk_overlap: int = 200
     top_k: int = 6
+    search_mode: str = "similarity"
+    mmr_fetch_k: int = 30
+    mmr_lambda_mult: float = 0.5
     http_timeout: float = 15
     llm_timeout: float = 60
     max_retries: int = 2
@@ -32,6 +35,12 @@ class Settings:
             raise ValueError("0 <= CHUNK_OVERLAP < CHUNK_SIZE 이어야 합니다.")
         if not 2 <= self.top_k <= 20:
             raise ValueError("TOP_K는 2~20이어야 합니다.")
+        if self.search_mode not in {"similarity", "mmr"}:
+            raise ValueError("SEARCH_MODE는 similarity 또는 mmr이어야 합니다.")
+        if not self.top_k - 1 <= self.mmr_fetch_k <= 200:
+            raise ValueError("MMR_FETCH_K는 TOP_K - 1 이상, 200 이하여야 합니다.")
+        if not 0 <= self.mmr_lambda_mult <= 1:
+            raise ValueError("MMR_LAMBDA_MULT는 0~1이어야 합니다.")
         if min(self.http_timeout, self.llm_timeout) <= 0 or self.request_interval < 0:
             raise ValueError("시간 설정이 잘못되었습니다.")
         if not 0 <= self.max_retries <= 5:
@@ -56,6 +65,9 @@ class Settings:
             chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "200")),
             top_k=int(os.getenv("TOP_K", "6")),
+            search_mode=os.getenv("SEARCH_MODE", "similarity"),
+            mmr_fetch_k=int(os.getenv("MMR_FETCH_K", "30")),
+            mmr_lambda_mult=float(os.getenv("MMR_LAMBDA_MULT", "0.5")),
             http_timeout=float(os.getenv("HTTP_TIMEOUT_SECONDS", "15")),
             llm_timeout=float(os.getenv("LLM_TIMEOUT_SECONDS", "60")),
             max_retries=int(os.getenv("MAX_RETRIES", "2")),

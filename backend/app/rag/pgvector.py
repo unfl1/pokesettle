@@ -79,18 +79,24 @@ class PgVectorCollection:
                 "SELECT COUNT(*) AS count FROM vector_entries WHERE collection=%s", (self.name,)
             ).fetchone()["count"]
 
-    def get(self, ids=None, where=None, include=None):
+    def get(self, ids=None, where=None, include=None, include_embeddings=False):
         condition, params = self._filter(ids, where)
+        columns = "id,document,metadata"
+        if include_embeddings:
+            columns += ",embedding::text AS embedding"
         with self.store.connect() as db:
             rows = db.execute(
-                f"SELECT id,document,metadata FROM vector_entries WHERE {condition} ORDER BY id",
+                f"SELECT {columns} FROM vector_entries WHERE {condition} ORDER BY id",
                 params,
             ).fetchall()
-        return {
+        result = {
             "ids": [r["id"] for r in rows],
             "documents": [r["document"] for r in rows],
             "metadatas": [r["metadata"] for r in rows],
         }
+        if include_embeddings:
+            result["embeddings"] = [json.loads(r["embedding"]) for r in rows]
+        return result
 
     def delete(self, *, ids):
         with self.store.connect() as db:
@@ -98,13 +104,17 @@ class PgVectorCollection:
                 "DELETE FROM vector_entries WHERE collection=%s AND id=ANY(%s)", (self.name, ids)
             )
 
-    def query(self, *, query_embeddings, n_results, where=None):
+    def query(self, *, query_embeddings, n_results, where=None, include_embeddings=False):
         condition, params = self._filter(where=where)
         result = {"ids": [], "documents": [], "metadatas": []}
+        columns = "id,document,metadata"
+        if include_embeddings:
+            columns += ",embedding::text AS embedding"
+            result["embeddings"] = []
         with self.store.connect() as db:
             for vector in query_embeddings:
                 rows = db.execute(
-                    f"SELECT id,document,metadata FROM vector_entries WHERE {condition} ORDER BY embedding <-> %s::vector, id LIMIT %s",
+                    f"SELECT {columns} FROM vector_entries WHERE {condition} ORDER BY embedding <-> %s::vector, id LIMIT %s",
                     [*params, self._vector(vector), n_results],
                 ).fetchall()
                 for key, column in (
@@ -113,6 +123,8 @@ class PgVectorCollection:
                     ("metadatas", "metadata"),
                 ):
                     result[key].append([r[column] for r in rows])
+                if include_embeddings:
+                    result["embeddings"].append([json.loads(r["embedding"]) for r in rows])
         return result
 
 
