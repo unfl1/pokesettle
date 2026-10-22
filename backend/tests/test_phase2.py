@@ -91,9 +91,13 @@ def test_guide_is_grounded_persisted_and_scope_checked(setup):
         assert (
             client.post(
                 "/api/pokemon/pokemon:2/guide",
-                json={**body, "conversationId": result["conversationId"]},
+                json={
+                    **body,
+                    "clientRequestId": str(uuid4()),
+                    "conversationId": result["conversationId"],
+                },
             ).status_code
-            == 409
+            == 202
         )
 
 
@@ -212,3 +216,54 @@ def test_guide_fallback_rejects_stale_or_other_form_metadata(setup):
     assert metadata_guide(setup.catalog.get("pokemon:2"), evidence, None) is None
     evidence[0]["text"] += " stale"
     assert metadata_guide(pokemon, evidence, None) is None
+
+
+def test_general_conversations_are_independent_of_catalog_and_reset_state(setup):
+    with TestClient(create_app(setup.settings, service=setup.service)) as client:
+        client.post("/api/session")
+        session = client.cookies.get("pokecoach_session")
+        old_a = setup.store.conversation(session, "pokemon:1", None)
+        old_b = setup.store.conversation(session, "pokemon:2", None)
+        new = client.post("/api/conversations", json={})
+        assert new.status_code == 201
+        cid = new.json()["data"]["conversationId"]
+        assert cid not in {old_a, old_b}
+        assert setup.store.get("battle_state", cid) is None
+        assert client.get("/api/conversations").json()["data"]["total"] == 3
+        # A single conversation can refer to different Pokémon without a scope conflict.
+        assert setup.store.conversation(session, "pokemon:2", None, old_a) == old_a
+        response = client.post(
+            "/api/chat",
+            json={
+                "question": "어떻게 할까?",
+                "conversationId": cid,
+                "clientRequestId": str(uuid4()),
+            },
+        )
+        assert response.status_code == 202
+        result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
+        assert "도감에서 선택할 필요는 없어요" in result["answer"]
+        client.cookies.set("pokecoach_session", setup.store.new_session())
+        assert client.get("/api/conversations").json()["data"]["total"] == 0
+        assert client.get(f"/api/conversations/{cid}/messages").status_code == 404
+
+
+def test_chat_without_selected_pokemon_resolves_named_topics_in_same_conversation(setup):
+    with TestClient(create_app(setup.settings, service=setup.service)) as client:
+        client.post("/api/session")
+        cid = client.post("/api/conversations", json={}).json()["data"]["conversationId"]
+        for name in ("테스트1", "테스트2"):
+            response = client.post(
+                "/api/chat",
+                json={
+                    "question": f"{name} 타입 알려줘",
+                    "conversationId": cid,
+                    "clientRequestId": str(uuid4()),
+                },
+            )
+            assert response.status_code == 202
+            result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
+            assert result["conversationId"] == cid
+            assert result["answerPath"] == "catalog_direct"
+            assert name in result["answer"]
+        assert client.get(f"/api/conversations/{cid}/messages").json()["data"]["total"] == 4

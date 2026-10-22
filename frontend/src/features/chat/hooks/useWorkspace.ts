@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../../lib/apiClient';
 import { systemApi } from '../../../lib/systemApi';
-import { pokemonApi } from '../../pokemon/api';
 import { chatApi } from '../api';
 import type { PendingJob } from '../types';
 
 interface SendRequest {
   pokemonId: string;
+  referencePokemonId?: string;
   conversationId: string | null;
   question: string;
   kind: 'chat' | 'guide';
@@ -38,7 +38,8 @@ function readPending(): Record<string, PendingJob> {
   }
 }
 
-export function useWorkspace(pokemonId: string) {
+export function useWorkspace() {
+  const pokemonId = 'workspace';
   const cache = useQueryClient();
   const session = useQuery({
     queryKey: ['session'],
@@ -51,24 +52,33 @@ export function useWorkspace(pokemonId: string) {
     queryFn: systemApi.status,
     refetchInterval: 15000,
   });
-  const detail = useQuery({
-    queryKey: ['detail', pokemonId, status.data?.metadataCount],
-    queryFn: () => pokemonApi.detail(pokemonId),
-  });
   const conversations = useQuery({
     queryKey: ['conversations', pokemonId],
     queryFn: () => chatApi.conversations(pokemonId),
     enabled: session.isSuccess,
   });
-  const [choices, setChoices] = useState<Record<string, string | null>>({});
+  const [choices, setChoices] = useState<Record<string, string | null>>((): Record<string, string | null> => {
+    try { const id = sessionStorage.getItem('poketact-conversation'); return id ? {workspace: id} : {}; }
+    catch { return {}; }
+  });
   const conversationId = Object.hasOwn(choices, pokemonId)
     ? choices[pokemonId]
     : (conversations.data?.items[0]?.conversationId ?? null);
+  useEffect(() => {
+    try { if (conversationId) sessionStorage.setItem('poketact-conversation', conversationId); }
+    catch { /* storage may be disabled */ }
+  }, [conversationId]);
   const messages = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => chatApi.messages(conversationId!),
     enabled: session.isSuccess && Boolean(conversationId),
   });
+  useEffect(() => {
+    if (messages.error instanceof ApiError && messages.error.code === 'RESOURCE_NOT_FOUND') {
+      setChoices(previous => { const next = {...previous}; delete next.workspace; return next; });
+      try { sessionStorage.removeItem('poketact-conversation'); } catch { /* storage may be disabled */ }
+    }
+  }, [messages.error]);
   const [jobs, setJobs] = useState(readPending);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState<Failure | null>(null);
@@ -99,7 +109,7 @@ export function useWorkspace(pokemonId: string) {
   const send = useMutation({
     mutationFn: (body: SendRequest) =>
       body.kind === 'guide'
-        ? chatApi.guide(body.pokemonId, body.conversationId, body.clientRequestId)
+        ? chatApi.guide(body.referencePokemonId!, body.conversationId, body.clientRequestId)
         : chatApi.chat(
             body.pokemonId,
             body.question,
@@ -202,14 +212,15 @@ export function useWorkspace(pokemonId: string) {
     mutationFn: (id: string) => chatApi.newConversation(id),
     onSuccess: (data, id) => {
       setChoices((previous) => ({ ...previous, [id]: data.conversationId }));
+      setDrafts(previous => ({...previous, [id]: ''}));
+      setFailure(null);
       void cache.invalidateQueries({ queryKey: ['conversations', id] });
     },
   });
-  const busy = Boolean(pending) || send.isPending;
+  const busy = Boolean(pending) || send.isPending || createConversation.isPending;
   return {
     session,
     status,
-    detail,
     conversations,
     messages,
     conversationId,
@@ -228,18 +239,18 @@ export function useWorkspace(pokemonId: string) {
     },
     canSend: Boolean(
       session.isSuccess &&
-        detail.data &&
         conversations.isSuccess &&
         !messages.isError &&
         !messages.isFetching &&
         !busy,
     ),
-    submit: (kind: 'chat' | 'guide') =>
+    submit: (kind: 'chat' | 'guide', referencePokemonId?: string) =>
       send.mutate({
         pokemonId,
         question: drafts[pokemonId]?.trim() ?? '',
         conversationId,
         kind,
+        referencePokemonId,
         clientRequestId: crypto.randomUUID(),
       }),
     retry: () => {

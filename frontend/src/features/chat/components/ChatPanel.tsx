@@ -7,7 +7,7 @@ import {
   FileSearch,
   LoaderCircle,
   MessageSquare,
-  Plus,
+  RotateCcw,
   RefreshCw,
   Send,
   Sparkles,
@@ -48,7 +48,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
   return (
     <section
       className="border border-[#334150] rounded-[12px] bg-[#171f2a] overflow-hidden"
-      aria-label="포켓몬별 근거 대화"
+      aria-label="전략 대화"
     >
       <header className="px-5.5 py-4.5 gap-[11px] flex items-center border-b border-b-[#2b3746] max-desktop:p-[17px] max-phone:gap-2 max-phone:flex-wrap [&_h2]:text-[13px] [&_h2]:font-semibold [&_p]:text-[9px] [&_p]:text-[#8194aa] [&_p]:mt-[5px] max-tablet:[&_p]:text-[8px]">
         <div className="p-2 border border-[#a7efc527] bg-[#a7efc511] text-accent rounded-[7px] flex">
@@ -56,7 +56,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         </div>
         <div>
           <h2>근거와 함께 대화하기</h2>
-          <p>대화 주제: {w.detail.data?.nameKo ?? w.detail.data?.nameEn ?? "불러오는 중"} · 포켓몬별 기록 보관</p>
+          <p>도감 선택과 관계없이 배틀 상황을 질문하세요</p>
         </div>
         <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-[#344253] [&_select]:bg-[#111a25] [&_select]:text-[#99acc0] [&_select]:rounded-[5px] [&_select]:text-[10px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
           <label className="sr-only" htmlFor="conversation-select">
@@ -78,15 +78,16 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             ))}
           </select>
           <button
-            className="border border-[#344253] grid place-items-center w-[29px] h-[29px] rounded-[5px] text-[#a0b1c5]"
-            title="새 대화"
-            aria-label="새 대화 만들기"
+            className="border border-[#344253] flex items-center gap-1.5 px-2 py-1.5 rounded-[5px] text-[10px] text-[#a0b1c5] whitespace-nowrap"
+            title="빈 전투 상태로 새 대화 시작 · 이전 기록은 보관"
+            aria-label="대화 초기화"
             onClick={w.createNew}
             disabled={
               w.busy || w.createConversation.isPending || !w.session.isSuccess
             }
           >
-            <Plus size={18} />
+            <RotateCcw size={14} />
+            대화 초기화
           </button>
         </div>
       </header>
@@ -123,20 +124,20 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-[#334253] [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-[#b3c3d5] [&_button]:text-[10px] [&_button]:bg-[#1d2835] max-phone:[&_button]:text-[9px] [&_svg]:text-[#8db09e]">
               <button
                 onClick={() =>
-                  w.setDraft('이 포켓몬의 타입과 특성 이름을 알려줘.')
+                  w.setDraft('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?')
                 }
               >
                 <BookOpenText size={16} />
-                <span>기본 특징이 궁금해요</span>
+                <span>현재 대면에서 어떻게 할까?</span>
                 <ArrowRight size={15} />
               </button>
               <button
                 onClick={() =>
-                  w.setDraft('이 포켓몬의 도감 설명을 출처와 함께 알려줘.')
+                  w.setDraft('상대와 교체 가능한 팀원을 알려주면 교체 후보를 비교해 줘.')
                 }
               >
                 <FileSearch size={16} />
-                <span>도감에는 어떻게 설명되어 있나요?</span>
+                <span>교체 후보를 비교하고 싶어요</span>
                 <ArrowRight size={15} />
               </button>
             </div>
@@ -218,7 +219,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           id="chat-question"
           rows={2}
           maxLength={2000}
-          placeholder="선택한 포켓몬에 대해 질문해 보세요…"
+          placeholder="내 포켓몬·상대·현재 상황을 질문해 보세요…"
           value={w.draft}
           onChange={(e) => w.setDraft(e.target.value)}
           onKeyDown={(e) => {

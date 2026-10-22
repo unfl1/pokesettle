@@ -102,7 +102,7 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
       });
     }
     if (path === '/api/conversations' && request.method() === 'GET') {
-      const items = conversations[url.searchParams.get('pokemonId')!] ?? [];
+      const items = Object.values(conversations).flat().sort((a, b) => Number(b.conversationId.split('-').pop()) - Number(a.conversationId.split('-').pop()));
       return ok({ items, total: items.length });
     }
     if (/^\/api\/conversations\/[^/]+\/messages$/.test(path)) {
@@ -236,52 +236,30 @@ test('위키 인용의 원문 버전·기여자·라이선스 표시와 기록 �
   await expect(licence).toBeVisible();
 });
 
-test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링크', async ({
-  page,
-}) => {
+test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기록 복원', async ({ page }) => {
   await fixture(page);
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: '근거와 함께 대화하기' }),
-  ).toBeVisible();
-  await expect(
-    page.locator('[data-testid="profile-details"]'),
-  ).toBeVisible();
   await page.getByLabel('포켓몬 질문').fill('피카츄 타입');
   await page.getByRole('button', { name: '질문 보내기' }).click();
-  await expect(page.getByText('원문 자료를 확인하고 있어요')).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: '근거 1 원문 열기' }),
-  ).toHaveAttribute('href', 'https://pokeapi.co/api/v2/pokemon/25/');
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await page.getByLabel('포켓몬 질문').fill('이어서 물어볼 초안');
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
-  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('이어서 물어볼 초안');
+  await expect(page.getByRole('button', { name: '이 포켓몬으로 대화하기' })).toHaveCount(0);
+  await expect(page.getByText('도감 선택과 관계없이 배틀 상황을 질문하세요')).toBeVisible();
+  await page.getByRole('button', { name: '대화 초기화', exact: true }).click();
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('');
+  await page.getByLabel('포켓몬 질문').fill('마스카나 대 라우드본');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('마스카나 대 라우드본');
+  await page.getByLabel('대화 기록 선택').selectOption({ label: '피카츄 타입' });
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
+  await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await page.reload();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
-  await page.getByRole('button', { name: '이 포켓몬으로 대화하기', exact: true }).click();
-  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
-  await page.getByLabel('포켓몬 질문').fill('이상해씨 설명');
-  await page.getByRole('button', { name: '질문 보내기' }).click();
-  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
-  await page.getByRole('button', { name: '피카츄 선택' }).click();
-  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('이상해씨 설명');
-  await page.getByRole('button', { name: '이 포켓몬으로 대화하기', exact: true }).click();
-  await expect(page.locator('[data-testid="user-message"] p')).toHaveText(
-    '피카츄 타입',
-  );
-  await page.reload();
-  await expect(page.locator('[data-testid="user-message"] p')).toHaveText(
-    '피카츄 타입',
-  );
-  await page.getByRole('button', { name: '새 대화 만들기' }).click();
-  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
-  await page
-    .getByLabel('대화 기록 선택')
-    .selectOption({ label: '피카츄 타입' });
-  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
-  expect(
-    await page.evaluate(() => sessionStorage.getItem('pokecoach-pending')),
-  ).not.toContain('피카츄 타입');
 });
 
 test('가이드도 대화에 표시하고 자연어 검색은 명확화·빈 결과를 구분', async ({

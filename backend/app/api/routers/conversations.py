@@ -34,7 +34,7 @@ def new_conversation(
 @router.get("/conversations")
 def conversation_list(
     request: Request,
-    pokemon_id: str = Query(..., alias="pokemonId"),
+    pokemon_id: str | None = Query(None, alias="pokemonId"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     *,
@@ -42,7 +42,8 @@ def conversation_list(
     catalog: CatalogDep,
 ):
     session_id = session(request, store)
-    catalog.get(pokemon_id)
+    if pokemon_id:
+        catalog.get(pokemon_id)
     return ok(request, store.conversations(session_id, pokemon_id, limit, offset))
 
 

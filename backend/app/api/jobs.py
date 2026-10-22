@@ -8,7 +8,8 @@ def submit(request, background, body, kind, service, settings):
     store = service.store
     session_id = session(request, store)
     check_scope(body, service, settings)
-    if kind != "chat" or not catalog_question(service.catalog, body.pokemon_id, body.question):
+    focus = service.chat_focus(body, session_id) if kind == "chat" else body.pokemon_id
+    if kind != "chat" or (focus and not catalog_question(service.catalog, focus, body.question)):
         ensure_ready(service, settings)
     if kind in {"chat", "guide"} and body.conversation_id:
         store.conversation(session_id, body.pokemon_id, body.regulation_id, body.conversation_id)

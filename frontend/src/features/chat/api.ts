@@ -3,10 +3,16 @@ import type { Page } from '../../types/api';
 import type { Conversation, GroundedResult, Job, Message } from './types';
 
 export const chatApi = {
-  conversations: (id: string) =>
-    request<Page<Conversation>>(
-      `/conversations?pokemonId=${encodeURIComponent(id)}&limit=100`,
-    ),
+  conversations: async (_id?: string): Promise<Page<Conversation>> => {
+    const items: Conversation[] = [];
+    let offset = 0;
+    while (true) {
+      const page = await request<Page<Conversation>>(`/conversations?limit=100&offset=${offset}`);
+      items.push(...page.items);
+      offset += page.items.length;
+      if (offset >= page.total || !page.items.length) return {...page, items, offset: 0};
+    }
+  },
   messages: async (id: string): Promise<Message[]> => {
     const items: Message[] = [];
     let offset = 0;
@@ -19,8 +25,8 @@ export const chatApi = {
       if (offset >= page.total || !page.items.length) return items;
     } while (true);
   },
-  newConversation: (pokemonId: string) =>
-    post<{ conversationId: string }>('/conversations', { pokemonId }),
+  newConversation: (_id?: string) =>
+    post<{ conversationId: string }>('/conversations', {}),
   chat: (
     pokemonId: string,
     question: string,
@@ -28,7 +34,7 @@ export const chatApi = {
     clientRequestId: string,
   ) =>
     post<{ jobId: string }>('/chat', {
-      pokemonId,
+      pokemonId: pokemonId === 'workspace' ? undefined : pokemonId,
       question,
       conversationId,
       clientRequestId,

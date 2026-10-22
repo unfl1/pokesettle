@@ -167,11 +167,47 @@ class KnowledgeService:
                 "elapsed_seconds": round(time.monotonic() - started, 3),
             }
 
+    def chat_focus(self, request, session_id):
+        if request.pokemon_id:
+            return request.pokemon_id
+        names = mentioned_pokemon(self.catalog, request.question, limit=2)
+        if names:
+            return names[0]
+        if request.conversation_id:
+            record = self.store.messages(session_id, request.conversation_id, limit=1)
+            previous = self.store.get("battle_state", request.conversation_id) or {}
+            return (
+                previous.get("own_id")
+                or self.store.get("chat_topic", request.conversation_id)
+                or (record["pokemon_id"] if record["pokemon_id"] in self.catalog.items else None)
+            )
+        return None
+
     def chat(self, request, session_id, stage=lambda _: None, feature=None):
-        self.catalog.get(request.pokemon_id)
+        focus = self.chat_focus(request, session_id)
         conversation_id = self.store.conversation(
             session_id, request.pokemon_id, request.regulation_id, request.conversation_id
         )
+        if focus is None:
+            result = {
+                "answer_status": "partial",
+                "answer": "내 포켓몬과 상대 포켓몬, 또는 궁금한 포켓몬 이름을 질문에 적어주세요. 도감에서 선택할 필요는 없어요.",
+                "citations": [],
+                "assumptions": [],
+                "unknowns": [],
+            }
+            user_id, assistant_id = self.store.save_exchange(
+                conversation_id, request.question, result
+            )
+            return {
+                **result,
+                "conversation_id": conversation_id,
+                "user_message_id": user_id,
+                "assistant_message_id": assistant_id,
+            }
+        request = request.model_copy(update={"pokemon_id": focus})
+        self.catalog.get(focus)
+        self.store.put("chat_topic", conversation_id, focus)
         direct = (
             catalog_question(self.catalog, request.pokemon_id, request.question)
             if feature is None

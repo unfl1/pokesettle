@@ -128,7 +128,7 @@ class Generation(Model):
 
 
 class ChatRequest(Model):
-    pokemon_id: str = Field(min_length=1, max_length=80)
+    pokemon_id: str | None = Field(default=None, min_length=1, max_length=80)
     question: str = Field(min_length=1, max_length=2000)
     regulation_id: str | None = Field(default=None, max_length=80)
     client_request_id: UUID
@@ -150,7 +150,7 @@ class CollectRequest(Model):
 
 
 class ConversationRequest(Model):
-    pokemon_id: str = Field(min_length=1, max_length=80)
+    pokemon_id: str | None = Field(default=None, min_length=1, max_length=80)
     regulation_id: str | None = Field(default=None, max_length=80)
 
 

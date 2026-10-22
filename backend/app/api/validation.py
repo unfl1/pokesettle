@@ -18,7 +18,8 @@ def regulations(settings):
 
 
 def check_scope(request_data, service, settings):
-    service.catalog.get(request_data.pokemon_id)
+    if request_data.pokemon_id:
+        service.catalog.get(request_data.pokemon_id)
     if request_data.regulation_id and request_data.regulation_id not in {
         r["regulation_id"] for r in regulations(settings)
     }:

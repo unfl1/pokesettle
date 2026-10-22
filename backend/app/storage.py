@@ -94,15 +94,15 @@ class Store:
                 ).fetchone()
                 if not row:
                     raise ServiceError("RESOURCE_NOT_FOUND", "대화를 찾을 수 없습니다.", 404)
-                if row["pokemon_id"] != pokemon_id or row["regulation_id"] != regulation_id:
+                if row["regulation_id"] != regulation_id:
                     raise ServiceError(
-                        "CONVERSATION_SCOPE_MISMATCH", "항목·규칙별로 새 대화가 필요합니다.", 409
+                        "CONVERSATION_SCOPE_MISMATCH", "규칙별로 새 대화가 필요합니다.", 409
                     )
                 return conversation_id
             conversation_id = str(uuid4())
             db.execute(
                 "INSERT INTO conversations (id,session_id,pokemon_id,regulation_id) VALUES (%s,%s,%s,%s)",
-                (conversation_id, session_id, pokemon_id, regulation_id),
+                (conversation_id, session_id, pokemon_id or "general", regulation_id),
             )
         return conversation_id
 
@@ -121,20 +121,20 @@ class Store:
                 )
         return ids
 
-    def conversations(self, session_id, pokemon_id, limit=20, offset=0):
+    def conversations(self, session_id, pokemon_id=None, limit=20, offset=0):
         with self.connect() as db:
             total = db.execute(
-                "SELECT COUNT(*) AS total FROM conversations WHERE session_id=%s AND pokemon_id=%s",
-                (session_id, pokemon_id),
+                "SELECT COUNT(*) AS total FROM conversations WHERE session_id=%s AND (%s::text IS NULL OR pokemon_id=%s)",
+                (session_id, pokemon_id, pokemon_id),
             ).fetchone()["total"]
             rows = db.execute(
                 """SELECT c.*, COALESCE(MAX(m.created_at),'') AS updated_at,
                 (SELECT content FROM messages WHERE conversation_id=c.id AND role='user' ORDER BY seq LIMIT 1) AS first_question,
                 COUNT(m.id) AS message_count
                 FROM conversations c LEFT JOIN messages m ON m.conversation_id=c.id
-                WHERE c.session_id=%s AND c.pokemon_id=%s GROUP BY c.id
+                WHERE c.session_id=%s AND (%s::text IS NULL OR c.pokemon_id=%s) GROUP BY c.id
                 ORDER BY c.seq DESC LIMIT %s OFFSET %s""",
-                (session_id, pokemon_id, limit, offset),
+                (session_id, pokemon_id, pokemon_id, limit, offset),
             ).fetchall()
         return {
             "items": [

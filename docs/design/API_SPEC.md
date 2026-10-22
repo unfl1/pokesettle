@@ -45,8 +45,8 @@ Phase 1·2 경로와 Phase 3의 일반 타입 시나리오 경로 구현. Champi
 | POST `/api/documents/collect` | 선택 항목 문서 준비 작업, 캐시 우선 | Phase 1 |
 | POST `/api/chat` | 수집 필요성 확인 후 RAG 답변 작업 접수 | Phase 1 |
 | GET `/api/jobs/{jobId}` | 처리 단계·결과·안전한 오류 | Phase 1 |
-| POST `/api/conversations` | 선택 항목의 대화 생성 | Phase 2, Phase 1 채팅 검증 시 최소 저장 계약 선행 |
-| GET `/api/conversations?pokemonId=...` | 세션·항목별 대화 목록 | Phase 2 |
+| POST `/api/conversations` | 포켓몬과 독립된 새 대화 생성 | Phase 2, Phase 1 채팅 검증 시 최소 저장 계약 선행 |
+| GET `/api/conversations` | 세션 전체 대화 목록 | Phase 2 |
 | GET `/api/conversations/{id}/messages` | 저장 메시지·실제 인용 복원 | Phase 2 |
 | POST `/api/pokemon/search` | 자연어 조건 탐색 | Phase 2 |
 | POST `/api/pokemon/{id}/guide` | 근거 기반 운용 가이드 작업 접수 | Phase 2 |
@@ -114,7 +114,7 @@ polling 기본 1초, 장기 작업은 2~5초로 간격 확대함. 다른 세션�
 
 ## 6. 대화와 RAG 응답
 
-`POST /api/conversations`: `{pokemonId,regulationId?}`→201 data `{conversationId,pokemonId,regulationId,createdAt}`.
+`POST /api/conversations`: `{pokemonId?,regulationId?}`→201 data `{conversationId,pokemonId,regulationId,createdAt}`.
 
 `POST /api/chat` 요청:
 
@@ -128,7 +128,7 @@ polling 기본 1초, 장기 작업은 2~5초로 간격 확대함. 다른 세션�
 }
 ```
 
-conversationId가 null이면 선택 항목·규칙으로 새 대화를 생성함. 기존 ID이면 소유 세션·pokemonId·regulationId 일치를 검사하고 불일치는 409. 규칙 변경은 새 대화로 분리해 과거 맥락 혼입을 방지함. 채팅은 202 작업 응답을 반환하고, 서버가 필요한 수집을 거쳐 retrieve/generate를 수행함. UI가 별도 수집 요청을 먼저 호출할 필요는 없음.
+conversationId가 null이면 새 대화 생성. 기존 ID는 소유 세션·regulationId 일치를 검사하고 다른 포켓몬 질문도 같은 대화에서 허용. 채팅의 pokemonId는 선택 입력이며 생략하면 질문 속 이름·전투 상태·직전 대화 주제로 검색 대상 결정 규칙 변경은 새 대화로 분리해 과거 맥락 혼입을 방지함. 채팅은 202 작업 응답을 반환하고, 서버가 필요한 수집을 거쳐 retrieve/generate를 수행함. UI가 별도 수집 요청을 먼저 호출할 필요는 없음.
 
 완료된 chat job의 result는 `{conversationId,userMessageId,assistantMessageId,...GroundedResult}`임. 근거 부족 예시:
 
@@ -207,7 +207,7 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 
 ## Phase 2 구현 세부사항
 
-- 대화 목록은 `pokemonId` 필수, `limit` 기본 20/최대 100, `offset` 기본 0이며 최신 생성 순임. 메시지는 작성 순으로 기본 50/최대 100임. 다른 세션의 대화는 404임. 세션 쿠키는 7일 유효하며 이 기간은 장기 보존·삭제 정책을 뜻하지 않음.
+- 대화 목록은 `pokemonId` 생략 시 세션 전체 목록, 지정 시 기존 항목 필터 호환 유지, `limit` 기본 20/최대 100, `offset` 기본 0이며 최신 생성 순임. 메시지는 작성 순으로 기본 50/최대 100임. 다른 세션의 대화는 404임. 세션 쿠키는 7일 유효하며 이 기간은 장기 보존·삭제 정책을 뜻하지 않음.
 - guide는 일반 도감의 타입·종족값·문서의 특성 설명을 먼저 요청함. 문서에 없는 역할·추천 세트·Champions 전용 전략은 미확인으로 남김. 결과는 GroundedResult에 `feature:pokemon_guide`, `guideScope:generic_reference`, `guideLimitations`가 추가됨. 대화에는 짧은 사용자 요청과 최종 결과를 저장함.
 - 조건 필드: `name`, `types`, `abilities`, `champions_eligibility_status`, `base_stats.{hp,attack,defense,sp_attack,sp_defense,speed}`. 필드 식별자 문자열은 snake_case임. 값은 문자열이며 숫자 비교는 질문에 명시된 정수만 허용함. 이름은 eq/contains, 타입·특성·적격성은 eq, 수치는 eq/gte/lte/gt/lt만 허용함. OR와 질적 기준·미검증 전투 효과는 확인 요청 대상임.
 - 메타 컬렉션 전체를 의미 검색한 뒤 전체 도감에 정확 조건을 적용함. 상위 일부 후보만으로 전체 일치를 주장하지 않음. 검증된 일치 집합은 의미 순위로 정렬함. `baseStats`, `sourceUrl`, `matchedConditions`, `supportingEvidenceIds`를 반환함. 실제 UI는 해석 조건과 미확인 제외 수를 표시하고 항목 선택으로 원문 상세를 연결함.
@@ -329,3 +329,11 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 선택 포켓몬과 다른 대면 상대의 자료도 수집하여 전략 검색에 연결
 - `battleContext.damageComparisons`: 양측 전체 육성 포인트·성격·기술·중립 참조 조건이 명시된 경우 기존 참조 계산기 결과 포함, 누락값 자동 보충 없음
 - 상대 능력치 변화 입력과 중립 참조 조건이 충돌하면 피해 계산 제외, 조건 미입력 시 타입 시나리오와 추가 질문 제공
+
+
+### 도감과 독립된 대화 및 초기화
+
+- 도감 선택은 상세 정보만 변경, 대화 ID·기록·입력 초안 유지
+- 새 대화 요청은 `{}` 허용, 초기화는 새 ID 생성과 초안 비우기로 처리
+- 이전 기록은 전체 대화 목록에서 복원, 전투 상태는 새 ID로 분리
+- 근거 운용 가이드는 사용자가 명시적으로 누른 도감 항목을 대상으로 현재 대화에 추가

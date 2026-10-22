@@ -80,7 +80,7 @@ def test_job_failure_does_not_expose_raw_provider_error(setup):
         assert "full prompt" not in job.text
 
 
-def test_session_and_pokemon_conversation_isolation(setup):
+def test_session_isolation_and_cross_pokemon_conversation(setup):
     session_a, session_b = setup.store.new_session(), setup.store.new_session()
     first = setup.service.chat(ChatRequest(**request_body()), session_a)
     second = setup.service.chat(ChatRequest(**request_body(pokemonId="pokemon:2")), session_a)
@@ -96,7 +96,9 @@ def test_session_and_pokemon_conversation_isolation(setup):
             "/api/chat",
             json=request_body(pokemonId="pokemon:2", conversationId=first["conversation_id"]),
         )
-        assert response.status_code == 409
+        assert response.status_code == 202
+        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        assert job["result"]["conversationId"] == first["conversation_id"]
         job_id, _ = setup.store.create_job(session_a, "collect", str(uuid4()), {})
         setup.store.update_job(job_id, status="running", stage="collecting")
         assert client.get(f"/api/jobs/{job_id}").json()["data"]["stage"] == "collecting"

@@ -29,8 +29,7 @@ import type { PokemonSummary } from '../features/pokemon/types';
 export default function App() {
   const [params, setParams] = useSearchParams();
   const pokemonId = params.get('pokemon') ?? 'pokemon:25';
-  const chatPokemonId = params.get('chat') ?? pokemonId;
-  const w = useWorkspace(chatPokemonId);
+  const w = useWorkspace();
   const selectedDetail = useQuery({
     queryKey: ['detail', pokemonId, w.status.data?.metadataCount],
     queryFn: () => pokemonApi.detail(pokemonId),
@@ -83,7 +82,7 @@ export default function App() {
     else setSubmittedCondition(condition.trim());
   }
   function choose(pokemon: PokemonSummary) {
-    setParams({ pokemon: pokemon.pokemonId, chat: chatPokemonId });
+    setParams({ pokemon: pokemon.pokemonId });
     setCatalogOpen(false);
   }
 
@@ -193,7 +192,7 @@ export default function App() {
                     <span className="text-accent">.</span>
                   </h1>
                   <p className="text-[#8f9caf] text-[12px] leading-[1.8] mt-[7px] max-phone:text-[10px]">
-                    포켓몬을 선택하고 대화해 보세요. 답변의 근거도 함께 확인할
+                    배틀 상황을 자유롭게 질문해 보세요. 답변의 근거도 함께 확인할
                     수 있어요.
                   </p>
                 </div>
@@ -544,24 +543,12 @@ export default function App() {
                       <PokemonProfile
                         key={selectedDetail.data.pokemonId}
                         pokemon={selectedDetail.data}
-                        onGuide={() => w.submit('guide')}
-                        disabled={!w.canSend || !w.status.data?.ready || pokemonId !== chatPokemonId}
+                        onGuide={() => w.submit('guide', pokemonId)}
+                        disabled={!w.canSend || !w.status.data?.ready}
                       />
                     )
                   )}
-                  {pokemonId !== chatPokemonId && selectedDetail.data && (
-                    <div className="rounded-[8px] border border-[#344253] p-3 text-[11px] leading-[1.9]">
-                      <p>포켓몬 정보를 살펴보는 동안 기존 대화를 유지합니다.</p>
-                      <button
-                        className="mt-2 rounded-[6px] border border-[#a7efc540] px-3 py-2 text-accent"
-                        onClick={() => setParams({ pokemon: pokemonId, chat: pokemonId })}
-                      >
-                        이 포켓몬으로 대화하기
-                      </button>
-                      <p className="mt-1 text-[#8295a8]">선택 시 해당 포켓몬의 대화 기록으로 전환합니다. 기존 기록은 유지됩니다.</p>
-                    </div>
-                  )}
-                  <ChatPanel key={chatPokemonId} workspace={w} />
+                  <ChatPanel workspace={w} />
                   <footer className="gap-3 flex items-center justify-between text-[#5f758b] text-[9px] [&>span:first-child]:gap-1.5 [&>span:first-child]:flex [&>span:first-child]:items-center max-tablet:[&>span:last-child]:hidden">
                     <span>
                       <ShieldCheck size={12} />
