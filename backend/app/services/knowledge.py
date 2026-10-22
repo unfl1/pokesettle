@@ -164,6 +164,7 @@ class KnowledgeService:
         )
         stage("saving")
         result = state["result"]
+        result["retrieval"] = self.vectors.retrieval_settings
         if feature:
             result["feature"] = feature
             result["guide_scope"] = "generic_reference"

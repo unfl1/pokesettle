@@ -23,6 +23,7 @@ def status(request: Request, *, settings: SettingsDep, catalog: CatalogDep, vect
             "species_count": len({p.species_id for p in catalog.items.values()}),
             "alternate_variety_count": sum(not p.is_default for p in catalog.items.values()),
             "document_chunk_count": vectors.docs.count(),
+            "retrieval": vectors.retrieval_settings,
             "missing": missing,
             "regulation_verification_status": "unknown",
         },

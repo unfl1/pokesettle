@@ -7,6 +7,7 @@ Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓�
 - 포켓몬 선택 후 문서 근거를 활용한 질의응답
 - 포켓몬별 대화 기록 저장·복원 및 실제 인용 자료 확인
 - 자연어 조건 검색과 근거 기반 운용 가이드
+- 유사도·MMR 검색 설정과 근거 중복 억제
 - 일반 도감 기본 1,025종·별도 폼 326개, 총 1,351개 항목 제공
 - 포켓몬 이미지·모바일 화면·진행 상태·오류 재시도 지원
 
@@ -44,6 +45,7 @@ pnpm --dir frontend dev
 - 접속: [로컬 챗봇](http://127.0.0.1:5173/)
 - API 확인: [로컬 Swagger UI](http://127.0.0.1:8000/docs)
 - DB 연결: `.env`의 `DATABASE_URL`·`DATABASE_SCHEMA` 설정, Compose 사용 시 `POSTGRES_PASSWORD` 설정 필수
+- 검색 방식: 기본 유사도 검색, `.env`의 `SEARCH_MODE=mmr` 설정으로 다양성을 고려한 검색 선택
 - 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/POSTGRESQL_MIGRATION.md) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행

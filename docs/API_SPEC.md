@@ -238,3 +238,23 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 계산 공통: `scope=generic`, `regulationId=null`, `facts`, 문자열 배열 `assumptions`·`unknowns`, 출처 배열 `citations`, `calculation.status=type_only`. `damage`, `koProbability`, `winProbability`는 null. 기존 RAG `GroundedResult`와 별도 타입.
 - 타입 자료 누락은 `TYPE_CHART_NOT_READY` 503. 잘못된 슬롯·중복 종·6마리 미충족·미지원 폼은 안전한 422, 도감 ID 없음은 404.
 - 상세 구현과 미지원 조건은 [Phase 3 결과](PHASE3_RESULTS.md) 참조. 앞의 설계 예시와 이 실행 계약이 다르면 본 절 및 실제 OpenAPI 우선.
+
+
+## Phase 4 검색 설정 응답
+
+`GET /api/status` 및 채팅·가이드 결과의 `retrieval` 필드 추가
+저장 메시지에서도 실제 실행 시점 설정 복원 가능
+
+```json
+{
+  "searchMode": "mmr",
+  "topK": 6,
+  "mmrFetchK": 30,
+  "mmrLambdaMult": 0.5
+}
+```
+
+- 검색 방식은 서버 환경변수로 설정, 요청별 임의 설정 변경 없음
+- 원시 임베딩·DB 연결 문자열·서버 경로는 API 응답에 포함하지 않음
+- 기존 답변·인용·페이지 조회 필드 유지, 기존 메시지에 `retrieval`이 없을 수 있음
+- [검색 검증 결과](PHASE4_MMR_RESULTS.md) 참조
