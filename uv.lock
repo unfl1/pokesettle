@@ -1959,7 +1959,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pokecoach-ai"
+name = "poketact-ai"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

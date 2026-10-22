@@ -115,7 +115,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         <span>
           {result.feature === 'pokemon_guide'
             ? '근거 기반 운용 가이드'
-            : 'PokéCoach'}
+            : 'PokeTact'}
         </span>
         <span
           className="px-[5px] py-[3px] border border-[#344355] ml-auto text-[8px] text-[#849bb0] rounded-[4px]"

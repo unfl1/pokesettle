@@ -1,5 +1,5 @@
 [project]
-name = "pokecoach-ai"
+name = "poketact-ai"
 version = "0.1.0"
 description = "근거 기반 포켓몬 지식 RAG 백엔드 (Phase 1)"
 requires-python = ">=3.10,<3.14"
