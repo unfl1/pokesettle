@@ -242,6 +242,17 @@ def build_graph(vector_store, model, stage=lambda _: None):
                             )
                         ]
                         context = state["battle_context"]
+                        # A move definition cannot establish ownership or matchup damage.
+                        # Battle move/type advice is rendered from the user's inputs and tool.
+                        move_evidence = {
+                            item["evidence_id"]
+                            for item in state["evidence"]
+                            if item.get("document_id", "").startswith("pokeapi:move:")
+                        }
+                        extra = [
+                            claim for claim in extra
+                            if not move_evidence.intersection(claim.evidence_ids)
+                        ]
                         if context.get("scope") == "generic_team_selection":
                             # The selection rank is computed, not an invitation to invent
                             # per-species abilities or reinterpret unrelated strategy prose.

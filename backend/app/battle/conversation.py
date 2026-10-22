@@ -227,7 +227,10 @@ def merge_state(previous, update, allowed_ids, catalog):
 
 def resolve_named_opponent(question, state, catalog):
     """Never retain an old opponent when a newly named opponent is unresolved."""
-    match = re.search(r"상대(?:방)?(?:가|는|은)?\s*([가-힣A-Za-z-]+)", question)
+    match = re.search(
+        r"상대(?:방)?(?:의)?\s*(?:선봉)?(?:이|가|는|은)?\s*(?P<name>[가-힣A-Za-z0-9].*)",
+        question,
+    )
     if not match:
         pending = state.get("unresolved_opponent")
         if pending and (
@@ -243,18 +246,37 @@ def resolve_named_opponent(question, state, catalog):
                 state["opponent_id"] = target.pokemon_id
                 state.pop("unresolved_opponent", None)
         return state
-    token = match[1]
-    names = {p.name_ko: p.pokemon_id for p in catalog.items.values() if p.name_ko}
-    names.update({p.name_en: p.pokemon_id for p in catalog.items.values()})
-    resolved = next(
+    remainder = match["name"]
+    token_match = re.match(r"[가-힣A-Za-z0-9-]+", remainder)
+    token = token_match[0]
+    names = {}
+    for pokemon in catalog.items.values():
+        for name in (pokemon.name_ko, pokemon.name_en):
+            if name:
+                names.setdefault(name, set()).add(pokemon.pokemon_id)
+    matched = next(
         (
-            pid
-            for name, pid in sorted(names.items(), key=lambda item: -len(item[0]))
-            if token.casefold().startswith(name.casefold())
-            and token[len(name) :] in {"", "야", "이야", "이", "가", "는", "은"}
+            (name, ids)
+            for name, ids in sorted(names.items(), key=lambda item: -len(item[0]))
+            if remainder.casefold().startswith(name.casefold())
+            and re.match(
+                r"^(?:(?:이야|인데|야|이|가|는|은|을|를)(?=$|\s|[,.!?~])|$|\s*(?:[,.!?~]|$)|\s+(?!\())",
+                remainder[len(name) :],
+            )
         ),
         None,
     )
+    resolved = next(iter(matched[1])) if matched and len(matched[1]) == 1 else None
+    if matched and not resolved:
+        return {
+            **{
+                k: v
+                for k, v in state.items()
+                if (not k.startswith("opponent_") or k == "opponent_team_ids")
+                and k != "damage_scenarios"
+            },
+            "unresolved_opponent": {"input": matched[0], "suggestion": None},
+        }
     if resolved:
         if resolved != state.get("opponent_id"):
             state = {
@@ -274,7 +296,7 @@ def resolve_named_opponent(question, state, catalog):
         for move in catalog.details.get("move_details", [])
     ):
         return state
-    tail = question[match.end() :].strip()
+    tail = remainder[len(token_match[0]) :].strip()
     if tail and not re.match(r"(?:나왔|나와|선봉|인데|어케|어떻게|[?.!])", tail):
         return state
     state = {
@@ -654,6 +676,17 @@ def coach_fallback(context, evidence):
         [item for item in context["attacks"] if item["multiplier"] > 1],
         key=lambda item: -item["multiplier"],
     )
+    attack_candidates = favorable
+    if context["recommendation"] == "compare_attacks_and_switches" and not favorable:
+        neutral = [item for item in context["attacks"] if item["multiplier"] == 1]
+        if neutral and all(item["multiplier"] <= 1 for item in context["defense"]):
+            attack_candidates = neutral
+        elif context["attacks"] and all(
+            item["multiplier"] < 1 for item in context["attacks"]
+        ):
+            direction = "현재 비교한 공격은 모두 반감되거나 통하지 않습니다. 다른 타입의 공격 기술이 없다면 교체를 우선 추천합니다."
+        elif not context["attacks"]:
+            direction = "현재 입력된 기술 중 비교할 수 있는 공격 기술이 없습니다. 공격 기술이 없다면 교체를 우선 검토하세요."
     if (
         context["recommendation"]
         in {
@@ -661,9 +694,9 @@ def coach_fallback(context, evidence):
             "consider_attack_with_speed_and_hp_check",
             "compare_attacks_and_switches",
         }
-        and favorable
+        and attack_candidates
     ):
-        attack_type = favorable[0]["type"]
+        attack_type = attack_candidates[0]["type"]
         move = next(
             (
                 move
@@ -680,6 +713,8 @@ def coach_fallback(context, evidence):
             else type_labels[attack_type] + " 타입 기술"
         )
         direction = f"일반적으로 {label}로 공격하는 것을 추천합니다."
+        if attack_candidates[0]["multiplier"] == 1:
+            direction += " 약점을 찌르지는 못하지만 반감 없이 맞힐 수 있어, 타입 상성만으로는 교체를 서두를 이유가 적습니다."
     texts = [direction]
     warnings = []
     for item in context["switches"]:
@@ -714,6 +749,17 @@ def coach_fallback(context, evidence):
             warnings.append(
                 "상대 엔트리에 땅 타입이 있다면 전기 기술을 무효화하는 교체에 주의하세요."
             )
+    ineffective = [item for item in context["attacks"] if item["multiplier"] < 1]
+    if ineffective:
+        texts.append(
+            "타입 상성상 "
+            + " ".join(
+                f"{type_labels[item['type']]} 공격은 "
+                + ("통하지 않습니다." if item["multiplier"] == 0 else f"{item['multiplier']:g}배로 반감됩니다.")
+                for item in ineffective
+            )
+            + " 해당 공격을 반복하기보다 반감되지 않는 다른 기술이나 교체를 검토하세요."
+        )
     risks = [item for item in context["defense"] if item["multiplier"] > 1]
     if risks:
         warnings.append(
@@ -733,7 +779,7 @@ def coach_fallback(context, evidence):
             + ", ".join(f"{item['type']} 공격 {item['multiplier']}배" for item in change["defense"])
             + "입니다. 실제 사용 가능 여부와 해당 타입 기술 보유는 별도 확인이 필요합니다."
         )
-    if any(item.get("basis") == "if_available" for item in favorable):
+    if any(item.get("basis") == "if_available" for item in context["attacks"]):
         warnings.append("추천한 타입의 기술을 실제로 보유한 경우의 일반적인 판단입니다.")
     warnings.append(
         "남은 HP·선공 여부·특성·도구에 따라 선택은 달라질 수 있으며, 타입 배율이 KO나 승률을 뜻하지는 않습니다."
