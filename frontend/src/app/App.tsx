@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import {
   ArrowDown,
   UsersRound,
@@ -29,7 +29,12 @@ import type { PokemonSummary } from '../features/pokemon/types';
 export default function App() {
   const [params, setParams] = useSearchParams();
   const pokemonId = params.get('pokemon') ?? 'pokemon:25';
-  const w = useWorkspace(pokemonId);
+  const chatPokemonId = params.get('chat') ?? pokemonId;
+  const w = useWorkspace(chatPokemonId);
+  const selectedDetail = useQuery({
+    queryKey: ['detail', pokemonId, w.status.data?.metadataCount],
+    queryFn: () => pokemonApi.detail(pokemonId),
+  });
   const [view, setView] = useState<'chat' | 'teams'>('chat');
   const [teamsOpened, setTeamsOpened] = useState(false);
   const [mode, setMode] = useState<'name' | 'conditions'>('name');
@@ -78,7 +83,7 @@ export default function App() {
     else setSubmittedCondition(condition.trim());
   }
   function choose(pokemon: PokemonSummary) {
-    setParams({ pokemon: pokemon.pokemonId });
+    setParams({ pokemon: pokemon.pokemonId, chat: chatPokemonId });
     setCatalogOpen(false);
   }
 
@@ -507,7 +512,7 @@ export default function App() {
                   </div>
                 </section>
                 <div className="gap-4.5 flex flex-col min-w-0">
-                  {w.detail.isPending ? (
+                  {selectedDetail.isPending ? (
                     <div
                       className="border border-[#2b3441] rounded-[12px] bg-[#151c26] overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[12px] text-[#94a7ba]"
                       role="status"
@@ -518,16 +523,16 @@ export default function App() {
                       />
                       포켓몬 정보를 불러오고 있어요.
                     </div>
-                  ) : w.detail.error ? (
+                  ) : selectedDetail.error ? (
                     <div
                       className="border border-[#2b3441] rounded-[12px] bg-[#151c26] overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[12px] text-[#94a7ba]"
                       role="alert"
                     >
                       <CircleHelp size={20} />
-                      <p>{w.detail.error.message}</p>
+                      <p>{selectedDetail.error.message}</p>
                       <button
                         onClick={() => {
-                          void w.detail.refetch();
+                          void selectedDetail.refetch();
                         }}
                         className="gap-[5px] text-[10px] text-[#b4d8c6] flex items-center ml-auto whitespace-nowrap"
                       >
@@ -535,15 +540,27 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    w.detail.data && (
+                    selectedDetail.data && (
                       <PokemonProfile
-                        pokemon={w.detail.data}
+                        pokemon={selectedDetail.data}
                         onGuide={() => w.submit('guide')}
-                        disabled={!w.canSend}
+                        disabled={!w.canSend || pokemonId !== chatPokemonId}
                       />
                     )
                   )}
-                  <ChatPanel key={pokemonId} workspace={w} />
+                  {pokemonId !== chatPokemonId && selectedDetail.data && (
+                    <div className="rounded-[8px] border border-[#344253] p-3 text-[11px] leading-[1.9]">
+                      <p>포켓몬 정보를 살펴보는 동안 기존 대화를 유지합니다.</p>
+                      <button
+                        className="mt-2 rounded-[6px] border border-[#a7efc540] px-3 py-2 text-accent"
+                        onClick={() => setParams({ pokemon: pokemonId, chat: pokemonId })}
+                      >
+                        이 포켓몬으로 대화하기
+                      </button>
+                      <p className="mt-1 text-[#8295a8]">선택 시 해당 포켓몬의 대화 기록으로 전환합니다. 기존 기록은 유지됩니다.</p>
+                    </div>
+                  )}
+                  <ChatPanel key={chatPokemonId} workspace={w} />
                   <footer className="gap-3 flex items-center justify-between text-[#5f758b] text-[9px] [&>span:first-child]:gap-1.5 [&>span:first-child]:flex [&>span:first-child]:items-center max-tablet:[&>span:last-child]:hidden">
                     <span>
                       <ShieldCheck size={12} />

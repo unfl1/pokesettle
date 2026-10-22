@@ -36,7 +36,7 @@ export function PokemonProfile({
         </div>
         <div className="min-w-0 [&_h2]:text-[21px] [&_h2]:font-semibold [&_h2]:tracking-[-0.5px] [&_h2]:leading-[1.2]">
           <p className="gap-1.5 text-[9px] tracking-[0.7px] text-[#8295a8] flex items-center">
-            현재 대화 주제
+            살펴보는 포켓몬
           </p>
           <div className="mx-0 gap-2.5 flex items-baseline mt-[5px] mb-2 flex-wrap max-phone:gap-1.5">
             <h2>{pokemon.nameKo ?? pokemon.nameEn}</h2>

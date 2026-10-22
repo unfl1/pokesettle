@@ -54,7 +54,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         </div>
         <div>
           <h2>근거와 함께 대화하기</h2>
-          <p>선택한 포켓몬의 기록이 따로 보관됩니다.</p>
+          <p>대화 주제: {w.detail.data?.nameKo ?? w.detail.data?.nameEn ?? "불러오는 중"} · 포켓몬별 기록 보관</p>
         </div>
         <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-[#344253] [&_select]:bg-[#111a25] [&_select]:text-[#99acc0] [&_select]:rounded-[5px] [&_select]:text-[10px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
           <label className="sr-only" htmlFor="conversation-select">

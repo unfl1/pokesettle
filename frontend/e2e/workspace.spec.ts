@@ -244,11 +244,18 @@ test('대화 중심 화면, 항목별 기록, 새로고침과 실제 인용 링�
     page.getByRole('link', { name: '근거 1 원문 열기' }),
   ).toHaveAttribute('href', 'https://pokeapi.co/api/v2/pokemon/25/');
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
+  await page.getByRole('button', { name: '이 포켓몬으로 대화하기', exact: true }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await page.getByLabel('포켓몬 질문').fill('이상해씨 설명');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
   await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await expect(page.locator('[data-testid="user-message"] p')).toHaveText('이상해씨 설명');
+  await page.getByRole('button', { name: '이 포켓몬으로 대화하기', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText(
     '피카츄 타입',
   );
