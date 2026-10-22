@@ -94,7 +94,12 @@ def render_answer(generated, evidence, regulation_id):
         "answer_status": "partial"
         if generated.claims and generated.unknowns
         else generated.answer_status,
-        "answer": "\n\n".join(sentences) or "수집된 문서에서 확인되지 않습니다.",
+        "answer": "\n\n".join(sentences)
+        or (
+            "답변의 인용·버전 표기를 검증하지 못했습니다. 다시 요청해 주세요."
+            if "검증 가능한 인용·버전 표기를 만들지 못했습니다." in generated.unknowns
+            else "수집된 문서에서 확인되지 않습니다."
+        ),
         "facts": facts,
         "assumptions": [
             {

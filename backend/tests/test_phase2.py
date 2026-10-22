@@ -170,3 +170,45 @@ def test_discovery_failure_is_safe_and_extra_input_rejected(setup):
         assert response.status_code == 500
         assert "SECRET_TEST_TOKEN" not in response.text
         assert "full prompt" not in response.text
+
+
+def test_guide_invalid_citations_falls_back_to_cited_metadata_only(setup, monkeypatch):
+    from backend.app.schemas import Generation
+
+    original = setup.model.invoke
+
+    def invoke(purpose, system, payload, schema):
+        if purpose == "generate":
+            return Generation(
+                answer_status="answered",
+                claims=[{"text": "unsupported strategy", "evidence_ids": ["invented"]}],
+                assumptions=[],
+                unknowns=[],
+            )
+        return original(purpose, system, payload, schema)
+
+    monkeypatch.setattr(setup.model, "invoke", invoke)
+    result = setup.service.chat(
+        chat("pokemon:1"), setup.store.new_session(), feature="pokemon_guide"
+    )
+    assert result["answer_status"] == "partial"
+    assert "일반 도감 타입: test-type" in result["answer"]
+    assert "HP 50" in result["answer"]
+    assert "test-ability" in result["answer"]
+    assert "unsupported strategy" not in result["answer"]
+    assert len(result["citations"]) == 1
+    assert result["citations"][0]["source_type"] == "metadata"
+    assert any("인용 검증" in item["reason"] for item in result["unknowns"])
+    saved = setup.store.history(result["conversation_id"])
+    assert saved
+
+
+def test_guide_fallback_rejects_stale_or_other_form_metadata(setup):
+    from backend.app.rag.guide import metadata_guide
+
+    pokemon = setup.catalog.get("pokemon:1")
+    evidence = setup.vectors.retrieve("pokemon:1", "test")
+    assert metadata_guide(pokemon, evidence, None)
+    assert metadata_guide(setup.catalog.get("pokemon:2"), evidence, None) is None
+    evidence[0]["text"] += " stale"
+    assert metadata_guide(pokemon, evidence, None) is None

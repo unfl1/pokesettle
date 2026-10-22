@@ -1,4 +1,4 @@
-PROMPT_VERSION = "phase4-sources-v1"
+PROMPT_VERSION = "phase4-selection-batch-v2"
 
 QUERY_PROMPT = """당신은 포켓몬 자료 조사자입니다. 주어진 항목과 질문에서 외부 검색어를 추출하세요.
 현재 외부 출처는 PokéAPI의 정확한 resource-name 검색만 지원합니다.
