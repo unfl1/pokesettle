@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import DamagePanel from '../../damage/components/DamagePanel';
 import {
   useMutation,
   useQueries,
@@ -621,6 +622,7 @@ export default function TeamWorkspace({
           )}
         </section>
       )}
+      <DamagePanel own={own} opponent={opponent} label={label} sessionReady={sessionReady} />
       <button
         className={`${action} my-5 flex items-center gap-2`}
         disabled={!own.length}
