@@ -29,11 +29,7 @@ export default function PokemonImage({
   size: 'small' | 'large';
 }) {
   const [failed, setFailed] = useState<string[]>([]);
-  const candidates =
-    size === 'large'
-      ? [pokemon.images?.artworkUrl, pokemon.images?.spriteUrl]
-      : [pokemon.images?.spriteUrl];
-  const source = candidates
+  const source = [pokemon.images?.spriteUrl]
     .map(safeImage)
     .find((url) => url && !failed.includes(url));
   const name = pokemon.nameKo ?? pokemon.nameEn;
@@ -42,7 +38,8 @@ export default function PokemonImage({
       className={`object-contain shrink-0 ${imageSizes[size]}`}
       src={source}
       alt={size === 'large' ? `${name} 이미지` : ''}
-      loading="lazy"
+      loading={size === 'large' ? 'eager' : 'lazy'}
+      fetchPriority={size === 'large' ? 'high' : 'auto'}
       decoding="async"
       referrerPolicy="no-referrer"
       onError={() => setFailed((old) => [...old, source])}

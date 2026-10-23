@@ -187,10 +187,6 @@ export default function App() {
                     <ChevronRight size={12} />
                     코치와 대화
                   </p>
-                  <h1 className="text-[28px] tracking-[-1.3px] font-[650] leading-[1.4] max-desktop:text-[26px] max-tablet:text-[25px] max-phone:text-[22px]">
-                    질문에서, 더 좋은 판단으로
-                    <span className="text-accent">.</span>
-                  </h1>
                   <p className="text-[#8f9caf] text-[12px] leading-[1.8] mt-[7px] max-phone:text-[10px]">
                     배틀 상황을 자유롭게 질문해 보세요. 답변의 근거도 함께 확인할
                     수 있어요.
