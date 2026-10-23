@@ -76,3 +76,21 @@ playwright-report/
 coverage/
 .coverage*
 htmlcov/
+
+# Deployment credentials, infrastructure state, and database backups
+.npmrc
+.pgpass
+.pg_service.conf
+.kube/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.dump
+*.sql.gz
+*.sql.zip
+/backups/
+/captures/
+/screenshots/

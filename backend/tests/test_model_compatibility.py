@@ -7,6 +7,14 @@ from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
 
 
+@pytest.mark.parametrize('base_url', ['', 'https://provider.example/v1'])
+def test_empty_endpoint_uses_openai_and_custom_endpoint_is_preserved(monkeypatch, base_url):
+    monkeypatch.setattr('backend.app.core.config.load_dotenv', lambda *args, **kwargs: None)
+    monkeypatch.setenv('OPENAI_BASE_URL', base_url)
+    settings = Settings.from_env()
+    assert settings.base_url == (base_url or 'https://api.openai.com/v1')
+
+
 @pytest.mark.parametrize('model, purpose, expected', [
     ('gpt-6-luna', 'generate', None),
     ('gpt-6-luna', 'discovery', None),

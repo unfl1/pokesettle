@@ -62,7 +62,8 @@ class Settings:
             database_schema=os.getenv("DATABASE_SCHEMA", "poketact"),
             api_key=os.getenv("OPENAI_API_KEY", ""),
             chat_model=os.getenv("CHAT_MODEL", ""),
-            base_url=os.getenv("OPENAI_BASE_URL") or None,
+            # Pass an explicit default: the SDK otherwise rereads an empty env value.
+            base_url=os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1",
             embedding_model=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
             chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "200")),
