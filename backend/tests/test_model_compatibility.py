@@ -34,4 +34,3 @@ def test_structured_calls_preserve_contract_and_omit_unsupported_temperature(mon
     assert captured['temperature'] == expected
     expected_reasoning = ('medium' if purpose == 'battle_state' else 'none') if model == 'gpt-6-luna' else None
     assert captured['reasoning_effort'] == expected_reasoning
-
