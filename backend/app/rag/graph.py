@@ -207,6 +207,12 @@ def build_graph(vector_store, model, stage=lambda _: None):
 
     def generate_node(state):
         stage("generating")
+        if (state.get("battle_context") or {}).get("scope") == "generic_team_selection":
+            calculated = coach_fallback(state["battle_context"], state["evidence"])
+            if calculated:
+                # Selection uses only computed claims; a model call would be discarded.
+                stage("validating_citations")
+                return {"result": render_answer(calculated, state["evidence"], state.get("regulation_id"))}
         if not state["evidence"]:
             output = Generation(
                 answer_status="abstained", claims=[], assumptions=[], unknowns=["검색된 근거 없음"]

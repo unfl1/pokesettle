@@ -18,7 +18,12 @@ class StructuredModel:
             )
         model = ChatOpenAI(
             model=self.settings.chat_model,
-            temperature=0 if purpose in {"discovery", "generate"} else None,
+            reasoning_effort=(
+                "medium" if purpose == "battle_state" else "none"
+            ) if self.settings.chat_model == "gpt-6-luna" else None,
+            temperature=0
+            if purpose in {"discovery", "generate"} and self.settings.chat_model != "gpt-6-luna"
+            else None,
             api_key=self.settings.api_key,
             base_url=self.settings.base_url,
             timeout=self.settings.llm_timeout,

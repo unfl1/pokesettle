@@ -328,9 +328,21 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
-        # Team selection already has local roster/type inputs; use the prepared RAG
-        # index instead of repeating external query planning and document collection.
-        if battle_context and battle_context.get("scope") == "generic_team_selection":
+        # Evaluated battles already have catalog/type inputs. Search the prepared
+        # RAG index without collecting both species again on every conversation turn.
+        use_prepared_index = bool(
+            battle_context
+            and battle_context.get("sources")
+            and battle_context.get("scope") in {"generic_team_selection", "generic_type_scenario"}
+            and (
+                battle_context.get("scope") == "generic_team_selection"
+                or not re.search(
+                    r"최신|검색|찾아|공략|운영법|육성|특성|도구|기술.*(?:효과|설명)",
+                    request.question,
+                )
+            )
+        )
+        if use_prepared_index:
             collection = {"queries": [], "source": "prepared_local_index"}
         else:
             collection = self.collect(
@@ -338,7 +350,7 @@ class KnowledgeService:
             )
         if (
             battle_context
-            and battle_context.get("scope") != "generic_team_selection"
+            and not use_prepared_index
             and battle_state.get("opponent_id") not in {None, request.pokemon_id}
         ):
             opponent_collection = self.collect(
