@@ -9,13 +9,14 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Storage: JSON reference snapshots and PostgreSQL
 
 ## Sources of truth
-- `요구사항정의.pdf`: mandatory assignment requirements (F2001–F2012 take priority).
-- `docs/design/PROJECT_SPEC.md`: product scope, architecture, and phased plan.
+- Current user requests and practical production needs take priority: usability, reliability, security, operating cost, and maintainability.
+- `요구사항정의.pdf`: optional RAG design reference. Keep useful quality principles; do not impose assignment-specific counts, technologies, submissions, or approval gates.
+- `docs/design/PROJECT_SPEC.md`: product, architecture, RAG quality, and production planning guidance.
 - `docs/`: read only the relevant design documents for the task.
 - Verify current Pokémon Champions mechanics and regulation eligibility before coding them. Do not transplant Scarlet/Violet mechanics without verification.
 
 ## Working rules
-- Inspect existing code before editing; keep changes focused on the requested phase.
+- Inspect existing code before editing; keep changes focused on the current product or production objective.
 - Use snake_case in Python, camelCase in TypeScript, and clear module boundaries.
 - Keep UI, API, RAG, retrieval data, and battle calculations separate.
 - Prefer simple solutions; avoid unnecessary abstractions and dependencies.
@@ -27,10 +28,10 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 ## Workflow
 - Perform all frontend and backend work on `develop` unless the user explicitly requests another branch.
 - Treat a request to create a PR as one workflow: commit the requested changes locally, push `develop` to GitHub, then create or update a `develop` → `main` PR. Leave merging to the user unless explicitly requested.
-- For major changes, state a short plan and implement one phase at a time.
-- Do not start a later phase without a user request.
+- For major changes, state a short plan and implement in reviewable increments based on production priorities.
+- Within the user's requested objective, choose implementation order and complete necessary related work autonomously.
 - Explain changes, tests, limitations, and next steps in Korean.
-- After each completed task, update a relevant local learning note under ignored `docs/private/` with what changed, why it changed, concepts the user should study, and relevant code paths. Prefer updating an existing note over creating another document.
+- After each completed task, update the single ignored local learning guide at `docs/private/LEARNING_GUIDE.md` with what changed, why it changed, concepts the user should study, and relevant code paths. Keep Phase 0 through current work in this file; update its relevant sections instead of creating separate phase-specific learning notes.
 - Do not create standalone work reports, submission documents, or checklists unless the user explicitly requests them. The default task document is the local learning note, not a public repository artifact.
 
 ## Documentation and PR style

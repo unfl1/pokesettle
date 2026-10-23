@@ -2,7 +2,7 @@
 
 > **Purpose:** Build a Pokémon Champions ranked-singles preparation and battle-review assistant that combines verifiable RAG evidence with deterministic battle analysis.
 >
-> **Priority:** The attached assignment PDF is authoritative for F2001–F2012 and associated verification. This document expands the product design without overriding the assignment.
+> **Current priority (2026-10-23):** User-directed production operation takes precedence. Use the assignment PDF as an optional RAG design reference, not a source of mandatory counts, technologies, submissions, or approval gates. Preserve useful retrieval, citation, caching, and verification principles; choose implementation order based on usability, reliability, security, operating cost, and maintainability.
 >
 > **Status:** Design proposal. Game-specific details marked **VERIFY** must be checked against current official sources before implementation. The initial candidate regulation is **M-C**, not an assumption that it will always be current.
 
@@ -12,18 +12,18 @@ Users can browse Pokémon, ask sourced strategy questions, build their six-Poké
 
 Primary use case: team preparation and post-battle review. Check tournament/platform rules before promoting use as a live external assistant.
 
-### MVP versus stretch goals
+### Product capabilities
 
 | Priority | Deliverable | Scope |
 |---|---|---|
-| P0 | Mandatory RAG | Pokémon metadata >=100; external-document search, filtering, collection, chunking and indexing; sourced Q&A; two collections; LangGraph retrieve/generate |
+| P0 | Evidence-based RAG | Pokémon metadata covering the supported product scope; external-document search, filtering, collection, chunking and indexing; sourced Q&A; two collections; LangGraph retrieve/generate |
 | P0 | Service requirements | Pokémon selection, separate conversations, natural-language filtered search, at least one domain-specific feature, progress/errors |
 | P1 | React experience | Pokédex, evidence-linked chat, team-entry UI, dark visual language, responsive behavior |
 | P1 | Basic team/battle coach | Type effectiveness, defensive matchup overview, explainable candidate switching; explicit assumptions |
 | P2 | Advanced battle reasoning | Select 3 from 6, Mega scenarios, action ranking with opponent scenarios |
 | P3 | Precise mechanics | Verified Champions stat/damage engine, damage ranges, conditional KO probability, advanced simulation |
 
-P0 takes precedence over visual polish and optional combat features.
+These priorities are planning guidance. Choose work based on current user needs and production risks rather than a fixed implementation order.
 
 ## 2. Tech stack and architecture
 
@@ -31,9 +31,9 @@ P0 takes precedence over visual polish and optional combat features.
 - **Backend:** Python 3.10+, FastAPI, Pydantic, Uvicorn, pytest, python-dotenv.
 - **RAG:** LangChain, LangGraph (at minimum `retrieve` and `generate`), PostgreSQL + pgvector, model API configured via environment; LangSmith optional if supported by environment.
 - **Storage:** JSON for curated reference data; PostgreSQL for locally saved teams, conversations, jobs, source caches, and pgvector semantic indexes.
-- **Database responsibilities:** PostgreSQL stores application state, document/index manifests, and both logical vector collections through pgvector. The user explicitly chose this database-specific deviation after confirming that the assignment PDF specifies ChromaDB; assignment-side substitution approval is not assumed.
+- **Database responsibilities:** PostgreSQL stores application state, document/index manifests, and both logical vector collections through pgvector.
 - **Calculation:** Python rule engine for validated type/legality checks. Investigate `@smogon/calc` and an optional isolated Node service for Champions-compatible calculations; do not assume generic Gen 9 formulas are sufficient.
-- **Dependency versions:** Check the assignment PDF's specified package versions before installation. Record any justified deviations.
+- **Dependency versions:** Use project manifests and lockfiles as the reproducible baseline; assess compatibility, security, and operating cost when changing dependencies.
 
 ```text
 React (Vite) UI
@@ -68,26 +68,22 @@ Potential sources to investigate (do not assume every field is up to date for Ch
 
 Record URL, collection time, usage rights, game/format applicability, and verification status. Preserve original Korean/English names or confirmed mappings. Do not represent generic Pokémon data as regulation-legal Champions data without verification.
 
-## 4. Required assignment traceability
+## 4. RAG quality principles
 
-| Requirement | Implementation | Acceptance evidence |
+| Area | Design principle | Useful verification |
 |---|---|---|
-| F2001 | Load >=100 Pokémon metadata records; build one searchable text per item | Count and sample indexed text |
-| F2002 | Upsert stable IDs into `pokemon_meta` | Index count unchanged after rerun |
-| F2003 | LLM query-extraction prompt, parseable result | Captured search-keyword example |
-| F2004 | Search external source and LLM-filter candidate documents; always include subject's own document | Accepted/rejected candidate sample and URLs |
-| F2005 | Configurable size/overlap chunking into separate `pokemon_docs` | Chunk records, source metadata, count changes |
-| F2006 | Retrieve selected item metadata + relevant document chunks; merge/dedupe, configurable Top-k | Retrieval result sample |
-| F2007 | LangGraph nodes `retrieve` and `generate`; grounded answer; abstain when unsupported | Graph and negative test |
-| F2008 | Citation markers in claims; only actually cited source titles/links shown | UI citation-link test |
-| F2009 | Item selection and per-item chat histories | Switching-item persistence test |
-| F2010 | Domain-specific feature using evidence (e.g., sourced matchup explanation) | Feature output with citations |
-| F2011 | Natural-language conditions -> candidate retrieval + true predicate validation | Query with matching/nonmatching examples |
-| F2012 | Progress, missing-index/key/empty-results states and relevant warnings | Screenshots of normal/error states |
+| Metadata | Validated, searchable Pokémon attributes with stable IDs | Representative text and idempotent indexing |
+| Source discovery | Structured query extraction and relevant candidate selection | Query parsing, accepted/rejected sources, subject relevance |
+| Collection | Permitted sources, provenance, caching, and clear partial failures | Source URLs, cache reuse, timeout/error behavior |
+| Chunking | Configurable chunk size/overlap and stable document associations | Relevant context retained, stale chunks handled |
+| Retrieval | Relevant metadata and document chunks; deduplication and configurable Top-k | Grounded retrieval across representative user questions |
+| Generation | Clear retrieval/generation boundaries and structured responses | Unsupported claims rejected; insufficient evidence acknowledged |
+| Citations | Only sources actually supporting the answer are displayed | Claim/source agreement and clickable links |
+| Conversations | Explicit context and session isolation | Persistence and unauthorized-access checks |
+| Discovery | Structured predicates for exact conditions | Boundary values, false positives, unknown attributes |
+| UX | Progress, empty states, actionable errors, and retry behavior | Normal/error paths and mobile usability |
 
-Also address NF2001–NF2007 from the PDF: responsive runtime, collection cache, secret handling, safe error messages, modularity, polite API use, and documented rights. Optional deepening: F2013 custom HTML/CSS/JS UI (check React acceptance with instructor), F2014 MMR, F2015 RAG vs no-RAG analysis (>=5 representative questions), F2016 multiple source types.
-
-**Important:** The provided assignment requires selected-item metadata to be included in evidence even if similarity search would not retrieve it, and subject-specific documents to be retained during candidate filtering. Do not overlook these constraints.
+Keep source licensing, safe errors, secret protection, request courtesy, and modular boundaries. Use MMR, multiple source types, and RAG/no-RAG comparisons when they improve measured quality; no fixed question count or submission evidence is required.
 
 ## 5. Data model
 
@@ -119,7 +115,7 @@ Strategy advice from other formats (for example Showdown 6v6, past mainline game
 
 Collection/index preparation:
 
-1. Load and validate 100+ metadata records, build searchable text, upsert into `pokemon_meta`.
+1. Load and validate metadata for the supported Pokémon catalog, build searchable text, upsert into `pokemon_meta`.
 2. Select Pokémon and user question; LLM **Prompt 1** extracts source queries as parseable JSON.
 3. Search permitted outside sources; collect candidate titles/summaries.
 4. LLM **Prompt 2** ranks/selects relevant candidates **without excluding the source document dedicated to the selected Pokémon**.
@@ -139,7 +135,7 @@ Prompts must have clearly defined purposes and structured output where required.
 
 ## 7. Product features
 
-### 7.1 Pokédex + sourced chat (mandatory)
+### 7.1 Pokédex + sourced chat
 
 Search/select Pokémon; show verified types, abilities, stats, Mega forms, metadata source and availability status. Chat with cited evidence and clickable source links. Support natural-language item discovery (e.g. high Speed, Dragon type, documented Ground immunity). Use structured filtering for exact numerical/boolean predicates; semantic retrieval for descriptions and qualitative strategy.
 
@@ -195,7 +191,6 @@ Components: `AppLayout`, `PokemonCard`, `PokemonSelector`, `TypeBadge`, `StatsPa
 ```text
 poketact/
 ├── AGENTS.md
-├── 요구사항정의.pdf
 ├── README.md
 ├── .gitignore
 ├── .env.example
@@ -220,32 +215,24 @@ poketact/
 
 Do not create empty boilerplate directories unnecessarily. Start small and evolve as features are implemented.
 
-## 11. Implementation phases
+## 11. Development priorities
 
-**Phase 0 — Plan only:** inspect repository and PDF, map F2001–F2012 and NF items, verify Champions sources/mechanics/usage conditions, define data schemas, API contract and technical risk register. Output `docs/design/REQUIREMENTS.md`, `docs/design/ARCHITECTURE.md`, `docs/guides/DATA_SOURCES.md`, `docs/design/API_SPEC.md`. **Stop before implementation.**
+Choose work based on the current user objective, existing implementation, and production risks. Implement in reviewable increments; no fixed phase sequence or per-phase approval is required.
 
-**Phase 1 — Mandatory RAG data and backend:** 100+ validated records; both PostgreSQL/pgvector logical collections; three prompts; outside documents + selection + caching + chunking; LangGraph retrieval/generation and source citations; tests F2001–F2008.
+- **RAG quality:** validated metadata, reliable collection/cache/chunking, relevant retrieval, grounded generation, and citations
+- **User experience:** Pokédex, chat, conversation context, discovery, progress, errors, and mobile usability
+- **Battle assistance:** team building, matchup analysis, selection candidates, action alternatives, and explicit assumptions
+- **Advanced analysis:** verified damage calculations, MMR, additional sources, and representative answer-quality comparisons when useful
+- **Production operation:** server-side credentials, access controls, usage/spend limits, deployment, HTTPS, database backups, and operational diagnostics
 
-**Phase 2 — Mandatory UX and integration:** React/Vite setup, Pokédex and chat, item-specific history, conditional discovery, a cited Pokémon-specific service feature, progress/empty/error states, API integration; test F2009–F2012 and full mandatory suite.
+## 12. Quality verification
 
-**Phase 3 — Battle assistant:** team builder, type matchup, three-selection heuristic, attack/switch alternatives, cautious Mega state analysis; maintain source/assumption distinction.
-
-**Phase 4 — Optional advanced work:** verified damage and conditional KO engine, MMR, dual-source indexing, RAG-before/after quality comparison, UI refinements and submission evidence.
-
-Each phase requires a concise report: changed files, tests executed/results, completed requirement IDs, remaining gaps, and blockers. Do not claim unrun tests have passed. Do not start the next phase without explicit approval.
-
-## 12. Acceptance and submission checks
-
-- Index count >=100 and unchanged after rerun; representative metadata text inspected.
-- Collected subject-specific document retained; candidate rejection and cache behavior demonstrated.
-- Adjustable chunk size/overlap and Top-k demonstrate observable retrieval differences.
-- `retrieve` and `generate` graph nodes shown; source IDs and displayed citations agree.
-- No sourced evidence yields an explicit abstention; unknown battle inputs do not produce invented numeric results.
-- Chat context is separated per Pokémon; filters do not present false-positive candidates as exact matches.
-- API secret safety, clean errors, data-source licenses and request courtesy validated.
-- Optional RAG-before/after comparison: at least five challenging questions, accuracy/citation/abstention comparison.
-- Submit requirement matrix, pipeline design, source code, data collection/index scripts, self/peer checklists, evidence screenshots, README, and any chosen advanced-task evidence specified in PDF.
-
-## 13. First Codex instruction (Phase 0 only)
-
-Read `AGENTS.md`, this `docs/design/PROJECT_SPEC.md`, and `요구사항정의.pdf`. Treat mandatory requirements from the original PDF as authoritative. Check external rules/data you can actually verify; list unknowns instead of guessing. Create `docs/design/REQUIREMENTS.md`, `docs/design/ARCHITECTURE.md`, `docs/guides/DATA_SOURCES.md`, and `docs/design/API_SPEC.md` with the F2001–F2012 mapping, regulated Pokémon data plan, two-collection RAG flow, proposed API and phase breakdown. **Do not implement application code in this first task.** Report results and wait for approval of Phase 1.
+- Stable indexing after rerun; representative metadata and retrieval coverage inspected
+- Subject-relevant documents retained; candidate filtering and cache behavior verified
+- Chunk size/overlap and Top-k evaluated against retrieval quality when changed
+- Retrieval and generation boundaries tested; source IDs and displayed citations agree
+- Insufficient evidence yields explicit uncertainty; unknown battle inputs do not produce invented numeric results
+- Conversation context and session isolation verified; filters do not present false positives as exact matches
+- API secret safety, clean errors, data-source licenses, and request courtesy validated
+- Representative RAG/no-RAG comparisons used when needed to assess accuracy, citations, and abstention
+- Relevant tests executed and remaining unverified behavior reported honestly
