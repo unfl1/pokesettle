@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from uuid import uuid4
 
+from backend.app.core.config import DAILY_MODEL_TOKEN_CAP
 from backend.app.core.errors import ServiceError
 
 active_usage = ContextVar("active_usage", default=None)
@@ -87,7 +88,7 @@ class UsageGuard:
             if subject == "global":
                 raise denied(
                     "MODEL_BUDGET_EXHAUSTED",
-                    "오늘의 서비스 전체 AI 사용 한도에 도달했습니다. 기본 도감 조회는 계속 이용할 수 있습니다.",
+                    "오늘의 서비스 전체 AI 사용 한도에 도달했습니다. 다음 이용은 한국 시간 오전 9시 이후 가능합니다. 기본 도감 조회는 계속 이용할 수 있습니다.",
                 )
             raise denied()
         db.execute(
@@ -154,7 +155,10 @@ class UsageGuard:
             day = db.execute(
                 "SELECT to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') AS day"
             ).fetchone()["day"]
-            self.charge(db, day + ":tokens", "global", tokens, s.usage_daily_tokens)
+            self.charge(
+                db, day + ":tokens", "global", tokens,
+                min(s.usage_daily_tokens, DAILY_MODEL_TOKEN_CAP),
+            )
             self.charge(db, day + ":calls", "global", 1, s.usage_daily_calls)
             db.execute(
                 "UPDATE usage_leases SET calls=calls+1, expires_at=now()+interval '15 minutes' WHERE id=%s",

@@ -49,6 +49,8 @@ pnpm --dir frontend dev
 - 추가 출처: `WIKIPEDIA_ENABLED=true` 설정 시 피카츄·리자몽 종 배경용 Wikipedia 후보 수집 지원, [출처·구성 안내](docs/guides/DATA_SOURCES.md) 참조
 - 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/guides/POSTGRESQL_MIGRATION.md) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
+- AI 호출은 입력·최대 출력·재시도를 사전 예약하며 하루 최대 23만 예약 토큰에서 차단, 한국 시간 오전 9시 초기화. `USAGE_DAILY_TOKENS`로 더 낮게 설정 가능
+- 무료 혜택은 OpenAI 계정의 데이터 공유·대상 모델·잔액 조건 충족 필요. 같은 조직의 다른 앱·직접 API 호출은 앱 한도에 포함되지 않아 별도 과금 가능
 - 기존 데이터 사용 가능, 전체 원본 재수집 시 `uv run --frozen python -m backend.scripts.prepare_data` 실행
 
 선택형 참조 데미지 API 사용 시 계산 의존성 설치:
