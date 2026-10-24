@@ -7,6 +7,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import Settings
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.middleware import configure_middleware
+from backend.app.core.telemetry import Telemetry, TelemetryMiddleware
 from backend.app.data_preparation.sources import build_source
 from backend.app.http_client import SourceClient
 from backend.app.rag.model import StructuredModel
@@ -15,28 +16,36 @@ from backend.app.services.knowledge import KnowledgeService
 from backend.app.storage import Store
 
 
-def create_service(settings):
+def create_service(settings, telemetry=None):
     store = Store(settings.database_url, settings.database_schema)
     catalog = Catalog(settings.data_dir / "pokemon.json")
     vectors = VectorStore(settings, store)
     source = build_source(settings, SourceClient(settings, store))
-    return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings))
+    return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings, telemetry))
 
 
 def create_app(settings=None, *, service=None):
     settings = settings or Settings.from_env()
+    telemetry = Telemetry()
 
     @asynccontextmanager
     async def lifespan(app):
         # Importing the module must not open a database connection.
-        app.state.service = service if service is not None else create_service(settings)
+        app.state.service = service if service is not None else create_service(settings, telemetry)
         app.state.service.store.recover_jobs()
-        yield
+        if settings.telemetry_enabled:
+            telemetry.start(settings.runtime_dir / "telemetry")
+        try:
+            yield
+        finally:
+            telemetry.close()
 
     app = FastAPI(title="PokeTact", version="0.1.0", lifespan=lifespan)
     app.state.service = service
     app.state.settings = settings
+    app.state.telemetry = telemetry
     configure_middleware(app, settings)
+    app.add_middleware(TelemetryMiddleware, telemetry=telemetry)
     register_exception_handlers(app)
     app.include_router(api_router)
     return app

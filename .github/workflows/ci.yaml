@@ -1,0 +1,78 @@
+name: Verify
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18
+        env:
+          POSTGRES_DB: poketact_test
+          POSTGRES_USER: poketact_test
+          POSTGRES_PASSWORD: synthetic-ci-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U poketact_test -d poketact_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      POKETACT_TEST_DATABASE_URL: postgresql://poketact_test:synthetic-ci-password@127.0.0.1:5432/poketact_test
+      LANGSMITH_TRACING: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.9.5
+          uv sync --frozen
+          npm install --global pnpm@11.25.0
+          pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+      - name: Inspect public files and deployment code
+        run: |
+          uv run python deployment/check_public_files.py
+          uv run ruff check backend/app/core/telemetry.py backend/tests/test_telemetry.py backend/tests/test_deployment.py deployment
+          uv run python -m compileall -q deployment
+          bash -n deployment/deploy_backend.sh deployment/bootstrap_server.sh
+      - name: Backend regression and release safety tests
+        run: uv run pytest -q
+      - name: Frontend build
+        run: pnpm --dir frontend run build
+      - name: Build production image
+        run: docker build --tag "poketact-backend:$GITHUB_SHA" .
+      - name: Validate monitoring configuration
+        run: |
+          docker run --rm --entrypoint /bin/promtool -v "$PWD/deployment/observability:/etc/prometheus:ro" prom/prometheus:v3.15.1 check config /etc/prometheus/prometheus.yaml
+          docker run --rm -v "$PWD/deployment/observability/loki.yaml:/config.yaml:ro" grafana/loki:3.7.9 -config.file=/config.yaml -verify-config=true
+          docker run --rm -v "$PWD/deployment/observability/config.alloy:/config.alloy:ro" grafana/alloy:v1.21.2 validate /config.alloy
+      - name: Package immutable production release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p out/frontend
+          cp -R frontend/dist/index.html frontend/dist/assets out/frontend/
+          docker save --output "$RUNNER_TEMP/image.tar" "poketact-backend:$GITHUB_SHA"
+          uv run python -m deployment.package_release --image "$RUNNER_TEMP/image.tar" --output out/backend-release.tar.gz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          name: release-${{ github.sha }}
+          path: out/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error

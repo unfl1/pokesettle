@@ -76,6 +76,7 @@ pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
 - [백엔드 구조·실행 경로](docs/design/BACKEND_STRUCTURE.md)
 - [Docker 백엔드 배포](docs/guides/DOCKER_DEPLOYMENT.md)
 - [S3·CloudFront 프론트엔드 배포](docs/guides/FRONTEND_DEPLOYMENT.md)
+- [GitHub Actions 자동 배포·Grafana 운영 관측](docs/guides/OPERATIONS.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company
 

@@ -18,6 +18,7 @@
 | [PostgreSQL 전환](guides/POSTGRESQL_MIGRATION.md) | 저장·pgvector 구성·기존 데이터 이전 |
 | [Docker 백엔드 배포](guides/DOCKER_DEPLOYMENT.md) | Lightsail·컨테이너 실행·비밀값·데이터 보존 |
 | [프론트엔드 배포](guides/FRONTEND_DEPLOYMENT.md) | 비공개 S3·CloudFront·도메인 HTTPS·선택적 Nginx API 연결 |
+| [자동 배포·운영 관측](guides/OPERATIONS.md) | GitHub Actions·전용 배포 키·AWS OIDC·Grafana·로그·경보 |
 
 최소 실행 절차는 [프로젝트 README](../README.md) 참조
 
