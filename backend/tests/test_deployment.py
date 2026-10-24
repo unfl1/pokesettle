@@ -83,7 +83,8 @@ def test_forced_command_rejects_shell_and_non_sha_arguments(command):
         receiver.main(command)
 
 
-def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkeypatch):
+@pytest.mark.parametrize("prefix", ["repo:unfl1/poketact", "repo:unfl1@111/poketact@222"])
+def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkeypatch, prefix):
     calls = {}
 
     class IAM:
@@ -105,11 +106,64 @@ def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkey
     bootstrap = importlib.import_module("deployment.aws.bootstrap_github_oidc")
     state = tmp_path / "poketact-deployment.json"
     state.write_text(json.dumps({"bucket": "synthetic-bucket", "distribution_id": "synthetic-distribution", "domain": "example.com"}))
-    bootstrap.configure(state, "unfl1/poketact")
+    bootstrap.configure(state, "unfl1/poketact", prefix)
     condition = calls["trust"]["Statement"][0]["Condition"]["StringEquals"]
-    assert condition["token.actions.githubusercontent.com:sub"] == "repo:unfl1/poketact:environment:production"
+    assert condition["token.actions.githubusercontent.com:sub"] == prefix + ":environment:production"
     actions = {a for statement in calls["policy"]["Statement"] for a in statement["Action"]}
     assert actions == {"s3:ListBucket", "s3:PutObject", "cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"}
     output = tmp_path / "github-production-secrets.json"
     assert output.stat().st_mode & 0o777 == 0o600
     assert json.loads(output.read_text())["PRODUCTION_URL"] == "https://www.example.com"
+    for invalid in ("repo:*/*", "repo:other@111/poketact@222", "repo:unfl1@111/other@222",
+                    prefix + ":environment:other"):
+        with pytest.raises(ValueError):
+            bootstrap.validate_subject_prefix(invalid, "unfl1/poketact")
+
+
+@pytest.mark.parametrize("old_subject,allowed", [
+    ("repo:unfl1/poketact:environment:production", True),
+    ("repo:other/poketact:environment:production", False),
+])
+def test_aws_subject_migration_preserves_other_conditions(tmp_path, monkeypatch, old_subject, allowed):
+    import copy
+
+    class ExistingRole(Exception):
+        pass
+
+    calls = {}
+
+    class IAM:
+        exceptions = SimpleNamespace(EntityAlreadyExistsException=ExistingRole)
+
+        def get_open_id_connect_provider(self, **kwargs):
+            return {"ClientIDList": ["sts.amazonaws.com"]}
+
+        def create_role(self, **kwargs):
+            calls["desired"] = json.loads(kwargs["AssumeRolePolicyDocument"])
+            raise ExistingRole()
+
+        def get_role(self, **kwargs):
+            old = copy.deepcopy(calls["desired"])
+            old["Statement"][0]["Condition"]["StringEquals"]["token.actions.githubusercontent.com:sub"] = old_subject
+            return {"Role": {"Arn": "synthetic-role-arn", "AssumeRolePolicyDocument": old}}
+
+        def update_assume_role_policy(self, **kwargs):
+            calls["updated"] = json.loads(kwargs["PolicyDocument"])
+
+        def put_role_policy(self, **kwargs):
+            pass
+
+    iam = IAM()
+    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name: iam if name == "iam"
+                        else SimpleNamespace(get_caller_identity=lambda: {"Account": "TEST_ACCOUNT"})))
+    sys.modules.pop("deployment.aws.bootstrap_github_oidc", None)
+    bootstrap = importlib.import_module("deployment.aws.bootstrap_github_oidc")
+    state = tmp_path / "poketact-deployment.json"
+    state.write_text(json.dumps({"bucket": "synthetic-bucket", "distribution_id": "synthetic-distribution", "domain": "example.com"}))
+    if allowed:
+        bootstrap.configure(state, "unfl1/poketact", "repo:unfl1@111/poketact@222", migrate_legacy_subject=True)
+        assert calls["updated"] == calls["desired"]
+    else:
+        with pytest.raises(RuntimeError, match="different trust"):
+            bootstrap.configure(state, "unfl1/poketact", "repo:unfl1@111/poketact@222", migrate_legacy_subject=True)
+        assert "updated" not in calls
