@@ -182,6 +182,8 @@ def setup(tmp_path, pg_store):
         chunk_size=150,
         chunk_overlap=20,
         request_interval=0,
+        usage_requests_per_minute=100,
+        usage_requests_per_day=100,
     )
     store = pg_store
     catalog = Catalog(data_dir / "pokemon.json")

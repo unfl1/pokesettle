@@ -36,6 +36,14 @@ class Telemetry:
             "poketact_model_duration_seconds", "Structured model attempt duration", ["purpose"],
             buckets=(.1, .5, 1, 5, 15, 30, 60, 120, 180), registry=self.registry,
         )
+        self.usage_denied = Counter(
+            "poketact_usage_denied", "Admission or model reservations denied", ["reason"],
+            registry=self.registry,
+        )
+        self.reserved_tokens = Counter(
+            "poketact_reserved_tokens", "Conservative reserved tokens, not billed usage",
+            registry=self.registry,
+        )
         # A dedicated logger avoids collecting third-party logs or raw provider errors.
         self.logger = logging.Logger("poketact.operational", level=logging.INFO)
         self.server = None

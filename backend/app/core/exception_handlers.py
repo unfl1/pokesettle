@@ -14,6 +14,7 @@ async def service_error(request, error):
     return JSONResponse(
         {"error": error.as_dict(), "requestId": request.state.request_id},
         status_code=error.status,
+        headers={"Retry-After": "60"} if error.status == 429 else None,
     )
 
 

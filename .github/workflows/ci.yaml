@@ -47,7 +47,7 @@ jobs:
       - name: Inspect public files and deployment code
         run: |
           uv run python deployment/check_public_files.py
-          uv run ruff check backend/app/core/telemetry.py backend/tests/test_telemetry.py backend/tests/test_deployment.py deployment
+          uv run ruff check backend/app/core/usage.py backend/app/rag/model.py backend/tests/test_usage.py backend/app/core/telemetry.py backend/tests/test_telemetry.py backend/tests/test_deployment.py deployment
           uv run python -m compileall -q deployment
           bash -n deployment/deploy_backend.sh deployment/bootstrap_server.sh deployment/verify_observability.sh
       - name: Backend regression and release safety tests

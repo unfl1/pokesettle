@@ -14,7 +14,7 @@ from backend.app.rag.model import StructuredModel
 
 def app_with_routes():
     service = SimpleNamespace(store=SimpleNamespace(recover_jobs=lambda: None))
-    app = create_app(Settings(), service=service)
+    app = create_app(Settings(), service=service, usage=object())
 
     @app.get("/test/items/{item_id}")
     def item(item_id: str):
@@ -100,7 +100,13 @@ def test_model_attempts_record_retries_without_provider_content(monkeypatch):
 
     monkeypatch.setattr("backend.app.rag.model.ChatOpenAI", Client)
     model = StructuredModel(Settings(api_key="synthetic-test-key", chat_model="test"), telemetry)
-    assert model.invoke("generate", "PRIVATE_SYSTEM", {"question": "PRIVATE_QUESTION"}, object) == "success"
+    from backend.app.core.usage import active_usage
+    from backend.app.schemas import Generation
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None), "test"))
+    try:
+        assert model.invoke("generate", "PRIVATE_SYSTEM", {"question": "PRIVATE_QUESTION"}, Generation) == "success"
+    finally:
+        active_usage.reset(token)
     metrics = generate_latest(telemetry.registry).decode()
     assert 'outcome="failure",purpose="generate"} 1.0' in metrics
     assert 'outcome="success",purpose="generate"} 1.0' in metrics
