@@ -10,6 +10,7 @@ x-backend: &backend
     RUNTIME_DIR: /app/runtime
     DAMAGE_NODE_BINARY: /usr/local/bin/node
     LANGSMITH_TRACING: "false"
+    TRUST_USAGE_PROXY: "true"
   volumes:
     - runtime_data:/app/runtime
   security_opt:

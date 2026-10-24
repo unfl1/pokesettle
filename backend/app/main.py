@@ -8,6 +8,7 @@ from backend.app.core.config import Settings
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.middleware import configure_middleware
 from backend.app.core.telemetry import Telemetry, TelemetryMiddleware
+from backend.app.core.usage import UsageGuard
 from backend.app.data_preparation.sources import build_source
 from backend.app.http_client import SourceClient
 from backend.app.rag.model import StructuredModel
@@ -24,7 +25,7 @@ def create_service(settings, telemetry=None):
     return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings, telemetry))
 
 
-def create_app(settings=None, *, service=None):
+def create_app(settings=None, *, service=None, usage=None):
     settings = settings or Settings.from_env()
     telemetry = Telemetry()
 
@@ -33,6 +34,7 @@ def create_app(settings=None, *, service=None):
         # Importing the module must not open a database connection.
         app.state.service = service if service is not None else create_service(settings, telemetry)
         app.state.service.store.recover_jobs()
+        app.state.usage = usage if usage is not None else UsageGuard(app.state.service.store, settings, telemetry)
         if settings.telemetry_enabled:
             telemetry.start(settings.runtime_dir / "telemetry")
         try:

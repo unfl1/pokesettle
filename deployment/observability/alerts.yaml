@@ -31,3 +31,8 @@ groups:
         for: 5m
         labels: {severity: warning}
         annotations: {summary: "Host root disk available space below fifteen percent"}
+      - alert: UsageLimitBlocks
+        expr: sum(increase(poketact_usage_denied_total[5m])) >= 5
+        for: 1m
+        labels: {severity: warning}
+        annotations: {summary: "Repeated admission or model budget blocks; inspect usage limits"}

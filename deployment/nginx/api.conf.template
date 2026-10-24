@@ -1,6 +1,12 @@
 # Install in /etc/nginx/conf.d after replacing domain/certificate placeholders.
 # The origin token include is generated separately with root-only permissions.
 limit_req_zone $binary_remote_addr zone=api_reads:10m rate=10r/s;
+# CloudFront appends the actual viewer IP as the final X-Forwarded-For entry.
+# Trust this only after validating the private origin token below.
+map $http_x_forwarded_for $usage_viewer_ip {
+    default "";
+    ~(?:^|,\s*)(?<usage_last_address>[0-9a-fA-F:.]+)\s*$ $usage_last_address;
+}
 map $request_method $write_limit_key {
     default "";
     POST $server_name;
@@ -59,6 +65,7 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header Connection "";
+        proxy_set_header X-PokeTact-Viewer-IP $usage_viewer_ip;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto https;

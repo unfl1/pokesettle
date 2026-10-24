@@ -396,9 +396,13 @@ if __name__ == "__main__":
         from backend.app.rag.vector_store import VectorStore
 
         vectors = VectorStore(settings, Store(settings.database_url, settings.database_schema))
-        report = compare(
-            cases, vectors, StructuredModel(settings), reference_data, model_id=settings.chat_model
-        )
+        from backend.app.core.usage import UsageGuard
+
+        guard = UsageGuard(Store(settings.database_url, settings.database_schema), settings)
+        with guard.scope(guard.begin(["local-answer-comparison"])):
+            report = compare(
+                cases, vectors, StructuredModel(settings), reference_data, model_id=settings.chat_model
+            )
         report.update(dataset_version=dataset["version"], dataset_hash=digest(dataset))
         output = args.output or settings.runtime_dir / "answer_comparison.json"
         output.parent.mkdir(parents=True, exist_ok=True)

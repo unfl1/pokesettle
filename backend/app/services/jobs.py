@@ -1,11 +1,17 @@
 import logging
+from contextlib import nullcontext
 
 from backend.app.core.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 
 
-def run_job(service, job_id, kind, body, session_id):
+def run_job(service, job_id, kind, body, session_id, guard=None, lease=None):
+    with guard.scope(lease) if guard else nullcontext():
+        _run_job(service, job_id, kind, body, session_id)
+
+
+def _run_job(service, job_id, kind, body, session_id):
     store = service.store
     store.update_job(job_id, status="running")
 

@@ -32,6 +32,16 @@ class Settings:
     wikipedia_enabled: bool = False
     damage_node_binary: str = "node"
     telemetry_enabled: bool = False
+    trust_usage_proxy: bool = False
+    usage_requests_per_minute: int = 3
+    usage_requests_per_day: int = 200
+    usage_ip_requests_per_day: int = 400
+    usage_global_concurrency: int = 2
+    usage_calls_per_job: int = 8
+    usage_daily_tokens: int = 500_000
+    usage_daily_calls: int = 1000
+    model_max_input_tokens: int = 24_000
+    model_max_output_tokens: int = 2_000
 
     def __post_init__(self):
         if not 0 <= self.chunk_overlap < self.chunk_size:
@@ -46,6 +56,12 @@ class Settings:
             raise ValueError("MMR_LAMBDA_MULT는 0~1이어야 합니다.")
         if min(self.http_timeout, self.llm_timeout) <= 0 or self.request_interval < 0:
             raise ValueError("시간 설정이 잘못되었습니다.")
+        limits = (self.usage_requests_per_minute, self.usage_requests_per_day,
+                  self.usage_global_concurrency, self.usage_calls_per_job, self.usage_ip_requests_per_day,
+                  self.usage_daily_tokens, self.usage_daily_calls,
+                  self.model_max_input_tokens, self.model_max_output_tokens)
+        if any(value <= 0 for value in limits):
+            raise ValueError("사용량 제한은 양수여야 합니다.")
         if not 0 <= self.max_retries <= 5:
             raise ValueError("MAX_RETRIES는 0~5이어야 합니다.")
 
@@ -86,5 +102,12 @@ class Settings:
             source_contact=os.getenv("SOURCE_CONTACT", ""),
             wikipedia_enabled=os.getenv("WIKIPEDIA_ENABLED", "false").lower() == "true",
             damage_node_binary=os.getenv("DAMAGE_NODE_BINARY", "node"),
+            trust_usage_proxy=os.getenv("TRUST_USAGE_PROXY", "false").lower() == "true",
+            **{name: int(os.getenv(name.upper(), str(default))) for name, default in {
+                "usage_requests_per_minute": 3, "usage_requests_per_day": 200, "usage_ip_requests_per_day": 400,
+                "usage_global_concurrency": 2, "usage_calls_per_job": 8,
+                "usage_daily_tokens": 500_000, "usage_daily_calls": 1000,
+                "model_max_input_tokens": 24_000, "model_max_output_tokens": 2_000,
+            }.items()},
             telemetry_enabled=os.getenv("TELEMETRY_ENABLED", "false").lower() == "true",
         )

@@ -37,7 +37,14 @@ def test_structured_calls_preserve_contract_and_omit_unsupported_temperature(mon
 
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
     settings = Settings(api_key='synthetic-test-key', chat_model=model)
-    assert StructuredModel(settings).invoke(purpose, 'test', {}, Generation) is result
+    from backend.app.core.usage import active_usage
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None), "test"))
+    try:
+        assert StructuredModel(settings).invoke(purpose, 'test', {}, Generation) is result
+    finally:
+        active_usage.reset(token)
+    assert captured['max_retries'] == 0
+    assert captured['max_completion_tokens'] == settings.model_max_output_tokens
     assert captured['model'] == model
     assert captured['temperature'] == expected
     expected_reasoning = ('medium' if purpose == 'battle_state' else 'none') if model == 'gpt-6-luna' else None
