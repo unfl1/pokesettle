@@ -38,8 +38,14 @@ sudo bash deployment/bootstrap_server.sh dedicated-deploy-key.pub
 - 인증된 CloudShell에서 기존 `~/poketact-deployment.json`과 아래 스크립트 사용
 
 ```bash
-python3 bootstrap_github_oidc.py --repository unfl1/poketact
+# GitHub 인증이 있는 로컬 터미널에서 현재 subject prefix 조회
+gh api repos/unfl1/poketact/actions/oidc/customization/sub --jq .sub_claim_prefix
+# CloudShell에서 위 조회 결과를 그대로 사용, 실제 ID는 Git에 기록하지 않음
+python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'repo:OWNER@OWNER_ID/REPO@REPO_ID'
 ```
+
+- 최신 저장소의 subject에는 이름과 영구 ID가 함께 포함됨, 이름만으로 신뢰 조건을 추측하지 않음
+- 기존 이름 전용 조건을 이전할 때만 `--migrate-legacy-subject` 추가, 같은 저장소의 기존 정확 일치 조건만 교체하며 다른 신뢰 조건은 변경 거부
 
 - GitHub `production` 환경만 신뢰하는 OIDC 역할 생성, 장기 AWS 액세스 키 미발급
 - 권한: 해당 버킷 목록 조회·`index.html`/`assets/*` 업로드·해당 배포의 CloudFront 무효화 생성/조회

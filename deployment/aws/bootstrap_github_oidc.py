@@ -1,14 +1,24 @@
 """Create a narrowly scoped GitHub OIDC role from an authenticated AWS CloudShell."""
 
 import argparse
+import copy
 import json
 import os
+import re
 from pathlib import Path
 
 import boto3
 
 
-def configure(state_path, repository):
+def validate_subject_prefix(subject_prefix, repository):
+    owner, name = repository.split("/")
+    immutable = rf"repo:{re.escape(owner)}@[0-9]+/{re.escape(name)}@[0-9]+"
+    if subject_prefix != f"repo:{repository}" and not re.fullmatch(immutable, subject_prefix):
+        raise ValueError("Use the exact subject prefix reported by this repository's OIDC API")
+
+
+def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=False):
+    validate_subject_prefix(subject_prefix, repository)
     # Resource identifiers remain in the private CloudShell state, never in source control.
     state = json.loads(state_path.read_text())
     account = boto3.client("sts").get_caller_identity()["Account"]
@@ -27,7 +37,7 @@ def configure(state_path, repository):
             "Effect": "Allow", "Principal": {"Federated": provider},
             "Action": "sts:AssumeRoleWithWebIdentity", "Condition": {"StringEquals": {
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-                "token.actions.githubusercontent.com:sub": f"repo:{repository}:environment:production",
+                "token.actions.githubusercontent.com:sub": f"{subject_prefix}:environment:production",
             }},
         }],
     }
@@ -36,10 +46,15 @@ def configure(state_path, repository):
         result = iam.create_role(RoleName=role, AssumeRolePolicyDocument=json.dumps(trust),
                                  Description="PokeTact frontend deployment from protected production environment")
     except iam.exceptions.EntityAlreadyExistsException:
-        # Never silently repurpose a role with different trust.
+        # Only an explicit migration of this exact repository's old subject is allowed.
         existing = iam.get_role(RoleName=role)
         if existing["Role"]["AssumeRolePolicyDocument"] != trust:
-            raise RuntimeError("Existing deployment role has different trust; review required") from None
+            legacy = copy.deepcopy(trust)
+            legacy["Statement"][0]["Condition"]["StringEquals"]["token.actions.githubusercontent.com:sub"] = (
+                f"repo:{repository}:environment:production")
+            if not migrate_legacy_subject or existing["Role"]["AssumeRolePolicyDocument"] != legacy:
+                raise RuntimeError("Existing deployment role has different trust; review required") from None
+            iam.update_assume_role_policy(RoleName=role, PolicyDocument=json.dumps(trust))
         result = existing
     bucket = state["bucket"]
     distribution = f"arn:aws:cloudfront::{account}:distribution/{state['distribution_id']}"
@@ -67,5 +82,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, default=Path.home() / "poketact-deployment.json")
     parser.add_argument("--repository", default="unfl1/poketact")
+    parser.add_argument("--subject-prefix", required=True,
+                        help="Exact sub_claim_prefix from the GitHub repository OIDC API")
+    parser.add_argument("--migrate-legacy-subject", action="store_true",
+                        help="Replace only this repository's exact legacy subject, preserving all other trust conditions")
     args = parser.parse_args()
-    configure(args.state, args.repository)
+    configure(args.state, args.repository, args.subject_prefix,
+              migrate_legacy_subject=args.migrate_legacy_subject)
