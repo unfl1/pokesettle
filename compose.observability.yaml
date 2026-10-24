@@ -1,0 +1,104 @@
+# Use together with compose.production.yaml; no public monitoring ports.
+x-monitor: &monitor
+  restart: unless-stopped
+  networks: [observability]
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "2"}
+
+services:
+  api:
+    environment:
+      TELEMETRY_ENABLED: "true"
+    networks: [default, observability]
+
+  prometheus:
+    <<: *monitor
+    image: prom/prometheus:v3.15.1
+    mem_limit: 160m
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=512MB
+    volumes:
+      - ./deployment/observability/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ./deployment/observability/alerts.yaml:/etc/prometheus/alerts.yaml:ro
+      - prometheus_data:/prometheus
+
+  loki:
+    <<: *monitor
+    image: grafana/loki:3.7.9
+    mem_limit: 256m
+    command: [-config.file=/etc/loki/config.yaml]
+    volumes:
+      - ./deployment/observability/loki.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+
+  alloy:
+    <<: *monitor
+    image: grafana/alloy:v1.21.2
+    user: "10001:10001"
+    mem_limit: 128m
+    command: [run, --storage.path=/var/lib/alloy, /etc/alloy/config.alloy]
+    volumes:
+      - ./deployment/observability/config.alloy:/etc/alloy/config.alloy:ro
+      - runtime_data:/app/runtime:ro
+      - type: volume
+        source: alloy_data
+        target: /var/lib/alloy
+        volume:
+          nocopy: true
+
+  node-exporter:
+    <<: *monitor
+    image: prom/node-exporter:v1.12.1
+    mem_limit: 32m
+    pid: host
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/host/root
+      - --collector.disable-defaults
+      - --collector.cpu
+      - --collector.meminfo
+      - --collector.filesystem
+      - --collector.loadavg
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|run/.+)($|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+
+  grafana:
+    <<: *monitor
+    networks: [observability, grafana_access]
+    image: grafana/grafana:13.2.4
+    mem_limit: 256m
+    env_file: .env.observability
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GOMEMLIMIT: 192MiB
+    ports: ["127.0.0.1:3000:3000"]
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deployment/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deployment/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+networks:
+  observability:
+    internal: true
+  # A second bridge permits the loopback-only published port on current Docker engines.
+  grafana_access: {}
+
+volumes:
+  prometheus_data:
+  loki_data:
+  alloy_data:
+  grafana_data:

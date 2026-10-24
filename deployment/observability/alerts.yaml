@@ -1,0 +1,33 @@
+groups:
+  - name: poketact
+    rules:
+      - alert: ApiMetricsUnavailable
+        expr: up{job="poketact"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "API metrics unavailable for two minutes"}
+      - alert: ApiErrors
+        expr: sum(increase(poketact_http_requests_total{status=~"5.."}[5m])) >= 3
+        for: 1m
+        labels: {severity: warning}
+        annotations: {summary: "At least three API server errors in five minutes"}
+      - alert: ApiLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(poketact_http_duration_seconds_bucket[5m]))) > 5
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "API p95 response time above five seconds"}
+      - alert: ModelFailures
+        expr: sum(increase(poketact_model_calls_total{outcome="failure"}[10m])) >= 3
+        for: 1m
+        labels: {severity: warning}
+        annotations: {summary: "At least three model attempt failures in ten minutes"}
+      - alert: LowHostMemory
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.1
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Host available memory below ten percent"}
+      - alert: LowDiskSpace
+        expr: node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"} < 0.15
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Host root disk available space below fifteen percent"}

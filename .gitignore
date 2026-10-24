@@ -99,3 +99,6 @@ htmlcov/
 poketact-deployment*.json
 origin-token
 origin-token.*
+github-production-secrets.json
+/out/
+/releases/

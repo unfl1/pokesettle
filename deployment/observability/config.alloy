@@ -1,0 +1,32 @@
+logging {
+  level = "warn"
+}
+
+// Collect only our allowlisted operational JSON, never Docker stdout or DB logs.
+local.file_match "operational" {
+  path_targets = [{"__path__" = "/app/runtime/telemetry/events.jsonl", "job" = "poketact"}]
+}
+
+loki.source.file "operational" {
+  targets    = local.file_match.operational.targets
+  forward_to = [loki.process.operational.receiver]
+}
+
+loki.process "operational" {
+  stage.json {
+    expressions = { event = "event" }
+  }
+  stage.labels {
+    values = { event = "" }
+  }
+  stage.label_drop {
+    values = ["filename"]
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

@@ -31,6 +31,7 @@ class Settings:
     source_contact: str = ""
     wikipedia_enabled: bool = False
     damage_node_binary: str = "node"
+    telemetry_enabled: bool = False
 
     def __post_init__(self):
         if not 0 <= self.chunk_overlap < self.chunk_size:
@@ -85,4 +86,5 @@ class Settings:
             source_contact=os.getenv("SOURCE_CONTACT", ""),
             wikipedia_enabled=os.getenv("WIKIPEDIA_ENABLED", "false").lower() == "true",
             damage_node_binary=os.getenv("DAMAGE_NODE_BINARY", "node"),
+            telemetry_enabled=os.getenv("TELEMETRY_ENABLED", "false").lower() == "true",
         )

@@ -1,4 +1,5 @@
 import json
+from contextlib import nullcontext
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -8,8 +9,9 @@ from backend.app.core.errors import ServiceError
 
 
 class StructuredModel:
-    def __init__(self, settings):
+    def __init__(self, settings, telemetry=None):
         self.settings = settings
+        self.telemetry = telemetry
 
     def invoke(self, purpose, system, payload, schema):
         if not self.settings.model_configured:
@@ -31,14 +33,15 @@ class StructuredModel:
         )
         for attempt in range(2):
             try:
-                return model.with_structured_output(
-                    schema, method="json_schema", strict=True
-                ).invoke(
-                    [
-                        SystemMessage(content=system),
-                        HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str)),
-                    ]
-                )
+                with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
+                    return model.with_structured_output(
+                        schema, method="json_schema", strict=True
+                    ).invoke(
+                        [
+                            SystemMessage(content=system),
+                            HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str)),
+                        ]
+                    )
             except APITimeoutError:
                 raise ServiceError(
                     "MODEL_TIMEOUT", "모델 응답 시간이 초과되었습니다.", 504, True

@@ -1,0 +1,75 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yaml
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ap-northeast-2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check deployment prerequisites
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+          FRONTEND_BUCKET: ${{ secrets.FRONTEND_BUCKET }}
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          for name in DEPLOY_HOST DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS AWS_ROLE_ARN FRONTEND_BUCKET CLOUDFRONT_DISTRIBUTION_ID PRODUCTION_URL; do
+            if [[ -z "${!name}" ]]; then echo "::error::Missing production secret: $name"; exit 1; fi
+          done
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-${{ github.sha }}
+          path: out
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+          role-session-name: poketact-${{ github.run_id }}
+      - name: Deploy backend and monitoring, restore previous API on failure
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: bash deployment/deploy_backend.sh out/backend-release.tar.gz
+      - name: Publish frontend assets, then entry point
+        env:
+          FRONTEND_BUCKET: ${{ secrets.FRONTEND_BUCKET }}
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          aws s3 sync out/frontend/assets/ "s3://$FRONTEND_BUCKET/assets/" --cache-control 'public,max-age=31536000,immutable' --only-show-errors
+          aws s3 cp out/frontend/index.html "s3://$FRONTEND_BUCKET/index.html" --content-type text/html --cache-control no-cache --only-show-errors
+          invalidation=$(aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths /index.html / --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --id "$invalidation"
+      - name: Check public frontend and API
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: python deployment/check_production.py
