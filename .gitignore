@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.production.example
 .venv/
 __pycache__/
 *.py[cod]
@@ -94,3 +95,7 @@ htmlcov/
 /backups/
 /captures/
 /screenshots/
+# Local deployment state and generated origin authentication files
+poketact-deployment*.json
+origin-token
+origin-token.*

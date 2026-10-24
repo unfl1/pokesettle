@@ -1,0 +1,75 @@
+name: poketact
+
+x-backend: &backend
+  image: poketact-backend:${IMAGE_TAG:-local}
+  build: .
+  env_file: .env.production
+  environment:
+    DATABASE_URL: postgresql://poketact:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/poketact
+    DATA_DIR: /app/data
+    RUNTIME_DIR: /app/runtime
+    DAMAGE_NODE_BINARY: /usr/local/bin/node
+    LANGSMITH_TRACING: "false"
+  volumes:
+    - runtime_data:/app/runtime
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: poketact
+      POSTGRES_USER: poketact
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poketact -d poketact"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  index:
+    <<: *backend
+    profiles: [setup]
+    command: ["python", "-m", "backend.scripts.index_data"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, urllib.request; r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/status', timeout=5)); assert r['data']['ready']"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  runtime_data:
