@@ -88,8 +88,16 @@ def deploy(release, sha):
     result = subprocess.run(["docker", "volume", "inspect", "--format", "{{.Mountpoint}}", "poketact_alloy_data"],
                             check=True, capture_output=True, text=True)
     os.chown(result.stdout.strip(), 10001, 10001)
+    for attempt in range(3):
+        try:
+            compose(release, sha, "pull", "prometheus", "loki", "alloy", "node-exporter", "grafana")
+            break
+        except RuntimeError:
+            if attempt == 2:
+                raise
+            time.sleep(5)
     try:
-        compose(release, sha, "up", "-d", "--wait", "--wait-timeout", "180", "--no-build",
+        compose(release, sha, "up", "-d", "--wait", "--wait-timeout", "180", "--no-deps", "--no-build",
                 "api", "prometheus", "loki", "alloy", "node-exporter", "grafana")
         # Grafana may still be initializing after its container has started.
         for attempt in range(30):
@@ -101,8 +109,13 @@ def deploy(release, sha):
                     raise RuntimeError("Release readiness check failed") from None
                 time.sleep(2)
     except Exception:
+        services = ["api"]
+        if previous["monitoring"]:
+            services += ["prometheus", "loki", "alloy", "node-exporter", "grafana"]
         compose(Path(previous["directory"]), previous["image_tag"], "up", "-d", "--wait",
-                "--wait-timeout", "180", "--no-build", "api", monitoring=previous["monitoring"])
+                "--wait-timeout", "180", "--no-deps", "--no-build", *services, monitoring=previous["monitoring"])
+        if not previous["monitoring"]:
+            compose(release, sha, "stop", "prometheus", "loki", "alloy", "node-exporter", "grafana")
         raise RuntimeError("New release failed; previous API image restored") from None
     record = {"directory": str(release), "image_tag": sha, "monitoring": True}
     temporary = ROOT / "current.next.json"

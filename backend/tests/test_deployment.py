@@ -74,6 +74,7 @@ def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_pa
     assert calls[-1][0][0] == tmp_path / "previous"
     assert calls[-1][0][1] == "old"
     assert "down" not in str(calls)
+    assert "--no-deps" in calls[-1][0]
 
 
 @pytest.mark.parametrize("command", ["bash", "deploy main", "deploy " + "a" * 40 + "; id", "deploy " + "../a" * 40])

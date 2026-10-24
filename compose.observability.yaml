@@ -46,7 +46,11 @@ services:
     volumes:
       - ./deployment/observability/config.alloy:/etc/alloy/config.alloy:ro
       - runtime_data:/app/runtime:ro
-      - alloy_data:/var/lib/alloy
+      - type: volume
+        source: alloy_data
+        target: /var/lib/alloy
+        volume:
+          nocopy: true
 
   node-exporter:
     <<: *monitor
@@ -70,8 +74,9 @@ services:
 
   grafana:
     <<: *monitor
+    networks: [observability, grafana_access]
     image: grafana/grafana:13.2.4
-    mem_limit: 192m
+    mem_limit: 256m
     env_file: .env.observability
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "false"
@@ -79,6 +84,7 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_SECURITY_COOKIE_SAMESITE: strict
+      GOMEMLIMIT: 192MiB
     ports: ["127.0.0.1:3000:3000"]
     volumes:
       - grafana_data:/var/lib/grafana
@@ -88,6 +94,8 @@ services:
 networks:
   observability:
     internal: true
+  # A second bridge permits the loopback-only published port on current Docker engines.
+  grafana_access: {}
 
 volumes:
   prometheus_data:
