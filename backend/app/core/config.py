@@ -5,6 +5,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[3]
+# Verified account allowance: 250K tokens/day shared across the model group.
+# Keep 20K headroom; this cap cannot be raised by an environment override.
+DAILY_MODEL_TOKEN_CAP = 230_000
 
 
 @dataclass(frozen=True)
@@ -38,7 +41,7 @@ class Settings:
     usage_ip_requests_per_day: int = 400
     usage_global_concurrency: int = 2
     usage_calls_per_job: int = 8
-    usage_daily_tokens: int = 500_000
+    usage_daily_tokens: int = DAILY_MODEL_TOKEN_CAP
     usage_daily_calls: int = 1000
     model_max_input_tokens: int = 24_000
     model_max_output_tokens: int = 2_000
@@ -106,7 +109,7 @@ class Settings:
             **{name: int(os.getenv(name.upper(), str(default))) for name, default in {
                 "usage_requests_per_minute": 3, "usage_requests_per_day": 200, "usage_ip_requests_per_day": 400,
                 "usage_global_concurrency": 2, "usage_calls_per_job": 8,
-                "usage_daily_tokens": 500_000, "usage_daily_calls": 1000,
+                "usage_daily_tokens": DAILY_MODEL_TOKEN_CAP, "usage_daily_calls": 1000,
                 "model_max_input_tokens": 24_000, "model_max_output_tokens": 2_000,
             }.items()},
             telemetry_enabled=os.getenv("TELEMETRY_ENABLED", "false").lower() == "true",

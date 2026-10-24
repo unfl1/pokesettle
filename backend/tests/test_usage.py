@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.core.config import Settings
+from backend.app.core.config import DAILY_MODEL_TOKEN_CAP, Settings
 from backend.app.core.errors import ServiceError
 from backend.app.core.usage import UsageGuard, active_usage, request_subjects
 from backend.app.main import create_app
@@ -31,6 +31,62 @@ def test_concurrent_reservations_are_atomic_and_survive_restart(pg_store):
     with pytest.raises(ServiceError):
         restarted.reserve(leases[0], 1)
     assert guard.salt == restarted.salt
+
+
+def test_free_allowance_cap_cannot_be_raised_and_resets_on_utc_day(pg_store):
+    guard = UsageGuard(pg_store, Settings(usage_daily_tokens=500_000, usage_calls_per_job=10))
+    with guard.scope(guard.begin(["first", "ip-first"])):
+        lease = active_usage.get()[1]
+        for _ in range(10):
+            guard.reserve(lease, 23_000)
+    restarted = UsageGuard(pg_store, guard.settings)
+    with restarted.scope(restarted.begin(["next", "ip-next"])):
+        lease = active_usage.get()[1]
+        with pytest.raises(ServiceError) as error:
+            restarted.reserve(lease, 1)
+        assert error.value.code == "MODEL_BUDGET_EXHAUSTED"
+        assert "오전 9시" in error.value.message
+    with pg_store.connect() as db:
+        assert db.execute(
+            "SELECT amount FROM usage_counters WHERE subject='global' AND bucket LIKE '%%:tokens'"
+        ).fetchone()["amount"] == DAILY_MODEL_TOKEN_CAP
+        # Simulate the previous UTC day's persisted reservation without changing the host clock.
+        db.execute(
+            "UPDATE usage_counters SET bucket='2000-01-01:tokens' WHERE subject='global' AND bucket LIKE '%%:tokens'"
+        )
+    with restarted.scope(restarted.begin(["tomorrow", "ip-tomorrow"])):
+        restarted.reserve(active_usage.get()[1], 25_000)
+
+
+def test_next_full_model_reservation_is_blocked_before_crossing_cap(pg_store, monkeypatch):
+    s = Settings(api_key="synthetic", chat_model="gpt-6-luna")
+    guard = UsageGuard(pg_store, s)
+    reached_provider = []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        def with_structured_output(self, *args, **kwargs):
+            reached_provider.append(True)
+            raise AssertionError("Must reserve the entire next call before contacting provider")
+
+    monkeypatch.setattr("backend.app.rag.model.ChatOpenAI", Client)
+    with guard.scope(guard.begin(["one", "ip-one"])):
+        with pg_store.connect() as db:
+            db.execute(
+                """INSERT INTO usage_counters VALUES (
+                to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') || ':tokens', 'global', %s)""",
+                (DAILY_MODEL_TOKEN_CAP - 1000,),
+            )
+        with pytest.raises(ServiceError) as error:
+            StructuredModel(s).invoke("generate", "test", {}, Generation)
+        assert error.value.code == "MODEL_BUDGET_EXHAUSTED"
+        assert not reached_provider
+        with pg_store.connect() as db:
+            assert db.execute(
+                "SELECT amount FROM usage_counters WHERE subject='global' AND bucket LIKE '%%:tokens'"
+            ).fetchone()["amount"] == DAILY_MODEL_TOKEN_CAP - 1000
 
 
 def test_sessions_cannot_bypass_ip_and_slots_release(pg_store):
