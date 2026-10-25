@@ -354,3 +354,14 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 상대 팀 변경 질문은 내 엔트리를 유지하고 상대 엔트리를 갱신한 뒤 재평가
 - 선출 질문은 준비된 로컬 자료와 RAG 색인을 사용하여 질문마다 외부 문서 수집을 반복하지 않음
 - 현재 선봉·상대와 공격을 질문하면 선출 모드에서 대면 비교로 전환
+
+## 싱글 메타 화면 API — 2026-10-25
+
+- `GET /api/meta/singles?limit=30`: 앱 화면용 싱글 사용 순위와 주요 세팅 제공, `limit` 1~30
+- `data`: `items`, `season`, `format=Singles`, `dataDate`, `providerGeneratedAt`, `collectedAt`, `sourceUrl`, `termsUrl`, `attribution`, `regulationId=null`, `stale`, `limit`
+- `items[]`: `nameEn`, `nameKo`, `pokemonId`, `rank`, `groups[]`; 폼 이름을 정확히 연결하지 못하면 한국어 이름·도감 ID는 null
+- `groups[]`: `category`(`move`, `held_item`, `ability`, `stat_alignment`), `items[]`(`name`, `nameKo`, `rank`, `percentage`), 범주별 상위 5개
+- 비율 미제공·범위 오류는 null, 0% 유지, 포켓몬 전체 사용률·승률 필드 없음
+- 6시간 서버 메모리 캐시, 갱신 실패 시 최대 24시간 경과 전 데이터와 `stale=true` 제공, 실패 재요청 60초 대기, 사용 가능한 캐시가 없으면 `503 META_UNAVAILABLE`
+- 클라이언트 영구 보관 방지를 위해 응답에 `Cache-Control: no-store` 설정, 원본 데이터 다운로드·히스토리 재배포 경로 미제공
+- LLM 설정·도감 적격성 판정·RAG 색인과 독립적으로 조회, [출처·이용 조건](../guides/DATA_SOURCES.md) 참조

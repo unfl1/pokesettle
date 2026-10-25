@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, X } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, TrendingUp, X } from 'lucide-react';
 import { useWorkspace } from '../features/chat/hooks/useWorkspace';
 import ChatPanel from '../features/chat/components/ChatPanel';
 import PokedexPage from '../features/pokemon/pages/PokedexPage';
 import TeamWorkspace from '../features/team/components/TeamWorkspace';
+import MetagamePage from '../features/metagame/MetagamePage';
 
-type View = 'chat' | 'pokedex' | 'scenario';
+type View = 'chat' | 'pokedex' | 'scenario' | 'meta';
 const navigation = [
   { id: 'chat', path: '/chat', label: '챗봇', icon: MessageSquare },
   { id: 'pokedex', path: '/pokedex', label: '도감', icon: BookOpen },
+  { id: 'meta', path: '/meta', label: '메타 순위', icon: TrendingUp },
   { id: 'scenario', path: '/scenario', label: '6:6 시나리오', icon: Swords },
 ] as const;
 const introductions = {
+  meta: { label: null, title: '싱글 메타 순위', description: '자주 쓰는 포켓몬과 주요 세팅을 출처·기준일과 함께 살펴보세요.' },
   pokedex: { label: null, title: '도감', description: '포켓몬의 타입·특성·종족값과 기술을 확인하세요.' },
   scenario: { label: 'BATTLE WORKSPACE', title: '우리 팀의 가능성을 살펴보세요.', description: '양쪽 팀을 구성하고, 선출과 공격·교체 시나리오를 차근차근 비교해 보세요.' },
 };
@@ -22,7 +25,7 @@ export default function App() {
   const navigate = useNavigate();
   const w = useWorkspace();
   const view: View = location.pathname === '/pokedex' || (location.pathname === '/' && new URLSearchParams(location.search).has('pokemon'))
-    ? 'pokedex' : location.pathname === '/scenario' ? 'scenario' : 'chat';
+    ? 'pokedex' : location.pathname === '/scenario' ? 'scenario' : location.pathname === '/meta' ? 'meta' : 'chat';
   // Keep visited workspaces mounted so navigation preserves drafts and team edits.
   const [visited, setVisited] = useState<Set<View>>(() => new Set([view]));
   const [lastView, setLastView] = useState(view);
@@ -118,6 +121,7 @@ export default function App() {
             <PokedexPage active={view === 'pokedex'} ready={ready} sessionReady={w.session.isSuccess} metadataCount={w.status.data?.metadataCount} />
           </div>
         )}
+        {visited.has('meta') && <div hidden={view !== 'meta'} data-testid="meta-page"><MetagamePage active={view === 'meta'} /></div>}
         {visited.has('scenario') && (
           <div hidden={view !== 'scenario'} data-testid="scenario-page">
             <TeamWorkspace sessionReady={w.session.isSuccess} onAsk={goToChat} />
