@@ -56,6 +56,8 @@ jobs:
         run: pnpm --dir frontend run build
       - name: Build production image
         run: docker build --tag "poketact-backend:$GITHUB_SHA" .
+      - name: Verify packaged application and calculator
+        run: docker run --rm --network none --entrypoint python "poketact-backend:$GITHUB_SHA" -m backend.scripts.smoke_image
       - name: Validate monitoring configuration
         run: |
           docker run --rm --entrypoint /bin/promtool -v "$PWD/deployment/observability:/etc/prometheus:ro" prom/prometheus:v3.15.1 check config /etc/prometheus/prometheus.yaml
