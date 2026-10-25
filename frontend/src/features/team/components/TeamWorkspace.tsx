@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { ArrowLeft, MessageSquare, ShieldAlert } from 'lucide-react';
+import { MessageSquare, ShieldAlert } from 'lucide-react';
 import { pokemonApi } from '../../pokemon/api';
 import { battleApi } from '../api';
 import { useAnalysis } from '../hooks/useAnalysis';
@@ -23,17 +23,17 @@ import TeamEditor, { action, control } from './TeamEditor';
 
 function Evidence({ result }: { result: Context }) {
   return (
-    <div className="mt-4 border-t border-[#2b3441] pt-3 text-[11px] leading-[1.9]">
+    <div className="mt-4 border-t border-line pt-3 text-[12px] leading-[1.9]">
       <p className="text-accent">
         일반 타입표 계산 · Champions 적용 여부 미확인
       </p>
-      <p className="mt-2 font-medium text-[#d3b97c]">미확인</p>
-      <ul className="list-disc pl-4 text-[#a3b2c3]">
+      <p className="mt-2 font-medium text-warning">미확인</p>
+      <ul className="list-disc pl-4 text-muted">
         {result.unknowns.map((x) => (
           <li key={x}>{x}</li>
         ))}
       </ul>
-      <details className="mt-2 text-[#8295a8]">
+      <details className="mt-2 text-muted">
         <summary className="cursor-pointer">계산 가정과 출처</summary>
         <ul className="mt-2 list-disc pl-4">
           {result.assumptions.map((x) => (
@@ -71,12 +71,12 @@ function AnalysisState({
   return (
     <>
       {busy && (
-        <p role="status" className="mt-3 text-[11px] text-accent">
+        <p role="status" className="mt-3 text-[12px] text-accent">
           타입 시나리오 비교 중…
         </p>
       )}
       {error && (
-        <p role="alert" className="mt-3 text-[11px] text-[#d3b97c]">
+        <p role="alert" className="mt-3 text-[12px] text-warning">
           {error.message} 입력을 확인한 뒤 다시 분석해 주세요.
         </p>
       )}
@@ -86,11 +86,9 @@ function AnalysisState({
 
 export default function TeamWorkspace({
   onAsk,
-  onBack,
   sessionReady,
 }: {
   onAsk: (question: string) => void;
-  onBack: () => void;
   sessionReady: boolean;
 }) {
   const cache = useQueryClient();
@@ -183,20 +181,7 @@ export default function TeamWorkspace({
   };
   return (
     <div>
-      <button
-        className="mb-4 flex items-center gap-2 text-[11px] text-accent"
-        onClick={onBack}
-      >
-        <ArrowLeft size={14} />
-        챗봇으로 돌아가기
-      </button>
-      <h1 className="text-[26px] font-semibold tracking-[-1px]">
-        팀과 전투 준비
-      </h1>
-      <p className="mt-2 text-[12px] leading-[1.8] text-[#8f9caf]">
-        팀의 타입 대응을 비교하고, 추가로 확인할 내용은 챗봇에 질문하세요.
-      </p>
-      <div className="my-5 flex items-start gap-3 rounded-[8px] border border-[#d3b97c36] bg-[#d3b97c08] p-4 text-[11px] leading-[1.9] text-[#c4b38f]">
+      <div className="mb-5 flex items-start gap-3 rounded-[8px] border border-warning-line bg-warning-soft p-4 text-[12px] leading-[1.9] text-warning">
         <ShieldAlert size={18} />
         <p>
           현재는 일반 도감·타입표 기반 준비 시나리오입니다. 현행 Champions 참가
@@ -205,7 +190,7 @@ export default function TeamWorkspace({
         </p>
       </div>
       {!sessionReady && (
-        <p role="alert" className="mb-3 text-[11px] text-[#d3b97c]">
+        <p role="alert" className="mb-3 text-[12px] text-warning">
           세션 연결 후 팀 저장과 분석을 이용할 수 있습니다.
         </p>
       )}
@@ -217,7 +202,7 @@ export default function TeamWorkspace({
         {(['team', 'battle'] as const).map((v) => (
           <button
             key={v}
-            className={`${action} aria-pressed:bg-[#a7efc514]`}
+            className={`${action} aria-pressed:bg-accent/8`}
             aria-pressed={tab === v}
             onClick={() => setTab(v)}
           >
@@ -226,7 +211,7 @@ export default function TeamWorkspace({
         ))}
       </div>
       <div className="mb-4 flex flex-wrap items-end gap-2">
-        <label className="flex min-w-0 flex-col gap-1 text-[10px] text-[#8295a8]">
+        <label className="flex min-w-0 flex-col gap-1 text-[11px] text-muted">
           저장한 내 팀
           <select
             className={control}
@@ -242,7 +227,7 @@ export default function TeamWorkspace({
             ))}
           </select>
         </label>
-        <label className="flex min-w-0 flex-col gap-1 text-[10px] text-[#8295a8]">
+        <label className="flex min-w-0 flex-col gap-1 text-[11px] text-muted">
           팀 이름
           <input
             className={control}
@@ -279,7 +264,7 @@ export default function TeamWorkspace({
             </button>
           </>
         )}
-        <label className="flex min-w-0 flex-col gap-1 text-[10px] text-[#8295a8]">
+        <label className="flex min-w-0 flex-col gap-1 text-[11px] text-muted">
           상대 팀 불러오기
           <select
             className={control}
@@ -297,12 +282,12 @@ export default function TeamWorkspace({
         </label>
       </div>
       {notice && (
-        <p role="status" className="mb-3 text-[11px] text-accent">
+        <p role="status" className="mb-3 text-[12px] text-accent">
           {notice}
         </p>
       )}
       {(save.error || remove.error || teams.error) && (
-        <p role="alert" className="mb-3 text-[11px] text-[#d3b97c]">
+        <p role="alert" className="mb-3 text-[12px] text-warning">
           {(save.error ?? remove.error ?? teams.error)?.message}
           <button
             className={`${action} ml-2`}
@@ -318,7 +303,7 @@ export default function TeamWorkspace({
       </div>
       {tab === 'team' ? (
         <section
-          className="mt-4 rounded-[12px] border border-[#2b3441] bg-[#151c26] p-4"
+          className="mt-4 rounded-[12px] border border-line bg-surface p-4"
           aria-label="팀 분석 결과"
         >
           <div className="flex flex-wrap gap-2">
@@ -342,7 +327,7 @@ export default function TeamWorkspace({
               3마리 선출 비교
             </button>
           </div>
-          <p className="mt-2 text-[10px] text-[#8295a8]">
+          <p className="mt-2 text-[11px] text-muted">
             1–6마리 팀 비교 · 선출 비교는 양쪽 6마리 필요 · 같은 종 중복은 팀
             편집 정책으로 제한
           </p>
@@ -352,11 +337,11 @@ export default function TeamWorkspace({
           />
           {summary.data && (
             <div className="mt-4">
-              <h2 className="text-[13px] font-semibold">
+              <h2 className="text-[14px] font-semibold">
                 공격 커버리지 · 일반 타입 배율
               </h2>
               <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-left text-[11px]">
+                <table className="w-full text-left text-[12px]">
                   <thead>
                     <tr>
                       <th className="p-2">내 팀 / 상대</th>
@@ -371,7 +356,7 @@ export default function TeamWorkspace({
                     {summary.data.members.map((m) => (
                       <tr
                         key={m.pokemonId}
-                        className="border-t border-[#2b3441]"
+                        className="border-t border-line"
                       >
                         <th className="p-2 whitespace-nowrap font-medium">
                           {label(m.pokemonId)}
@@ -388,11 +373,11 @@ export default function TeamWorkspace({
                   </tbody>
                 </table>
               </div>
-              <h3 className="mt-4 text-[12px]">겹치는 약점과 교체 대응</h3>
-              <ul className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#a3b2c3]">
+              <h3 className="mt-4 text-[13px]">겹치는 약점과 교체 대응</h3>
+              <ul className="mt-2 flex flex-wrap gap-2 text-[12px] text-muted">
                 {summary.data.sharedWeaknesses.map((w) => (
                   <li
-                    className="rounded-[6px] bg-[#111a25] p-2"
+                    className="rounded-[6px] bg-canvas p-2"
                     key={w.attackType}
                   >
                     {typeLabels[w.attackType]} 약점 {w.weakCount} · 반감/무효{' '}
@@ -401,12 +386,12 @@ export default function TeamWorkspace({
                 ))}
               </ul>
               {!summary.data.sharedWeaknesses.length && (
-                <p className="mt-2 text-[11px]">
+                <p className="mt-2 text-[12px]">
                   중복 타입 약점 없음 · 전투 안전 보장 아님
                 </p>
               )}
               {summary.data.roleGaps.map((g) => (
-                <p className="mt-3 text-[11px] text-[#8295a8]" key={g}>
+                <p className="mt-3 text-[12px] text-muted" key={g}>
                   {g}
                 </p>
               ))}
@@ -415,10 +400,10 @@ export default function TeamWorkspace({
           )}
           {selection.data && (
             <div className="mt-5">
-              <h2 className="text-[13px] font-semibold">
+              <h2 className="text-[14px] font-semibold">
                 선출 후보 {selection.data.candidateCount}개 · 휴리스틱 점수
               </h2>
-              <p className="mt-2 text-[10px] text-[#8295a8]">
+              <p className="mt-2 text-[12px] text-muted">
                 점수 = 약점 공략 상대 수×2 + 가정 공격 반감 대응 수 - 중복 약점
                 수 · 참가 합법성·승률 미검증
               </p>
@@ -426,13 +411,13 @@ export default function TeamWorkspace({
                 {selection.data.candidates.map((c, i) => (
                   <li
                     key={c.pokemonIds.join()}
-                    className="rounded-[6px] border border-[#2b3441] p-3 text-[11px]"
+                    className="rounded-[6px] border border-line p-3 text-[12px]"
                   >
                     <strong className="font-medium">
                       {i + 1}. {c.pokemonIds.map(label).join(' · ')}{' '}
                       <span className="text-accent">{c.score}점</span>
                     </strong>
-                    <p className="mt-1 text-[#8295a8]">
+                    <p className="mt-1 text-muted">
                       선봉 비교 후보: {label(c.leadId)} · 공략{' '}
                       {c.components.coveredOpponents} · 반감 대응{' '}
                       {c.components.resistedScenarios} · 중복 약점{' '}
@@ -447,16 +432,16 @@ export default function TeamWorkspace({
         </section>
       ) : (
         <section
-          className="mt-4 rounded-[12px] border border-[#2b3441] bg-[#151c26] p-4"
+          className="mt-4 rounded-[12px] border border-line bg-surface p-4"
           aria-label="전투 분석"
         >
           <h2 className="text-[14px] font-semibold">공격·교체·메가 시나리오</h2>
-          <p className="my-2 text-[11px] text-[#8295a8]">
+          <p className="my-2 text-[12px] text-muted">
             기술·HP는 위 멤버 카드에서 입력하세요. 공격 기술을 입력해야 공격
             대안을 비교합니다.
           </p>
           <div className="grid grid-cols-2 gap-3 max-phone:grid-cols-1">
-            <label className="flex flex-col gap-1 text-[11px]">
+            <label className="flex flex-col gap-1 text-[12px]">
               현재 내 포켓몬
               <select
                 className={control}
@@ -470,7 +455,7 @@ export default function TeamWorkspace({
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px]">
+            <label className="flex flex-col gap-1 text-[12px]">
               현재 상대 포켓몬
               <select
                 className={control}
@@ -484,7 +469,7 @@ export default function TeamWorkspace({
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px]">
+            <label className="flex flex-col gap-1 text-[12px]">
               메가 사용 상태
               <select
                 className={control}
@@ -496,7 +481,7 @@ export default function TeamWorkspace({
                 <option value="used">이미 사용함</option>
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px]">
+            <label className="flex flex-col gap-1 text-[12px]">
               전환 후 폼 비교
               <select
                 className={control}
@@ -512,7 +497,7 @@ export default function TeamWorkspace({
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px]">
+            <label className="flex flex-col gap-1 text-[12px]">
               교체 봉쇄 상태
               <select
                 className={control}
@@ -526,14 +511,14 @@ export default function TeamWorkspace({
             </label>
           </div>
           <fieldset className="mt-4">
-            <legend className="mb-2 text-[11px]">
+            <legend className="mb-2 text-[12px]">
               상대 공개/가정 공격 타입 · 미선택 시 상대 입력 기술 또는 타입 가정
             </legend>
             <div className="flex flex-wrap gap-2">
               {Object.entries(typeLabels).map(([type, text]) => (
                 <label
                   key={type}
-                  className="flex items-center gap-1 text-[10px] text-[#a3b2c3]"
+                  className="flex items-center gap-1 text-[11px] text-muted"
                 >
                   <input
                     type="checkbox"
@@ -561,12 +546,12 @@ export default function TeamWorkspace({
           <AnalysisState busy={battle.busy} error={battle.error} />
           {battle.data && (
             <div className="mt-4">
-              <p className="text-[11px] leading-[1.9] text-[#d3b97c]">
+              <p className="text-[12px] leading-[1.9] text-warning">
                 {battle.data.notice}
               </p>
               {(['attack', 'switch'] as const).map((kind) => (
                 <div className="mt-4" key={kind}>
-                  <h3 className="text-[12px]">
+                  <h3 className="text-[13px]">
                     {kind === 'attack'
                       ? '공격 대안 · 타입 배율 내림차순'
                       : '교체 대안 · 가정 공격 배율 오름차순'}
@@ -580,7 +565,7 @@ export default function TeamWorkspace({
                       )
                       .map((o) => (
                         <li
-                          className="rounded-[6px] border border-[#2b3441] p-3 text-[11px]"
+                          className="rounded-[6px] border border-line p-3 text-[12px]"
                           key={`${o.kind}-${o.pokemonId}-${o.label}`}
                         >
                           <strong className="font-medium">
@@ -589,9 +574,9 @@ export default function TeamWorkspace({
                               ? '효과 미계산'
                               : `${o.multiplier}×`}
                           </strong>
-                          <p className="mt-1 text-[#a3b2c3]">{o.reason}</p>
+                          <p className="mt-1 text-muted">{o.reason}</p>
                           {o.risks.map((r) => (
-                            <p className="mt-1 text-[#8295a8]" key={r}>
+                            <p className="mt-1 text-muted" key={r}>
                               {r}
                             </p>
                           ))}
@@ -599,7 +584,7 @@ export default function TeamWorkspace({
                       ))}
                   </ul>
                   {!battle.data!.options.some((o) => o.kind === kind) && (
-                    <p className="mt-2 text-[11px] text-[#8295a8]">
+                    <p className="mt-2 text-[12px] text-muted">
                       {kind === 'attack'
                         ? '입력한 공격 기술 없음 또는 현재 포켓몬이 쓰러진 상태'
                         : '생존한 교체 후보 없음 또는 교체 봉쇄 상태'}
@@ -607,12 +592,12 @@ export default function TeamWorkspace({
                   )}
                 </div>
               ))}
-              <h3 className="mt-4 text-[12px]">메가 상태</h3>
-              <p className="mt-2 text-[11px] text-[#a3b2c3]">
+              <h3 className="mt-4 text-[13px]">메가 상태</h3>
+              <p className="mt-2 text-[12px] text-muted">
                 {battle.data.mega.reason}
               </p>
               {battle.data.mega.typeComparison?.map((t) => (
-                <p className="mt-1 text-[11px]" key={t.attackType}>
+                <p className="mt-1 text-[12px]" key={t.attackType}>
                   {typeLabels[t.attackType]} 공격에 대한 방어: {t.before}× →{' '}
                   {t.after}×
                 </p>

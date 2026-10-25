@@ -8,9 +8,9 @@ import { typeLabels } from '../../pokemon/typeLabels';
 import PokemonImage from '../../pokemon/components/PokemonImage';
 
 export const control =
-  'rounded-[6px] border border-[#344253] bg-[#111a25] px-3 py-2 text-[11px] text-[#c5d2e1] min-w-0';
+  'rounded-[6px] border border-line bg-canvas px-3 py-2 text-[12px] text-ink min-w-0';
 export const action =
-  'rounded-[6px] border border-[#a7efc540] px-3 py-2 text-[11px] text-accent disabled:opacity-40';
+  'rounded-[6px] border border-accent/25 px-3 py-2 text-[12px] text-accent disabled:opacity-40';
 
 function MemberCard({
   member,
@@ -30,18 +30,18 @@ function MemberCard({
   });
   const p = detail.data;
   return (
-    <li className="rounded-[8px] border border-[#2b3441] p-3">
+    <li className="rounded-[8px] border border-line p-3">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-[#8295a8]">{index + 1}</span>
+        <span className="text-[11px] text-muted">{index + 1}</span>
         {p && <PokemonImage pokemon={p} size="small" />}
-        <strong className="min-w-0 flex-1 text-[12px] font-medium wrap-anywhere">
+        <strong className="min-w-0 flex-1 text-[13px] font-medium wrap-anywhere">
           {p?.nameKo ?? p?.nameEn ?? member.pokemonId}
         </strong>
         {p?.types.map((t) => (
           <TypeBadge type={t} key={t} />
         ))}
         <button
-          className="shrink-0 text-[#8295a8]"
+          className="shrink-0 text-muted"
           onClick={onRemove}
           aria-label={`${index + 1}번 멤버 제거`}
         >
@@ -49,11 +49,11 @@ function MemberCard({
         </button>
       </div>
       {detail.error && (
-        <p role="alert" className="mt-2 text-[10px] text-[#d3b97c]">
+        <p role="alert" className="mt-2 text-[11px] text-warning">
           {detail.error.message}
         </p>
       )}
-      <details className="mt-2 text-[10px] text-[#8295a8]">
+      <details className="mt-2 text-[11px] text-muted">
         <summary className="cursor-pointer">기술·HP·알려진 정보 입력</summary>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1">
@@ -222,12 +222,12 @@ export default function TeamEditor({
   });
   return (
     <section
-      className="min-w-0 rounded-[12px] border border-[#2b3441] bg-[#151c26] p-4"
+      className="min-w-0 rounded-[12px] border border-line bg-surface p-4"
       aria-label={title}
     >
       <h2 className="mb-3 text-[14px] font-semibold">
         {title}{' '}
-        <span className="text-[10px] font-normal text-[#8295a8]">
+        <span className="text-[11px] font-normal text-muted">
           {members.length} / 6
         </span>
       </h2>
@@ -245,7 +245,7 @@ export default function TeamEditor({
         ))}
       </ul>
       {!members.length && (
-        <p className="py-6 text-center text-[11px] text-[#8295a8]">
+        <p className="py-6 text-center text-[12px] text-muted">
           포켓몬을 추가해 팀을 구성하세요.
         </p>
       )}
@@ -273,12 +273,12 @@ export default function TeamEditor({
             }}
           />
           {found.isFetching && (
-            <p role="status" className="py-2 text-[10px] text-accent">
+            <p role="status" className="py-2 text-[11px] text-accent">
               검색 중…
             </p>
           )}
           {found.error && (
-            <p role="alert" className="py-2 text-[10px] text-[#d3b97c]">
+            <p role="alert" className="py-2 text-[11px] text-warning">
               {found.error.message}
               <button className={action} onClick={() => void found.refetch()}>
                 다시 시도
@@ -286,12 +286,12 @@ export default function TeamEditor({
             </p>
           )}
           {!found.isPending && !found.error && !found.data?.items.length && (
-            <p className="py-3 text-[11px]">검색 결과가 없습니다.</p>
+            <p className="py-3 text-[12px]">검색 결과가 없습니다.</p>
           )}
           <div className="my-2 max-h-55 overflow-auto">
             {found.data?.items.map((p) => (
               <button
-                className="flex w-full items-center gap-2 rounded-[6px] p-2 text-left text-[11px] hover:bg-[#202b38]"
+                className="flex w-full items-center gap-2 rounded-[6px] p-2 text-left text-[12px] hover:bg-canvas"
                 key={p.pokemonId}
                 disabled={members.some(
                   (m) =>
@@ -331,7 +331,7 @@ export default function TeamEditor({
             >
               이전
             </button>
-            <span className="text-[10px] text-[#8295a8]">
+            <span className="text-[11px] text-muted">
               {offset + 1}–{offset + (found.data?.items.length ?? 0)} /{' '}
               {found.data?.total ?? 0}
             </span>

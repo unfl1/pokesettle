@@ -46,7 +46,7 @@ export default function PokemonImage({
     />
   ) : (
     <span
-      className={`inline-flex items-center justify-center text-[#667c91] shrink-0 ${imageSizes[size]}`}
+      className={`inline-flex items-center justify-center text-muted shrink-0 ${imageSizes[size]}`}
       role={size === 'large' ? 'img' : undefined}
       aria-label={size === 'large' ? `${name} 이미지 없음` : undefined}
       aria-hidden={size === 'small' ? true : undefined}

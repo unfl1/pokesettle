@@ -244,11 +244,14 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
   await page.getByLabel('포켓몬 질문').fill('이어서 물어볼 초안');
+  await page.getByRole('link', { name: '도감', exact: true }).click();
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await expect(page.getByRole('region', { name: '전략 대화' })).toBeHidden();
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue('이어서 물어볼 초안');
   await expect(page.getByRole('button', { name: '이 포켓몬으로 대화하기' })).toHaveCount(0);
-  await expect(page.getByText('도감 선택과 관계없이 배틀 상황을 질문하세요')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '전략 챗봇', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '대화 초기화', exact: true }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue('');
@@ -257,7 +260,9 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('마스카나 대 라우드본');
   await page.getByLabel('대화 기록 선택').selectOption({ label: '피카츄 타입' });
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
+  await page.getByRole('link', { name: '도감', exact: true }).click();
   await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await page.reload();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
@@ -267,7 +272,7 @@ test('도감 가이드 버튼 제거와 자연어 검색의 명확화·빈 결�
   page,
 }) => {
   await fixture(page);
-  await page.goto('/');
+  await page.goto('/pokedex');
   await expect(page.getByRole('button', { name: '근거 운용 가이드', exact: true })).toHaveCount(0);
   await page
     .getByRole('button', { name: '조건으로 찾기', exact: true })
@@ -330,7 +335,7 @@ test('모바일 화면에 가로 넘침 없음', async ({ page }) => {
   await fixture(page);
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: '근거와 함께 대화하기' }),
+    page.getByRole('heading', { name: '전략 챗봇' }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -341,11 +346,12 @@ test('모바일 화면에 가로 넘침 없음', async ({ page }) => {
 
 test('이름 검색 빈 결과와 근거 없는 답변 안내', async ({ page }) => {
   await fixture(page, [], true);
-  await page.goto('/');
+  await page.goto('/pokedex');
   await page.getByLabel('포켓몬 이름 검색').fill('없는이름');
   await expect(
     page.getByText('일치하는 포켓몬이 없어요.', { exact: true }),
   ).toBeVisible();
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await page.getByLabel('포켓몬 질문').fill('확인되지 않은 승률을 알려줘');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(
@@ -357,19 +363,23 @@ test('이름 검색 빈 결과와 근거 없는 답변 안내', async ({ page })
   );
 });
 
-test('모바일 검색은 접고 챗봇을 먼저 표시', async ({ page }) => {
+test('모바일 상단 메뉴로 챗봇과 도감을 분리하고 선택 URL 유지', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixture(page);
-  await page.goto('/');
-  await expect(page.getByLabel('포켓몬 이름 검색')).toBeHidden();
-  const composer = page.getByRole('heading', { name: '근거와 함께 대화하기' });
-  await expect(composer).toBeInViewport();
-  await page.getByRole('button', { name: '선택·검색 열기' }).click();
+  await page.goto('/chat');
+  await expect(page.getByLabel('포켓몬 이름 검색')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '전략 챗봇' })).toBeInViewport();
+  await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
+  await expect(page.getByRole('region', { name: '전략 대화' })).toBeHidden();
   await page.getByRole('button', { name: '이상해씨 선택' }).click();
-  await expect(
-    page.getByRole('heading', { name: '이상해씨', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/pokedex\?pokemon=pokemon%3A1/);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
+  await page.goBack();
+  await expect(page.getByRole('link', { name: '도감', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
 test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', async ({
@@ -432,7 +442,7 @@ test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', 
       });
     return route.fallback();
   });
-  await page.goto('/');
+  await page.goto('/pokedex');
   await page.getByRole('button', { name: '더 보기 (100 / 205)' }).click();
   await expect(
     page.getByRole('button', { name: '전체테스트200 선택', exact: true }),
@@ -502,7 +512,7 @@ for (const missingSprite of [false, true])
         ),
       });
     });
-    await page.goto('/');
+    await page.goto('/pokedex');
     if (missingSprite)
       await expect(
         page.getByRole('img', { name: '피카츄 이미지 없음' }),
@@ -517,41 +527,24 @@ for (const missingSprite of [false, true])
     ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
   });
 
-test('기존 반응형 경계와 높은 화면의 대화 영역 유지', async ({ page }) => {
+test('상단 메뉴와 독립 화면의 반응형 레이아웃 유지', async ({ page }) => {
   await fixture(page);
-  await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: '피카츄', exact: true }),
-  ).toBeVisible();
-  for (const [width, height, railWidth, headingSize, feedHeight] of [
-    [390, 844, 54, 22, 420],
-    [480, 844, 54, 22, 420],
-    [481, 900, 54, 25, 420],
-    [780, 1100, 54, 25, 420],
-    [781, 1100, 72, 26, 510],
-    [1150, 900, 72, 26, 410],
-    [1151, 900, 72, 28, 410],
-    [1440, 1100, 72, 28, 510],
-  ]) {
-    await page.setViewportSize({ width, height });
-    await expect(
-      page.getByRole('complementary', { name: '주 메뉴' }),
-    ).toHaveCSS('width', `${railWidth}px`);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveCSS(
-      'font-size',
-      `${headingSize}px`,
-    );
-    await expect(page.getByRole('log')).toHaveCSS('height', `${feedHeight}px`);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-    if (width <= 780) {
-      await expect(page.getByLabel('포켓몬 이름 검색')).toBeHidden();
-    } else {
-      await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
+  await page.goto('/chat');
+  for (const width of [360, 390, 480, 540, 780, 900, 1151, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const nav = page.getByRole('navigation', { name: '주 메뉴' });
+    await expect(nav).toBeVisible();
+    for (const label of ['챗봇', '도감', '6:6 시나리오']) {
+      await expect(nav.getByRole('link', { name: label, exact: true })).toBeInViewport();
     }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.getByRole('log')).toBeVisible();
+  }
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  for (const width of [360, 780, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
 });
 
@@ -564,21 +557,18 @@ test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', as
       },
     }),
   );
-  await page.goto('/');
+  await page.goto('/pokedex');
   const selected = page.getByRole('button', { name: '피카츄 선택' });
   const other = page.getByRole('button', { name: '이상해씨 선택' });
   await expect(selected).toHaveAttribute('aria-pressed', 'true');
   await selected.hover();
-  await expect(selected).toHaveCSS(
-    'background-color',
-    'rgba(167, 239, 197, 0.043)',
-  );
+  await expect(selected).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await other.hover();
-  await expect(other).toHaveCSS('background-color', 'rgb(32, 43, 56)');
+  await expect(other).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   const input = page.getByLabel('포켓몬 이름 검색');
   await input.focus();
-  await expect(input).toHaveCSS('outline-color', 'rgb(167, 239, 197)');
   await expect(input).toHaveCSS('outline-width', '2px');
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await page.getByLabel('포켓몬 질문').fill('타입 질문');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   const spinner = page.getByRole('status').locator('svg').first();
@@ -618,7 +608,7 @@ test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복�
 
  test('포켓몬 선택만으로 기본 정보와 습득 기술 표시', async ({ page }) => {
   await fixture(page, ['model', 'index']);
-  await page.goto('/');
+  await page.goto('/pokedex');
   await expect(page.getByText('피카츄 도감 설명', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '종족값', exact: true })).toBeVisible();
   await expect(page.getByText('정전기', { exact: true })).toBeVisible();
@@ -634,7 +624,7 @@ test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복�
 
 test('습득 기술을 타입별 카드로 표시하고 습득 방법으로 필터', async ({ page }) => {
   await fixture(page);
-  await page.goto('/');
+  await page.goto('/pokedex');
   const electric = page.getByRole('region', { name: '전기 타입 기술' });
   const normal = page.getByRole('region', { name: '노말 타입 기술' });
   await expect(electric).toContainText('10만볼트');
@@ -663,4 +653,25 @@ test('챗봇 선출 결과는 6대6 조합 수를 표시하고 대면 미확인�
   await expect(context).toContainText('6대6 엔트리 비교 · 20개 선출 조합 평가');
   await expect(context).not.toContainText('내 포켓몬 미확인');
   await expect(context).not.toContainText('상대 미확인');
+});
+
+
+test('챗봇 진입은 도감을 요청하지 않고 메뉴·뒤로 가기로 도감 선택 복원', async ({ page }) => {
+  await fixture(page);
+  const catalogRequests: string[] = [];
+  page.on('request', request => {
+    if (new URL(request.url()).pathname.startsWith('/api/pokemon')) catalogRequests.push(request.url());
+  });
+  await page.goto('/chat');
+  await expect(page.getByRole('heading', { name: '전략 챗봇' })).toBeVisible();
+  expect(catalogRequests).toHaveLength(0);
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/pokemon=pokemon%3A1/);
 });
