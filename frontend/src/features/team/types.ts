@@ -39,7 +39,24 @@ export interface TeamResult extends Context {
   }[];
   roleGaps: string[];
 }
+export interface SelectionPlan {
+  pokemonIds: string[];
+  leadId: string;
+  leadReason: string;
+  members: { pokemonId: string; attackAssumed: boolean; attackTargets: string[]; resistTargets: string[] }[];
+  matchups: {
+    opponentId: string; attackerId: string | null; attackType: string | null;
+    attackMultiplier: number | null; attackAssumed: boolean;
+    incomingTypes: string[]; incomingAssumed: boolean;
+    pivotId: string | null; pivotMultiplier: number | null;
+    leadAction: 'attack' | 'switch' | 'caution'; leadAttackType: string | null;
+    leadAttackMultiplier: number | null; leadIncomingMultiplier: number | null;
+  }[];
+  uncoveredOpponentIds: string[];
+  noResistOpponentIds: string[];
+}
 export interface SelectionResult extends Context {
+  recommendation?: SelectionPlan;
   candidateCount: number;
   candidates: {
     pokemonIds: string[];

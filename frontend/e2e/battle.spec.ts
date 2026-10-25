@@ -125,7 +125,13 @@ async function fixture(page: Page) {
                 sharedWeaknessPenalty: 0,
               },
             });
-      return ok({ ...context, candidateCount: 20, candidates });
+      return ok({ ...context, candidateCount: 20, candidates, recommendation: {
+        pokemonIds: candidates[0].pokemonIds, leadId: candidates[0].leadId,
+        leadReason: '타입 커버와 반감 대응 비교',
+        members: candidates[0].pokemonIds.map(pokemonId => ({pokemonId, attackAssumed: true, attackTargets: ['pokemon:2'], resistTargets: ['pokemon:1']})),
+        matchups: pokemon.map(p => ({opponentId: p.pokemonId, attackerId: 'pokemon:1', attackType: 'fire', attackMultiplier: 2, attackAssumed: true, incomingTypes: ['grass'], incomingAssumed: true, pivotId: 'pokemon:2', pivotMultiplier: 0.5, leadAction: 'attack', leadAttackType: 'fire', leadAttackMultiplier: 2, leadIncomingMultiplier: 1})),
+        uncoveredOpponentIds: [], noResistOpponentIds: ['pokemon:2'],
+      } });
     }
     if (path === '/api/battle/recommend')
       return ok({
@@ -214,7 +220,12 @@ test('선출 20개·근거·상성 결과 및 입력 변경 시 이전 결과 �
   await expect(
     page.getByRole('heading', { name: '공격 커버리지 · 일반 타입 배율' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: '3마리 선출 비교' }).click();
+  await page.getByRole('button', { name: '3마리·선봉 추천' }).click();
+  const recommendation = page.getByRole('region', { name: '추천 선출과 운영' });
+  await expect(recommendation.getByRole('heading', { name: '추천 3마리와 선봉' })).toBeVisible();
+  await expect(recommendation.locator('article')).toHaveCount(6);
+  await expect(page.getByText('다른 조합과 점수 비교', { exact: true })).toBeVisible();
+  await page.getByText('다른 조합과 점수 비교', { exact: true }).click();
   await expect(
     page.getByRole('heading', { name: '선출 후보 20개 · 휴리스틱 점수' }),
   ).toBeVisible();
@@ -230,7 +241,7 @@ test('선출 20개·근거·상성 결과 및 입력 변경 시 이전 결과 �
     page.getByRole('heading', { name: '선출 후보 20개 · 휴리스틱 점수' }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole('button', { name: '3마리 선출 비교' }),
+    page.getByRole('button', { name: '3마리·선봉 추천' }),
   ).toBeDisabled();
 });
 
@@ -359,4 +370,19 @@ test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ pag
   await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue('메뉴를 오가도 유지할 질문');
+});
+
+
+test('추천 선봉 적용과 전략 근거 질문 연결', async ({ page }) => {
+  await fixture(page);
+  await openTeams(page);
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByRole('button', { name: '3마리·선봉 추천', exact: true }).click();
+  await page.getByRole('button', { name: '추천 선봉으로 전투 비교', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: '현재 내 포켓몬', exact: true })).toHaveValue('0');
+  await page.getByRole('button', { name: '팀·선출 비교', exact: true }).click();
+  await page.getByRole('button', { name: '이 선출의 전략 근거 질문하기', exact: true }).click();
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/추천 선출은 테스트1, 테스트2, 테스트3이고 선봉은 테스트1/);
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/입력한 공격/);
 });
