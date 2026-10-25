@@ -166,3 +166,7 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 표기: `Battle data provided by Pokémon Champions Battle Data` 및 출처·이용 조건 링크, 데이터 기준일·서버 조회 시각·시즌·캐시 갱신 실패 여부 표시
 - 범위: 제공자 통계의 사용 순위와 기술·도구·특성·성격 채용률만 표시, 포켓몬 전체 사용률·승률·완성 세트·현행 레귤레이션 적격성으로 확장 해석하지 않음
 - 이름: 기존 도감과 정규화된 영문 이름이 일치할 때만 한국어·도감 링크 연결, 폼을 기본 종으로 추정하지 않음, 미수집 항목은 원문 유지
+- 도구·성격 한국어 이름: PokéAPI의 [items.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/items.csv)·[item_names.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/item_names.csv) 및 [natures.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/natures.csv)·[nature_names.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/nature_names.csv)의 동일 ID와 한국어 언어 ID `3` 연결
+- 2026-10-25 수집: 도구 2,173개·성격 25개 이름을 `data/battle_names.json`에 저장, 각 원본 URL·수집 시각·해시·[라이선스](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md) 기록, 이름 매핑을 Champions 적격성이나 작동 검증으로 해석하지 않음
+- 이름 갱신: `python -m backend.scripts.prepare_battle_names`, 기존 도감·습득 기술 데이터와 별도 갱신
+- 메타 이미지: 기존 도감의 PokéAPI sprites URL·권리 문구 재사용, 정확히 연결된 폼의 이미지로만 표시, 새 이미지 수집·생성·폼 추정 없음

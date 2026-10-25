@@ -25,7 +25,7 @@ export default function PokemonImage({
   pokemon,
   size,
 }: {
-  pokemon: PokemonSummary;
+  pokemon: Pick<PokemonSummary, 'nameKo' | 'nameEn' | 'images'>;
   size: 'small' | 'large';
 }) {
   const [failed, setFailed] = useState<string[]>([]);

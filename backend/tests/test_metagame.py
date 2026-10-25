@@ -14,8 +14,8 @@ from backend.app.services.metagame import MetagameService
 def meta():
     service = MetagameService()
     catalog = SimpleNamespace(items={
-        "one": SimpleNamespace(name_en="Test-Mon", name_ko="합성 포켓몬", pokemon_id="one")
-    }, details={"move_details": [{"name": "test-move", "name_ko": "합성 기술"}]})
+        "one": SimpleNamespace(name_en="Test-Mon", name_ko="합성 포켓몬", pokemon_id="one", images=None)
+    }, details={"move_details": [{"name": "test-move", "name_ko": "합성 기술"}]}, battle_names={})
     index = {"seasons": [
         {"season": "M1", "dates": ["01_10_2026"], "formats": ["Singles"]},
         {"season": "M2", "dates": ["24_10_2026"], "formats": ["Singles"]},
@@ -56,6 +56,29 @@ def test_cache_limit_and_no_mutation(meta):
     meta.service.singles(meta.catalog, 1)
     assert len(meta.service.singles(meta.catalog)["items"]) == 2
     assert len(meta.calls) == 2
+
+
+def test_real_names_and_image_metadata_are_connected_without_changing_percentages(meta):
+    from pathlib import Path
+
+    from backend.app.catalog import Catalog
+
+    catalog = Catalog(Path(__file__).resolve().parents[2] / "data/pokemon.json")
+    meta.snapshot["pokemon"] = {"Garchomp": {"position": 1,
+        "held_item": [["Choice Scarf", 21.8, 1], ["Garchompite Z", 37.3, 2], ["Unknown Item", None, 3]],
+        "stat_alignment": [["Jolly", 42, "Speed", "Sp. Atk", 1]],
+    }}
+    result = meta.service.singles(catalog)
+    pokemon = result["items"][0]
+    assert pokemon["pokemon_id"] == "pokemon:445"
+    assert pokemon["images"]["sprite_url"].endswith("/445.png")
+    groups = {group["category"]: group["items"] for group in pokemon["groups"]}
+    assert [x["name_ko"] for x in groups["held_item"]] == ["구애스카프", "한카리아스나이트Z", None]
+    assert groups["held_item"][0]["percentage"] == 21.8
+    assert groups["stat_alignment"][0]["name_ko"] == "명랑"
+    assert len(catalog.battle_names["stat_alignment"]) == 25
+    assert len(result["name_sources"]) == 4
+    assert result["name_licence_url"].endswith("LICENSE.md")
 
 
 def test_failed_refresh_serves_bounded_stale_then_expires(meta):

@@ -10,6 +10,8 @@ class Catalog:
         self.items = {}
         details_path = path.parent / "catalog_details.json"
         self.details = json.loads(details_path.read_text()) if details_path.exists() else {}
+        names_path = path.parent / "battle_names.json"
+        self.battle_names = json.loads(names_path.read_text()) if names_path.exists() else {}
         species_path = path.parent / "documents" / "species.json"
         self.move_details = {}
         for move in self.details.get("move_details", []):

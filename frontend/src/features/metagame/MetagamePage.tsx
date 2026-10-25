@@ -2,16 +2,21 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { request } from '../../lib/apiClient';
+import PokemonImage from '../pokemon/components/PokemonImage';
+import type { PokemonImages } from '../pokemon/types';
 
 type Entry = { name: string; nameKo: string | null; rank: number; percentage: number | null };
 type MetaPokemon = {
   nameEn: string; nameKo: string | null; pokemonId: string | null; rank: number;
+  images: PokemonImages | null;
   groups: { category: string; items: Entry[] }[];
 };
 type SinglesMeta = {
   items: MetaPokemon[]; season: string; dataDate: string;
   collectedAt: string; providerGeneratedAt: string | null; stale: boolean;
   sourceUrl: string; termsUrl: string; attribution: string;
+  nameSources: { url: string; collectedAt: string; contentHash: string }[];
+  nameLicenceUrl: string | null;
 };
 const labels: Record<string, string> = {
   move: '기술', held_item: '도구', ability: '특성', stat_alignment: '성격',
@@ -55,6 +60,7 @@ export default function MetagamePage({ active }: { active: boolean }) {
             {data.items.map(item => <li key={item.nameEn}>
               <button aria-pressed={pokemon.nameEn === item.nameEn} onClick={() => setSelected(item.nameEn)} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-pressed:bg-accent/8 aria-pressed:text-accent">
                 <span className="w-8 shrink-0 text-sm tabular-nums">{item.rank}위</span>
+                <PokemonImage pokemon={item} size="small" />
                 <span className="min-w-0 break-words text-sm">{item.nameKo ?? item.nameEn}<small className="block text-xs text-muted">{item.nameEn}</small></span>
               </button>
             </li>)}
@@ -62,7 +68,10 @@ export default function MetagamePage({ active }: { active: boolean }) {
         </section>
         <section className="min-w-0 rounded-xl border border-line bg-surface p-5" aria-label="주요 세팅">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">{pokemon.nameKo ?? pokemon.nameEn} <span className="text-sm text-muted">{pokemon.rank}위</span></h2>
+            <div className="flex min-w-0 items-center gap-3">
+              <PokemonImage key={pokemon.nameEn} pokemon={pokemon} size="large" />
+              <h2 className="min-w-0 break-words text-lg font-semibold">{pokemon.nameKo ?? pokemon.nameEn} <span className="text-sm text-muted">{pokemon.rank}위</span></h2>
+            </div>
             {pokemon.pokemonId && <Link className="text-sm text-accent" to={`/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`}>도감 보기 →</Link>}
           </div>
           <p className="mb-5 text-xs leading-6 text-muted">수집된 한국어 이름이 없는 항목은 원문으로 표시해요. 현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.</p>
@@ -76,6 +85,10 @@ export default function MetagamePage({ active }: { active: boolean }) {
                 </li>)}
               </ul>}
             </section>)}
+          </div>
+          <div className="mt-5 border-t border-line pt-3 text-xs leading-6 text-muted">
+            {data.nameSources?.length > 0 && <p>도구·성격 한국어 이름: PokéAPI · 수집일 {data.nameSources[0].collectedAt.slice(0, 10)} · <a className="underline" href={data.nameLicenceUrl ?? undefined} target="_blank" rel="noreferrer">이용 조건</a></p>}
+            {pokemon.images && <p>이미지: <a className="underline" href={pokemon.images.sourceUrl} target="_blank" rel="noreferrer">PokéAPI sprites</a> · {pokemon.images.rightsNotice}</p>}
           </div>
         </section>
       </div>}

@@ -21,6 +21,7 @@ backend/calculator/*
 data/*
 !data/pokemon.json
 !data/catalog_details.json
+!data/battle_names.json
 !data/type_chart.json
 !data/sources.json
 !data/documents/
