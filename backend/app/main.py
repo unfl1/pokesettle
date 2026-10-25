@@ -14,6 +14,7 @@ from backend.app.http_client import SourceClient
 from backend.app.rag.model import StructuredModel
 from backend.app.rag.vector_store import VectorStore
 from backend.app.services.knowledge import KnowledgeService
+from backend.app.services.metagame import MetagameService
 from backend.app.storage import Store
 
 
@@ -45,6 +46,7 @@ def create_app(settings=None, *, service=None, usage=None):
     app = FastAPI(title="PokeTact", version="0.1.0", lifespan=lifespan)
     app.state.service = service
     app.state.settings = settings
+    app.state.metagame = MetagameService()
     app.state.telemetry = telemetry
     configure_middleware(app, settings)
     app.add_middleware(TelemetryMiddleware, telemetry=telemetry)
