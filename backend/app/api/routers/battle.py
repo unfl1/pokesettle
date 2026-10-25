@@ -3,11 +3,17 @@ from fastapi import APIRouter, Request
 from backend.app.api.dependencies import ServiceDep, SettingsDep, StoreDep
 from backend.app.api.responses import ok
 from backend.app.api.validation import session
-from backend.app.battle.damage import DamageInput, calculate_damage
+from backend.app.battle.damage import DamageInput, calculate_damage, damage_move_options
 from backend.app.battle.engine import BattleEngine
 from backend.app.battle.models import BattleInput
 
 router = APIRouter()
+
+
+@router.get("/battle/damage/moves/{pokemon_id}")
+def damage_moves(request: Request, pokemon_id: str, *, store: StoreDep, service: ServiceDep):
+    session(request, store)
+    return ok(request, damage_move_options(service.catalog, pokemon_id))
 
 
 @router.post("/battle/damage")

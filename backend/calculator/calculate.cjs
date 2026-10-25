@@ -3,11 +3,8 @@ const {Generations, Pokemon, Move, Field, calculate} = require('@smogon/calc');
 const {version} = require('@smogon/calc/package.json');
 const fs = require('node:fs');
 
-const supportedMoves = new Set([
-  'tackle', 'bodyslam', 'thunderbolt', 'flamethrower', 'surf', 'icebeam',
-  'psychic', 'shadowball', 'energyball', 'dragonclaw', 'crunch', 'earthquake',
-]);
 const id = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+const supportedMoves = new Set(require('./supported_moves.json').map(id));
 const statKeys = {hp: 'hp', attack: 'atk', defense: 'def', sp_attack: 'spa', sp_defense: 'spd', speed: 'spe'};
 
 function run(input) {

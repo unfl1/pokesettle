@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 from typing import Literal
@@ -73,8 +74,81 @@ class DamageInput(Model):
         return value
 
 
+SUPPORTED_MOVES = json.loads((ROOT / "backend/calculator/supported_moves.json").read_text())
+
+
+def move_key(name):
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+def damage_move_options(catalog, pokemon_id):
+    profile = catalog.profile(pokemon_id)
+    learnset = profile.get("learnset")
+    result = {
+        "pokemon_id": pokemon_id,
+        "version_group": learnset.get("version_group") if learnset else None,
+        "items": [],
+        "sources": profile.get("learnset_sources", []),
+        "champions_learnset_verified": False,
+    }
+    if not learnset:
+        return result
+    supported = {move_key(name) for name in SUPPORTED_MOVES}
+    by_name = {move_key(m["name"]): m for m in catalog.move_details.values()}
+    rows = {}
+    for entry in learnset["moves"]:
+        data = catalog.move_details.get(entry["name"]) or by_name.get(move_key(entry["name"]))
+        if not data:
+            continue
+        name = data["name"]
+        if name not in rows:
+            reason = (
+                None
+                if move_key(name) in supported
+                else (
+                    "변화 기술은 직접 피해 계산 대상이 아닙니다."
+                    if data.get("category") == "status"
+                    else "이 기술의 특수 조건 또는 계산기 지원 여부는 아직 검증하지 않았습니다."
+                )
+            )
+            rows[name] = {
+                **data,
+                "supported": reason is None,
+                "unsupported_reason": reason,
+                "methods": [],
+            }
+        if entry["method"] not in rows[name]["methods"]:
+            rows[name]["methods"].append(entry["method"])
+    result["items"] = sorted(
+        rows.values(), key=lambda m: (m.get("type") or "", m.get("name_ko") or m["name"])
+    )
+    return result
+
+
 def calculate_damage(body, catalog, settings):
+    options = damage_move_options(catalog, body.attacker.pokemon_id)
+    selected = next(
+        (
+            m
+            for m in options["items"]
+            if move_key(m["name"]) == move_key(body.move) or m.get("name_ko") == body.move
+        ),
+        None,
+    )
+    if not options["version_group"]:
+        raise ServiceError(
+            "DAMAGE_LEARNSET_NOT_READY", "공격자의 습득 기술 자료가 없어 계산할 수 없습니다.", 422
+        )
+    if selected is None:
+        raise ServiceError(
+            "DAMAGE_MOVE_NOT_LEARNED",
+            "수집된 원본 게임 습득 기술에서 선택한 기술을 확인할 수 없습니다.",
+            422,
+        )
+    if not selected["supported"]:
+        raise ServiceError("DAMAGE_UNSUPPORTED_INPUT", selected["unsupported_reason"], 422)
     payload = body.model_dump()
+    payload["move"] = move_key(selected["name"])
     for side in ("attacker", "defender"):
         member = getattr(body, side)
         payload[side]["name"] = catalog.get(member.pokemon_id).name_en
@@ -141,6 +215,12 @@ def calculate_damage(body, catalog, settings):
         "legality_verified": False,
         "engine": {"name": "@smogon/calc", "version": "0.12.0", "generation": 0, "level": 50},
         "inputs": body.model_dump(),
+        "learnset_reference": {
+            "version_group": options["version_group"],
+            "move": selected["name"],
+            "sources": options["sources"],
+            "champions_verified": False,
+        },
         "calculation": {
             "status": "reference_scenario",
             "damage": damage,

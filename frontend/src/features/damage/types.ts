@@ -28,3 +28,14 @@ export interface DamageResult {
   unknowns: string[];
   citations: { title: string; sourceUrl: string; version: string }[];
 }
+
+export interface DamageMoveOptions {
+  pokemonId: string;
+  versionGroup: string | null;
+  championsLearnsetVerified: boolean;
+  items: {
+    name: string; nameKo: string | null; type: string | null;
+    category: string | null; power: number | null; accuracy: number | null;
+    methods: string[]; supported: boolean; unsupportedReason: string | null;
+  }[];
+}
