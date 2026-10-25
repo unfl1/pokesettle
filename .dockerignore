@@ -1,6 +1,10 @@
 # Allowlist: credentials, local databases, notes, logs, and captures never enter the build.
 **
-!Dockerfile
+!deployment/
+deployment/*
+!deployment/docker/
+deployment/docker/*
+!deployment/docker/Dockerfile
 !pyproject.toml
 !uv.lock
 !backend/

@@ -192,21 +192,24 @@ Components: `AppLayout`, `PokemonCard`, `PokemonSelector`, `TypeBadge`, `StatsPa
 poketact/
 ├── AGENTS.md
 ├── README.md
-├── .gitignore
 ├── .env.example
+├── compose.yaml             # local PostgreSQL quick start
+├── pyproject.toml
+├── uv.lock
 ├── frontend/
-│   └── src/{app,components,pages,hooks,services,stores,types,styles}/
+│   ├── src/{app,features,lib,types}/
+│   └── e2e/
 ├── backend/
-│   ├── main.py
-│   ├── api/
-│   ├── models/
-│   ├── rag/{vector_store.py,retriever.py,prompts.py,graph.py}
-│   ├── battle/{type_analyzer.py,stat_calculator.py,battle_evaluator.py,switch_recommender.py,team_selection.py}
-│   ├── services/
+│   ├── app/{api,core,services,rag,battle,data_preparation}/
+│   ├── calculator/
 │   ├── scripts/
 │   └── tests/
-├── damage_service/           # optional; add only if needed
-├── data/{regulations,documents}/
+├── deployment/
+│   ├── docker/              # Dockerfile, production/monitoring Compose, env example
+│   ├── aws/
+│   ├── nginx/
+│   └── observability/
+├── data/{documents,evaluation,strategy,licenses}/
 └── docs/
     ├── design/{PROJECT_SPEC.md,ARCHITECTURE.md,API_SPEC.md}
     ├── guides/{DATA_SOURCES.md,OPERATIONS.md}

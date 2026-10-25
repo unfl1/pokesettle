@@ -11,7 +11,10 @@ def package(image, destination):
     with tarfile.open(destination, "w:gz") as archive:
         archive.add(image, arcname="image.tar", recursive=False)
         for name in sorted(CONFIG_FILES):
-            path = Path(name)
+            # Keep the server bundle layout stable when repository files move.
+            path = (Path("deployment/docker") / name
+                    if name in {"compose.production.yaml", "compose.observability.yaml"}
+                    else Path(name))
             if not path.is_file() or path.is_symlink():
                 raise ValueError("Expected a regular deployment file")
             archive.add(path, arcname=name, recursive=False)
