@@ -123,7 +123,7 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 ## PostgreSQL 전환 관련 출처 (2026-10-22)
 
 - 상태 저장과 RAG 벡터 검색을 PostgreSQL + pgvector로 통합함. 포켓몬 원본 출처·수집일·이용 조건 유지함.
-- 기존 로컬 ONNX 모델을 독립 임베딩 모듈에서 재사용함. 모델·ONNX export 라이선스는 [전환 기록](POSTGRESQL_MIGRATION.md#출처라이선스) 참조.
+- 기존 로컬 ONNX 모델을 독립 임베딩 모듈에서 재사용함. 모델·ONNX export 라이선스는 [전환 기록](OPERATIONS.md#postgresql--pgvector-저장검색-통합) 참조.
 
 ## 복수 외부 출처 추가 (2026-10-22)
 
@@ -170,3 +170,8 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 2026-10-25 수집: 도구 2,173개·성격 25개 이름을 `data/battle_names.json`에 저장, 각 원본 URL·수집 시각·해시·[라이선스](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md) 기록, 이름 매핑을 Champions 적격성이나 작동 검증으로 해석하지 않음
 - 이름 갱신: `python -m backend.scripts.prepare_battle_names`, 기존 도감·습득 기술 데이터와 별도 갱신
 - 메타 이미지: 기존 도감의 PokéAPI sprites URL·권리 문구 재사용, 정확히 연결된 폼의 이미지로만 표시, 새 이미지 수집·생성·폼 추정 없음
+
+## 로컬 이미지 자산
+
+- `frontend/src/assets/master-ball.png`: [PokeAPI sprites — Master Ball](https://github.com/PokeAPI/sprites/blob/master/sprites/items/master-ball.png), 수집일 2026-10-25, 수정 없는 원본 PNG
+- 현재 앱 코드의 사용 여부 미확인임. Pokémon 이미지 권리는 원권리자에게 귀속, 이미지 자체의 별도 재배포 라이선스 미확인임
