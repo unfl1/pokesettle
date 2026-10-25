@@ -133,6 +133,15 @@ async function fixture(page: Page) {
         uncoveredOpponentIds: [], noResistOpponentIds: ['pokemon:2'],
       } });
     }
+    if (path.startsWith('/api/battle/damage/moves/')) return ok({
+      pokemonId: path.split('/').at(-1), versionGroup: 'synthetic-reference', championsLearnsetVerified: false,
+      items: path.endsWith('pokemon:2') ? [] : [
+        {name: 'thunderbolt', nameKo: '10만볼트', type: 'electric', category: 'special', power: 90, accuracy: 100, supported: true, unsupportedReason: null, methods: ['machine']},
+        {name: 'volt-tackle', nameKo: '볼트태클', type: 'electric', category: 'physical', power: 120, accuracy: 100, supported: true, unsupportedReason: null, methods: ['egg']},
+        {name: 'double-slap', nameKo: '연속뺨치기', type: 'normal', category: 'physical', power: 15, accuracy: 85, supported: false, unsupportedReason: '연속 공격 미지원', methods: ['level-up']},
+        {name: 'surf', nameKo: '파도타기', type: 'water', category: 'special', power: 90, accuracy: 100, supported: true, unsupportedReason: null, methods: ['machine']},
+      ],
+    });
     if (path === '/api/battle/recommend')
       return ok({
         ...context,
@@ -295,7 +304,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
     expect(body.attacker.statPoints.spAttack).toBe(32);
     expect(body.attacker.alignment).toBe('Modest');
     expect(body.neutralConditions).toBe(true);
-    expect(body.move).toBe('Thunderbolt');
+    expect(body.move).toBe('thunderbolt');
     expect(body.defenderCurrentHp).toBeNull();
     expect(body.attacker).not.toHaveProperty('ability');
     if (calls === 1) return route.fulfill({ status: 503, json: {
@@ -318,6 +327,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   const submit = panel.getByRole('button', { name: '참조 피해 계산', exact: true });
   await expect(submit).toBeDisabled();
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
+  await panel.getByLabel('계산 기술', { exact: true }).selectOption('thunderbolt');
   await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:2');
   await panel.getByLabel('공격자 성향').selectOption('Modest');
   await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
@@ -385,4 +395,25 @@ test('추천 선봉 적용과 전략 근거 질문 연결', async ({ page }) => 
   await page.getByRole('button', { name: '이 선출의 전략 근거 질문하기', exact: true }).click();
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/추천 선출은 테스트1, 테스트2, 테스트3이고 선봉은 테스트1/);
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/입력한 공격/);
+});
+
+
+test('피해 계산 기술의 타입·습득 필터 및 공격자 변경 초기화', async ({ page }) => {
+  await fixture(page);
+  await openTeams(page);
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
+  await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
+  const moves = panel.getByLabel('계산 기술', { exact: true });
+  await expect(moves.locator('option[value="double-slap"]')).toHaveAttribute('disabled', '');
+  await panel.getByLabel('계산 기술 타입', { exact: true }).selectOption('electric');
+  await expect(moves.locator('option[value="surf"]')).toHaveCount(0);
+  await panel.getByLabel('계산 기술 습득 방법', { exact: true }).selectOption('machine');
+  await expect(moves.locator('option[value="volt-tackle"]')).toHaveCount(0);
+  await moves.selectOption('thunderbolt');
+  await expect(panel.getByText(/Champions 육성 기준/)).toHaveCount(2);
+  await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:2');
+  await expect(moves).toHaveValue('');
+  await expect(panel.getByRole('button', { name: '참조 피해 계산', exact: true })).toBeDisabled();
 });

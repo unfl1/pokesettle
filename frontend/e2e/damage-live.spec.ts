@@ -21,6 +21,7 @@ test('실제 API·DB·Node 계산기와 UI의 조건부 KO 연결', async ({ pag
   await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption({ label: '통합 방어자' });
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:25');
+  await panel.getByLabel('계산 기술', { exact: true }).selectOption('thunderbolt');
   await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:9');
   await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
   await panel.getByRole('checkbox').check();

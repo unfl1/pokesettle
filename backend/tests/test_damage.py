@@ -172,7 +172,12 @@ def test_api_auth_validation_and_no_model_or_vector_requirement(setup, actual_en
     setup.vectors.meta.delete(ids=setup.vectors.meta.get()["ids"])
     with TestClient(create_app(no_model, service=setup.service)) as client:
         assert client.post("/api/battle/damage", json=request_body()).status_code == 401
+        assert client.get("/api/battle/damage/moves/pokemon:25").status_code == 401
         client.post("/api/session")
+        options = client.get("/api/battle/damage/moves/pokemon:25")
+        assert options.status_code == 200
+        assert options.json()["data"]["items"]
+        assert client.get("/api/battle/damage/moves/pokemon:unknown").status_code == 404
         response = client.post("/api/battle/damage", json=request_body())
         assert response.status_code == 200
         data = response.json()["data"]
@@ -234,3 +239,69 @@ def test_immune_target_never_meets_positive_hp_ko(actual_engine):
     body["defender"]["pokemonId"] = "pokemon:445"
     result = calculate_damage(DamageInput.model_validate(body), catalog, settings)
     assert result["calculation"]["conditional_ko"]["qualifying_rolls"] == 0
+
+
+def test_move_options_are_species_specific_localized_and_deduplicated(actual_engine):
+    from backend.app.battle.damage import damage_move_options
+
+    _, catalog = actual_engine
+    options = damage_move_options(catalog, "pokemon:25")
+    rows = {m["name"]: m for m in options["items"]}
+    assert options["version_group"]
+    assert options["champions_learnset_verified"] is False
+    assert len(rows) == len(options["items"])
+    assert rows["thunderbolt"]["name_ko"] == "10만볼트"
+    assert rows["thunderbolt"]["supported"]
+    assert rows["thunderbolt"]["methods"]
+    assert "flamethrower" not in rows
+    assert not rows["agility"]["supported"]
+    assert rows["agility"]["unsupported_reason"]
+
+
+def test_damage_rejects_unlearned_move_and_missing_form_learnset(actual_engine):
+    settings, catalog = actual_engine
+    with pytest.raises(ServiceError) as error:
+        calculate_damage(
+            DamageInput.model_validate(request_body(move="Flamethrower")), catalog, settings
+        )
+    assert error.value.code == "DAMAGE_MOVE_NOT_LEARNED"
+    catalog.details["pokemon"].pop("pokemon:25", None)
+    try:
+        with pytest.raises(ServiceError) as error:
+            calculate_damage(DamageInput.model_validate(request_body()), catalog, settings)
+        assert error.value.code == "DAMAGE_LEARNSET_NOT_READY"
+    finally:
+        # Avoid changing the shared real-catalog fixture for other tests.
+        catalog.details = json.loads((ROOT / "data/catalog_details.json").read_text())
+
+
+def test_expanded_move_list_has_single_hit_distributions(actual_engine):
+    from backend.app.battle.damage import SUPPORTED_MOVES
+
+    settings, _ = actual_engine
+    # Exercise every supported reference move in one worker environment without
+    # treating arbitrary species/move combinations as legal learnsets.
+    script = """
+const fs = require('fs');
+const {Generations, Pokemon, Move, Field, calculate} = require('@smogon/calc');
+const gen = Generations.get(0);
+const moves = require('./supported_moves.json');
+const a = new Pokemon(gen, 'Pikachu', {ability: 'No Ability', item: ''});
+const d = new Pokemon(gen, 'Blastoise', {ability: 'No Ability', item: ''});
+for (const name of moves) {
+ const data = gen.moves.get(name.replace(/-/g, ''));
+ if (!data || data.multihit || data.basePower <= 0 || data.category === 'Status') throw Error(name);
+ const move = new Move(gen, data.name);
+ const damage = calculate(gen, a, d, move, new Field({gameType:'Singles'})).damage;
+ if (damage !== 0 && (!Array.isArray(damage) || damage.length !== 16 || damage.some(n=>!Number.isSafeInteger(n)||n<0))) throw Error(name);
+}
+process.stdout.write(String(moves.length));
+"""
+    result = subprocess.run(
+        [settings.damage_node_binary, "-e", script],
+        cwd=ROOT / "backend/calculator",
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert int(result.stdout) == len(SUPPORTED_MOVES) > 12

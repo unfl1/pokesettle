@@ -285,7 +285,12 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 
 - `statPoints`는 6개 필드 모두 필요, 각 값 정수 0–32·합계 66 이하, 본가 EV·IV·레벨 입력과 구분
 - `alignment`는 참조 엔진의 25개 영문 정렬 식별자, 허용 값은 Swagger 스키마 참조
-- 기술: Tackle·Body Slam·Thunderbolt·Flamethrower·Surf·Ice Beam·Psychic·Shadow Ball·Energy Ball·Dragon Claw·Crunch·Earthquake
+- `GET /api/battle/damage/moves/{pokemonId}`: 기존 세션 필요, 수집된 최신 원본 버전 습득 기술을 중복 제거해 반환, `versionGroup`·`items`·`sources`·`championsLearnsetVerified=false` 포함
+- 기술 항목: 원본 `name`·한국어 `nameKo`, `type`·`category`·`power`·`accuracy`, 습득 `methods`, 참조 계산 `supported`·`unsupportedReason` 반환
+- 지원 목록: [공통 기술 목록](../../backend/calculator/supported_moves.json)의 96개 단일 타격 참조 기술, Python API와 Node 계산기가 동일 목록 사용
+- 계산 전 공격자의 수집 습득 자료와 대조, 자료 누락은 `DAMAGE_LEARNSET_NOT_READY`, 습득 목록에 없는 기술은 `DAMAGE_MOVE_NOT_LEARNED` 422. 원본 자료 대조이며 현행 Champions 습득·합법성 인증 아님
+- `move`는 원본 이름·slug·등록된 한국어 명칭 허용, 실제 계산에는 정규화된 원본 식별자 사용
+- `learnsetReference`에 대조한 `versionGroup`·기술·출처·`championsVerified=false` 반환
 - 미등록 도감 ID는 404, 엔진 미지원 종/폼·기술은 `DAMAGE_UNSUPPORTED_INPUT` 422, 잘못된 육성·조건은 422
 - 응답: `scope=champions_reference_scenario`, `verificationStatus=assumed`, `inGameVerified=false`, `legalityVerified=false`
 - `engine`에 이름·버전·generation·level, `inputs`에 요청 조건, `calculation.damage`에 최소/최대·16개 정수 피해값·양측 참조 능력치·기술 속성 포함

@@ -140,6 +140,8 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - [Smogon damage-calc](https://github.com/smogon/damage-calc)·`@smogon/calc 0.12.0`의 Champions 전용 모드 사용, 확인일 2026-10-22
 - npm 배포 체크섬은 `backend/calculator/pnpm-lock.yaml`에 고정, 별도 공개 게임 데이터 수집 없이 설치 패키지의 참조 자료 사용
 - 원문 MIT 저작권·허가문은 [라이선스](../../backend/calculator/LICENSE.smogon-calc)에 보존
+- 지원 기술 목록 확인일 2026-10-25: 고정 설치 패키지의 Champions 모드에서 96개 단일 타격 기술의 존재·양의 기본 위력·16개 정수 피해 출력 확인, 기술별 실전 효과 인증 아님
+- 습득 가능 기술·한국어 명칭·습득 방법은 기존 PokéAPI `catalog_details.json`과 보존된 원본 출처·수집일·라이선스 사용, 신규 외부 기술 데이터 수집 없음
 - 코드 라이선스와 포켓몬 원문·캐릭터·이미지 권리 구분, 라이브러리 지원을 공식 게임 결과 검증으로 표시 금지
 
 ## 조건부 전략 RAG 초기 자료
