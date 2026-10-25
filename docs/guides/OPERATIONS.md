@@ -1,5 +1,9 @@
 # 배포·운영 지침
 
+- 저장소 Docker 설정: `deployment/docker/`
+- 직접 빌드: `docker build -f deployment/docker/Dockerfile -t poketact-backend:local .`
+- 자동 배포 번들은 기존 서버 경로 유지, 저장소 이동에 따른 서버 수신기 재설치 불필요
+
 ## 구성
 
 | 시점·대상 | 처리 |
@@ -138,7 +142,7 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 - PostgreSQL 트랜잭션 잠금으로 다중 프로세스 동시 요청의 한도 초과 방지, 중복 clientRequestId는 기존 작업 반환·추가 접수량 차감 없음
 - 일일 기준 UTC 00:00, 한국 시각 09:00 초기화; 사용량 행은 다음 접수 시 지난 날짜 정리, 비정상 종료 작업 슬롯은 15분 후 만료·만료된 작업의 추가 모델 호출 차단
 - 저장: 별도 집계 테이블과 작업 슬롯, IP/세션 원문 대신 DB별 비밀값으로 HMAC 처리한 식별자 사용, 질문·공급자 응답을 사용량 집계에 저장하지 않음
-- 설정: `.env.production.example`의 `USAGE_*`·`MODEL_MAX_*` 값을 서버 비공개 env에서 조정, 0 이하 한도는 시작 시 거부
+- 설정: `deployment/docker/.env.production.example`의 `USAGE_*`·`MODEL_MAX_*` 값을 서버 비공개 env에서 조정, 0 이하 한도는 시작 시 거부
 - 관측: Grafana의 시간당 예약 토큰·차단 사유별 횟수 패널, 반복 차단 경보 추가; 예약량 누계는 프로세스 지표이며 강제 차단 기준은 DB 집계
 - 로컬 실제 모델 비교도 동일 전체 예산과 실행당 호출 제한 적용, 대규모 비교는 운영과 분리된 테스트 DB·키·한도 사용 권장
 - [CloudFront X-Forwarded-For 처리](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html)
@@ -152,20 +156,22 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 
 - Ubuntu 서버와 Docker Engine·Compose 플러그인 필요
 - 프로젝트 파일과 기준 데이터 전송, `.env`·SSH 키·로컬 DB·대화 기록·개인 문서는 소스 전송 대상에서 제외
-- `.env.production.example`을 `.env.production`으로 복사 후 서버에서 비밀값 설정, 파일 권한 `600` 적용
+- `deployment/docker/.env.production.example`을 `.env.production`으로 복사 후 서버에서 비밀값 설정, 파일 권한 `600` 적용
 - `POSTGRES_PASSWORD`는 서버별 고유 URL-safe 값 사용, `OPENAI_API_KEY`는 운영용 키 설정
 - `ALLOWED_ORIGINS`는 실제 프론트엔드 주소로 설정, CORS를 인증이나 요청 제한으로 간주하지 않음
 - 기존 DB 볼륨의 비밀번호는 환경변수 변경만으로 바뀌지 않으므로 별도 DB 계정 변경 절차 필요
 
 ### 최초 실행
 
+저장소 루트에서 실행, `--project-directory .`로 빌드·환경변수·볼륨 상대 경로 기준 유지
+
 ```bash
-sudo docker compose --env-file .env.production -f compose.production.yaml config --quiet
-sudo docker compose --env-file .env.production -f compose.production.yaml build api
-sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait postgres
-sudo docker compose --env-file .env.production -f compose.production.yaml run --rm index
-sudo docker compose --env-file .env.production -f compose.production.yaml run --rm index python -m backend.scripts.index_strategy
-sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml config --quiet
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml build api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait postgres
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml run --rm index
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml run --rm index python -m backend.scripts.index_strategy
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api
 curl --fail http://127.0.0.1:8000/api/status
 ```
 
@@ -180,9 +186,9 @@ curl --fail http://127.0.0.1:8000/api/status
 ### 업데이트와 데이터 유지
 
 ```bash
-sudo docker compose --env-file .env.production -f compose.production.yaml build api
-sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait api
-sudo docker compose --env-file .env.production -f compose.production.yaml ps
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml build api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml ps
 ```
 
 - `postgres_data`: 대화·팀·출처 캐시·벡터 색인 보존
@@ -197,7 +203,7 @@ sudo docker compose --env-file .env.production -f compose.production.yaml ps
 ```bash
 install -d -m 700 backups
 umask 077
-sudo docker compose --env-file .env.production -f compose.production.yaml exec -T postgres pg_dump -U poketact -d poketact -Fc > backups/poketact.dump
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml exec -T postgres pg_dump -U poketact -d poketact -Fc > backups/poketact.dump
 ```
 
 - 백업 파일은 Git·이미지·공개 웹 경로 제외, 동일 서버의 백업만으로 장애 복구를 보장할 수 없으므로 별도 비공개 저장소와 복구 검증 필요

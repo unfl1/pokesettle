@@ -21,7 +21,7 @@ cleanup() {
 trap cleanup EXIT
 mkdir -p "$task_directory/deployment"
 cp -R deployment/observability "$task_directory/deployment/"
-cp compose.production.yaml compose.observability.yaml "$task_directory/"
+cp deployment/docker/compose.production.yaml deployment/docker/compose.observability.yaml "$task_directory/"
 umask 077
 printf 'POSTGRES_PASSWORD=synthetic-monitoring-test\n' > "$task_directory/.env.production"
 printf 'GF_SECURITY_ADMIN_USER=admin\nGF_SECURITY_ADMIN_PASSWORD=synthetic-monitoring-test\n' > "$task_directory/.env.observability"

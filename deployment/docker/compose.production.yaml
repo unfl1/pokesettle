@@ -2,7 +2,9 @@ name: poketact
 
 x-backend: &backend
   image: poketact-backend:${IMAGE_TAG:-local}
-  build: .
+  build:
+    context: .
+    dockerfile: deployment/docker/Dockerfile
   env_file: .env.production
   environment:
     DATABASE_URL: postgresql://poketact:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/poketact

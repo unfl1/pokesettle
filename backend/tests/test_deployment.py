@@ -42,7 +42,8 @@ def test_release_rejects_unexpected_paths_links_sizes_and_duplicate_members(tmp_
 def test_release_package_excludes_environment_and_unlisted_files(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     for name in receiver.CONFIG_FILES:
-        path = tmp_path / name
+        source = "deployment/docker/" + name if name.startswith("compose.") else name
+        path = tmp_path / source
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("public")
     (tmp_path / ".env.production").write_text("PRIVATE_VALUE")

@@ -74,7 +74,7 @@ pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
 
 - [작업 지침](AGENTS.md) · [프로젝트 명세](docs/design/PROJECT_SPEC.md)
 - [아키텍처](docs/design/ARCHITECTURE.md) · [API 계약](docs/design/API_SPEC.md)
-- [배포·운영 지침](docs/guides/OPERATIONS.md)
+- [배포·운영 지침](docs/guides/OPERATIONS.md) · Docker 설정: `deployment/docker/`
 - [출처·이용 조건](docs/guides/DATA_SOURCES.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company

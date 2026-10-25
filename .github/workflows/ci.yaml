@@ -55,7 +55,7 @@ jobs:
       - name: Frontend build
         run: pnpm --dir frontend run build
       - name: Build production image
-        run: docker build --tag "poketact-backend:$GITHUB_SHA" .
+        run: docker build --file deployment/docker/Dockerfile --tag "poketact-backend:$GITHUB_SHA" .
       - name: Verify packaged application and calculator
         run: docker run --rm --network none --entrypoint python "poketact-backend:$GITHUB_SHA" -m backend.scripts.smoke_image
       - name: Validate monitoring configuration
