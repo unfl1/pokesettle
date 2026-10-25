@@ -133,6 +133,10 @@ class MetagameService:
             translations = {
                 "move": {name_key(m["name"]): m.get("name_ko") for m in catalog.details.get("move_details", [])},
                 "ability": {name_key(k): v for k, v in catalog.details.get("ability_names", {}).items()},
+                **{
+                    category: {name_key(k): v for k, v in catalog.battle_names.get(category, {}).items()}
+                    for category in ("held_item", "stat_alignment")
+                },
             }
             items = []
             for row in data["items"][:limit]:
@@ -146,6 +150,11 @@ class MetagameService:
                 items.append({
                     "name_en": row["name_en"], "name_ko": pokemon.name_ko if pokemon else None,
                     "pokemon_id": pokemon.pokemon_id if pokemon else None,
+                    "images": pokemon.images.model_dump(mode="json") if pokemon and pokemon.images else None,
                     "rank": row["rank"], "groups": groups,
                 })
-            return {**data, "items": items, "stale": stale, "limit": limit}
+            return {
+                **data, "items": items, "stale": stale, "limit": limit,
+                "name_sources": catalog.battle_names.get("sources", []),
+                "name_licence_url": catalog.battle_names.get("licence_url"),
+            }

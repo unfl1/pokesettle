@@ -8,6 +8,9 @@ from backend.app.main import app
 
 def check_image():
     assert app.title == "PokeTact"
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    assert catalog.battle_names["held_item"]["choice-scarf"] == "구애스카프"
+    assert catalog.battle_names["stat_alignment"]["jolly"] == "명랑"
 
     def member(pokemon_id, points):
         return {
@@ -31,7 +34,7 @@ def check_image():
             "neutralConditions": True,
         }
     )
-    result = calculate_damage(body, Catalog(ROOT / "data/pokemon.json"), Settings())
+    result = calculate_damage(body, catalog, Settings())
     damage = result["calculation"]["damage"]
     if (damage["minimum"], damage["maximum"]) != (84, 102) or len(damage["rolls"]) != 16:
         raise RuntimeError("Packaged calculator regression")

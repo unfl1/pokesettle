@@ -359,7 +359,9 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 
 - `GET /api/meta/singles?limit=30`: 앱 화면용 싱글 사용 순위와 주요 세팅 제공, `limit` 1~30
 - `data`: `items`, `season`, `format=Singles`, `dataDate`, `providerGeneratedAt`, `collectedAt`, `sourceUrl`, `termsUrl`, `attribution`, `regulationId=null`, `stale`, `limit`
-- `items[]`: `nameEn`, `nameKo`, `pokemonId`, `rank`, `groups[]`; 폼 이름을 정확히 연결하지 못하면 한국어 이름·도감 ID는 null
+- `items[]`: `nameEn`, `nameKo`, `pokemonId`, `images`, `rank`, `groups[]`; 폼 이름을 정확히 연결하지 못하면 한국어 이름·도감 ID·이미지는 null
+- `images`: 도감과 동일한 `spriteUrl`, `artworkUrl`, `sourceUrl`, `rightsNotice`, `checkedAt`, `availability`, 화면에서 스프라이트 로딩 실패 시 대체 아이콘 표시
+- `nameSources`, `nameLicenceUrl`: 도구·성격 한국어 이름의 CSV 출처·수집 시각·해시·이용 조건 제공, 확인된 이름이 없으면 `nameKo=null`과 원문 유지
 - `groups[]`: `category`(`move`, `held_item`, `ability`, `stat_alignment`), `items[]`(`name`, `nameKo`, `rank`, `percentage`), 범주별 상위 5개
 - 비율 미제공·범위 오류는 null, 0% 유지, 포켓몬 전체 사용률·승률 필드 없음
 - 6시간 서버 메모리 캐시, 갱신 실패 시 최대 24시간 경과 전 데이터와 `stale=true` 제공, 실패 재요청 60초 대기, 사용 가능한 캐시가 없으면 `503 META_UNAVAILABLE`
