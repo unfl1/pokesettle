@@ -155,10 +155,10 @@ async function fixture(page: Page) {
 async function openTeams(page: Page) {
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: '근거와 함께 대화하기' }),
+    page.getByRole('heading', { name: '전략 챗봇' }),
   ).toBeVisible();
   await page
-    .getByRole('button', { name: '팀과 전투 준비', exact: true })
+    .getByRole('link', { name: '6:6 시나리오', exact: true })
     .click();
 }
 
@@ -176,12 +176,12 @@ test('팀 편집·저장·갱신·복원·삭제 및 챗봇 질문 초안 연결
     .click();
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/내 팀\(테스트1\)/);
   await page
-    .getByRole('button', { name: '팀과 전투 준비', exact: true })
+    .getByRole('link', { name: '6:6 시나리오', exact: true })
     .click();
   await expect(own.getByText('테스트1', { exact: true })).toBeVisible();
   await page.reload();
   await page
-    .getByRole('button', { name: '팀과 전투 준비', exact: true })
+    .getByRole('link', { name: '6:6 시나리오', exact: true })
     .click();
   await page
     .getByLabel('저장한 내 팀', { exact: true })
@@ -340,4 +340,23 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   await page.getByRole('region', { name: '내 팀', exact: true }).getByRole('button', { name: '1번 멤버 제거', exact: true }).click();
   await expect(submit).toBeDisabled();
   await expect(panel.getByText('참조 피해 범위:', { exact: false })).toHaveCount(0);
+});
+
+
+test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ page }) => {
+  await fixture(page);
+  await page.goto('/scenario');
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByLabel('팀 이름', { exact: true }).fill('편집 중인 팀');
+  await page.getByRole('button', { name: '현재 전투 비교', exact: true }).click();
+  await page.getByRole('combobox', { name: '메가 사용 상태', exact: true }).selectOption('used');
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
+  await expect(page.getByRole('region', { name: '내 팀', exact: true })).toBeHidden();
+  await page.getByLabel('포켓몬 질문').fill('메뉴를 오가도 유지할 질문');
+  await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
+  await expect(page.getByLabel('팀 이름', { exact: true })).toHaveValue('편집 중인 팀');
+  await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
+  await page.getByRole('link', { name: '챗봇', exact: true }).click();
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('메뉴를 오가도 유지할 질문');
 });

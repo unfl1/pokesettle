@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import {
   ArrowRight,
   BookOpenText,
-  Check,
   CircleHelp,
   FileSearch,
   LoaderCircle,
@@ -10,7 +9,6 @@ import {
   RotateCcw,
   RefreshCw,
   Send,
-  Sparkles,
 } from 'lucide-react';
 import { ChatMessage } from './Reference';
 import type { useWorkspace } from '../hooks/useWorkspace';
@@ -47,18 +45,20 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
   const loading = w.messages.isPending && Boolean(w.conversationId);
   return (
     <section
-      className="border border-[#334150] rounded-[12px] bg-[#171f2a] overflow-hidden max-tablet:order-first"
+      className="border border-line rounded-[12px] bg-surface overflow-hidden max-tablet:order-first"
       aria-label="전략 대화"
     >
-      <header className="px-5.5 py-4.5 gap-[11px] flex items-center border-b border-b-[#2b3746] max-desktop:p-[17px] max-phone:gap-2 max-phone:flex-wrap [&_h2]:text-[13px] [&_h2]:font-semibold [&_p]:text-[9px] [&_p]:text-[#8194aa] [&_p]:mt-[5px] max-tablet:[&_p]:text-[8px]">
-        <div className="p-2 border border-[#a7efc527] bg-[#a7efc511] text-accent rounded-[7px] flex">
+      <header className="px-5.5 py-4.5 gap-[11px] flex items-center border-b border-b-line max-desktop:p-[17px] max-phone:gap-2 max-phone:flex-wrap [&_h1]:text-[14px] [&_h1]:font-semibold">
+        <div className="p-2 border border-accent/15 bg-accent/7 text-accent rounded-[7px] flex">
           <MessageSquare size={17} />
         </div>
-        <div>
-          <h2>근거와 함께 대화하기</h2>
-          <p>도감 선택과 관계없이 배틀 상황을 질문하세요</p>
+        <div className="min-w-0">
+          <h1>전략 챗봇</h1>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            포켓몬 배틀 상황을 물어보면, 근거를 바탕으로 전략을 안내해요.
+          </p>
         </div>
-        <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-[#344253] [&_select]:bg-[#111a25] [&_select]:text-[#99acc0] [&_select]:rounded-[5px] [&_select]:text-[10px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
+        <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-line [&_select]:bg-canvas [&_select]:text-muted [&_select]:rounded-[5px] [&_select]:text-[11px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
           <label className="sr-only" htmlFor="conversation-select">
             대화 기록 선택
           </label>
@@ -78,7 +78,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             ))}
           </select>
           <button
-            className="border border-[#344253] flex items-center gap-1.5 px-2 py-1.5 rounded-[5px] text-[10px] text-[#a0b1c5] whitespace-nowrap"
+            className="border border-line flex items-center gap-1.5 px-2 py-1.5 rounded-[5px] text-[11px] text-muted whitespace-nowrap"
             title="빈 전투 상태로 새 대화 시작 · 이전 기록은 보관"
             aria-label="대화 초기화"
             onClick={w.createNew}
@@ -92,7 +92,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         </div>
       </header>
       <div
-        className="px-6.5 py-5.5 h-[clamp(360px,_calc(100dvh_-_490px),_760px)] overflow-auto [scrollbar-width:thin] [scrollbar-color:#354253_transparent] max-tablet:p-5 max-tablet:h-105 max-phone:px-[15px] max-phone:py-4.5 tall:h-[510px]"
+        className="chat-feed"
         ref={feed}
         role="log"
         aria-label="대화 기록"
@@ -100,7 +100,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
       >
         {loading && (
           <div
-            className="px-0 py-4 gap-2.5 flex items-center text-accent text-[11px]"
+            className="px-0 py-4 gap-2.5 flex items-center text-accent text-[12px]"
             role="status"
           >
             <LoaderCircle
@@ -111,17 +111,15 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           </div>
         )}
         {!loading && !items.length && !w.pending && (
-          <div className="px-0 flex items-center flex-col text-center pt-8 pb-3 max-tablet:pt-7 [&_h3]:text-[18px] [&_h3]:tracking-[-0.6px] [&_h3]:font-medium max-desktop:[&_h3]:text-[16px] max-phone:[&_h3]:text-[15px] [&>p]:mx-0 [&>p]:text-[11px] [&>p]:text-[#8a9eb5] [&>p]:leading-[1.9] [&>p]:mt-[11px] [&>p]:mb-[23px] [&>small]:gap-1.5 [&>small]:flex [&>small]:items-center [&>small]:text-[9px] [&>small]:text-[#637e92] [&>small]:mt-[21px]">
-            <span className="border border-[#a7efc530] grid place-items-center w-14 h-14 rounded-[17px] text-accent bg-[#a7efc508] mb-5">
-              <Sparkles size={25} strokeWidth={1.4} />
+          <div className="px-0 flex items-center flex-col text-center pt-24 pb-3 max-tablet:pt-23 [&_h2]:text-[18px] [&_h2]:tracking-[-0.6px] [&_h2]:font-medium max-desktop:[&_h2]:text-[16px] max-phone:[&_h2]:text-[15px] [&>p]:mx-0 [&>p]:text-[12px] [&>p]:text-muted [&>p]:leading-[1.9] [&>p]:mt-[11px] [&>p]:mb-[23px]">
+            <span className="border border-accent/19 grid place-items-center w-14 h-14 rounded-[17px] text-accent bg-accent/3 mb-5">
+              <MessageSquare size={25} strokeWidth={1.8} aria-hidden="true" />
             </span>
-            <h3>궁금한 점을 근거로 확인해 보세요.</h3>
+            <h2>어떤 배틀 상황이 궁금하세요?</h2>
             <p>
-              도감 정보부터 원문 설명까지.
-              <br />
-              확인할 수 없는 내용은 추측하지 않아요.
+              내 포켓몬과 상대, 현재 상황을 알려주세요.
             </p>
-            <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-[#334253] [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-[#b3c3d5] [&_button]:text-[10px] [&_button]:bg-[#1d2835] max-phone:[&_button]:text-[9px] [&_svg]:text-[#8db09e]">
+            <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-line [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-ink [&_button]:text-[11px] [&_button]:bg-surface max-phone:[&_button]:text-[10px] [&_svg]:text-muted">
               <button
                 onClick={() =>
                   w.setDraft('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?')
@@ -141,10 +139,6 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
                 <ArrowRight size={15} />
               </button>
             </div>
-            <small>
-              <Check size={12} />
-              답변에 실제 사용한 출처를 함께 보여드립니다.
-            </small>
           </div>
         )}
         {items.map((message) => (
@@ -154,7 +148,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           <>
             {w.pending.question && (
               <div
-                className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-[#79988b] [&>span]:text-right [&>span]:text-[9px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-[#a7efc523] [&_p]:bg-[#a7efc50a] [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[13px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
+                className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-muted [&>span]:text-right [&>span]:text-[10px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-accent/14 [&_p]:bg-accent/4 [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[14px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
                 data-testid="user-message"
               >
                 <span>나의 요청</span>
@@ -162,7 +156,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
               </div>
             )}
             <div
-              className="px-0 py-4 gap-2.5 flex items-center text-accent text-[11px] [&_p]:text-[9px] [&_p]:text-[#7d95ac] [&_p]:mt-[7px] [&_strong]:font-medium"
+              className="px-0 py-4 gap-2.5 flex items-center text-accent text-[12px] [&_p]:text-[10px] [&_p]:text-muted [&_p]:mt-[7px] [&_strong]:font-medium"
               role="status"
             >
               <LoaderCircle
@@ -174,7 +168,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
                   {stages[w.job.data?.stage ?? 'validating'] ??
                     '요청을 처리하고 있어요'}
                 </strong>
-                <p>다른 포켓몬을 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.</p>
+                <p>다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.</p>
               </div>
             </div>
           </>
@@ -182,7 +176,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
       </div>
       {error && (
         <div
-          className="px-4 py-[13px] mx-5.5 border border-[#d3b97c36] gap-[11px] flex items-center bg-[#d3b97c08] text-[#c4b38f] rounded-[8px] text-[11px] leading-[1.8] mt-0 mb-[15px] max-phone:mx-[13px] max-phone:mb-[13px] [&_button]:gap-[5px] [&_button]:text-[10px] [&_button]:text-[#b4d8c6] [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap"
+          className="px-4 py-[13px] mx-5.5 border border-warning-line gap-[11px] flex items-center bg-warning-soft text-warning rounded-[8px] text-[12px] leading-[1.8] mt-0 mb-[15px] max-phone:mx-[13px] max-phone:mb-[13px] [&_button]:gap-[5px] [&_button]:text-[11px] [&_button]:text-ink [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap"
           role="alert"
         >
           <CircleHelp size={16} />
@@ -206,7 +200,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         </div>
       )}
       <form
-        className="px-3.5 mx-5.5 border border-[#465a67] mt-0 mb-5 pt-[13px] pb-2.5 bg-[#111b24] rounded-[9px] max-phone:p-[11px] max-phone:mx-[13px] max-phone:mb-3.5 [&:focus-within]:border-[#a7efc580] [&_textarea]:border-0 [&_textarea]:border-[currentColor] [&_textarea]:w-full [&_textarea]:bg-[transparent] [&_textarea]:resize-y [&_textarea]:max-h-45 [&_textarea]:min-h-[45px] [&_textarea]:outline-none [&_textarea]:text-[#e0e9f0] [&_textarea]:text-[13px] [&_textarea]:leading-[1.8] [&_textarea::placeholder]:text-[#63798f]"
+        className="px-3.5 mx-5.5 border border-line mt-0 mb-5 pt-[13px] pb-2.5 bg-canvas rounded-[9px] max-phone:p-[11px] max-phone:mx-[13px] max-phone:mb-3.5 [&:focus-within]:border-accent/50 [&_textarea]:border-0 [&_textarea]:border-[currentColor] [&_textarea]:w-full [&_textarea]:bg-[transparent] [&_textarea]:resize-y [&_textarea]:max-h-45 [&_textarea]:min-h-[45px] [&_textarea]:outline-none [&_textarea]:text-ink [&_textarea]:text-[14px] [&_textarea]:leading-[1.8] [&_textarea::placeholder]:text-muted"
         onSubmit={(e) => {
           e.preventDefault();
           if (w.canSend && w.draft.trim()) w.submit('chat');
@@ -219,7 +213,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           id="chat-question"
           rows={2}
           maxLength={2000}
-          placeholder="내 포켓몬·상대·현재 상황을 질문해 보세요…"
+          placeholder="메시지를 입력하세요…"
           value={w.draft}
           onChange={(e) => w.setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -233,13 +227,13 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             }
           }}
         />
-        <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[9px] [&>span]:text-[#6f879c] max-phone:[&>span]:text-[8px]">
+        <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[10px] [&>span]:text-muted max-phone:[&>span]:text-[10px]">
           <span>
             <CircleHelp size={12} />
-            {w.status.data?.ready ? 'Champions 전용 규칙은 확인된 근거가 필요해요.' : '도감 기본 질문은 바로 확인 가능 · 전략 답변은 모델·색인 준비 필요'}
+            답변에 사용한 출처와 미확인 정보를 함께 안내해요.
           </span>
           <button
-            className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-[#17382b] shrink-0"
+            className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-white shrink-0"
             type="submit"
             aria-label="질문 보내기"
             disabled={!w.canSend || !w.draft.trim()}

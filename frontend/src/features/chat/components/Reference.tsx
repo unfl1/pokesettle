@@ -33,7 +33,7 @@ function CitedText({
         return match && citations.some((c) => c.number === Number(match[1])) ? (
           <a
             key={index}
-            className="mx-[3px] my-0 border border-[#a7efc540] text-[9px] inline-flex items-center justify-center min-w-[17px] h-[17px] rounded-[4px] text-accent bg-[#a7efc50a] align-super leading-[1]"
+            className="mx-[3px] my-0 border border-accent/25 text-[10px] inline-flex items-center justify-center min-w-[17px] h-[17px] rounded-[4px] text-accent bg-accent/4 align-super leading-[1]"
             href={`#${prefix}-${match[1]}`}
             aria-label={`근거 ${match[1]} 확인`}
           >
@@ -59,17 +59,17 @@ export function EvidenceCard({
     <div>
       <a
         id={`${prefix}-${citation.number}`}
-        className="px-3 py-[11px] border border-[#324052] gap-2.5 flex items-center bg-[#131c27] rounded-[7px] scroll-m-[15px] target:border-accent [&>svg]:ml-auto [&>svg]:text-[#78968d]"
+        className="px-3 py-[11px] border border-line gap-2.5 flex items-center bg-surface rounded-[7px] scroll-m-[15px] target:border-accent [&>svg]:ml-auto [&>svg]:text-muted"
         data-testid="evidence-card"
         href={href}
         target="_blank"
         rel="noreferrer"
         aria-label={`근거 ${citation.number} 원문 열기`}
       >
-        <span className="border border-[#a7efc52e] grid place-items-center text-accent rounded-[4px] w-[21px] h-[21px] text-[9px]">
+        <span className="border border-accent/18 grid place-items-center text-accent rounded-[4px] w-[21px] h-[21px] text-[10px]">
           {citation.number}
         </span>
-        <span className="min-w-0 [&_strong]:text-[10px] [&_strong]:font-medium [&_strong]:block [&_strong]:wrap-anywhere [&_small]:block [&_small]:text-[9px] [&_small]:text-[#728aa2] [&_small]:mt-[5px]">
+        <span className="min-w-0 [&_strong]:text-[11px] [&_strong]:font-medium [&_strong]:block [&_strong]:wrap-anywhere [&_small]:block [&_small]:text-[10px] [&_small]:text-muted [&_small]:mt-[5px]">
           <strong>{citation.title}</strong>
           <small>
             {citation.sourceType === 'metadata'
@@ -87,7 +87,7 @@ export function EvidenceCard({
         <ArrowUpRight size={15} aria-hidden="true" />
       </a>
       {['wiki', 'curated'].includes(citation.sourceType) && citation.licence && (
-        <p className="mt-1 text-[9px] text-[#8295a8] wrap-anywhere">
+        <p className="mt-1 text-[10px] text-muted wrap-anywhere">
           <a
             href={sourceHref(citation.licenceUrl ?? null)}
             target="_blank"
@@ -106,7 +106,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
   return (
     <div className="mb-7" data-testid="answer-body">
       <div
-        className="gap-[7px] flex items-center text-[#b0dac3] text-[11px] mb-[11px]"
+        className="gap-[7px] flex items-center text-ink text-[12px] mb-[11px]"
         data-testid="answer-label"
       >
         {result.feature === 'pokemon_guide' ? (
@@ -122,7 +122,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
             : 'PokeTact'}
         </span>
         <span
-          className="px-[5px] py-[3px] border border-[#344355] ml-auto text-[8px] text-[#849bb0] rounded-[4px]"
+          className="px-[5px] py-[3px] border border-line ml-auto text-[10px] text-muted rounded-[4px]"
           data-testid="answer-state"
         >
           {result.answerStatus === 'abstained'
@@ -133,7 +133,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         </span>
       </div>
       {result.battleContext && (
-        <div className="mb-3 rounded-[6px] border border-[#344253] p-3 text-[11px] leading-[1.9] text-[#a3b2c3]" aria-label="현재 전투 입력">
+        <div className="mb-3 rounded-[6px] border border-line p-3 text-[12px] leading-[1.9] text-muted" aria-label="현재 전투 입력">
           {result.battleContext.scope === 'generic_team_selection' ? <p>6대6 엔트리 비교{result.battleContext.selection ? ` · ${result.battleContext.selection.candidateCount}개 선출 조합 평가` : ' · 엔트리 확인 필요'}</p> : <p>현재 입력: {result.battleContext.ownName ?? '내 포켓몬 미확인'} / 상대 {result.battleContext.opponentName ?? '미확인'}</p>}
           {result.battleContext.state.ownHpPercent !== undefined && <p>내 남은 HP: {result.battleContext.state.ownHpPercent}%</p>}
           {result.battleContext.state.ownMoves?.length ? <p>입력한 기술: {result.battleContext.state.ownMoves.join(', ')}</p> : null}
@@ -149,7 +149,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         </div>
       )}
       <div
-        className="text-[14px] leading-[1.95] text-[#c5d2e1] whitespace-pre-wrap wrap-anywhere max-tablet:text-[13px]"
+        className="text-[14px] leading-[1.95] text-ink whitespace-pre-wrap wrap-anywhere max-tablet:text-[14px]"
         data-testid="answer-text"
       >
         <CitedText
@@ -159,7 +159,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         />
       </div>
       {result.assumptions.length > 0 && (
-        <div className="text-[10px] text-[#a99b7e] mt-[13px] leading-[1.9]">
+        <div className="text-[11px] text-warning mt-[13px] leading-[1.9]">
           <strong>가정</strong>
           {result.assumptions.map((a, i) => (
             <p key={i}>{a.text}</p>
@@ -167,7 +167,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         </div>
       )}
       {result.unknowns.length > 0 && (
-        <details open={result.answerStatus !== 'answered'} className="text-[10px] text-[#a99b7e] mt-[13px] leading-[1.9] [&_summary]:gap-[5px] [&_summary]:flex [&_summary]:items-center [&_summary]:cursor-pointer [&_p]:mt-[7px]">
+        <details open={result.answerStatus !== 'answered'} className="text-[11px] text-warning mt-[13px] leading-[1.9] [&_summary]:gap-[5px] [&_summary]:flex [&_summary]:items-center [&_summary]:cursor-pointer [&_p]:mt-[7px]">
           <summary>
             <CircleHelp size={14} />
             미확인 정보 {result.unknowns.length}개
@@ -179,7 +179,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
       )}
       {result.citations.length ? (
         <div className="gap-[7px] mt-[17px] flex flex-col [&>p]:mb-0.5">
-          <p className="gap-1.5 text-[9px] tracking-[0.7px] text-[#8295a8] flex items-center">
+          <p className="gap-1.5 text-[10px] tracking-[0.7px] text-muted flex items-center">
             <FileText size={12} />
             실제로 사용한 근거 {result.citations.length}개
           </p>
@@ -188,13 +188,13 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
           ))}
         </div>
       ) : (
-        <p className="gap-1.5 text-[9px] text-[#8194a8] leading-[1.8] mt-2.5 flex items-center">
+        <p className="gap-1.5 text-[10px] text-muted leading-[1.8] mt-2.5 flex items-center">
           <CircleHelp size={14} />
           {result.citationNotice ?? '이 답변에 인용된 근거가 없습니다.'}
         </p>
       )}
       {result.guideLimitations?.map((line, i) => (
-        <p className="text-[9px] text-[#8194a8] leading-[1.8] mt-2.5" key={i}>
+        <p className="text-[10px] text-muted leading-[1.8] mt-2.5" key={i}>
           {line}
         </p>
       ))}
@@ -206,7 +206,7 @@ export function ChatMessage({ message }: { message: Message }) {
   if (message.role === 'user')
     return (
       <div
-        className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-[#79988b] [&>span]:text-right [&>span]:text-[9px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-[#a7efc523] [&_p]:bg-[#a7efc50a] [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[13px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
+        className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-muted [&>span]:text-right [&>span]:text-[10px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-accent/14 [&_p]:bg-accent/4 [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[14px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
         data-testid="user-message"
       >
         <span>나의 질문</span>
@@ -220,7 +220,7 @@ export function ChatMessage({ message }: { message: Message }) {
   if (typeof message.content === 'string')
     return (
       <div
-        className="text-[14px] leading-[1.95] text-[#c5d2e1] whitespace-pre-wrap wrap-anywhere max-tablet:text-[13px]"
+        className="text-[14px] leading-[1.95] text-ink whitespace-pre-wrap wrap-anywhere max-tablet:text-[14px]"
         data-testid="answer-text"
       >
         {message.content}
