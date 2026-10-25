@@ -55,7 +55,7 @@ export default function App() {
       <header className="site-header">
         <div className="header-inner">
           <Link to="/chat" className="brand" aria-label="PokeTact 홈">
-            <span className="brand-symbol"><span /></span>
+            <span className="brand-symbol" aria-hidden="true"><span /></span>
             PokeTact<span className="brand-tag">BETA</span>
           </Link>
           <nav className="primary-nav" aria-label="주 메뉴">

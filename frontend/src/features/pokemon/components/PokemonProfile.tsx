@@ -23,7 +23,7 @@ export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
       aria-label="선택한 포켓몬 정보"
     >
       <div className="px-5.5 py-[17px] gap-4.5 flex items-center max-desktop:px-[17px] max-desktop:gap-[13px] max-tablet:gap-3.5 max-phone:flex-wrap">
-        <div className="border border-accent/17 w-20.5 h-20.5 rounded-[16px] bg-[radial-gradient(circle_at_40%_30%,_#eaf0ff,_transparent_70%)] flex items-center justify-center text-accent relative shrink-0 overflow-hidden max-phone:w-16.5 max-phone:h-16.5 [&_svg]:mb-[7px]">
+        <div className="border border-accent/17 w-20.5 h-20.5 rounded-[16px] bg-[radial-gradient(circle_at_40%_30%,_#fff0ee,_transparent_70%)] flex items-center justify-center text-accent relative shrink-0 overflow-hidden max-phone:w-16.5 max-phone:h-16.5 [&_svg]:mb-[7px]">
           <PokemonImage
             key={pokemon.pokemonId}
             pokemon={pokemon}
@@ -78,7 +78,7 @@ export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
                   key={key}
                 >
                   <span>{statLabels[key]}</span>
-                  <div className="h-1 bg-canvas rounded-[4px] flex-1 [&_i]:block [&_i]:bg-accent/60 [&_i]:h-full [&_i]:rounded-[4px]">
+                  <div className="h-1 bg-canvas rounded-[4px] flex-1 [&_i]:block [&_i]:bg-link/55 [&_i]:h-full [&_i]:rounded-[4px]">
                     <i style={{ width: `${(value / maximum) * 100}%` }} />
                   </div>
                   <strong>{value}</strong>
@@ -118,7 +118,7 @@ export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
                         return <div key={name} className="rounded-lg border border-line border-l-[3px] bg-canvas px-3 py-2.5" style={{ borderLeftColor: typeColors[type] ?? '#8492a3' }}>
                           <div className="flex items-center justify-between gap-2"><strong className="text-[13px] font-medium text-ink">{name}</strong><span className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ${{ physical: 'bg-orange-400/15 text-orange-700', special: 'bg-sky-400/15 text-sky-700', status: 'bg-violet-400/15 text-violet-700' }[move.category ?? ''] ?? 'text-slate-600'}`}>{{ physical: '물리', special: '특수', status: '변화' }[move.category ?? ''] ?? '분류 미확인'}</span></div>
                           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-                            <p className="rounded bg-amber-400/10 px-2 py-1"><span className="text-amber-700">위력 </span><strong className="font-semibold text-amber-900 tabular-nums">{move.power ?? '—'}</strong></p>
+                            <p className="rounded bg-highlight px-2 py-1"><span className="text-highlight-ink">위력 </span><strong className="font-semibold text-highlight-ink tabular-nums">{move.power ?? '—'}</strong></p>
                             <p className="rounded bg-cyan-400/10 px-2 py-1"><span className="text-cyan-700">명중 </span><strong className="font-semibold text-cyan-900 tabular-nums">{move.accuracy != null ? `${move.accuracy}%` : '—'}</strong></p>
                           </div>
                           <p className="text-[11px] text-muted mt-1">{entries.map(m => m.method === 'level-up' ? `레벨업 Lv.${m.level}` : ({ machine: '기술머신·비전머신', egg: '알 기술', tutor: '기술 가르침', train: '트레이닝' }[m.method] ?? m.method)).join(' · ')}</p>
@@ -131,13 +131,13 @@ export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
               <details className="mt-2 text-[11px] text-muted">
                 <summary className="cursor-pointer">기술 데이터 출처·수집일</summary>
                 <p>수집 자료 중 가장 최근 버전 그룹 기준 · 일반 도감 자료</p>
-                {pokemon.learnsetSources?.map(source => <p key={source.url}><a className="underline" href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()}</a> · {source.collectedAt.slice(0, 10)}</p>)}
-                {pokemon.learnsetLicenceUrl && <a className="underline" href={pokemon.learnsetLicenceUrl} target="_blank" rel="noreferrer">PokéAPI 이용 조건</a>}
+                {pokemon.learnsetSources?.map(source => <p key={source.url}><a className="text-link underline" href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()}</a> · {source.collectedAt.slice(0, 10)}</p>)}
+                {pokemon.learnsetLicenceUrl && <a className="text-link underline" href={pokemon.learnsetLicenceUrl} target="_blank" rel="noreferrer">PokéAPI 이용 조건</a>}
               </details>
             </> : <p className="text-muted">이 포켓몬의 버전별 기술 습득 자료가 아직 등록되지 않았습니다.</p>}
           </div>
           <a
-            className="gap-1 flex items-center text-muted text-[10px] mt-[9px]"
+            className="gap-1 flex items-center text-link text-[10px] mt-[9px]"
             href={pokemon.sourceUrl}
             target="_blank"
             rel="noreferrer"
@@ -148,6 +148,7 @@ export function PokemonProfile({ pokemon }: { pokemon: PokemonDetail }) {
           {pokemon.images && (
             <p className="text-[10px] leading-[1.8] text-muted mt-2 [&_a]:underline">
               <a
+                className="text-link"
                 href={pokemon.images.sourceUrl}
                 target="_blank"
                 rel="noreferrer"

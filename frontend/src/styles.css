@@ -3,15 +3,18 @@
 @theme {
   /* Keep existing pixel spacing independent of the 14px root font. */
   --spacing: 4px;
-  --color-accent: #386be8;
+  --color-accent: #c63f46;
+  --color-link: #3267b8;
   --color-ink: #1b2538;
   --color-muted: #64748b;
   --color-surface: #ffffff;
-  --color-canvas: #f7f9fc;
-  --color-line: #e3e8f1;
-  --color-warning: #916323;
-  --color-warning-soft: #fffbf2;
-  --color-warning-line: #efdfbf;
+  --color-canvas: #fafaf8;
+  --color-line: #e7e7e5;
+  --color-highlight: #ffdd32cc;
+  --color-highlight-ink: #624900;
+  --color-warning: var(--color-highlight-ink);
+  --color-warning-soft: var(--color-highlight);
+  --color-warning-line: var(--color-highlight);
   --font-sans:
     Inter, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
     'Malgun Gothic', sans-serif;
@@ -64,31 +67,31 @@
   body { margin: 0; min-width: 320px; }
   button, input, textarea, select { font: inherit; }
   button, a, input, select, textarea { transition: background-color 160ms, border-color 160ms, color 160ms; }
-  ::selection { background: #dce7ff; }
+  ::selection { background: #f8dadd; }
 }
 
 .app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
 .site-header { background: #ffffff; border-bottom: 1px solid var(--color-line); position: sticky; top: 0; z-index: 20; }
 .header-inner { max-width: 1240px; min-height: 76px; padding: 0 32px; margin: auto; display: flex; align-items: center; gap: 28px; }
 .brand { display: flex; align-items: center; gap: 9px; font-size: 23px; font-weight: 800; letter-spacing: -1px; text-decoration: none; color: #1b2538; }
-.brand-symbol { position: relative; display: grid; place-items: center; width: 27px; height: 27px; border: 2px solid var(--color-accent); border-radius: 50%; overflow: hidden; background: linear-gradient(#e5edff 50%, white 50%); }
+.brand-symbol { position: relative; display: grid; place-items: center; width: 27px; height: 27px; border: 2px solid var(--color-accent); border-radius: 50%; overflow: hidden; background: linear-gradient(#fce4e8 50%, white 50%); }
 .brand-symbol::before { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: var(--color-accent); }
 .brand-symbol span { z-index: 1; width: 9px; height: 9px; background: white; border: 2px solid var(--color-accent); border-radius: 50%; }
-.brand-tag { padding: 3px 5px; background: #edf2ff; color: #5673b5; font-size: 8px; letter-spacing: .5px; font-weight: 600; border-radius: 4px; }
+.brand-tag { padding: 3px 5px; background: var(--color-highlight); color: var(--color-highlight-ink); font-size: 8px; letter-spacing: .5px; font-weight: 600; border-radius: 4px; }
 .primary-nav { display: flex; align-items: stretch; gap: 16px; align-self: stretch; margin: auto; }
 .primary-nav a { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; color: #6b7280; font-size: 14px; font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; border-top: 3px solid transparent; white-space: nowrap; }
-.primary-nav a:hover { color: var(--color-accent); background: #fafbff; }
+.primary-nav a:hover { color: var(--color-accent); background: #fff7f6; }
 .primary-nav a[aria-current=page] { border-bottom-color: var(--color-accent); color: var(--color-accent); }
 .header-actions { display: flex; align-items: center; gap: 14px; }
 .connection-status { display: flex; align-items: center; gap: 7px; color: #64748b; font-size: 11px; white-space: nowrap; }
-.connection-status i { width: 6px; height: 6px; border-radius: 50%; background: #d5a54d; }
+.connection-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-highlight); }
 .connection-status i[data-online=true] { background: #43ad86; }
 .help-button { display: grid; place-items: center; padding: 8px; border-radius: 8px; color: #64748b; }
-.help-button:hover { background: #edf2ff; color: var(--color-accent); }
+.help-button:hover { background: #fff0ee; color: var(--color-accent); }
 .workspace-main { width: min(100%, 1224px); padding: 0 32px 56px; margin: 0 auto; flex: 1; }
 .workspace-main.chat-width { max-width: 980px; padding-top: 48px; }
 .page-intro { padding: 42px 0 30px; }
-.eyebrow { display: flex; align-items: center; gap: 6px; color: #597fce; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+.eyebrow { display: flex; align-items: center; gap: 6px; color: var(--color-accent); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
 .page-intro h1 { font-size: 30px; font-weight: 750; letter-spacing: -1.1px; margin: 12px 0 9px; line-height: 1.4; color: #1b2538; }
 .page-intro p { color: #64748b; font-size: 13px; line-height: 1.8; }
 .chat-width [aria-label="전략 대화"] { box-shadow: 0 5px 30px #27436a05; border-radius: 16px; }

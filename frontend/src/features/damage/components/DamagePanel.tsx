@@ -161,7 +161,7 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
         <p className="mt-2 wrap-anywhere">피해 후보: {damage.rolls.join(', ')}</p>
         <p>{result.data.engine.name} {result.data.engine.version} · 레벨 {result.data.engine.level}</p>
         <ul className="list-disc pl-4">{[...result.data.assumptions, ...result.data.unknowns].map((s) => <li key={s}>{s}</li>)}</ul>
-        {result.data.citations.map((c) => <p key={c.sourceUrl}><a className="text-accent underline" href={c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined} target="_blank" rel="noreferrer">{c.title}</a> · {c.version}</p>)}
+        {result.data.citations.map((c) => <p key={c.sourceUrl}><a className="text-link underline" href={c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined} target="_blank" rel="noreferrer">{c.title}</a> · {c.version}</p>)}
       </details>
     </div>}
   </section>;

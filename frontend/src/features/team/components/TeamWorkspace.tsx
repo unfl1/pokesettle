@@ -45,7 +45,7 @@ function Evidence({ result }: { result: Context }) {
           {result.citations.map((c, i) => (
             <li key={`${c.sourceUrl}-${i}`}>
               <a
-                className="text-accent underline"
+                className="text-link underline"
                 href={
                   c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined
                 }

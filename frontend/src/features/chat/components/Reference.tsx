@@ -33,7 +33,7 @@ function CitedText({
         return match && citations.some((c) => c.number === Number(match[1])) ? (
           <a
             key={index}
-            className="mx-[3px] my-0 border border-accent/25 text-[10px] inline-flex items-center justify-center min-w-[17px] h-[17px] rounded-[4px] text-accent bg-accent/4 align-super leading-[1]"
+            className="mx-[3px] my-0 border border-link/25 text-[10px] inline-flex items-center justify-center min-w-[17px] h-[17px] rounded-[4px] text-link bg-link/4 align-super leading-[1]"
             href={`#${prefix}-${match[1]}`}
             aria-label={`근거 ${match[1]} 확인`}
           >
@@ -59,14 +59,14 @@ export function EvidenceCard({
     <div>
       <a
         id={`${prefix}-${citation.number}`}
-        className="px-3 py-[11px] border border-line gap-2.5 flex items-center bg-surface rounded-[7px] scroll-m-[15px] target:border-accent [&>svg]:ml-auto [&>svg]:text-muted"
+        className="px-3 py-[11px] border border-line gap-2.5 flex items-center bg-surface rounded-[7px] scroll-m-[15px] text-link hover:border-link/35 target:border-link [&>svg]:ml-auto [&>svg]:text-link"
         data-testid="evidence-card"
         href={href}
         target="_blank"
         rel="noreferrer"
         aria-label={`근거 ${citation.number} 원문 열기`}
       >
-        <span className="border border-accent/18 grid place-items-center text-accent rounded-[4px] w-[21px] h-[21px] text-[10px]">
+        <span className="border border-link/18 grid place-items-center text-link rounded-[4px] w-[21px] h-[21px] text-[10px]">
           {citation.number}
         </span>
         <span className="min-w-0 [&_strong]:text-[11px] [&_strong]:font-medium [&_strong]:block [&_strong]:wrap-anywhere [&_small]:block [&_small]:text-[10px] [&_small]:text-muted [&_small]:mt-[5px]">
@@ -92,7 +92,7 @@ export function EvidenceCard({
             href={sourceHref(citation.licenceUrl ?? null)}
             target="_blank"
             rel="noreferrer"
-            className="underline"
+            className="text-link underline"
           >
             {citation.licence}
           </a>
