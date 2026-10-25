@@ -8,9 +8,9 @@
 
 > Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [대화·검색 테스트](../../backend/tests/test_phase2.py) 참조.
 
-관련 문서: [요구사항과 단계 계획](REQUIREMENTS.md), [출처 검증](../guides/DATA_SOURCES.md), [API 계약](API_SPEC.md).
+관련 문서: [프로젝트 명세](PROJECT_SPEC.md), [출처 검증](../guides/DATA_SOURCES.md), [API 계약](API_SPEC.md).
 
-> 2026-10-22 구조 정리: 실행 코드를 `backend/app`으로 이동하고 기능별 `APIRouter`·공통 의존성·예외 처리·미들웨어를 분리함. 현재 경로와 검증은 [백엔드 구조](BACKEND_STRUCTURE.md) 참조. 단계별 업데이트 문구는 당시 기록으로 유지함.
+> 2026-10-22 구조 정리: 실행 코드를 `backend/app`으로 이동하고 기능별 `APIRouter`·공통 의존성·예외 처리·미들웨어를 분리함. 현재 경로는 [앱 진입점](../../backend/app/main.py)과 [API 라우터](../../backend/app/api/router.py) 참조. 단계별 업데이트 문구는 당시 기록으로 유지함.
 
 ## 1. 구조와 책임
 
@@ -216,7 +216,7 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 | R10 높음 | 세션별 대화 혼입·키/추적 노출 | 소유 세션 검사, 안전한 오류, 비밀정보 검사. 외부 공개 전 별도 인증 |
 | R11 중간 | 작업 재시작/중복 전송 | 상태 복구·요청 idempotency·완료 manifest. 단일 프로세스 제한 |
 
-위험의 존재는 Phase 0 문서 작성 실패를 뜻하지 않음. 관련 구현을 시작할 때 해결해야 할 조건이며, 기능 실행 검증은 [단계 계획](REQUIREMENTS.md)에 따라 수행함.
+위험의 존재는 Phase 0 문서 작성 실패를 뜻하지 않음. 관련 구현을 시작할 때 해결해야 할 조건이며, 기능 실행 검증은 [프로젝트 명세](PROJECT_SPEC.md)에 따라 수행함.
 
 ## Phase 3 구현 반영
 
@@ -236,7 +236,7 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - `backend/app/rag/embeddings.py`: 기존 MiniLM 모델·256토큰·평균 풀링·정규화를 독립 실행함.
 - 대화·메시지 순서는 identity `seq`로 유지함. 작업 중복 요청은 PostgreSQL 트랜잭션 advisory lock, 상태 갱신은 행 잠금으로 보호함.
 - JSON은 기준 데이터·출처 스냅샷으로 유지함. 런타임 상태와 벡터는 PostgreSQL에 저장함. `runtime`은 로컬 임베딩 모델 캐시에 사용함.
-- 이전·실행·검증과 한계는 [PostgreSQL 전환 안내](../guides/POSTGRESQL_MIGRATION.md) 참조.
+- 이전·실행 절차는 [PostgreSQL 전환 안내](../guides/OPERATIONS.md#postgresql--pgvector-저장검색-통합) 참조.
 
 
 ## Phase 4 MMR 반영

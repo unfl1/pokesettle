@@ -208,9 +208,9 @@ poketact/
 ├── damage_service/           # optional; add only if needed
 ├── data/{regulations,documents}/
 └── docs/
-    ├── README.md
-    ├── design/{PROJECT_SPEC.md,REQUIREMENTS.md,ARCHITECTURE.md,API_SPEC.md,BACKEND_STRUCTURE.md}
-    └── guides/{DATA_SOURCES.md,POSTGRESQL_MIGRATION.md}
+    ├── design/{PROJECT_SPEC.md,ARCHITECTURE.md,API_SPEC.md}
+    ├── guides/{DATA_SOURCES.md,OPERATIONS.md}
+    └── private/LEARNING_GUIDE.md  # ignored local learning guide
 ```
 
 Do not create empty boilerplate directories unnecessarily. Start small and evolve as features are implemented.

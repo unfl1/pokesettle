@@ -32,7 +32,7 @@ PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Within the user's requested objective, choose implementation order and complete necessary related work autonomously.
 - Explain changes, tests, limitations, and next steps in Korean.
 - After each completed task, update the single ignored local learning guide at `docs/private/LEARNING_GUIDE.md` with what changed, why it changed, concepts the user should study, and relevant code paths. Keep Phase 0 through current work in this file; update its relevant sections instead of creating separate phase-specific learning notes.
-- Do not create standalone work reports, submission documents, or checklists unless the user explicitly requests them. The default task document is the local learning note, not a public repository artifact.
+- Keep documentation in the existing project instructions, specifications, API/architecture references, operations guide, source/license records, and the single local learning guide. Do not create additional Markdown files, per-directory READMEs, standalone work reports, submission documents, or checklists unless the user explicitly requests them. The default task document is the local learning note, not a public repository artifact.
 
 ## Documentation and PR style
 - Apply this style to all project-authored Korean Markdown, README files, design documents, reports, result summaries, and pull request titles/descriptions, including newly created files.

@@ -5,7 +5,7 @@
 
 현재 API 확인: [실행 중 Swagger UI](http://127.0.0.1:8000/docs)·[라우터 정의](../../backend/app/api/routers/) 참조, 아래 설계 예시와 실제 구현이 다르면 실행 중 API 계약 우선
 
-관련 문서: [요구사항](REQUIREMENTS.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](../guides/DATA_SOURCES.md).
+관련 문서: [프로젝트 명세](PROJECT_SPEC.md), [아키텍처·데이터](ARCHITECTURE.md), [출처](../guides/DATA_SOURCES.md).
 
 ## 1. 공통 규약
 

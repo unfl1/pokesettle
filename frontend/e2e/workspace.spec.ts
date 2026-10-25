@@ -222,6 +222,37 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
   };
 }
 
+test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새로고침 시 초기화', async ({ page }) => {
+  await fixture(page);
+  const chatRequests: string[] = [];
+  page.on('request', request => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/chat') {
+      chatRequests.push(request.postData() ?? '');
+    }
+  });
+  await page.goto('/');
+  const input = page.getByLabel('포켓몬 질문');
+  const send = page.getByRole('button', { name: '질문 보내기' });
+  await expect(page.getByRole('button', { name: '대화 초기화', exact: true })).toBeEnabled();
+  await expect(input).toHaveValue('');
+  await expect(send).toBeDisabled();
+
+  await page.getByRole('button', { name: '현재 대면에서 어떻게 할까?' }).click();
+  await expect(input).toHaveValue('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?');
+  await expect(send).toBeEnabled();
+  await expect(page.getByTestId('user-message')).toHaveCount(0);
+
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
+  await expect(input).toHaveValue('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?');
+
+  await page.reload();
+  await expect(page.getByRole('button', { name: '대화 초기화', exact: true })).toBeEnabled();
+  await expect(input).toHaveValue('');
+  await expect(send).toBeDisabled();
+  expect(chatRequests).toEqual([]);
+});
+
 test('위키 인용의 원문 버전·기여자·라이선스 표시와 기록 복원', async ({ page }) => {
   await fixture(page, [], false, true);
   await page.goto('/');

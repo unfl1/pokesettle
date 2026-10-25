@@ -1,4 +1,4 @@
-# 자동 배포와 운영 관측
+# 배포·운영 지침
 
 ## 구성
 
@@ -142,3 +142,224 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 - 관측: Grafana의 시간당 예약 토큰·차단 사유별 횟수 패널, 반복 차단 경보 추가; 예약량 누계는 프로세스 지표이며 강제 차단 기준은 DB 집계
 - 로컬 실제 모델 비교도 동일 전체 예산과 실행당 호출 제한 적용, 대규모 비교는 운영과 분리된 테스트 DB·키·한도 사용 권장
 - [CloudFront X-Forwarded-For 처리](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html)
+
+
+## Docker 백엔드 배포
+
+구성: FastAPI·참조 계산기·로컬 ONNX 임베딩을 포함한 백엔드 이미지와 PostgreSQL + pgvector 컨테이너
+
+### 서버 준비
+
+- Ubuntu 서버와 Docker Engine·Compose 플러그인 필요
+- 프로젝트 파일과 기준 데이터 전송, `.env`·SSH 키·로컬 DB·대화 기록·개인 문서는 소스 전송 대상에서 제외
+- `.env.production.example`을 `.env.production`으로 복사 후 서버에서 비밀값 설정, 파일 권한 `600` 적용
+- `POSTGRES_PASSWORD`는 서버별 고유 URL-safe 값 사용, `OPENAI_API_KEY`는 운영용 키 설정
+- `ALLOWED_ORIGINS`는 실제 프론트엔드 주소로 설정, CORS를 인증이나 요청 제한으로 간주하지 않음
+- 기존 DB 볼륨의 비밀번호는 환경변수 변경만으로 바뀌지 않으므로 별도 DB 계정 변경 절차 필요
+
+### 최초 실행
+
+```bash
+sudo docker compose --env-file .env.production -f compose.production.yaml config --quiet
+sudo docker compose --env-file .env.production -f compose.production.yaml build api
+sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait postgres
+sudo docker compose --env-file .env.production -f compose.production.yaml run --rm index
+sudo docker compose --env-file .env.production -f compose.production.yaml run --rm index python -m backend.scripts.index_strategy
+sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait api
+curl --fail http://127.0.0.1:8000/api/status
+```
+
+- 첫 색인 시 체크섬 검증된 임베딩 파일 다운로드 및 벡터 생성, 전략 색인 시 PokéAPI 자료 요청 발생
+- API는 단일 worker로 실행, PostgreSQL 준비 이후 시작
+- 상태 검사는 색인·모델 설정 여부 확인용이며 실제 모델 호출 성공 보장과 구분
+- PostgreSQL은 호스트 포트 미공개, FastAPI는 호스트 `127.0.0.1:8000`에만 바인딩
+- 인터넷 공개 전 HTTPS 프록시·접근 통제·요청 제한·API 지출 한도 구성 필요
+- S3·CloudFront와 HTTPS 프록시 구성은 [프론트엔드 배포](OPERATIONS.md#프론트엔드-배포) 참고
+- 개인 SSH 터널로 확인 시 `ssh -L 18000:127.0.0.1:8000 사용자@서버` 실행 후 로컬 `http://127.0.0.1:18000/docs` 접속
+
+### 업데이트와 데이터 유지
+
+```bash
+sudo docker compose --env-file .env.production -f compose.production.yaml build api
+sudo docker compose --env-file .env.production -f compose.production.yaml up -d --wait api
+sudo docker compose --env-file .env.production -f compose.production.yaml ps
+```
+
+- `postgres_data`: 대화·팀·출처 캐시·벡터 색인 보존
+- `runtime_data`: 다운로드한 임베딩 모델 보존
+- 기준 데이터·청킹·임베딩 설정 변경 시 재색인 필요
+- `down -v`는 DB 볼륨 삭제 명령이므로 운영 작업에서 사용 금지
+- 로그는 컨테이너별 10MB × 3개로 순환, 실제 키·전체 환경변수·대화 원문 출력 금지
+- `docker compose config`는 비밀값을 펼칠 수 있으므로 검증 시 `--quiet` 사용
+
+### DB 백업
+
+```bash
+install -d -m 700 backups
+umask 077
+sudo docker compose --env-file .env.production -f compose.production.yaml exec -T postgres pg_dump -U poketact -d poketact -Fc > backups/poketact.dump
+```
+
+- 백업 파일은 Git·이미지·공개 웹 경로 제외, 동일 서버의 백업만으로 장애 복구를 보장할 수 없으므로 별도 비공개 저장소와 복구 검증 필요
+- 복원 시 대상 DB·버전·기존 데이터 영향 확인 후 `pg_restore` 적용
+
+### 참고
+
+- [Docker Ubuntu 설치](https://docs.docker.com/engine/install/ubuntu/)
+- [Compose 준비 상태와 시작 순서](https://docs.docker.com/compose/how-tos/startup-order/)
+- [Lightsail 방화벽](https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-firewall-and-port-mappings-in-amazon-lightsail.html)
+
+
+## 프론트엔드 배포
+
+### 구성
+
+- React·Vite 빌드 결과를 비공개 S3 버킷에 저장, CloudFront OAC로만 읽기 허용
+- `www.example.com`을 CloudFront에 CNAME으로 연결, `us-east-1` ACM 인증서로 HTTPS 제공
+- S3·CloudFront에서 정적 파일 제공 기능 담당, 프론트 전용 Docker·Nginx 불필요
+- 선택 구성: CloudFront `/api`, `/api/*` → HTTPS Nginx → 호스트 `127.0.0.1:8000` FastAPI → 내부 PostgreSQL
+- 프론트만 배포한 경우 API 조회·대화·팀 저장 사용 불가, 백엔드 공개 연결은 별도 단계
+
+### 빌드와 최초 배포
+
+```bash
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend run build
+cd frontend/dist
+zip -r /tmp/poketact-frontend.zip index.html assets
+```
+
+- ZIP에 `index.html`·`assets/`만 포함, `.env`·소스·서버 키 업로드 제외
+- `VITE_*` 값은 브라우저에 공개되므로 API 키·DB 비밀번호 사용 금지
+- 인증된 AWS CloudShell에 ZIP·아래 Python 파일·SPA 함수 업로드, `boto3` 사용
+
+```bash
+python3 provision_frontend.py --domain example.com --bundle poketact-frontend.zip
+```
+
+- 코드: `deployment/aws/provision_frontend.py`
+- 생성 결과의 CloudFront 주소를 `www` CNAME으로 등록, ACM 검증 CNAME을 DNS에 등록
+- `~/poketact-deployment.json`은 다음 실행에 필요한 리소스 식별자 보관용, 다른 계정·배포에 재사용 금지
+- 배포 상태 JSON·원본 검증값·치환한 운영 Nginx 설정은 `.secrets/` 등 비공개 경로에 보관, Git에는 템플릿만 포함
+- ACM 상태 `ISSUED` 확인 후 도메인·SPA 함수 연결
+
+```bash
+python3 connect_frontend.py --function spa-rewrite.js
+```
+
+- 코드: `deployment/aws/connect_frontend.py`, `deployment/cloudfront/spa-rewrite.js`
+- SPA 경로만 `index.html`로 변환, API·정적 자산 오류를 HTML로 치환하지 않음
+- `index.html` 재검증, 해시 자산 1년 캐시·immutable 적용
+- 재배포 시 동일 상태 파일·버킷 사용, 빌드 업로드 후 CloudFront 무효화 필요
+
+### 선택 구성: HTTPS API 연결
+
+- Lightsail 고정 IP에 루트 도메인·`api` A 레코드 등록
+- 호스트 Nginx·Certbot 설치, `deployment/nginx/bootstrap.conf`로 80번 ACME 경로 준비
+- 루트·API 도메인의 웹루트 인증서 발급, 실제 경로로 `api.conf.template` 치환
+- 64자리 무작위 16진수 원본 검증값을 별도 비공개 파일에 보관, Git·로그·브라우저 배포 파일 제외
+- `/etc/nginx/poketact-private/origin-token.conf`는 root 전용 디렉터리·파일 권한 `700`·`600`으로 생성
+
+```nginx
+set $valid_origin_token 0;
+if ($http_x_poketact_origin = "REPLACE_WITH_PRIVATE_ORIGIN_TOKEN") { set $valid_origin_token 1; }
+```
+
+- 원본 검증값은 CloudFront 사용자 지정 원본 헤더와 Nginx에서 동일하게 설정, API 키와 별도 관리
+- `nginx -t` 통과 후 반영, Certbot deploy hook에 `reload-after-renewal.sh` 설치
+- `.env.production`의 `ALLOWED_ORIGINS`에 실제 프론트 HTTPS 주소 설정 후 API 컨테이너 재생성
+- 백엔드 공개 승인 이후 443번 개방 및 아래 연결 실행
+
+```bash
+python3 connect_frontend.py --function spa-rewrite.js --origin-token-file /private/path/origin-token
+```
+
+- API 캐시 비활성화, 쿠키·쿼리·요청 헤더 전달, Nginx 응답 `Cache-Control: no-store` 적용
+- 세션 쿠키 Secure·HttpOnly·SameSite=Lax 적용, DB·8000번 직접 공개 제외
+- 전체 쓰기 요청 분당 30회·순간 burst 5, 읽기 CloudFront 연결 IP별 초당 10회 적용
+- 원본 검증값은 서버 직접 호출 제한용이며 서비스 이용자 인증과 구분
+- 요청 제한은 AI 지출의 금액 상한을 보장하지 않음, 공개 운영 시 별도 사용량 관리 필요
+- 루트 HTTP·HTTPS는 HTTPS `www`로 이동, 나머지 HTTP 호스트는 인증서 검증 경로 외 404 반환
+
+### 참고
+
+- [CloudFront S3 원본 접근 제어](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html)
+- [CloudFront 대체 도메인 인증서](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html)
+- [CloudFront 관리형 원본 요청 정책](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+- [Nginx 프록시 모듈](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)
+
+
+## PostgreSQL + pgvector 저장·검색 통합
+
+변경일: 2026-10-22 (Asia/Seoul)
+
+### 구현
+
+| 원인 | 수정 | 결과 |
+|---|---|---|
+| 상태 저장에 SQLite 사용 | PostgreSQL·psycopg로 교체 | 세션·대화·팀·작업·캐시를 PostgreSQL에 저장함 |
+| SQLite 전용 SQL·행 순서 사용 | 매개변수·upsert·identity `seq` 적용 | 기존 API·대화 순서·세션 소유권 유지함 |
+| 동시 작업 요청·상태 갱신 경합 | 트랜잭션 advisory lock·`FOR UPDATE` 적용 | 동일 요청 ID 중복 생성과 상태 덮어쓰기 방지함 |
+| 이전 색인의 완료 캐시 재사용 위험 | 읽기 전용 이전·manifest/완료 캐시 제외·원문 재색인 | 실제 PostgreSQL 벡터 청크 확인 후 PostgreSQL에 완료 상태 생성함 |
+
+| 저장 대상 | 저장소 |
+|---|---|
+| 세션·대화·메시지·팀·작업·캐시·원문·manifest | PostgreSQL의 `sessions`, `conversations`, `messages`, `teams`, `jobs`, `cache` |
+| 포켓몬 메타·문서 청크·임베딩 | PostgreSQL `vector_collections`·`vector_entries`의 `pokemon_meta`·`pokemon_docs` 논리 컬렉션 |
+| 도감·출처·규칙 기준 스냅샷 | `data/` JSON |
+
+- 원본 PDF 5쪽의 Chroma 지정은 확인된 사실임. 사용자가 PostgreSQL + pgvector 통합을 선택함. 과제 측 대체 허용 확인과 구분함.
+- 기존 `runtime/embedding_model` 캐시 재사용함. ChromaDB·langchain-chroma 의존성과 런타임 저장 경로 제거함.
+- 메타데이터는 JSONB 동등 필터, 벡터는 `<->` 정확 L2 검색 적용함. 모델·차원 불일치와 비유한 벡터 입력 거부함.
+
+### 실행
+
+`.env.example`을 참고해 다음 항목 설정 필요함:
+
+- `POSTGRES_PASSWORD`: 로컬 Compose DB 비밀번호.
+- `DATABASE_URL`: 같은 사용자·비밀번호·포트·DB로 구성한 연결 URL. 비밀번호의 예약 문자는 URL 인코딩 필요함.
+- `DATABASE_SCHEMA`: 기본 `poketact`. 소문자 영문·숫자·밑줄 사용함.
+- `RUNTIME_DIR`: 기본 저장소의 `runtime`. 로컬 임베딩 모델 캐시 경로임. 벡터 데이터는 PostgreSQL에 저장함.
+- 기존 모델 공급자 설정 유지함. DB 연결 문자열은 설정 객체의 `repr`에서 제외함.
+
+```bash
+docker compose up -d --wait postgres
+uv sync --python 3.12 --frozen --group dev
+uv run --frozen python -m backend.scripts.index_data
+uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+- 기존 PostgreSQL 사용 시 Compose 시작 생략 가능함. UTF-8 DB·pgvector 설치·스키마 생성 권한 필요함. `CREATE EXTENSION vector WITH SCHEMA public` 실행 권한 또는 관리자의 사전 확장 생성 필요함.
+- Compose DB는 `127.0.0.1`에만 노출함. named volume에 데이터 유지함.
+- Compose는 pgvector 포함 PostgreSQL 이미지를 사용함. 별도 벡터 DB 서비스 불필요함.
+- 앱 모듈 import는 DB 연결을 수행하지 않음. 실제 서비스 초기화는 FastAPI lifespan에서 수행함.
+
+### 기존 데이터 이전
+
+기존 서버를 중지하고 빈 PostgreSQL 스키마를 대상으로 **색인 전에** 실행 필요함:
+
+```bash
+uv run --frozen python -m backend.scripts.migrate_sqlite runtime/state.sqlite3
+uv run --frozen python -m backend.scripts.index_data
+```
+
+- SQLite는 읽기 전용 연결·단일 읽기 스냅샷으로 처리함. 원본 파일 삭제·수정 없음.
+- 대상 상태 테이블 또는 벡터 색인에 데이터가 존재하면 이전 거부함. 복사는 하나의 PostgreSQL 트랜잭션으로 처리함.
+- 세션·대화·메시지·팀·작업·원문/HTTP 캐시 이전함. 메시지와 대화는 SQLite 삽입 순서 보존함.
+- 이미 PostgreSQL 상태 저장을 사용 중이면 SQLite 이전을 다시 실행하지 않고 `index_data`만 실행함. 기존 캐시·원문에서 새 벡터 색인 구성 가능함.
+- `manifest`·`query_complete` 캐시는 제외함. `index_data`가 기준 JSON과 이전한 `document` 원문 캐시로 pgvector 색인을 검증·재구축함.
+- 이전된 원문은 번들 JSON 색인 전에 읽어 보존하고 번들 색인 후 재적용함.
+- 앱 재시작 시 `queued`·`running` 작업은 기존 동작과 동일하게 `interrupted` 복구함.
+- 이전 도구 재실행 시 데이터 덮어쓰기 없음. 새 `DATABASE_SCHEMA`를 지정한 별도 이전 필요함.
+
+
+### 출처·라이선스
+
+확인일: 2026-10-22 (Asia/Seoul)
+
+- [Psycopg 공식 문서](https://www.psycopg.org/psycopg3/docs/): 연결·행 사전·트랜잭션·SQL 매개변수 참고함. 배포 패키지 라이선스 원문 유지함.
+- [pgvector 공식 문서](https://github.com/pgvector/pgvector): PostgreSQL License. 벡터 타입·L2 거리·정확 검색·Docker 구성 참고함.
+- [all-MiniLM-L6-v2 모델 카드](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2): Apache-2.0 모델, 영어 중심·384차원임.
+- [ONNX export 프로젝트](https://github.com/chroma-core/onnx-embedding): Apache-2.0 프로젝트. 기존 로컬 모델 캐시 재사용함. 배포 URL의 Chroma 명칭은 모델 호스팅 주소이며 ChromaDB 런타임 의존성과 구분함.
+
+- 모델 신규 다운로드는 SHA-256 `913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3` 검증 후 정규 파일 두 개만 추출함.

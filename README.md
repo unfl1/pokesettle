@@ -47,7 +47,7 @@ pnpm --dir frontend dev
 - DB 연결: `.env`의 `DATABASE_URL`·`DATABASE_SCHEMA` 설정, Compose 사용 시 `POSTGRES_PASSWORD` 설정 필수
 - 검색 방식: 기본 유사도 검색, `.env`의 `SEARCH_MODE=mmr` 설정으로 다양성을 고려한 검색 선택
 - 추가 출처: `WIKIPEDIA_ENABLED=true` 설정 시 피카츄·리자몽 종 배경용 Wikipedia 후보 수집 지원, [출처·구성 안내](docs/guides/DATA_SOURCES.md) 참조
-- 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/guides/POSTGRESQL_MIGRATION.md) 참조
+- 기존 SQLite 데이터 이전: [PostgreSQL 전환 안내](docs/guides/OPERATIONS.md#postgresql--pgvector-저장검색-통합) 참조
 - 최초 색인 시 임베딩 모델 다운로드 필요, 실제 답변 생성 시 설정한 공급자의 크레딧 사용
 - AI 호출은 입력·최대 출력·재시도를 사전 예약하며 하루 최대 23만 예약 토큰에서 차단, 한국 시간 오전 9시 초기화. `USAGE_DAILY_TOKENS`로 더 낮게 설정 가능
 - 무료 혜택은 OpenAI 계정의 데이터 공유·대상 모델·잔액 조건 충족 필요. 같은 조직의 다른 앱·직접 API 호출은 앱 한도에 포함되지 않아 별도 과금 가능
@@ -72,13 +72,10 @@ pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
 
 ## 문서와 출처
 
-- [전체 문서](docs/README.md) · [프로젝트 명세](docs/design/PROJECT_SPEC.md)
-- [요구사항](docs/design/REQUIREMENTS.md) · [아키텍처](docs/design/ARCHITECTURE.md) · [API 계약](docs/design/API_SPEC.md)
+- [작업 지침](AGENTS.md) · [프로젝트 명세](docs/design/PROJECT_SPEC.md)
+- [아키텍처](docs/design/ARCHITECTURE.md) · [API 계약](docs/design/API_SPEC.md)
+- [배포·운영 지침](docs/guides/OPERATIONS.md)
 - [출처·이용 조건](docs/guides/DATA_SOURCES.md)
-- [백엔드 구조·실행 경로](docs/design/BACKEND_STRUCTURE.md)
-- [Docker 백엔드 배포](docs/guides/DOCKER_DEPLOYMENT.md)
-- [S3·CloudFront 프론트엔드 배포](docs/guides/FRONTEND_DEPLOYMENT.md)
-- [GitHub Actions 자동 배포·Grafana 운영 관측](docs/guides/OPERATIONS.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [프로젝트 라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company
 
