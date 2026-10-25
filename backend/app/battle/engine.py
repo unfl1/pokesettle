@@ -3,6 +3,7 @@ from itertools import combinations
 from math import prod
 from pathlib import Path
 
+from backend.app.battle.selection_plan import build_selection_plan
 from backend.app.core.errors import ServiceError
 
 
@@ -191,6 +192,7 @@ class BattleEngine:
             **context,
             "score_kind": "heuristic_not_probability",
             "candidate_count": len(candidates),
+            "recommendation": build_selection_plan(self, body, own, opponent, candidates[0]),
             "candidates": candidates,
         }
 

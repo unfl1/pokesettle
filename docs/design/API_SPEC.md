@@ -230,7 +230,9 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 초안은 0–6마리, 기술 0–4개 허용. 빈 팀 이름·알 수 없는 ID·타입·0–100 밖의 HP·같은 종의 중복은 422. 폼이 달라도 종 ID 기준 중복 검사.
 - GET `/api/teams`: `{items,total}`. 생성 201, 조회·갱신 200, 삭제 204(본문 없음). 타 세션 자원은 404, 유효 세션 없으면 401.
 - POST `/api/teams/analyze`: `{own,opponent}`. 각각 1–6마리. 멤버별 `coverage`, `defense`, `sharedWeaknesses`, `roleGaps` 반환.
-- POST `/api/teams/select`: 양쪽 6마리 필수, 쓰러진 멤버 입력 거부. `candidateCount=20`, `scoreKind=heuristic_not_probability`, `candidates`와 점수 구성 반환. 합법 판정·승률 아님.
+- POST `/api/teams/select`: 양쪽 6마리 필수, 쓰러진 멤버 입력 거부. `candidateCount=20`, `scoreKind=heuristic_not_probability`, `candidates`와 점수 구성 반환. 합법 판정·승률 아님
+- 선출 `recommendation`: 최상위 조합의 `pokemonIds`, `leadId`, `leadReason`, 멤버별 `attackTargets`·`resistTargets`, 상대별 `matchups`, `uncoveredOpponentIds`·`noResistOpponentIds` 반환
+- `matchups`: 상대 ID, 공격 후보·타입·배율·가정 여부, 선봉의 공격/교체/주의 방향, 선봉 외 비약점 교체 후보 반환. 실제 피해·선공·생존 보장 없이 입력 기술 또는 자기 타입 공격 가정으로 비교
 - POST `/api/battle/analyze`, `/api/battle/recommend`: 동일 타입 비교 결과. 팀 본문에 `ownActive`, `opponentActive`(0부터 시작), `opponentAttackTypes`, `megaUsed`, `megaTargetId`, `switchBlocked` 추가 가능. 상태 boolean 생략 시 null/미확인.
 - 전투 결과: `options`의 공격/교체별 `comparisonOrder`, `multiplier`, `reason`, `risks`; 메가 `status`, `reason`, `typeComparison`. `recommendedAction=null`, `recommendationStatus=insufficient_battle_information` 유지.
 - 계산 공통: `scope=generic`, `regulationId=null`, `facts`, 문자열 배열 `assumptions`·`unknowns`, 출처 배열 `citations`, `calculation.status=type_only`. `damage`, `koProbability`, `winProbability`는 null. 기존 RAG `GroundedResult`와 별도 타입.

@@ -271,3 +271,118 @@ def test_opponent_fainted_selection_and_existing_mega_form(battle_setup):
     assert response["mega"]["status"] == "already_mega_form"
     assert response["mega"]["type_comparison"] is None
     assert any("HP 미입력" in a for a in response["assumptions"])
+
+
+def test_selection_plan_matches_calculated_candidates_and_type_evidence(battle_setup):
+    e = engine(battle_setup)
+    body = TeamAnalysis(
+        own=[member(i) for i in range(1, 7)], opponent=[member(i) for i in range(1, 7)]
+    )
+    result = e.selection(body)
+    plan = result["recommendation"]
+    assert plan["pokemon_ids"] == result["candidates"][0]["pokemon_ids"]
+    assert plan["lead_id"] == result["candidates"][0]["lead_id"]
+    assert len(plan["matchups"]) == 6
+    assert len(plan["members"]) == 3
+    selected = set(plan["pokemon_ids"])
+    for row in plan["matchups"]:
+        enemy = battle_setup.catalog.get(row["opponent_id"])
+        if row["attacker_id"]:
+            assert row["attacker_id"] in selected
+            assert row["attack_multiplier"] == e.multiplier(row["attack_type"], enemy.types)
+        if row["pivot_id"]:
+            assert row["pivot_id"] in selected - {plan["lead_id"]}
+            assert row["pivot_multiplier"] <= 1
+        if row["lead_action"] == "switch":
+            assert row["lead_incoming_multiplier"] > 1
+            assert row["pivot_id"]
+    for role in plan["members"]:
+        assert role["attack_assumed"] is True
+        own_pokemon = battle_setup.catalog.get(role["pokemon_id"])
+        for target in role["attack_targets"]:
+            assert any(
+                e.multiplier(t, battle_setup.catalog.get(target).types) > 1
+                for t in own_pokemon.types
+            )
+
+
+def test_selection_plan_does_not_invent_attacks_for_status_only_team(battle_setup):
+    body = TeamAnalysis(
+        own=[
+            member(i, moves=[{"name": "변화 기술", "type": "normal", "category": "status"}])
+            for i in range(1, 7)
+        ],
+        opponent=[member(i) for i in range(1, 7)],
+    )
+    plan = engine(battle_setup).selection(body)["recommendation"]
+    assert all(not row["attack_targets"] and not row["attack_assumed"] for row in plan["members"])
+    assert len(plan["uncovered_opponent_ids"]) == 6
+    for row in plan["matchups"]:
+        assert row["attacker_id"] is None
+        assert row["attack_multiplier"] is None
+        assert row["lead_action"] != "attack"
+
+
+def test_selection_plan_respects_explicit_coverage_and_opponent_attacks(battle_setup):
+    body = TeamAnalysis(
+        own=[
+            member(i, moves=[{"name": "입력 전기 기술", "type": "electric"}]) for i in range(1, 7)
+        ],
+        opponent=[
+            member(i, moves=[{"name": "입력 불꽃 기술", "type": "fire"}]) for i in range(1, 7)
+        ],
+    )
+    plan = engine(battle_setup).selection(body)["recommendation"]
+    for row in plan["matchups"]:
+        assert row["attack_type"] == "electric"
+        assert row["incoming_types"] == ["fire"]
+        assert not row["attack_assumed"] and not row["incoming_assumed"]
+    assert "pokemon:5" in plan["uncovered_opponent_ids"]  # Ground immunity.
+
+
+def test_selection_opening_switch_uses_only_selected_resisting_pivot(battle_setup):
+    from backend.app.battle.selection_plan import build_selection_plan
+
+    e = engine(battle_setup)
+    body = TeamAnalysis(
+        own=[member(i) for i in range(1, 7)], opponent=[member(i) for i in range(1, 7)]
+    )
+    body = TeamAnalysis(
+        own=body.own,
+        opponent=[
+            member(i, moves=[{"name": "불꽃 공격", "type": "fire"}]) if i == 2 else member(i)
+            for i in range(1, 7)
+        ],
+    )
+    own = e.validate_members(body.own)
+    opponent = e.validate_members(body.opponent)
+    candidate = {"pokemon_ids": ["pokemon:1", "pokemon:3", "pokemon:6"], "lead_id": "pokemon:1"}
+    plan = build_selection_plan(e, body, own, opponent, candidate)
+    fire = next(m for m in plan["matchups"] if m["opponent_id"] == "pokemon:2")
+    assert fire["lead_action"] == "switch"
+    assert fire["pivot_id"] == "pokemon:3"
+    assert fire["pivot_multiplier"] == 0.5
+    assert fire["lead_incoming_multiplier"] == 2
+    assert fire["attacker_id"] == "pokemon:3"
+    assert fire["attack_multiplier"] == 2
+
+
+def test_selection_switch_can_use_neutral_defense_with_super_effective_counter(battle_setup):
+    from backend.app.battle.selection_plan import build_selection_plan
+
+    e = engine(battle_setup)
+    body = TeamAnalysis(
+        own=[member(i) for i in range(1, 7)], opponent=[member(i) for i in range(1, 7)]
+    )
+    plan = build_selection_plan(
+        e,
+        body,
+        e.validate_members(body.own),
+        e.validate_members(body.opponent),
+        {"pokemon_ids": ["pokemon:2", "pokemon:4", "pokemon:6"], "lead_id": "pokemon:2"},
+    )
+    water = next(m for m in plan["matchups"] if m["opponent_id"] == "pokemon:3")
+    assert water["lead_action"] == "switch"
+    assert water["pivot_id"] == "pokemon:4"
+    assert water["pivot_multiplier"] == 1
+    assert water["attack_multiplier"] == 2

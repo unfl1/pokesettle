@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SelectionRecommendation from './SelectionRecommendation';
 import DamagePanel from '../../damage/components/DamagePanel';
 import {
   useMutation,
@@ -324,7 +325,7 @@ export default function TeamWorkspace({
               }
               onClick={selection.run}
             >
-              3마리 선출 비교
+              3마리·선봉 추천
             </button>
           </div>
           <p className="mt-2 text-[11px] text-muted">
@@ -400,10 +401,21 @@ export default function TeamWorkspace({
           )}
           {selection.data && (
             <div className="mt-5">
-              <h2 className="text-[14px] font-semibold">
+              {selection.data.recommendation && <SelectionRecommendation
+                plan={selection.data.recommendation}
+                label={label}
+                onApply={() => {
+                  setOwnActive(own.findIndex(m => m.pokemonId === selection.data!.recommendation!.leadId));
+                  setTab('battle');
+                }}
+                onAsk={() => onAsk(`내 팀(${own.map(m => label(m.pokemonId)).join(', ')})과 상대 팀(${opponent.map(m => label(m.pokemonId)).join(', ')})에서 추천 선출은 ${selection.data!.recommendation!.pokemonIds.map(label).join(', ')}이고 선봉은 ${label(selection.data!.recommendation!.leadId)}입니다. 이 조합의 운영과 상대별 주의점을 전략 자료의 근거와 함께 설명해 주세요. 입력된 팀 정보: ${JSON.stringify({ own, opponent })}. 기술 미입력 멤버는 자기 타입 공격을 가정한 계산이며 실제 기술 보유를 확정하지 마세요.`)}
+              />}
+              <details className="mt-4">
+              <summary className="cursor-pointer text-sm text-muted">다른 조합과 점수 비교</summary>
+              <h2 className="mt-3 text-[14px] font-semibold">
                 선출 후보 {selection.data.candidateCount}개 · 휴리스틱 점수
               </h2>
-              <p className="mt-2 text-[12px] text-muted">
+              <p className="mt-2 text-[11px] text-muted">
                 점수 = 약점 공략 상대 수×2 + 가정 공격 반감 대응 수 - 중복 약점
                 수 · 참가 합법성·승률 미검증
               </p>
@@ -426,6 +438,7 @@ export default function TeamWorkspace({
                   </li>
                 ))}
               </ol>
+              </details>
               <Evidence result={selection.data} />
             </div>
           )}
