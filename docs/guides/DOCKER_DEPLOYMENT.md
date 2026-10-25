@@ -62,3 +62,9 @@ sudo docker compose --env-file .env.production -f compose.production.yaml exec -
 - [Docker Ubuntu 설치](https://docs.docker.com/engine/install/ubuntu/)
 - [Compose 준비 상태와 시작 순서](https://docs.docker.com/compose/how-tos/startup-order/)
 - [Lightsail 방화벽](https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-firewall-and-port-mappings-in-amazon-lightsail.html)
+
+### 빌드 이미지 실행 검사
+
+- CI에서 이미지 빌드 후 `docker run --rm --network none --entrypoint python 이미지태그 -m backend.scripts.smoke_image` 실행
+- 앱 모듈 로딩·도감/습득 기술 자료·지원 기술 JSON·Node 참조 계산기의 84–102 HP 회귀 확인, 운영 환경변수·DB·모델 호출 없이 실행
+- `.dockerignore`는 허용 목록 방식이므로 새 런타임 파일 추가 시 이미지 포함 여부 확인 필요

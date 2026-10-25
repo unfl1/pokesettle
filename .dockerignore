@@ -15,6 +15,7 @@ backend/calculator/*
 !backend/calculator/package.json
 !backend/calculator/pnpm-lock.yaml
 !backend/calculator/calculate.cjs
+!backend/calculator/supported_moves.json
 !backend/calculator/LICENSE.smogon-calc
 !data/
 data/*
