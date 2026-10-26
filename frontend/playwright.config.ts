@@ -15,7 +15,7 @@ export default defineConfig({
     screenshot: 'off',
     trace: 'off',
   },
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_EXTERNAL_SERVER === '1' ? undefined : {
     command: 'cp -R public .next/standalone/ && cp -R .next/static .next/standalone/.next/ && node .next/standalone/server.js',
     env: { HOSTNAME: '127.0.0.1', PORT: '5173' },
     url: 'http://127.0.0.1:5173',
