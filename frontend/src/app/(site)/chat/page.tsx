@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import ChatWorkspace from '../../ChatWorkspace';
+import ChatWorkspace from '../../../features/chat/components/ChatWorkspace';
 
 export const metadata: Metadata = { title: '챗봇' };
 

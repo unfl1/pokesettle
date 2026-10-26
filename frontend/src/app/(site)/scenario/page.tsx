@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import ScenarioWorkspace from '../../ScenarioWorkspace';
+import ScenarioWorkspace from '../../../features/team/components/ScenarioWorkspace';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: '6:6 시나리오' };

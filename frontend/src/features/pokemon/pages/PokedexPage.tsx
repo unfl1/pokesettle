@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkspaceContext } from "../../../app/providers";
+import { useWorkspaceContext } from "../../../providers/AppProviders";
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';

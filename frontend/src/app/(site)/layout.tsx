@@ -1,8 +1,8 @@
 import { Suspense, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { AppProviders } from '../providers';
-import WorkspaceHeader from '../WorkspaceHeader';
+import { AppProviders } from '../../providers/AppProviders';
+import WorkspaceHeader from '../../components/layout/WorkspaceHeader';
 
 export default function WorkspaceLayout({ children }: { children: ReactNode }) {
   return <AppProviders><div className="app-shell">
