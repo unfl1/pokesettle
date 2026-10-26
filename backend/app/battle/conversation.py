@@ -599,9 +599,9 @@ def coach_fallback(context, evidence):
         team = ", ".join(names[pid] for pid in best["pokemon_ids"])
         parts = best["components"]
         texts = [
-            f"일반적인 타입 상성 기준으로 {team} 선출을 추천합니다. 선봉 후보는 {names[best['lead_id']]}입니다.",
-            f"이 조합은 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 공격 타입을 포함하며, 상대의 가정 공격을 반감·무효화할 수 있는 대응 시나리오는 {parts['resisted_scenarios']}개입니다.",
-            "주의사항\n기술을 입력하지 않은 멤버는 자신의 타입 공격을 가진 일반적인 상황으로 비교했습니다. 특성·도구·실제 기술·속도와 상대 선출에 따라 추천은 달라질 수 있습니다. 비교 점수는 승률이 아닙니다.",
+            f"타입 상성만 보면 {team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
+            f"이 조합에 포함된 공격 타입으로 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 수 있어요. 상대가 쓸 것으로 가정한 공격을 반감하거나 무효화하는 대응은 {parts['resisted_scenarios']}개예요.",
+            "다만,\n기술을 알려주지 않은 멤버는 자기 타입의 공격 기술이 있다고 가정했어요. 특성·도구·실제 기술·스피드와 상대 선출에 따라 추천이 달라질 수 있어요. 비교 점수는 승률을 뜻하지 않아요.",
         ]
         return Generation(
             answer_status="partial",
@@ -654,13 +654,13 @@ def coach_fallback(context, evidence):
         )
     )
     directions = {
-        "need_new_opponent": "상대가 쓰러진 상태로 입력됐습니다. 다음 상대를 알려주시면 대면을 다시 비교하겠습니다.",
-        "consider_switch_first": "일반적인 대면에서는 상대 공격을 받아줄 수 있는 포켓몬으로 교체하는 것을 추천합니다.",
-        "replacement_required": "입력한 HP가 0%이므로 현재 포켓몬의 공격보다 다음에 내보낼 포켓몬을 확인해야 합니다.",
-        "compare_attacks_switch_blocked": "교체가 봉쇄됐다고 입력했으므로 공격·보조 기술 선택을 비교해야 합니다.",
-        "consider_attack_if_available": "일반적으로 상대 약점을 찌르는 공격을 추천합니다.",
-        "consider_attack_with_speed_and_hp_check": "일반적으로 약점을 찌르는 보유 기술로 공격하는 것을 추천합니다.",
-        "compare_attacks_and_switches": "타입만으로 교체를 우선할 근거가 충분하지 않아 보유 기술과 교체 후보를 함께 비교해야 합니다.",
+        "need_new_opponent": "상대가 쓰러진 상태네요. 다음에 나온 상대를 알려주시면 다시 살펴볼게요.",
+        "consider_switch_first": "타입 상성만 보면, 상대 공격을 더 유리한 상성으로 받는 팀원으로 교체하는 쪽을 추천해요.",
+        "replacement_required": "남은 HP가 0%라서 다음에 내보낼 포켓몬을 골라야 해요.",
+        "compare_attacks_switch_blocked": "교체가 막혀 있으니, 지금 쓸 수 있는 공격 기술과 보조 기술을 비교해 봐야 해요.",
+        "consider_attack_if_available": "상대 약점을 찌를 기술이 있다면 그 기술로 공격하는 쪽을 추천해요.",
+        "consider_attack_with_speed_and_hp_check": "보유 기술 중 상대 약점을 찌르는 기술로 공격하는 쪽을 추천해요.",
+        "compare_attacks_and_switches": "타입만으로는 교체가 더 낫다고 보기 어려워요. 쓸 수 있는 기술과 교체할 팀원을 함께 살펴보면 좋겠어요.",
     }
     direction = directions.get(context["recommendation"])
     if direction is None:
@@ -671,7 +671,7 @@ def coach_fallback(context, evidence):
         if item["pokemon_id"] in context.get("preferred_switch_ids", [])
     ]
     if preferred and context["recommendation"] in {"consider_switch_first", "replacement_required"}:
-        direction = f"일반적으로 {', '.join(item['name'] for item in preferred)} 교체를 추천합니다. 상대 공격을 더 유리한 타입 상성으로 받을 수 있습니다."
+        direction = f"타입 상성만 보면 {', '.join(item['name'] for item in preferred)} 교체를 추천해요. 상대 공격을 더 유리한 상성으로 받을 수 있어요."
     favorable = sorted(
         [item for item in context["attacks"] if item["multiplier"] > 1],
         key=lambda item: -item["multiplier"],
@@ -684,9 +684,9 @@ def coach_fallback(context, evidence):
         elif context["attacks"] and all(
             item["multiplier"] < 1 for item in context["attacks"]
         ):
-            direction = "현재 비교한 공격은 모두 반감되거나 통하지 않습니다. 다른 타입의 공격 기술이 없다면 교체를 우선 추천합니다."
+            direction = "지금 비교한 공격은 모두 반감되거나 통하지 않아요. 다른 타입의 공격 기술이 없다면 교체하는 쪽을 추천해요."
         elif not context["attacks"]:
-            direction = "현재 입력된 기술 중 비교할 수 있는 공격 기술이 없습니다. 공격 기술이 없다면 교체를 우선 검토하세요."
+            direction = "알려주신 기술 중에는 상성을 비교할 수 있는 공격 기술이 없어요. 쓸 공격 기술이 없다면 교체를 고려해 보세요."
     if (
         context["recommendation"]
         in {
@@ -712,9 +712,9 @@ def coach_fallback(context, evidence):
             if move
             else type_labels[attack_type] + " 타입 기술"
         )
-        direction = f"일반적으로 {label}로 공격하는 것을 추천합니다."
+        direction = f"타입 상성만 보면 {label}로 공격하는 쪽을 추천해요."
         if attack_candidates[0]["multiplier"] == 1:
-            direction += " 약점을 찌르지는 못하지만 반감 없이 맞힐 수 있어, 타입 상성만으로는 교체를 서두를 이유가 적습니다."
+            direction += " 약점을 찌르지는 못해도 반감되지는 않아서, 상성 때문에 교체를 서두를 필요는 적어요."
     texts = [direction]
     warnings = []
     for item in context["switches"]:
@@ -722,19 +722,19 @@ def coach_fallback(context, evidence):
             f"{type_labels.get(entry['type'], entry['type'])} {entry['multiplier']:g}배"
             for entry in item["defense"]
         )
-        texts.append(f"교체 후보 {item['name']}: 상대 공격에 {comparison}입니다.")
+        texts.append(f"{item['name']}로 교체하면 상대 공격을 {comparison}로 받아요.")
     for result in context.get("damage_comparisons", []):
         damage = result["calculation"]["damage"]
         inputs = result["inputs"]
         texts.append(
-            f"명시한 중립 참조 조건에서 {inputs['move']}의 피해 후보는 {damage['minimum']}~{damage['maximum']}입니다. 실제 게임 생존·KO 확정이나 승률이 아니며 특성·도구·능력치 변화가 있다면 이 결과를 적용할 수 없습니다."
+            f"입력한 중립 참조 조건에서 {inputs['move']}의 계산 피해 범위는 {damage['minimum']}~{damage['maximum']}예요. 실제 게임에서 버티거나 쓰러뜨린다는 보장은 아니에요. 특성·도구·능력치 변화가 있다면 이 계산을 그대로 적용할 수 없어요."
         )
     if (
         context["state"].get("opponent_attack_stage") is not None
         or context["state"].get("opponent_speed_stage") is not None
     ):
         warnings.append(
-            "상대 능력치 변화 입력이 있으므로 기본 종족값만으로 선공·생존을 판단할 수 없습니다. 실제 스피드와 변화가 반영된 피해 비교가 필요합니다."
+            "상대 능력치가 변한 상태라 기본 종족값만으로 먼저 움직이거나 버틸 수 있다고 판단하기는 어려워요. 실제 스피드와 능력치 변화를 반영한 피해 비교가 필요해요."
         )
     favorable = sorted(
         [item for item in context["attacks"] if item["multiplier"] > 1],
@@ -743,7 +743,7 @@ def coach_fallback(context, evidence):
     for item in favorable[:2]:
         name = type_labels.get(item["type"], item["type"])
         texts.append(
-            f"{context['opponent_name']}는 {name} 공격에 {item['multiplier']:g}배 약점입니다."
+            f"{context['opponent_name']}는 {name} 공격에 {item['multiplier']:g}배 약점이에요."
         )
         if item.get("ground_switch_immunity"):
             warnings.append(
@@ -755,10 +755,10 @@ def coach_fallback(context, evidence):
             "타입 상성상 "
             + " ".join(
                 f"{type_labels[item['type']]} 공격은 "
-                + ("통하지 않습니다." if item["multiplier"] == 0 else f"{item['multiplier']:g}배로 반감됩니다.")
+                + ("통하지 않아요." if item["multiplier"] == 0 else f"{item['multiplier']:g}배로 반감돼요.")
                 for item in ineffective
             )
-            + " 해당 공격을 반복하기보다 반감되지 않는 다른 기술이나 교체를 검토하세요."
+            + " 반감되지 않는 다른 기술을 쓰거나 교체를 고려해 보세요."
         )
     risks = [item for item in context["defense"] if item["multiplier"] > 1]
     if risks:
@@ -768,7 +768,7 @@ def coach_fallback(context, evidence):
                 f"{type_labels.get(item['type'], item['type'])} 공격은 {item['multiplier']:g}배"
                 for item in risks
             )
-            + "로 받습니다. 상대가 해당 기술을 보유했는지는 공개 정보와 구분해야 합니다."
+            + "로 받아요. 상대가 실제로 그 기술을 갖고 있는지는 따로 확인해야 해요."
         )
     if context.get("type_change"):
         change = context["type_change"]
@@ -777,14 +777,14 @@ def coach_fallback(context, evidence):
             + change["type"]
             + "로만 바꾼 가정에서는 "
             + ", ".join(f"{item['type']} 공격 {item['multiplier']}배" for item in change["defense"])
-            + "입니다. 실제 사용 가능 여부와 해당 타입 기술 보유는 별도 확인이 필요합니다."
+            + "예요. 실제로 타입을 바꿀 수 있는지, 그 타입의 기술도 갖고 있는지는 따로 확인해야 해요."
         )
     if any(item.get("basis") == "if_available" for item in context["attacks"]):
-        warnings.append("추천한 타입의 기술을 실제로 보유한 경우의 일반적인 판단입니다.")
+        warnings.append("추천한 타입의 공격 기술이 실제로 있다는 가정이에요.")
     warnings.append(
-        "남은 HP·선공 여부·특성·도구에 따라 선택은 달라질 수 있으며, 타입 배율이 KO나 승률을 뜻하지는 않습니다."
+        "남은 HP·선공 여부·특성·도구에 따라 선택은 달라질 수 있어요. 타입 배율만으로 KO나 승률을 알 수는 없어요."
     )
-    texts.append("주의사항\n" + "\n".join(warnings))
+    texts.append("다만,\n" + "\n".join(warnings))
     return Generation(
         answer_status="partial",
         claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],

@@ -8,7 +8,48 @@ from types import SimpleNamespace
 import pytest
 
 from deployment import receive_release as receiver
+from deployment.check_production import check as check_production
 from deployment.package_release import package
+
+
+@pytest.mark.parametrize("failure", [None, "old_home", "redirect", "chat", "assets", "asset_status", "api"])
+def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
+    base = "https://www.example.com"
+    asset = "/_next/static/app.js"
+    calls = []
+
+    class Response(io.BytesIO):
+        def __init__(self, url, text, status=200):
+            super().__init__(text.encode())
+            self.url = url
+            self.status = status
+
+    def open_url(url, timeout):
+        calls.append(url)
+        if url == base + "/api/status":
+            return Response(url, json.dumps({"data": {"ready": failure != "api"}}))
+        if url == base + asset:
+            return Response(url, "js", 404 if failure == "asset_status" else 200)
+        marker = "배틀 준비는 PokeTact에서." if url == base + "/" else "전략 챗봇"
+        if failure == "old_home" and url == base + "/":
+            marker = "전략 챗봇"
+        if failure == "chat" and url == base + "/chat":
+            marker = "PokeTact"
+        html = marker + (f'<script src="{asset}"></script>' if failure != "assets" else "")
+        return Response(base + "/chat" if failure == "redirect" else url, html)
+
+    monkeypatch.setattr("deployment.check_production.urllib.request.urlopen", open_url)
+    if failure:
+        with pytest.raises(ValueError):
+            check_production(base)
+    else:
+        check_production(base)
+        assert calls == [base + "/", base + "/chat", base + asset, base + "/api/status"]
+
+
+def test_public_smoke_rejects_plain_http():
+    with pytest.raises(ValueError, match="HTTPS"):
+        check_production("http://www.example.com")
 
 
 def make_bundle(path, changes=None):

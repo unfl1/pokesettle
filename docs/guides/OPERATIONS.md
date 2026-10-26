@@ -77,6 +77,14 @@ python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'r
 
 ## 배포 동작과 복구
 
+- PR의 `Verify / verify`: 공개 파일·Ruff·배포 Python·셸 정적 검사만 수행, 전체 회귀 검사는 PR 단계에서 실행하지 않음
+- `main` 병합 후 `Deploy production`: 같은 커밋의 백엔드 회귀·프론트 Docker/E2E·모니터링 통합 검증을 병렬로 1회 수행, 모두 통과한 이미지로 릴리스 생성 후 배포
+- 프론트엔드는 Docker 안에서 빌드·타입 검사 후 해당 이미지로 E2E 수행, 별도 호스트 Next.js 빌드 생략
+- `Verify` 수동 실행: 선택한 브랜치의 전체 검증·릴리스 패키징만 수행, 서버 배포 미수행
+- 캐시: 잠금 파일 기준 pip·uv·pnpm 저장소와 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치는 `--frozen` 유지, 테스트 결과 자체는 캐시하지 않음
+- E2E 브라우저: Ubuntu 러너에 기본 설치된 Chrome을 `CHROME_PATH`로 사용, 브라우저·시스템 라이브러리 중복 설치 생략, 실제 사용 버전은 Actions 로그에 출력
+- 릴리스: 같은 실행의 SHA별 이미지 아티팩트만 결합, 이미지 재빌드 없음, gzip 레벨 1로 압축 시간 절감, 운영 SSH·OIDC 권한은 기존 배포 job에만 부여
+
 - 전달 대상: Docker 이미지와 명시한 Compose·모니터링 설정만 포함한 압축 번들
 - 서버 수신기는 파일 목록·중복·심볼릭 링크·크기·커밋 SHA 확인 후 적용
 - 운영 환경변수는 서버 파일을 참조, 번들·Docker 빌드에 포함하지 않음
@@ -85,7 +93,7 @@ python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'r
 - 서버 준비 상태 실패 시 이전 API·기존 Next.js 이미지로 복구, 최초 Next.js 전환 실패 시 새 프론트 컨테이너 정지, 실패 실행은 Actions에서 실패로 표시
 - 현재·이전 릴리스 설정 및 이미지 보관, 그보다 오래된 전용 릴리스 정리
 - API 컨테이너 교체 중 짧은 중단 가능, 무중단 배포 보장 없음
-- 서버 배포 성공 후 CloudFront `/*` 캐시 무효화 및 완료 대기, 공개 HTML·Next.js 정적 자산·API 준비 상태 검사
+- 서버 배포 성공 후 CloudFront `/*` 캐시 무효화 및 완료 대기, 홈(`/`)·챗봇(`/chat`)의 경로·서버 렌더링·Next.js 정적 자산·API 준비 상태 검사
 - 공개 검사 실패 시 서버 배포는 이미 반영된 상태일 수 있음, 서버 내부 준비 상태와 CloudFront·Nginx 공개 경로를 각각 확인
 - S3 정적 파일 업로드 없음, 최초 Next.js 전환 시 아래 HTTPS 서버 원본 연결을 별도로 적용해야 함
 - `down -v` 사용 금지, 사용자 데이터 복원은 별도 백업·복구 절차 적용

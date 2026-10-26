@@ -8,7 +8,9 @@ from deployment.receive_release import CONFIG_FILES
 
 
 def package(image, destination):
-    with tarfile.open(destination, "w:gz") as archive:
+    # Fast compression keeps the bounded SSH bundle format without spending
+    # minutes recompressing Docker layers at gzip's default level.
+    with tarfile.open(destination, "w:gz", compresslevel=1) as archive:
         archive.add(image, arcname="image.tar", recursive=False)
         for name in sorted(CONFIG_FILES):
             # Keep the server bundle layout stable when repository files move.

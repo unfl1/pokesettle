@@ -10,13 +10,17 @@ from urllib.parse import urljoin, urlsplit
 def check(base):
     if urlsplit(base).scheme != "https":
         raise ValueError("HTTPS production URL required")
-    with urllib.request.urlopen(base, timeout=15) as response:
-        html = response.read().decode()
-    if "전략 챗봇" not in html:
-        raise ValueError("Server-rendered content not found")
-    assets = re.findall(r'(?:src|href)="(/_next/static/[^"\s]+)"', html)
-    if not assets:
-        raise ValueError("Frontend assets not found")
+    pages = {"/": "배틀 준비는 PokeTact에서.", "/chat": "전략 챗봇"}
+    assets = set()
+    for path, marker in pages.items():
+        with urllib.request.urlopen(urljoin(base, path), timeout=15) as response:
+            html = response.read().decode()
+            if response.status != 200 or urlsplit(response.url).path != path or marker not in html:
+                raise ValueError("Server-rendered content not found")
+        page_assets = re.findall(r'(?:src|href)="(/_next/static/[^"\s]+)"', html)
+        if not page_assets:
+            raise ValueError("Frontend assets not found")
+        assets.update(page_assets)
     for asset in assets:
         with urllib.request.urlopen(urljoin(base, asset), timeout=15) as response:
             if response.status != 200:

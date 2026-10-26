@@ -292,7 +292,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
                                 *[
                                     claim
                                     for claim in calculated.claims
-                                    if not claim.text.startswith("주의사항\n")
+                                    if not claim.text.startswith("다만,\n")
                                 ],
                                 *[
                                     claim
@@ -307,7 +307,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
                                 *[
                                     claim
                                     for claim in calculated.claims
-                                    if claim.text.startswith("주의사항\n")
+                                    if claim.text.startswith("다만,\n")
                                 ],
                             ],
                             assumptions=list(dict.fromkeys(calculated.assumptions)),

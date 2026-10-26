@@ -56,7 +56,7 @@ def test_selection_retrieves_evidence_without_discarded_generation_call(setup):
 
     result = build_graph(setup.vectors, SimpleNamespace(invoke=invoke), stages.append).invoke({'pokemon_id': own[0], 'question': '3마리와 선봉 추천', 'battle_context': context})['result']
     assert 'retrieving' in stages and 'validating_citations' in stages
-    assert '선출을 추천' in result['answer'] and '선봉 후보' in result['answer']
+    assert '조합을 추천' in result['answer'] and '선봉으로는' in result['answer']
     assert result['citations']
 
 
