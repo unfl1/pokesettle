@@ -140,10 +140,11 @@ def test_real_pipeline_persists_user_state_and_supplies_citable_calculation(setu
     second = setup.service.chat(request("남은 HP 40%에 물 테라를 가지고 있어", cid), session)
     assert second["battle_context"]["state"]["opponent_id"] == "pokemon:6"
     assert setup.store.get("battle_state", cid)["own_hp_percent"] == 40
-    assert (
-        payloads[-1]["battle_context_from_user_inputs_and_type_tool"]["state"]["own_id"]
-        == "pokemon:3"
-    )
+    import json
+
+    reference = payloads[-1]["battle_context_from_user_inputs_and_type_tool"]["evidence_id"]
+    calculation = next(item for item in payloads[-1]["evidence"] if item["evidence_id"] == reference)
+    assert json.loads(calculation["text"])["state"]["own_id"] == "pokemon:3"
     assert second["citations"][0]["source_type"] == "calculation"
     assert len(payloads[-1]["evidence"]) <= setup.settings.top_k
     # A fresh conversation must not inherit any battle inputs.

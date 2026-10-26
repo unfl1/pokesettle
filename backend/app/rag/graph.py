@@ -218,9 +218,19 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 answer_status="abstained", claims=[], assumptions=[], unknowns=["검색된 근거 없음"]
             )
         else:
+            battle_context = state.get("battle_context")
+            calculation_id = "battle-calculation:" + digest(battle_context)
+            if any(
+                item["evidence_id"] == calculation_id
+                and item.get("source_type") == "calculation"
+                for item in state["evidence"]
+            ):
+                # The complete calculation is already present in evidence. Refer to
+                # it once rather than serializing the same current inputs twice.
+                battle_context = {"evidence_id": calculation_id}
             payload = {
                 "question": state["question"],
-                "battle_context_from_user_inputs_and_type_tool": state.get("battle_context"),
+                "battle_context_from_user_inputs_and_type_tool": battle_context,
                 "history_for_interpretation_only": state.get("history", []),
                 "regulation_id": state.get("regulation_id"),
                 "evidence": state["evidence"],

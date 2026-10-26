@@ -109,3 +109,68 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
     assert generations[-1]['history_for_interpretation_only']
     assert all(isinstance(message['content'], str) for message in generations[-1]['history_for_interpretation_only'])
     assert isinstance(setup.store.history(cid)[-1]['content'], dict)
+
+
+@pytest.mark.parametrize('top_k', [2, 6])
+def test_current_matchup_fits_input_limit_without_losing_calculation(setup, monkeypatch, top_k):
+    import json
+    from types import SimpleNamespace
+
+    from backend.app.core.usage import active_usage
+    from backend.app.rag.model import StructuredModel, input_reservation
+    from backend.app.rag.vector_store import VectorStore
+    from backend.app.schemas import Document
+    from backend.tests.conftest import embed
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    settings = replace(
+        setup.settings, data_dir=ROOT / 'data', chunk_size=1000, chunk_overlap=200,
+        top_k=top_k, api_key='synthetic', chat_model='test',
+    )
+    vectors = VectorStore(settings, setup.store, embed, 'synthetic-test-32')
+    pair = ['pokemon:637', 'pokemon:914']
+    vectors.upsert_metadata([catalog.get(pid) for pid in pair])
+    for row in json.loads((ROOT / 'data/documents/species.json').read_text()):
+        if row['pokemon_id'] in pair:
+            vectors.index_document(row['pokemon_id'], Document.model_validate(row['document']))
+    context = evaluate_state({'own_id': pair[0], 'opponent_id': pair[1]}, catalog, settings.data_dir)
+    question = '나 지금 불카모스 냈는데 상대 웨이니발이야 나 어케 해?'
+    sent, reservations = [], []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        def with_structured_output(self, *args, **kwargs):
+            return self
+
+        def invoke(self, messages):
+            payload = json.loads(messages[1].content)
+            assert input_reservation(messages[0].content, payload, Generation.model_json_schema()) <= settings.model_max_input_tokens
+            if top_k == 6:
+                duplicated = {**payload, 'battle_context_from_user_inputs_and_type_tool': context}
+                assert input_reservation(messages[0].content, duplicated, Generation.model_json_schema()) > settings.model_max_input_tokens
+            sent.append(payload)
+            return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+
+    monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
+    token = active_usage.set((SimpleNamespace(reserve=lambda lease, amount: reservations.append(amount)), 'test'))
+    try:
+        state = build_graph(vectors, StructuredModel(settings)).invoke({
+            'pokemon_id': pair[0], 'context_pokemon_ids': pair, 'question': question,
+            'battle_context': context, 'history': [],
+        })
+    finally:
+        active_usage.reset(token)
+    payload = sent[0]
+    assert payload['question'] == question
+    if top_k == 6:
+        reference = payload['battle_context_from_user_inputs_and_type_tool']['evidence_id']
+        calculation = next(e for e in payload['evidence'] if e['evidence_id'] == reference)
+        assert json.loads(calculation['text']) == context
+        assert state['result']['citations']
+    else:
+        # Both selected metadata entries occupy Top-k: retain the full context.
+        assert payload['battle_context_from_user_inputs_and_type_tool'] == context
+    assert state['battle_context'] == context
+    assert reservations and max(reservations) <= settings.model_max_input_tokens + settings.model_max_output_tokens
