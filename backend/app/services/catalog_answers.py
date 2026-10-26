@@ -71,33 +71,33 @@ def answer_catalog(pokemon, fields, regulation_id=None):
             "fairy": "페어리",
         }
         facts.append(
-            f"{pokemon.name_ko or pokemon.name_en}의 일반 도감 타입은 {' / '.join(labels.get(t, t) for t in pokemon.types)}입니다."
+            f"{pokemon.name_ko or pokemon.name_en}의 도감상 타입은 {' / '.join(labels.get(t, t) for t in pokemon.types)} 타입이에요."
         )
     if "stats" in fields:
         stats = pokemon.base_stats
         facts.append(
-            f"종족값은 HP {stats.hp}, 공격 {stats.attack}, 방어 {stats.defense}, 특수공격 {stats.sp_attack}, 특수방어 {stats.sp_defense}, 스피드 {stats.speed}입니다."
+            f"종족값은 HP {stats.hp}, 공격 {stats.attack}, 방어 {stats.defense}, 특수공격 {stats.sp_attack}, 특수방어 {stats.sp_defense}, 스피드 {stats.speed}예요."
         )
     if "abilities" in fields:
         if pokemon.abilities:
             facts.append(
-                "도감에 등록된 특성 이름은 "
+                "도감에 등록된 특성은 "
                 + ", ".join(pokemon.abilities)
-                + "입니다. 현재 보유 특성을 뜻하지 않습니다."
+                + "예요. 지금 사용 중인 개체의 특성인지는 별도로 확인해야 해요."
             )
         else:
-            unknowns.append("현재 도감에 특성 이름이 등록되어 있지 않습니다.")
+            unknowns.append("현재 도감에는 특성 이름이 등록되어 있지 않아요.")
     if "description" in fields:
         if pokemon.description:
             facts.append("도감 설명: " + pokemon.description)
         else:
-            unknowns.append("현재 로컬 도감에 설명이 등록되어 있지 않습니다.")
+            unknowns.append("현재 도감에는 설명이 등록되어 있지 않아요.")
     if "moves" in fields:
         if pokemon.available_moves:
             facts.append("등록된 일반 기술 목록: " + ", ".join(pokemon.available_moves))
         else:
             unknowns.append(
-                "현재 로컬 도감에 습득 기술 목록이 없습니다. 기술 보유·현행 게임 습득 여부를 추측하지 않습니다."
+                "현재 로컬 도감에는 배울 수 있는 기술 목록이 없어요. 실제로 보유한 기술이나 현행 게임에서 배울 수 있는 기술은 아직 확인할 수 없어요."
             )
     eid = f"catalog:{pokemon.pokemon_id}"
     evidence = [

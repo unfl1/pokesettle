@@ -36,8 +36,8 @@ def test_real_six_vs_six_checks_all_combinations_and_explains_three_with_lead():
     )
     answer = coach_fallback(context, [{"source_type": "calculation", "evidence_id": "calc"}])
     assert len(context["selection"]["candidates"]) == 3
-    assert "선출을 추천" in answer.claims[0].text and "선봉 후보" in answer.claims[0].text
-    assert answer.claims[-1].text.startswith("주의사항\n")
+    assert "조합을 추천" in answer.claims[0].text and "선봉으로는" in answer.claims[0].text
+    assert answer.claims[-1].text.startswith("다만,\n")
     assert context["probability"] is None
 
 
@@ -113,7 +113,7 @@ def test_chat_selection_keeps_all_twelve_ids_and_persists_rosters(setup, monkeyp
     result = setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), session)
     assert len(seen[0]["candidate_pokemon"]) == 12
     assert result["battle_context"]["selection"]["candidate_count"] == 20
-    assert "선출을 추천" in result["answer"]
+    assert "조합을 추천" in result["answer"]
     assert setup.store.get("battle_state", result["conversation_id"])["opponent_team_ids"] == ENEMY
 
     followup = setup.service.chat(
@@ -160,4 +160,4 @@ def test_selection_rejects_unsupported_model_species_commentary(setup):
         {"pokemon_id": OWN[0], "question": "3마리 선출 추천", "battle_context": context}
     )["result"]
     assert "리자몽은 불꽃 공격에 약합니다" not in result["answer"]
-    assert "선출을 추천" in result["answer"]
+    assert "조합을 추천" in result["answer"]
