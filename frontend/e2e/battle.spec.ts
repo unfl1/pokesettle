@@ -168,7 +168,7 @@ async function fixture(page: Page) {
 }
 
 async function openTeams(page: Page) {
-  await page.goto('/');
+  await page.goto('/chat');
   await expect(
     page.getByRole('heading', { name: '전략 챗봇' }),
   ).toBeVisible();

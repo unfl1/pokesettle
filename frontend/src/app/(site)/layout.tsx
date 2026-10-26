@@ -10,7 +10,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
     <Suspense><WorkspaceHeader /></Suspense>
     <main id="main-content" tabIndex={-1} className="workspace-main">{children}</main>
     <footer className="site-footer">
-      <Link href="/chat" className="footer-brand">PokeTact<span>포켓몬을 이해하는 더 나은 방법</span></Link>
+      <Link href="/" className="footer-brand">PokeTact<span>포켓몬을 이해하는 더 나은 방법</span></Link>
       <span>비공식 포켓몬 전략 도우미 <ArrowUpRight size={12} /></span>
     </footer>
   </div></AppProviders>;

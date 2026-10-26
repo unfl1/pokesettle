@@ -15,7 +15,7 @@ test('실제 API·DB·Node 계산기와 UI의 조건부 KO 연결', async ({ pag
   } });
   expect(own.ok()).toBeTruthy();
   expect(opponent.ok()).toBeTruthy();
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
   await page.getByLabel('저장한 내 팀', { exact: true }).selectOption({ label: '통합 공격자' });
   await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption({ label: '통합 방어자' });
