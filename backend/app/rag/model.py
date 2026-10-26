@@ -69,17 +69,19 @@ class StructuredModel:
         )
         attempts = min(2, self.settings.max_retries + 1)
         for attempt in range(attempts):
-            usage[0].reserve(usage[1], input_bound + self.settings.model_max_output_tokens)
+            reservation = usage[0].reserve(usage[1], input_bound + self.settings.model_max_output_tokens)
             try:
                 with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
-                    return model.with_structured_output(
-                        schema, method="json_schema", strict=True
+                    response = model.with_structured_output(
+                        schema, method="json_schema", strict=True, include_raw=True
                     ).invoke(
                         [
                             SystemMessage(content=system),
                             HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str)),
                         ]
                     )
+                    if response["parsing_error"] is not None or response["parsed"] is None:
+                        raise ValueError("Invalid structured response")
             except ServiceError:
                 raise
             except APITimeoutError:
@@ -93,3 +95,7 @@ class StructuredModel:
                         "모델 호출 또는 구조화 출력 검증에 실패했습니다. 서버 모델 설정을 확인하세요.",
                         retryable=True,
                     ) from None
+            else:
+                # Settlement failures must not trigger a second paid provider call.
+                usage[0].settle(reservation, getattr(response["raw"], "usage_metadata", None))
+                return response["parsed"]

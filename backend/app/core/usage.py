@@ -1,6 +1,6 @@
 """Persistent, fail-closed admission and conservative token reservations.
 
-Reservations are deliberately not refunded: unknown outcomes must not reopen budget.
+Successful calls settle against provider usage; unknown outcomes keep their reservation.
 Only opaque session/IP digests and aggregate counters are stored here, never prompts.
 """
 
@@ -66,6 +66,8 @@ class UsageGuard:
             db.execute("""CREATE TABLE IF NOT EXISTS usage_leases (
                 id TEXT PRIMARY KEY, subjects TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0,
                 expires_at TIMESTAMPTZ NOT NULL)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS usage_reservations (
+                id TEXT PRIMARY KEY, bucket TEXT NOT NULL, tokens BIGINT NOT NULL)""")
 
     @contextmanager
     def locked(self):
@@ -88,7 +90,7 @@ class UsageGuard:
             if subject == "global":
                 raise denied(
                     "MODEL_BUDGET_EXHAUSTED",
-                    "오늘의 서비스 전체 AI 사용 한도에 도달했습니다. 다음 이용은 한국 시간 오전 9시 이후 가능합니다. 기본 도감 조회는 계속 이용할 수 있습니다.",
+                    "오늘의 서비스 전체 AI 처리 예산이 부족해 새 요청을 시작할 수 없습니다. 다음 이용은 한국 시간 오전 9시 이후 가능합니다. 기본 도감 조회는 계속 이용할 수 있습니다.",
                 )
             raise denied()
         db.execute(
@@ -107,6 +109,7 @@ class UsageGuard:
             ).fetchone()
             db.execute("DELETE FROM usage_leases WHERE expires_at <= now()")
             db.execute("DELETE FROM usage_counters WHERE left(bucket,10) < %s", (clock["day"],))
+            db.execute("DELETE FROM usage_reservations WHERE left(bucket,10) < %s", (clock["day"],))
             leases = db.execute("SELECT subjects FROM usage_leases").fetchall()
             if len(leases) >= s.usage_global_concurrency or any(
                 set(subjects) & set(json.loads(r["subjects"])) for r in leases
@@ -144,6 +147,7 @@ class UsageGuard:
 
     def reserve(self, lease, tokens):
         s = self.settings
+        reservation = uuid4().hex
         if tokens <= 0 or tokens > s.model_max_input_tokens + s.model_max_output_tokens:
             raise ValueError("Invalid model reservation")
         with self.locked() as db:
@@ -161,8 +165,35 @@ class UsageGuard:
             )
             self.charge(db, day + ":calls", "global", 1, s.usage_daily_calls)
             db.execute(
+                "INSERT INTO usage_reservations VALUES (%s,%s,%s)",
+                (reservation, day + ":tokens", tokens),
+            )
+            db.execute(
                 "UPDATE usage_leases SET calls=calls+1, expires_at=now()+interval '15 minutes' WHERE id=%s",
                 (lease,),
             )
         if self.telemetry:
             self.telemetry.reserved_tokens.inc(tokens)
+        return reservation
+
+    def settle(self, reservation, usage):
+        # Missing, malformed or incomplete metadata must never reopen budget.
+        if not isinstance(usage, dict):
+            return
+        counts = [usage.get(key) for key in ("input_tokens", "output_tokens", "total_tokens")]
+        if any(type(value) is not int or value < 0 for value in counts):
+            return
+        if counts[2] <= 0 or counts[0] + counts[1] != counts[2]:
+            return
+        with self.locked() as db:
+            row = db.execute(
+                "DELETE FROM usage_reservations WHERE id=%s RETURNING bucket,tokens",
+                (reservation,),
+            ).fetchone()
+            if row:
+                # Use the original day, including across UTC midnight. A deleted old
+                # bucket stays deleted. Consuming the ticket makes settlement idempotent.
+                db.execute(
+                    "UPDATE usage_counters SET amount=amount+%s WHERE bucket=%s AND subject='global'",
+                    (counts[2] - row["tokens"], row["bucket"]),
+                )

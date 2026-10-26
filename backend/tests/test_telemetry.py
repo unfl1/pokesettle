@@ -96,13 +96,13 @@ def test_model_attempts_record_retries_without_provider_content(monkeypatch):
             attempts.append(1)
             if len(attempts) == 1:
                 raise RuntimeError("PRIVATE_PROVIDER_PAYLOAD")
-            return "success"
+            return {"parsed": "success", "raw": None, "parsing_error": None}
 
     monkeypatch.setattr("backend.app.rag.model.ChatOpenAI", Client)
     model = StructuredModel(Settings(api_key="synthetic-test-key", chat_model="test"), telemetry)
     from backend.app.core.usage import active_usage
     from backend.app.schemas import Generation
-    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None), "test"))
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, settle=lambda *args: None), "test"))
     try:
         assert model.invoke("generate", "PRIVATE_SYSTEM", {"question": "PRIVATE_QUESTION"}, Generation) == "success"
     finally:

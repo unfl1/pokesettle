@@ -425,13 +425,14 @@ def test_new_unknown_opponent_clears_old_pair_and_confirms_spelling():
     state = resolve_named_opponent(
         "이번엔 내가 마스카나를 냈는데 상대가 라운드본이 나왔어 어케해?", previous, catalog
     )
-    assert "opponent_id" not in state
+    assert catalog.get(state["opponent_id"]).name_ko == "라우드본"
     assert "opponent_moves" not in state
-    assert state["unresolved_opponent"]["suggestion"] == "라우드본"
-    result = evaluate_state(state, catalog, ROOT / "data")
-    assert "라우드본" in result["questions"][0]
-    assert "갸라도스" not in str(result)
-    confirmed = resolve_named_opponent("ㅇㅇ", state, catalog)
+    assert "opponent_hp_percent" not in state
+    assert "unresolved_opponent" not in state
+    # More distant spelling still requires explicit confirmation.
+    pending = resolve_named_opponent("상대가 라우드본느느야", {}, catalog)
+    assert pending["unresolved_opponent"]["suggestion"] == "라우드본"
+    confirmed = resolve_named_opponent("ㅇㅇ", pending, catalog)
     assert catalog.get(confirmed["opponent_id"]).name_ko == "라우드본"
     assert "unresolved_opponent" not in confirmed
     exact = resolve_named_opponent(
@@ -472,7 +473,7 @@ def test_unknown_new_opponent_is_saved_without_searching_old_opponent(setup, mon
         "collect",
         lambda *args: (_ for _ in ()).throw(AssertionError("must not search old opponent")),
     )
-    question = "이번엔 내가 마스카나를 냈는데 상대가 라운드본이 나왔어 어케해?"
+    question = "이번엔 내가 마스카나를 냈는데 상대가 라우드본느느가 나왔어 어케해?"
     result = setup.service.chat(
         ChatRequest(
             pokemon_id="pokemon:1",

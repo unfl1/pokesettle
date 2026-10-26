@@ -88,14 +88,14 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
             sent.append((self.schema, payload))
             assert input_reservation(messages[0].content, payload, self.schema.model_json_schema()) <= settings.model_max_input_tokens
             if self.schema is BattleUpdate:
-                return BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911')
-            return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+                return {'parsed': BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911'), 'raw': None, 'parsing_error': None}
+            return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
 
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
     monkeypatch.setattr(setup.service, 'collect', lambda *args: pytest.fail('battle should use prepared index'))
     session = setup.store.new_session()
     cid = None
-    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None), 'test'))
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, settle=lambda *args: None), 'test'))
     try:
         for question in ['내 선봉은 마스카나이고 상대 선봉은 라우드본이야. 어떻게 해?', *['그럼 어떻게 할까?'] * 6]:
             result = setup.service.chat(ChatRequest(question=question, conversation_id=cid, client_request_id=uuid4()), session)
@@ -151,10 +151,10 @@ def test_current_matchup_fits_input_limit_without_losing_calculation(setup, monk
                 duplicated = {**payload, 'battle_context_from_user_inputs_and_type_tool': context}
                 assert input_reservation(messages[0].content, duplicated, Generation.model_json_schema()) > settings.model_max_input_tokens
             sent.append(payload)
-            return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+            return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
 
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
-    token = active_usage.set((SimpleNamespace(reserve=lambda lease, amount: reservations.append(amount)), 'test'))
+    token = active_usage.set((SimpleNamespace(reserve=lambda lease, amount: reservations.append(amount), settle=lambda *args: None), 'test'))
     try:
         state = build_graph(vectors, StructuredModel(settings)).invoke({
             'pokemon_id': pair[0], 'context_pokemon_ids': pair, 'question': question,

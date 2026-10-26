@@ -7,6 +7,47 @@ from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
 
 
+def test_installed_sdk_preserves_usage_with_structured_response(monkeypatch):
+    import json
+
+    import httpx
+    from langchain_openai import ChatOpenAI
+
+    from backend.app.core.usage import active_usage
+
+    result = Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+    requests, settled = [], []
+
+    def respond(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={
+            'id': 'synthetic-completion', 'object': 'chat.completion', 'created': 1,
+            'model': 'gpt-4.1-mini',
+            'choices': [{'index': 0, 'finish_reason': 'stop', 'message': {
+                'role': 'assistant', 'content': result.model_dump_json(), 'refusal': None,
+            }}],
+            'usage': {'prompt_tokens': 1200, 'completion_tokens': 300, 'total_tokens': 1500},
+        })
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        monkeypatch.setattr('backend.app.rag.model.ChatOpenAI',
+                            lambda **kwargs: ChatOpenAI(**kwargs, http_client=client))
+        guard = SimpleNamespace(reserve=lambda *args: 'reservation',
+                                settle=lambda ticket, usage: settled.append((ticket, usage)))
+        token = active_usage.set((guard, 'lease'))
+        try:
+            settings = Settings(api_key='synthetic', chat_model='gpt-4.1-mini', base_url='https://provider.test/v1')
+            assert StructuredModel(settings).invoke('generate', 'test', {}, Generation) == result
+        finally:
+            active_usage.reset(token)
+    assert len(requests) == 1
+    assert requests[0]['response_format']['type'] == 'json_schema'
+    assert settled[0][0] == 'reservation'
+    assert {key: settled[0][1][key] for key in ('input_tokens', 'output_tokens', 'total_tokens')} == {
+        'input_tokens': 1200, 'output_tokens': 300, 'total_tokens': 1500,
+    }
+
+
 @pytest.mark.parametrize('base_url', ['', 'https://provider.example/v1'])
 def test_empty_endpoint_uses_openai_and_custom_endpoint_is_preserved(monkeypatch, base_url):
     monkeypatch.setattr('backend.app.core.config.load_dotenv', lambda *args, **kwargs: None)
@@ -32,13 +73,13 @@ def test_structured_calls_preserve_contract_and_omit_unsupported_temperature(mon
 
         def with_structured_output(self, schema, **kwargs):
             assert schema is Generation
-            assert kwargs == {'method': 'json_schema', 'strict': True}
-            return SimpleNamespace(invoke=lambda messages: result)
+            assert kwargs == {'method': 'json_schema', 'strict': True, 'include_raw': True}
+            return SimpleNamespace(invoke=lambda messages: {'parsed': result, 'raw': None, 'parsing_error': None})
 
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
     settings = Settings(api_key='synthetic-test-key', chat_model=model)
     from backend.app.core.usage import active_usage
-    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None), "test"))
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, settle=lambda *args: None), "test"))
     try:
         assert StructuredModel(settings).invoke(purpose, 'test', {}, Generation) is result
     finally:
@@ -87,10 +128,10 @@ def test_followup_does_not_resend_stored_citations_or_battle_results(monkeypatch
 
         def invoke(self, messages):
             captured.append(json.loads(messages[1].content))
-            return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+            return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
 
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
-    token = active_usage.set((SimpleNamespace(reserve=lambda lease, amount: reserved.append(amount)), 'test'))
+    token = active_usage.set((SimpleNamespace(reserve=lambda lease, amount: reserved.append(amount), settle=lambda *args: None), 'test'))
     try:
         StructuredModel(settings).invoke('generate', 'test', payload, Generation)
     finally:
