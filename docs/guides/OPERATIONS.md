@@ -9,7 +9,7 @@
 | 시점·대상 | 처리 |
 |---|---|
 | `main` 대상 PR | 실제 PostgreSQL + pgvector 회귀·프론트 빌드·백엔드 이미지 빌드·모니터링 설정 검사 |
-| `main` push·병합 | 동일 검증 → 결과물 전달 → 백엔드 준비 상태 확인 → 프론트 게시 → 공개 경로 확인 |
+| `main` push·병합 | 동일 검증 → API·Next.js 이미지 전달 → 서버 준비 상태 확인 → CloudFront 캐시 무효화 → 공개 경로 확인 |
 | API 운영 기록 | 경로 템플릿·상태 코드·처리 시간·서버 생성 요청 ID만 JSON 기록 |
 | 모델 운영 기록 | 용도별 시도 횟수·성공/실패·처리 시간 기록, 내부 SDK 재시도는 별도 분리 불가 |
 | Grafana | API·모델·서버 지표·로그·현재 경보 조회 |
@@ -82,11 +82,12 @@ python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'r
 - 운영 환경변수는 서버 파일을 참조, 번들·Docker 빌드에 포함하지 않음
 - 프로젝트 이름 `poketact` 유지로 기존 PostgreSQL·모델 볼륨 재사용
 - `--no-deps`로 PostgreSQL 자동 재생성 제외, 자동 재색인·DB 삭제·스키마 변경·Nginx/방화벽 변경 미수행
-- 새 API의 기동·준비 상태 실패 시 이전 API 이미지로 복구, 실패 실행은 Actions에서 실패로 표시
+- 서버 준비 상태 실패 시 이전 API·기존 Next.js 이미지로 복구, 최초 Next.js 전환 실패 시 새 프론트 컨테이너 정지, 실패 실행은 Actions에서 실패로 표시
 - 현재·이전 릴리스 설정 및 이미지 보관, 그보다 오래된 전용 릴리스 정리
 - API 컨테이너 교체 중 짧은 중단 가능, 무중단 배포 보장 없음
-- 백엔드 성공 후 프론트 해시 자산 업로드 → `index.html` 업로드 → CloudFront `/`·`/index.html` 무효화
-- 기존 해시 자산 삭제 없음, 프론트 게시 중 실패 시 재실행 필요
+- 서버 배포 성공 후 CloudFront `/*` 캐시 무효화 및 완료 대기, 공개 HTML·Next.js 정적 자산·API 준비 상태 검사
+- 공개 검사 실패 시 서버 배포는 이미 반영된 상태일 수 있음, 서버 내부 준비 상태와 CloudFront·Nginx 공개 경로를 각각 확인
+- S3 정적 파일 업로드 없음, 최초 Next.js 전환 시 아래 HTTPS 서버 원본 연결을 별도로 적용해야 함
 - `down -v` 사용 금지, 사용자 데이터 복원은 별도 백업·복구 절차 적용
 
 ## Grafana 접속과 관측
@@ -273,6 +274,12 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 ```
 
 - API 캐시 비활성화, 쿠키·쿼리·요청 헤더 전달, Nginx 응답 `Cache-Control: no-store` 적용
+- 기존 S3·Vite 배포 전환 순서: Nginx 템플릿 백업·반영 → `nginx -t`·reload → 인증된 원본 `/chat` 응답 확인 → `connect_frontend.py`로 CloudFront 전환 → 공개 검사
+- 전환 전 서버의 root 소유 `/usr/local/lib/poketact/receive-release.py`를 검토한 최신 `deployment/receive_release.py`로 갱신, 이전 수신기는 Next.js 이미지가 전달돼도 프론트 컨테이너 기동·준비 검사 미수행
+- 서버 수신기는 릴리스 번들에 포함되지 않으므로 앱 재배포만으로 갱신되지 않음, 기존 수신기 백업 후 root 소유·실행 권한 유지
+- Nginx 화면 요청은 `127.0.0.1:3001`, `/api/` 요청은 `127.0.0.1:8000`으로 전달, 기존 원본 인증값·인증서·API 요청 제한 유지
+- 공개 HTML의 `Server: AmazonS3`·`/assets/`와 Next.js 자산 부재는 기존 정적 원본 유지 징후, 캐시 무효화만으로 원본 전환 불가
+- 전환 후 `PRODUCTION_URL=https://www.example.com python3 deployment/check_production.py`로 서버 렌더링·정적 자산·API 준비 상태 확인, 실제 도메인 사용
 - 세션 쿠키 Secure·HttpOnly·SameSite=Lax 적용, DB·8000번 직접 공개 제외
 - 전체 쓰기 요청 분당 30회·순간 burst 5, 읽기 CloudFront 연결 IP별 초당 10회 적용
 - 원본 검증값은 서버 직접 호출 제한용이며 서비스 이용자 인증과 구분
