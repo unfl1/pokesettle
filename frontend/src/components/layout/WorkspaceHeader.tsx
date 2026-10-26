@@ -25,7 +25,7 @@ export default function WorkspaceHeader() {
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <Link href="/chat" className="brand" aria-label="PokeTact 홈">
+          <Link href="/" className="brand" aria-label="PokeTact 홈">
             <span className="brand-symbol" aria-hidden="true"><span /></span>
             PokeTact<span className="brand-tag">BETA</span>
           </Link>

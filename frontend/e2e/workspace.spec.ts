@@ -230,7 +230,7 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
       chatRequests.push(request.postData() ?? '');
     }
   });
-  await page.goto('/');
+  await page.goto('/chat');
   const input = page.getByLabel('포켓몬 질문');
   const send = page.getByRole('button', { name: '질문 보내기' });
   await expect(page.getByRole('button', { name: '대화 초기화', exact: true })).toBeEnabled();
@@ -244,6 +244,8 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
 
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
+  await page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(input).toHaveValue('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?');
 
   await page.reload();
@@ -255,7 +257,7 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
 
 test('위키 인용의 원문 버전·기여자·라이선스 표시와 기록 복원', async ({ page }) => {
   await fixture(page, [], false, true);
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByLabel('포켓몬 질문').fill('피카츄 배경 설명');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   const source = page.getByTestId('evidence-card');
@@ -270,7 +272,7 @@ test('위키 인용의 원문 버전·기여자·라이선스 표시와 기록 �
 
 test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기록 복원', async ({ page }) => {
   await fixture(page);
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByLabel('포켓몬 질문').fill('피카츄 타입');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
@@ -332,7 +334,7 @@ test('네트워크 재시도, 진행 중 새로고침, HTML은 텍스트로 표�
   page,
 }) => {
   const control = await fixture(page);
-  await page.goto('/');
+  await page.goto('/chat');
   control.failNext();
   await page.getByLabel('포켓몬 질문').fill('<img src=x onerror=alert(1)>');
   await page.getByRole('button', { name: '질문 보내기' }).click();
@@ -350,7 +352,7 @@ test('네트워크 재시도, 진행 중 새로고침, HTML은 텍스트로 표�
 for (const missing of ['MODEL_KEY_MISSING', 'INDEX_NOT_READY'])
   test(`${missing} 안내와 도감 질문 전송 허용`, async ({ page }) => {
     await fixture(page, [missing]);
-    await page.goto('/');
+    await page.goto('/chat');
     await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText(
       missing === 'INDEX_NOT_READY' ? '색인이 준비되지' : '모델 연결 설정',
     );
@@ -364,7 +366,7 @@ for (const missing of ['MODEL_KEY_MISSING', 'INDEX_NOT_READY'])
 test('모바일 화면에 가로 넘침 없음', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixture(page);
-  await page.goto('/');
+  await page.goto('/chat');
   await expect(
     page.getByRole('heading', { name: '전략 챗봇' }),
   ).toBeVisible();
@@ -611,7 +613,7 @@ test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', as
 
 test('조건부 전략 출처·라이선스와 추가 질문을 기본 표시', async ({ page }) => {
   await fixture(page, [], false, false, true);
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByLabel('포켓몬 질문').fill('육성 방향을 알려줘');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.getByTestId('evidence-card')).toContainText('직접 작성한 조건부 전략 · 가정 포함');
@@ -623,7 +625,7 @@ test('조건부 전략 출처·라이선스와 추가 질문을 기본 표시', 
 
 test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복원', async ({ page }) => {
   await fixture(page, [], false, false, false, true);
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByLabel('포켓몬 질문').fill('내 선봉 이상해꽃 상대 리자몽');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   const context = page.getByLabel('현재 전투 입력');
@@ -677,7 +679,7 @@ test('습득 기술을 타입별 카드로 표시하고 습득 방법으로 필�
 
 test('챗봇 선출 결과는 6대6 조합 수를 표시하고 대면 미확인으로 표시하지 않음', async ({page}) => {
   await fixture(page, [], false, false, false, false, true);
-  await page.goto('/');
+  await page.goto('/chat');
   await page.getByLabel('포켓몬 질문').fill('내 팀과 상대 팀 6마리로 3마리 선출 추천해줘');
   await page.getByRole('button', {name: '질문 보내기'}).click();
   const context = page.getByLabel('현재 전투 입력');
@@ -734,4 +736,29 @@ test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', asyn
   await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
   await expect(page.locator('[data-testid="chat-page"]')).toHaveCount(0);
   expect(hydrationErrors).toEqual([]);
+});
+
+test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음', async ({ page }) => {
+  await fixture(page);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
+  const menus = page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link');
+  await expect(menus).toHaveCount(4);
+  const paths = ['/chat', '/pokedex', '/meta', '/scenario'];
+  for (let index = 0; index < paths.length; index++) {
+    await expect(menus.nth(index)).toHaveAttribute('href', paths[index]);
+    await menus.nth(index).click();
+    await expect(page).toHaveURL(paths[index]);
+    await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
+  }
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(menus.nth(3)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+  expect(errors).toEqual([]);
 });
