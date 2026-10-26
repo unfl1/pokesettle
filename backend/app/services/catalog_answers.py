@@ -3,6 +3,7 @@
 import re
 
 from backend.app.catalog import metadata_text
+from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.rag.graph import render_answer
 from backend.app.schemas import Generation
 from backend.app.services.topics import mentioned_pokemon
@@ -22,7 +23,7 @@ def catalog_question(catalog, selected_id, question):
     if len(ids) > 1:
         return None
     pokemon = catalog.get(ids[0] if ids else selected_id)
-    text = question.casefold()
+    text = normalize_pokemon_names(catalog, question).casefold()
     text = re.sub(r"(?:이|선택한)\s*포켓몬|출처와\s*함께|근거와\s*함께", "", text)
     for name in (pokemon.name_ko, pokemon.name_en):
         if name:

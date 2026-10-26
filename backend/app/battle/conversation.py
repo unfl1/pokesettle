@@ -9,6 +9,7 @@ from backend.app.battle.damage import DamageInput, calculate_damage
 from backend.app.battle.engine import BattleEngine
 from backend.app.battle.models import TeamAnalysis, TeamMember, TypeName
 from backend.app.core.errors import ServiceError
+from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.schemas import Generation, Model
 
 
@@ -51,6 +52,7 @@ STATE_PROMPT = """사용자 전투 입력의 변경분만 추출하세요.
 내/상대 ID 이외의 각 입력 필드에는 input_evidence 목록에 field=필드명, quote=해당 값을 직접 명시한 이번 질문의 정확한 원문 구절을 복사하세요. 원문 근거가 없으면 필드는 null로 두세요.
 HP 기본값은 절대로 100으로 채우지 마세요. 내 기술을 상대 기술에 복사하지 마세요. 조언이나 추측을 하지 마세요.
 명시된 내 포켓몬과 상대 포켓몬의 역할을 구분하고 candidate_pokemon의 ID만 사용하세요.
+question_with_normalized_pokemon_names는 이름 오타를 정규화한 해석 보조문입니다. 역할은 question 원문을 기준으로 구분하고 input_evidence의 quote도 question 원문에서만 복사하세요.
 이전 상태는 해석용이며 이번에 말하지 않은 필드는 null, relevant는 전투 상태/행동 질문일 때만 true입니다.
 새 전투·초기화 요청만 reset=true, 잘못 추측한 포켓몬을 채우지 마세요.
 HP는 사용자가 %로 명시한 경우만 기록하고 실수치 50을 50%로 바꾸지 마세요.
@@ -227,8 +229,9 @@ def merge_state(previous, update, allowed_ids, catalog):
 
 def resolve_named_opponent(question, state, catalog):
     """Never retain an old opponent when a newly named opponent is unresolved."""
+    question = normalize_pokemon_names(catalog, question)
     match = re.search(
-        r"상대(?:방)?(?:의)?\s*(?:선봉)?(?:이|가|는|은)?\s*(?P<name>[가-힣A-Za-z0-9].*)",
+        r"상대(?:방)?(?:의)?\s*(?:선봉)?(?:이|가|는|은)?\s*(?P<name>[가-힣ㄱ-ㅣᄀ-ᇿA-Za-z0-9].*)",
         question,
     )
     if not match:
@@ -247,7 +250,7 @@ def resolve_named_opponent(question, state, catalog):
                 state.pop("unresolved_opponent", None)
         return state
     remainder = match["name"]
-    token_match = re.match(r"[가-힣A-Za-z0-9-]+", remainder)
+    token_match = re.match(r"[가-힣ㄱ-ㅣᄀ-ᇿA-Za-z0-9-]+", remainder)
     token = token_match[0]
     names = {}
     for pokemon in catalog.items.values():

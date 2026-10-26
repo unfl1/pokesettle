@@ -13,6 +13,86 @@ from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
 
 
+def test_successful_usage_settles_once_and_preserves_other_reservations(pg_store):
+    guard = UsageGuard(pg_store, Settings(usage_daily_tokens=100))
+    lease = guard.begin(["one", "ip-one"])
+    first = guard.reserve(lease, 60)
+    second = guard.reserve(lease, 40)
+    usage = {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+    restarted = UsageGuard(pg_store, guard.settings)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(lambda _: restarted.settle(first, usage), range(4)))
+    # 15 actual + 40 still reserved leaves exactly 45 available.
+    restarted.reserve(lease, 45)
+    with pytest.raises(ServiceError):
+        restarted.reserve(lease, 1)
+    assert second != first
+    with pg_store.connect() as db:
+        assert db.execute("SELECT amount FROM usage_counters WHERE bucket LIKE '%%:calls' AND subject='global'").fetchone()["amount"] == 3
+
+
+@pytest.mark.parametrize("metadata", [None, {}, {"total_tokens": 1},
+    {"input_tokens": True, "output_tokens": 1, "total_tokens": 2},
+    {"input_tokens": -1, "output_tokens": 2, "total_tokens": 1},
+    {"input_tokens": 1, "output_tokens": 2, "total_tokens": 2},
+    {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}])
+def test_missing_or_invalid_usage_keeps_full_reservation(pg_store, metadata):
+    guard = UsageGuard(pg_store, Settings(usage_daily_tokens=100))
+    lease = guard.begin(["one", "ip-one"])
+    reservation = guard.reserve(lease, 100)
+    guard.settle(reservation, metadata)
+    with pytest.raises(ServiceError):
+        guard.reserve(lease, 1)
+
+
+def test_settlement_never_changes_new_days_budget(pg_store):
+    guard = UsageGuard(pg_store, Settings())
+    lease = guard.begin(["one", "ip-one"])
+    reservation = guard.reserve(lease, 100)
+    with pg_store.connect() as db:
+        db.execute("UPDATE usage_counters SET bucket='2000-01-01:tokens' WHERE subject='global' AND bucket LIKE '%%:tokens'")
+        db.execute("UPDATE usage_reservations SET bucket='2000-01-01:tokens'")
+        db.execute("INSERT INTO usage_counters VALUES ('2000-01-02:tokens','global',90)")
+    guard.settle(reservation, {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15})
+    with pg_store.connect() as db:
+        assert db.execute("SELECT amount FROM usage_counters WHERE bucket='2000-01-01:tokens'").fetchone()["amount"] == 15
+        assert db.execute("SELECT amount FROM usage_counters WHERE bucket='2000-01-02:tokens'").fetchone()["amount"] == 90
+
+
+def test_model_success_settles_reported_usage_and_db_failure_does_not_retry(pg_store, monkeypatch):
+    settings = Settings(api_key="synthetic", chat_model="test")
+    guard = UsageGuard(pg_store, settings)
+    result = Generation(answer_status="abstained", claims=[], assumptions=[], unknowns=[])
+    attempts = []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        def with_structured_output(self, *args, **kwargs):
+            assert kwargs["include_raw"] is True
+            return self
+
+        def invoke(self, messages):
+            attempts.append(1)
+            return {"parsed": result, "parsing_error": None, "raw": SimpleNamespace(
+                usage_metadata={"input_tokens": 20, "output_tokens": 10, "total_tokens": 30})}
+
+    monkeypatch.setattr("backend.app.rag.model.ChatOpenAI", Client)
+    with guard.scope(guard.begin(["one", "ip-one"])):
+        assert StructuredModel(settings).invoke("generate", "test", {}, Generation) is result
+        with pg_store.connect() as db:
+            assert db.execute("SELECT amount FROM usage_counters WHERE subject='global' AND bucket LIKE '%%:tokens'").fetchone()["amount"] == 30
+
+        def unavailable(*args):
+            raise RuntimeError("settlement database unavailable")
+
+        monkeypatch.setattr(guard, "settle", unavailable)
+        with pytest.raises(RuntimeError, match="settlement database unavailable"):
+            StructuredModel(settings).invoke("generate", "test", {}, Generation)
+    assert len(attempts) == 2
+
+
 def test_concurrent_reservations_are_atomic_and_survive_restart(pg_store):
     settings = Settings(usage_daily_tokens=100, usage_global_concurrency=20)
     guard = UsageGuard(pg_store, settings)

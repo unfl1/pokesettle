@@ -12,6 +12,7 @@ from backend.app.battle.conversation import (
     resolve_named_opponent,
 )
 from backend.app.core.errors import ServiceError
+from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
@@ -251,6 +252,7 @@ class KnowledgeService:
                 STATE_PROMPT,
                 {
                     "question": request.question,
+                    "question_with_normalized_pokemon_names": normalize_pokemon_names(self.catalog, request.question),
                     "previous_user_inputs": previous_battle,
                     "candidate_pokemon": [
                         {

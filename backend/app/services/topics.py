@@ -1,11 +1,13 @@
-"""Resolve only explicit catalog names; never infer sides, sets or alternate forms."""
+"""Resolve catalog names with conservative spelling repair; never infer sides or forms."""
 
 import re
+
+from backend.app.pokemon_names import normalize_pokemon_names
 
 
 def mentioned_pokemon(catalog, question, limit=2):
     matches = []
-    text = question.casefold()
+    text = normalize_pokemon_names(catalog, question).casefold()
     for pokemon in catalog.items.values():
         for name in {pokemon.name_ko, pokemon.name_en} - {None, ""}:
             pattern = re.escape(name.casefold())
