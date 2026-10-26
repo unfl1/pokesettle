@@ -131,12 +131,11 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-frontend-
       - name: Install frontend test dependencies
         run: pnpm --dir frontend install --frozen-lockfile --ignore-scripts --prefer-offline
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/pnpm-lock.yaml') }}
-      - name: Install test browser and system libraries
-        run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - name: Reuse the runner's installed Chrome and system libraries
+        run: |
+          browser_path=$(command -v google-chrome)
+          "$browser_path" --version
+          echo "CHROME_PATH=$browser_path" >> "$GITHUB_ENV"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build Next.js production image once
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -157,7 +156,7 @@ jobs:
             if [ "$attempt" = 30 ]; then echo 'Frontend test server did not become ready' >&2; exit 1; fi
             sleep 1
           done
-          CHROME_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux*/chrome' -type f | head -1) pnpm --dir frontend test:e2e
+          pnpm --dir frontend test:e2e
       - name: Export tested frontend image
         run: docker save "poketact-frontend:$GITHUB_SHA" | gzip -1 > "$RUNNER_TEMP/frontend-image.tar.gz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

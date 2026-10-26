@@ -81,7 +81,8 @@ python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'r
 - `main` 병합 후 `Deploy production`: 같은 커밋의 백엔드 회귀·프론트 Docker/E2E·모니터링 통합 검증을 병렬로 1회 수행, 모두 통과한 이미지로 릴리스 생성 후 배포
 - 프론트엔드는 Docker 안에서 빌드·타입 검사 후 해당 이미지로 E2E 수행, 별도 호스트 Next.js 빌드 생략
 - `Verify` 수동 실행: 선택한 브랜치의 전체 검증·릴리스 패키징만 수행, 서버 배포 미수행
-- 캐시: 잠금 파일 기준 pip·uv·pnpm 저장소·Playwright 브라우저와 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치는 `--frozen` 유지, 테스트 결과 자체는 캐시하지 않음
+- 캐시: 잠금 파일 기준 pip·uv·pnpm 저장소와 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치는 `--frozen` 유지, 테스트 결과 자체는 캐시하지 않음
+- E2E 브라우저: Ubuntu 러너에 기본 설치된 Chrome을 `CHROME_PATH`로 사용, 브라우저·시스템 라이브러리 중복 설치 생략, 실제 사용 버전은 Actions 로그에 출력
 - 릴리스: 같은 실행의 SHA별 이미지 아티팩트만 결합, 이미지 재빌드 없음, gzip 레벨 1로 압축 시간 절감, 운영 SSH·OIDC 권한은 기존 배포 job에만 부여
 
 - 전달 대상: Docker 이미지와 명시한 Compose·모니터링 설정만 포함한 압축 번들
