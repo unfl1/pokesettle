@@ -171,6 +171,17 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 이름 갱신: `python -m backend.scripts.prepare_battle_names`, 기존 도감·습득 기술 데이터와 별도 갱신
 - 메타 이미지: 기존 도감의 PokéAPI sprites URL·권리 문구 재사용, 정확히 연결된 폼의 이미지로만 표시, 새 이미지 수집·생성·폼 추정 없음
 
+## 홈 트레이너 이미지 — 2026-10-27
+
+- 생성: OpenAI 내장 ImageGen 사용, 2026-10-27 생성, AI 생성 일러스트 2종
+- 남자 트레이너: `frontend/public/images/trainers/original-male-partner-v2.png`, 트레이너 캡·차분한 짧은 머리·빨간 자켓·흰 티셔츠·검은 긴바지·흰색 및 붉은색 운동화·몬스터볼·수댕이 조합, 여자와 동일한 단순 선화·평면 채색 방향으로 수정
+- 여자 트레이너: `frontend/public/images/trainers/original-female-partner-v1.png`, 포니테일·흰 자켓·검은 티셔츠·파란 스커트·맨다리·몬스터볼·냐오하 조합
+- 참고: 소드·실드 주인공의 모험 분위기·단순한 선화와 채색만 참고, 기존 주인공의 얼굴·의상을 직접 사용하지 않도록 생성 지시
+- 참고 파일: [승재](https://archives.bulbagarden.net/wiki/File:Sword_Shield_Victor.png)·[우리](https://archives.bulbagarden.net/wiki/File:Sword_Shield_Gloria.png), 기존 원본 PNG는 홈 표시 및 public 자산에서 제거
+- 보관: 최종 생성 PNG의 알파 유지, CSS·Next Image로 표시 크기 조정, 생성·수정 프롬프트는 로컬 학습 가이드에 기록
+- 권리: 트레이너는 AI 생성 디자인, 수댕이·냐오하·몬스터볼 등 Pokémon 요소의 권리는 각 원권리자에게 귀속, 생성 사실을 제3자 IP 이용 허가나 독점 권리 보장으로 해석하지 않음
+- 홈 고지: 비공식·비영리 및 Pokémon 권리 표기 유지, 더 이상 직접 표시하지 않는 기존 트레이너 원본의 화면 출처 링크 제거
+
 ## 로컬 이미지 자산
 
 - `frontend/src/assets/master-ball.png`: [PokeAPI sprites — Master Ball](https://github.com/PokeAPI/sprites/blob/master/sprites/items/master-ball.png), 수집일 2026-10-25, 수정 없는 원본 PNG

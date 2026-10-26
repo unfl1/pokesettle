@@ -37,10 +37,6 @@ export default function WorkspaceHeader() {
             ))}
           </nav>
           <div className="header-actions">
-            <span className="connection-status" title={ready ? '서비스 연결됨' : '서비스 상태 확인 필요'}>
-              <i data-online={ready} />
-              <span>{w.status.isPending ? '연결 확인 중' : ready ? '서비스 연결됨' : '설정 확인 필요'}</span>
-            </span>
             <button className="help-button" aria-label="이용 안내" aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
               <CircleHelp size={19} />
             </button>

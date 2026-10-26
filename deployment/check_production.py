@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlsplit
 def check(base):
     if urlsplit(base).scheme != "https":
         raise ValueError("HTTPS production URL required")
-    pages = {"/": "배틀 준비는 PokeTact에서.", "/chat": "전략 챗봇"}
+    pages = {"/": "배틀 준비는 PokeTact에서", "/chat": "전략 챗봇"}
     assets = set()
     for path, marker in pages.items():
         with urllib.request.urlopen(urljoin(base, path), timeout=15) as response:
