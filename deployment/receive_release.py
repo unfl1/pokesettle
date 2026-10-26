@@ -67,6 +67,9 @@ def ready():
     with urllib.request.urlopen("http://127.0.0.1:8000/api/status", timeout=10) as response:
         if not json.load(response)["data"]["ready"]:
             raise RuntimeError("API is not ready")
+    with urllib.request.urlopen("http://127.0.0.1:3001/chat", timeout=10) as response:
+        if "PokeTact" not in response.read().decode():
+            raise RuntimeError("Frontend is not ready")
     with urllib.request.urlopen("http://127.0.0.1:3000/api/health", timeout=10) as response:
         if json.load(response).get("database") != "ok":
             raise RuntimeError("Grafana is not ready")
@@ -82,6 +85,7 @@ def deploy(release, sha):
     compose(release, sha, "config", "--quiet")
     run(["docker", "load", "--input", str(release / "image.tar")])
     run(["docker", "image", "inspect", "poketact-backend:" + sha])
+    run(["docker", "image", "inspect", "poketact-frontend:" + sha])
     (release / "image.tar").unlink()
     # Alloy runs as the API UID and needs its persistent positions directory owned by that UID.
     run(["docker", "volume", "create", "poketact_alloy_data"])
@@ -98,7 +102,7 @@ def deploy(release, sha):
             time.sleep(5)
     try:
         compose(release, sha, "up", "-d", "--wait", "--wait-timeout", "180", "--no-deps", "--no-build",
-                "api", "prometheus", "loki", "alloy", "node-exporter", "grafana")
+                "api", "frontend", "prometheus", "loki", "alloy", "node-exporter", "grafana")
         # Grafana may still be initializing after its container has started.
         for attempt in range(30):
             try:
@@ -110,6 +114,10 @@ def deploy(release, sha):
                 time.sleep(2)
     except Exception:
         services = ["api"]
+        if previous.get("frontend"):
+            services += ["frontend"]
+        else:
+            compose(release, sha, "stop", "frontend")
         if previous["monitoring"]:
             services += ["prometheus", "loki", "alloy", "node-exporter", "grafana"]
         compose(Path(previous["directory"]), previous["image_tag"], "up", "-d", "--wait",
@@ -117,7 +125,7 @@ def deploy(release, sha):
         if not previous["monitoring"]:
             compose(release, sha, "stop", "prometheus", "loki", "alloy", "node-exporter", "grafana")
         raise RuntimeError("New release failed; previous API image restored") from None
-    record = {"directory": str(release), "image_tag": sha, "monitoring": True}
+    record = {"directory": str(release), "image_tag": sha, "monitoring": True, "frontend": True}
     temporary = ROOT / "current.next.json"
     temporary.write_text(json.dumps(record))
     temporary.replace(current)

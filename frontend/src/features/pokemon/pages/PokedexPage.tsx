@@ -1,5 +1,8 @@
+"use client";
+
+import { useWorkspaceContext } from "../../../app/providers";
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowRight, ChevronRight, CircleHelp, LoaderCircle, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { pokemonApi } from '../api';
@@ -8,19 +11,16 @@ import { TypeBadge } from '../components/TypeBadge';
 import PokemonImage from '../components/PokemonImage';
 import type { PokemonSummary } from '../types';
 
-export default function PokedexPage({ active, ready, sessionReady, metadataCount }: {
-  active: boolean;
-  ready: boolean;
-  sessionReady: boolean;
-  metadataCount?: number;
-}) {
-  const [params, setParams] = useSearchParams();
-  const [selectedId, setSelectedId] = useState(params.get('pokemon') ?? 'pokemon:25');
-  const pokemonId = params.get('pokemon') ?? selectedId;
+export default function PokedexPage() {
+  const workspace = useWorkspaceContext();
+  const ready = Boolean(workspace.status.data?.ready);
+  const sessionReady = workspace.session.isSuccess;
+  const metadataCount = workspace.status.data?.metadataCount;
+  const params = useSearchParams();
+  const pokemonId = params.get('pokemon') ?? 'pokemon:25';
   const selectedDetail = useQuery({
     queryKey: ['detail', pokemonId, metadataCount],
     queryFn: () => pokemonApi.detail(pokemonId),
-    enabled: active,
   });
   const [mode, setMode] = useState<'name' | 'conditions'>('name');
   const [name, setName] = useState('');
@@ -32,7 +32,6 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
     queryKey: ['catalog-pages', name.trim(), metadataCount],
     queryFn: ({ pageParam }) => pokemonApi.pokemon(name.trim(), pageParam),
     initialPageParam: 0,
-    enabled: active,
     getNextPageParam: (last) => {
       const next = (last.offset ?? 0) + last.items.length;
       return next < last.total && last.items.length ? next : undefined;
@@ -47,7 +46,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
     queryFn: ({ pageParam }) => pokemonApi.discover(submittedCondition!, pageParam),
     initialPageParam: 0,
     enabled:
-      active && submittedCondition !== null && sessionReady && ready,
+      submittedCondition !== null && sessionReady && ready,
     getNextPageParam: (last) => {
       const next = (last.offset ?? 0) + last.items.length;
       return next < last.total && last.items.length ? next : undefined;
@@ -66,8 +65,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
     else setSubmittedCondition(condition.trim());
   }
   function choose(pokemon: PokemonSummary) {
-    setSelectedId(pokemon.pokemonId);
-    setParams({ pokemon: pokemon.pokemonId });
+    window.history.pushState(null, '', `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`);
   }
 
   return (
@@ -87,7 +85,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
           className="catalog-controls"
         >
           <div
-            className="p-[3px] mx-4 border border-line gap-[3px] flex mt-0 mb-[15px] bg-canvas rounded-[7px] max-tablet:mb-2.5 [&_button]:px-[3px] [&_button]:py-2 [&_button]:gap-1.5 [&_button]:flex-1 [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:text-[11px] [&_button]:text-muted [&_button]:rounded-[4px] [&_[aria-pressed=true]]:bg-surface [&_[aria-pressed=true]]:text-ink"
+            className="p-[3px] mx-4 border border-line gap-[3px] flex mt-0 mb-[15px] bg-canvas rounded-[7px] max-tablet:mb-2.5 [&_button]:px-[3px] [&_button]:py-2 [&_button]:gap-1.5 [&_button]:flex-1 [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:text-[14px] [&_button]:text-muted [&_button]:rounded-[4px] [&_[aria-pressed=true]]:bg-surface [&_[aria-pressed=true]]:text-ink"
             role="group"
             aria-label="검색 방식"
           >
@@ -107,7 +105,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
             </button>
           </div>
           {mode === 'name' ? (
-            <div className="p-2.5 mx-4 my-0 border border-line gap-2 flex items-center bg-canvas rounded-[7px] text-muted [&_input]:border-0 [&_input]:border-[currentColor] [&_input]:w-full [&_input]:bg-[transparent] [&_input]:outline-none [&_input]:text-[12px] [&_input]:min-w-0 [&_input]:text-ink">
+            <div className="p-2.5 mx-4 my-0 border border-line gap-2 flex items-center bg-canvas rounded-[7px] text-muted [&_input]:border-0 [&_input]:border-[currentColor] [&_input]:w-full [&_input]:bg-[transparent] [&_input]:outline-none [&_input]:text-[14px] [&_input]:min-w-0 [&_input]:text-ink">
               <Search size={16} />
               <label className="sr-only" htmlFor="pokemon-name">
                 포켓몬 이름 검색
@@ -122,7 +120,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
             </div>
           ) : (
             <form
-              className="mx-4 my-0 [&_textarea]:p-2.5 [&_textarea]:border [&_textarea]:border-line [&_textarea]:w-full [&_textarea]:resize-y [&_textarea]:bg-canvas [&_textarea]:rounded-[6px] [&_textarea]:text-ink [&_textarea]:text-[12px] [&_textarea]:leading-[1.7] [&_button]:px-0 [&_button]:py-[11px] [&_button]:gap-[7px] [&_button]:w-full [&_button]:flex [&_button]:items-center [&_button]:text-[11px] [&_button]:text-ink [&_button_svg:last-child]:ml-auto"
+              className="mx-4 my-0 [&_textarea]:p-2.5 [&_textarea]:border [&_textarea]:border-line [&_textarea]:w-full [&_textarea]:resize-y [&_textarea]:bg-canvas [&_textarea]:rounded-[6px] [&_textarea]:text-ink [&_textarea]:text-[14px] [&_textarea]:leading-[1.7] [&_button]:px-0 [&_button]:py-[11px] [&_button]:gap-[7px] [&_button]:w-full [&_button]:flex [&_button]:items-center [&_button]:text-[14px] [&_button]:text-ink [&_button_svg:last-child]:ml-auto"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (condition.trim()) searchConditions();
@@ -165,10 +163,10 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
           )}
           {isDiscovery && discoveryResult && (
             <div
-              className="p-[11px] mx-4 my-3 border border-accent/16 bg-accent/2 rounded-[6px] text-[11px] leading-[1.8] text-muted [&_p]:mt-[5px] [&_small]:text-[10px] [&_small]:text-muted"
+              className="p-[11px] mx-4 my-3 border border-accent/16 bg-accent/2 rounded-[6px] text-[14px] leading-[1.8] text-muted [&_p]:mt-[5px] [&_small]:text-[14px] [&_small]:text-muted"
               role="status"
             >
-              <span className="gap-1.5 text-[10px] tracking-[0.7px] text-muted flex items-center">
+              <span className="gap-1.5 text-[14px] tracking-[0.7px] text-muted flex items-center">
                 {discoveryResult!.status === 'needs_clarification'
                   ? '조건 확인이 필요해요'
                   : '해석한 조건'}
@@ -188,7 +186,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
           )}
           {listError && (
             <div
-              className="[&_button]:gap-[5px] [&_button]:text-[11px] [&_button]:text-ink [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap p-[11px] mx-4 my-3 border border-warning-line bg-warning-soft rounded-[6px] text-[11px] leading-[1.8] text-warning"
+              className="[&_button]:gap-[5px] [&_button]:text-[14px] [&_button]:text-ink [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap p-[11px] mx-4 my-3 border border-warning-line bg-warning-soft rounded-[6px] text-[14px] leading-[1.8] text-warning"
               role="alert"
             >
               <CircleHelp size={16} />
@@ -204,7 +202,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
               </button>
             </div>
           )}
-          <div className="px-4.5 flex items-center justify-between pt-5 pb-2.5 text-[10px] text-muted max-tablet:pt-3 [&_span:last-child]:gap-[7px] [&_span:last-child]:flex [&_span:last-child]:items-center">
+          <div className="px-4.5 flex items-center justify-between pt-5 pb-2.5 text-[14px] text-muted max-tablet:pt-3 [&_span:last-child]:gap-[7px] [&_span:last-child]:flex [&_span:last-child]:items-center">
             <span>
               {isDiscovery
                 ? '조건 검색 결과'
@@ -224,7 +222,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
           >
             {activeList.isPending ? (
               <div
-                className="px-2.5 py-7.5 gap-[13px] text-center text-muted text-[12px] flex items-center flex-col"
+                className="px-2.5 py-7.5 gap-[13px] text-center text-muted text-[14px] flex items-center flex-col"
                 role="status"
               >
                 <LoaderCircle
@@ -234,7 +232,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
                 도감을 불러오고 있어요.
               </div>
             ) : !results.length ? (
-              <div className="px-2.5 py-7.5 gap-[13px] text-center text-muted text-[12px] flex items-center flex-col [&_strong]:text-[13px] [&_strong]:font-medium [&_p]:text-[11px] [&_p]:leading-[1.9]">
+              <div className="px-2.5 py-7.5 gap-[13px] text-center text-muted text-[14px] flex items-center flex-col [&_strong]:text-[14px] [&_strong]:font-medium [&_p]:text-[14px] [&_p]:leading-[1.9]">
                 <Search size={25} />
                 <strong>
                   {discoveryResult?.status === 'needs_clarification'
@@ -254,7 +252,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
                   aria-label={`${p.nameKo ?? p.nameEn} 선택`}
                   aria-pressed={p.pokemonId === pokemonId}
                 >
-                  <span className="text-[10px] tabular-nums text-muted max-phone:hidden group-aria-pressed:text-accent">
+                  <span className="text-[14px] tabular-nums text-muted max-phone:hidden group-aria-pressed:text-accent">
                     {String(
                       p.speciesId ?? p.pokemonId.split(':').at(-1),
                     ).padStart(3, '0')}
@@ -264,11 +262,11 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
                     pokemon={p}
                     size="small"
                   />
-                  <span className="min-w-0 [&_strong]:block [&_strong]:text-[13px] [&_strong]:font-medium [&_strong]:wrap-anywhere max-phone:[&_strong]:text-[11px] [&_small]:block [&_small]:text-[10px] [&_small]:text-muted [&_small]:mt-[3px] [&_small]:wrap-anywhere max-phone:[&_small]:text-[10px]">
+                  <span className="min-w-0 [&_strong]:block [&_strong]:text-[14px] [&_strong]:font-medium [&_strong]:wrap-anywhere max-phone:[&_strong]:text-[14px] [&_small]:block [&_small]:text-[14px] [&_small]:text-muted [&_small]:mt-[3px] [&_small]:wrap-anywhere max-phone:[&_small]:text-[14px]">
                     <strong>{p.nameKo ?? p.nameEn}</strong>
                     <small>{p.nameEn}</small>
                   </span>
-                  <span className="gap-1 ml-auto flex flex-col items-end max-phone:gap-[3px] max-phone:[&>span]:px-1 max-phone:[&>span]:py-0.5 max-phone:[&>span]:text-[10px]">
+                  <span className="gap-1 ml-auto flex flex-col items-end max-phone:gap-[3px] max-phone:[&>span]:px-1 max-phone:[&>span]:py-0.5 max-phone:[&>span]:text-[14px]">
                     {p.types.map((t) => (
                       <TypeBadge type={t} key={t} />
                     ))}
@@ -279,7 +277,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
             )}
             {activeList.hasNextPage && (
               <button
-                className="p-[13px] border border-accent/19 block w-full text-[12px] text-accent rounded-[6px] mt-2 max-tablet:col-[1/-1]"
+                className="p-[13px] border border-accent/19 block w-full text-[14px] text-accent rounded-[6px] mt-2 max-tablet:col-[1/-1]"
                 onClick={() => void activeList.fetchNextPage()}
                 disabled={activeList.isFetchingNextPage}
               >
@@ -294,7 +292,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
       <div className="min-w-0">
         {selectedDetail.isPending ? (
           <div
-            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[13px] text-muted"
+            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[14px] text-muted"
             role="status"
           >
             <LoaderCircle
@@ -305,7 +303,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
           </div>
         ) : selectedDetail.error ? (
           <div
-            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[13px] text-muted"
+            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[14px] text-muted"
             role="alert"
           >
             <CircleHelp size={20} />
@@ -314,7 +312,7 @@ export default function PokedexPage({ active, ready, sessionReady, metadataCount
               onClick={() => {
                 void selectedDetail.refetch();
               }}
-              className="gap-[5px] text-[11px] text-ink flex items-center ml-auto whitespace-nowrap"
+              className="gap-[5px] text-[14px] text-ink flex items-center ml-auto whitespace-nowrap"
             >
               다시 확인
             </button>

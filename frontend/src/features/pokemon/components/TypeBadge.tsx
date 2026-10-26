@@ -13,7 +13,7 @@ const lightTextTypes = new Set(['fighting', 'poison', 'ghost', 'dragon', 'dark']
 export function TypeBadge({ type }: { type: string }) {
   return (
     <span
-      className="inline-flex items-center px-2 py-1 text-[10px] font-semibold leading-[1.3] rounded-[4px] whitespace-nowrap"
+      className="inline-flex items-center px-2 py-1 text-[14px] font-semibold leading-[1.3] rounded-[4px] whitespace-nowrap"
       style={{ backgroundColor: typeColors[type] ?? '#8492a3', color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}
     >
       {typeLabels[type] ?? type}

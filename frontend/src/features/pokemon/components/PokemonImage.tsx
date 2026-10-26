@@ -1,3 +1,6 @@
+"use client";
+
+import Image from 'next/image';
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import type { PokemonSummary } from '../types';
@@ -34,9 +37,12 @@ export default function PokemonImage({
     .find((url) => url && !failed.includes(url));
   const name = pokemon.nameKo ?? pokemon.nameEn;
   return source ? (
-    <img
+    <Image
       className={`object-contain shrink-0 ${imageSizes[size]}`}
       src={source}
+      width={size === 'large' ? 80 : 32}
+      height={size === 'large' ? 80 : 32}
+      sizes={size === 'large' ? '80px' : '32px'}
       alt={size === 'large' ? `${name} 이미지` : ''}
       loading={size === 'large' ? 'eager' : 'lazy'}
       fetchPriority={size === 'large' ? 'high' : 'auto'}

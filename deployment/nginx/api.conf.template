@@ -82,5 +82,17 @@ server {
         # Drop query strings from the access log to avoid recording user questions.
         access_log off;
     }
-    location / { return 404; }
+    # CloudFront's default behavior forwards Next.js pages and assets here.
+    location / {
+        if ($valid_origin_token = 0) { return 403; }
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Connection "";
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-PokeTact-Origin "";
+        proxy_read_timeout 60s;
+        proxy_buffering off;
+        access_log off;
+    }
 }

@@ -22,7 +22,7 @@ const meta = {
 };
 
 test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ page }) => {
-  await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/**', route => route.fulfill({
+  await page.route('**/_next/image?**', route => route.fulfill({
     contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><circle cx="48" cy="48" r="32" fill="#f8cf36"/></svg>',
   }));
   await page.route('**/api/**', route => {
@@ -39,7 +39,9 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
   await expect(page.getByText('명랑', { exact: true })).toBeVisible();
   const image = page.getByRole('img', { name: '합성 포켓몬 이미지', exact: true });
   await expect(image).toBeVisible();
-  await expect(image).toHaveJSProperty('naturalWidth', 96);
+  await expect(image).toHaveJSProperty('complete', true);
+  expect(await image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+  await expect(image).toHaveAttribute('srcset', /\/_next\/image\?/);
   await expect(page.getByRole('region', { name: '싱글 사용 순위' }).locator('img')).toHaveCount(1);
   await expect(page.getByText('0%', { exact: true })).toBeVisible();
   await expect(page.getByText(/데이터 기준일 2026-10-24/)).toBeVisible();
@@ -60,7 +62,7 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
 });
 
 test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page }) => {
-  await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/**', route => route.abort());
+  await page.route('**/_next/image?**', route => route.abort());
   let failed = true;
   await page.route('**/api/**', route => {
     const path = new URL(route.request().url()).pathname;
@@ -71,7 +73,7 @@ test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page }
     return route.fulfill({ json: { data: path === '/api/status' ? { ready: true } : { active: true, items: [] } } });
   });
   await page.goto('/meta');
-  await expect(page.getByRole('alert')).toContainText('합성 외부 장애');
+  await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText('합성 외부 장애');
   failed = false;
   await page.getByRole('button', { name: '다시 시도', exact: true }).click();
   await expect(page.getByText(/임시 보관한 데이터를/)).toBeVisible();

@@ -47,3 +47,19 @@ backend/tests/
 **/credentials*.json
 **/service-account*.json
 **/.npmrc
+
+# Next.js server build inputs only; local output, credentials and test data excluded.
+!deployment/docker/Dockerfile.frontend
+!frontend/
+frontend/*
+!frontend/package.json
+!frontend/pnpm-lock.yaml
+!frontend/next.config.ts
+!frontend/postcss.config.mjs
+!frontend/tsconfig.json
+!frontend/src/
+!frontend/src/**
+!frontend/public/
+!frontend/public/**
+frontend/src/assets/master-ball.png
+frontend/src/assets/README.md

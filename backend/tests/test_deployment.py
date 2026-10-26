@@ -106,12 +106,12 @@ def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkey
     sys.modules.pop("deployment.aws.bootstrap_github_oidc", None)
     bootstrap = importlib.import_module("deployment.aws.bootstrap_github_oidc")
     state = tmp_path / "poketact-deployment.json"
-    state.write_text(json.dumps({"bucket": "synthetic-bucket", "distribution_id": "synthetic-distribution", "domain": "example.com"}))
+    state.write_text(json.dumps({"distribution_id": "synthetic-distribution", "domain": "example.com"}))
     bootstrap.configure(state, "unfl1/poketact", prefix)
     condition = calls["trust"]["Statement"][0]["Condition"]["StringEquals"]
     assert condition["token.actions.githubusercontent.com:sub"] == prefix + ":environment:production"
     actions = {a for statement in calls["policy"]["Statement"] for a in statement["Action"]}
-    assert actions == {"s3:ListBucket", "s3:PutObject", "cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"}
+    assert actions == {"cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"}
     output = tmp_path / "github-production-secrets.json"
     assert output.stat().st_mode & 0o777 == 0o600
     assert json.loads(output.read_text())["PRODUCTION_URL"] == "https://www.example.com"
@@ -160,7 +160,7 @@ def test_aws_subject_migration_preserves_other_conditions(tmp_path, monkeypatch,
     sys.modules.pop("deployment.aws.bootstrap_github_oidc", None)
     bootstrap = importlib.import_module("deployment.aws.bootstrap_github_oidc")
     state = tmp_path / "poketact-deployment.json"
-    state.write_text(json.dumps({"bucket": "synthetic-bucket", "distribution_id": "synthetic-distribution", "domain": "example.com"}))
+    state.write_text(json.dumps({"distribution_id": "synthetic-distribution", "domain": "example.com"}))
     if allowed:
         bootstrap.configure(state, "unfl1/poketact", "repo:unfl1@111/poketact@222", migrate_legacy_subject=True)
         assert calls["updated"] == calls["desired"]
@@ -168,3 +168,71 @@ def test_aws_subject_migration_preserves_other_conditions(tmp_path, monkeypatch,
         with pytest.raises(RuntimeError, match="different trust"):
             bootstrap.configure(state, "unfl1/poketact", "repo:unfl1@111/poketact@222", migrate_legacy_subject=True)
         assert "updated" not in calls
+
+
+@pytest.mark.parametrize("operation", ["provision", "connect"])
+def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, monkeypatch, operation):
+    calls = {}
+
+    class CloudFront:
+        def list_cache_policies(self, **kwargs):
+            return {"CachePolicyList": {"Items": [{"CachePolicy": {
+                "Id": "no-cache", "CachePolicyConfig": {"Name": "Managed-CachingDisabled"},
+            }}]}}
+
+        def list_origin_request_policies(self, **kwargs):
+            return {"OriginRequestPolicyList": {"Items": [{"OriginRequestPolicy": {
+                "Id": "viewer-headers", "OriginRequestPolicyConfig": {"Name": "Managed-AllViewerExceptHostHeader"},
+            }}]}}
+
+        def get_distribution_config(self, **kwargs):
+            return {"ETag": "version", "DistributionConfig": {
+                "Origins": {"Items": [{"Id": "frontend-s3"}]},
+                "DefaultCacheBehavior": {"ForwardedValues": {}, "DefaultTTL": 300},
+                "DefaultRootObject": "index.html",
+                "CacheBehaviors": {"Items": [{"PathPattern": "/assets/*"}]},
+                "CustomErrorResponses": {"Quantity": 1},
+            }}
+
+        def create_distribution(self, **kwargs):
+            calls["config"] = kwargs["DistributionConfig"]
+            return {"Distribution": {"Id": "distribution", "DomainName": "synthetic.cloudfront.net"}}
+
+        def update_distribution(self, **kwargs):
+            calls["config"] = kwargs["DistributionConfig"]
+            return {"ETag": "updated", "Distribution": {"Status": "InProgress"}}
+
+        def create_invalidation(self, **kwargs):
+            calls["invalidation"] = kwargs
+
+    acm = SimpleNamespace(
+        request_certificate=lambda **kwargs: {"CertificateArn": "certificate"},
+        describe_certificate=lambda **kwargs: {"Certificate": {"Status": "ISSUED"}},
+    )
+    cf = CloudFront()
+    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name, **kwargs: cf if name == "cloudfront" else acm))
+    module_name = f"deployment.aws.{operation}_frontend"
+    sys.modules.pop(module_name, None)
+    module = importlib.import_module(module_name)
+    state = tmp_path / "state.json"
+    token = tmp_path / "token"
+    token.write_text("a" * 64)
+    if operation == "provision":
+        module.provision("example.com", token, state)
+        assert "bucket" not in json.loads(state.read_text())
+    else:
+        state.write_text(json.dumps({"domain": "example.com", "distribution_id": "distribution", "certificate_arn": "certificate"}))
+        module.connect(state, token)
+        assert calls["invalidation"]["InvalidationBatch"]["Paths"]["Items"] == ["/*"]
+    config = calls["config"]
+    default = config["DefaultCacheBehavior"]
+    assert config["DefaultRootObject"] == ""
+    assert default["CachePolicyId"] == "no-cache"
+    assert default["OriginRequestPolicyId"] == "viewer-headers"
+    assert "ForwardedValues" not in default
+    assert "DefaultTTL" not in default
+    assert config["Origins"]["Quantity"] == 1
+    assert config["Origins"]["Items"][0]["CustomOriginConfig"]["OriginProtocolPolicy"] == "https-only"
+    assert default.get("FunctionAssociations", {}).get("Quantity", 0) == 0
+    assert config.get("CustomErrorResponses", {}).get("Quantity", 0) == 0
+    assert all(item["PathPattern"].startswith("/api") for item in config.get("CacheBehaviors", {}).get("Items", []))

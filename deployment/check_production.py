@@ -12,7 +12,9 @@ def check(base):
         raise ValueError("HTTPS production URL required")
     with urllib.request.urlopen(base, timeout=15) as response:
         html = response.read().decode()
-    assets = re.findall(r'(?:src|href)="(/assets/[^"\s]+)"', html)
+    if "전략 챗봇" not in html:
+        raise ValueError("Server-rendered content not found")
+    assets = re.findall(r'(?:src|href)="(/_next/static/[^"\s]+)"', html)
     if not assets:
         raise ValueError("Frontend assets not found")
     for asset in assets:
