@@ -57,17 +57,16 @@ export function useWorkspace() {
     queryFn: () => chatApi.conversations(pokemonId),
     enabled: session.isSuccess,
   });
-  const [choices, setChoices] = useState<Record<string, string | null>>((): Record<string, string | null> => {
-    try { const id = sessionStorage.getItem('poketact-conversation'); return id ? {workspace: id} : {}; }
-    catch { return {}; }
-  });
+  const [choices, setChoices] = useState<Record<string, string | null>>({});
+  const [restored, setRestored] = useState(false);
   const conversationId = Object.hasOwn(choices, pokemonId)
     ? choices[pokemonId]
     : (conversations.data?.items[0]?.conversationId ?? null);
   useEffect(() => {
+    if (!restored) return;
     try { if (conversationId) sessionStorage.setItem('poketact-conversation', conversationId); }
     catch { /* storage may be disabled */ }
-  }, [conversationId]);
+  }, [conversationId, restored]);
   const messages = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => chatApi.messages(conversationId!),
@@ -79,7 +78,15 @@ export function useWorkspace() {
       try { sessionStorage.removeItem('poketact-conversation'); } catch { /* storage may be disabled */ }
     }
   }, [messages.error]);
-  const [jobs, setJobs] = useState(readPending);
+  const [jobs, setJobs] = useState<Record<string, PendingJob>>({});
+  useEffect(() => {
+    setJobs(readPending());
+    try {
+      const id = sessionStorage.getItem('poketact-conversation');
+      if (id) setChoices({ workspace: id });
+    } catch { /* storage may be disabled */ }
+    setRestored(true);
+  }, []);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState<Failure | null>(null);
   const [lastRequests, setLastRequests] = useState<Record<string, SendRequest>>(
@@ -88,6 +95,7 @@ export function useWorkspace() {
   const pending = jobs[pokemonId];
 
   useEffect(() => {
+    if (!restored) return;
     // Persist only opaque job/conversation IDs, never questions or answers.
     try {
       sessionStorage.setItem(
@@ -104,7 +112,7 @@ export function useWorkspace() {
     } catch {
       /* storage may be disabled */
     }
-  }, [jobs]);
+  }, [jobs, restored]);
 
   const send = useMutation({
     mutationFn: (body: SendRequest) =>

@@ -54,11 +54,11 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         </div>
         <div className="min-w-0">
           <h1>전략 챗봇</h1>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+          <p className="mt-1 text-[14px] leading-relaxed text-muted">
             포켓몬 배틀 상황을 물어보면, 근거를 바탕으로 전략을 안내해요.
           </p>
         </div>
-        <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-line [&_select]:bg-canvas [&_select]:text-muted [&_select]:rounded-[5px] [&_select]:text-[11px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
+        <div className="gap-2 ml-auto flex items-center min-w-0 max-phone:mx-0 max-phone:w-full max-phone:mt-1 max-phone:mb-0 [&_select]:p-[7px] [&_select]:border [&_select]:border-line [&_select]:bg-canvas [&_select]:text-muted [&_select]:rounded-[5px] [&_select]:text-[14px] [&_select]:max-w-42.5 max-desktop:[&_select]:max-w-30 max-phone:[&_select]:max-w-none max-phone:[&_select]:flex-1">
           <label className="sr-only" htmlFor="conversation-select">
             대화 기록 선택
           </label>
@@ -78,7 +78,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             ))}
           </select>
           <button
-            className="border border-line flex items-center gap-1.5 px-2 py-1.5 rounded-[5px] text-[11px] text-muted whitespace-nowrap"
+            className="border border-line flex items-center gap-1.5 px-2 py-1.5 rounded-[5px] text-[14px] text-muted whitespace-nowrap"
             title="빈 전투 상태로 새 대화 시작 · 이전 기록은 보관"
             aria-label="대화 초기화"
             onClick={w.createNew}
@@ -100,7 +100,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
       >
         {loading && (
           <div
-            className="px-0 py-4 gap-2.5 flex items-center text-accent text-[12px]"
+            className="px-0 py-4 gap-2.5 flex items-center text-accent text-[14px]"
             role="status"
           >
             <LoaderCircle
@@ -111,7 +111,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           </div>
         )}
         {!loading && !items.length && !w.pending && (
-          <div className="px-0 flex items-center flex-col text-center pt-24 pb-3 max-tablet:pt-23 [&_h2]:text-[18px] [&_h2]:tracking-[-0.6px] [&_h2]:font-medium max-desktop:[&_h2]:text-[16px] max-phone:[&_h2]:text-[15px] [&>p]:mx-0 [&>p]:text-[12px] [&>p]:text-muted [&>p]:leading-[1.9] [&>p]:mt-[11px] [&>p]:mb-[23px]">
+          <div className="px-0 flex items-center flex-col text-center pt-24 pb-3 max-tablet:pt-23 [&_h2]:text-[18px] [&_h2]:tracking-[-0.6px] [&_h2]:font-medium max-desktop:[&_h2]:text-[16px] max-phone:[&_h2]:text-[15px] [&>p]:mx-0 [&>p]:text-[14px] [&>p]:text-muted [&>p]:leading-[1.9] [&>p]:mt-[11px] [&>p]:mb-[23px]">
             <span className="border border-accent/19 grid place-items-center w-14 h-14 rounded-[17px] text-accent bg-accent/3 mb-5">
               <MessageSquare size={25} strokeWidth={1.8} aria-hidden="true" />
             </span>
@@ -119,7 +119,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             <p>
               내 포켓몬과 상대, 현재 상황을 알려주세요.
             </p>
-            <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-line [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-ink [&_button]:text-[11px] [&_button]:bg-surface max-phone:[&_button]:text-[10px] [&_svg]:text-muted">
+            <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-line [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-ink [&_button]:text-[14px] [&_button]:bg-surface max-phone:[&_button]:text-[14px] [&_svg]:text-muted">
               <button
                 onClick={() =>
                   w.setDraft('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?')
@@ -148,7 +148,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           <>
             {w.pending.question && (
               <div
-                className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-muted [&>span]:text-right [&>span]:text-[10px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-accent/14 [&_p]:bg-accent/4 [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[14px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
+                className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-muted [&>span]:text-right [&>span]:text-[14px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-accent/14 [&_p]:bg-accent/4 [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[14px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
                 data-testid="user-message"
               >
                 <span>나의 요청</span>
@@ -156,7 +156,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
               </div>
             )}
             <div
-              className="px-0 py-4 gap-2.5 flex items-center text-accent text-[12px] [&_p]:text-[10px] [&_p]:text-muted [&_p]:mt-[7px] [&_strong]:font-medium"
+              className="px-0 py-4 gap-2.5 flex items-center text-accent text-[14px] [&_p]:text-[14px] [&_p]:text-muted [&_p]:mt-[7px] [&_strong]:font-medium"
               role="status"
             >
               <LoaderCircle
@@ -176,7 +176,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
       </div>
       {error && (
         <div
-          className="px-4 py-[13px] mx-5.5 border border-warning-line gap-[11px] flex items-center bg-warning-soft text-warning rounded-[8px] text-[12px] leading-[1.8] mt-0 mb-[15px] max-phone:mx-[13px] max-phone:mb-[13px] [&_button]:gap-[5px] [&_button]:text-[11px] [&_button]:text-ink [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap"
+          className="px-4 py-[13px] mx-5.5 border border-warning-line gap-[11px] flex items-center bg-warning-soft text-warning rounded-[8px] text-[14px] leading-[1.8] mt-0 mb-[15px] max-phone:mx-[13px] max-phone:mb-[13px] [&_button]:gap-[5px] [&_button]:text-[14px] [&_button]:text-ink [&_button]:flex [&_button]:items-center [&_button]:ml-auto [&_button]:whitespace-nowrap"
           role="alert"
         >
           <CircleHelp size={16} />
@@ -227,7 +227,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             }
           }}
         />
-        <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[10px] [&>span]:text-muted max-phone:[&>span]:text-[10px]">
+        <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[14px] [&>span]:text-muted max-phone:[&>span]:text-[14px]">
           <span>
             <CircleHelp size={12} />
             답변에 사용한 출처와 미확인 정보를 함께 안내해요.

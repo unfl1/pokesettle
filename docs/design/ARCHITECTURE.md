@@ -12,11 +12,17 @@
 
 > 2026-10-22 구조 정리: 실행 코드를 `backend/app`으로 이동하고 기능별 `APIRouter`·공통 의존성·예외 처리·미들웨어를 분리함. 현재 경로는 [앱 진입점](../../backend/app/main.py)과 [API 라우터](../../backend/app/api/router.py) 참조. 단계별 업데이트 문구는 당시 기록으로 유지함.
 
+- 프런트엔드: Next.js 16.4.3 App Router, `src/app/layout.tsx`·경로별 `page.tsx` 서버 컴포넌트 적용
+- 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
+- HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
+- 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
+- 통계: `@next/third-parties/google`의 `GoogleAnalytics`, 런타임 `GA_ID` 설정 시 활성화, CloudFront SSR 응답 캐시 비활성화
+
 ## 1. 구조와 책임
 
 ```mermaid
 flowchart TD
-    UI[React / TypeScript / Vite UI] --> API[FastAPI: 검증·세션·오류·작업 상태]
+    UI[Next.js App Router / React Server Components] --> API[FastAPI: 검증·세션·오류·작업 상태]
     API --> APP[응용 서비스: 채팅·가이드·조건 탐색]
     APP --> GRAPH[LangGraph: retrieve → generate]
     GRAPH --> META[pgvector pokemon_meta]

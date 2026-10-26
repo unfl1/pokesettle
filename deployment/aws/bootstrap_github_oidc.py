@@ -44,7 +44,7 @@ def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=
     role = "poketact-github-production"
     try:
         result = iam.create_role(RoleName=role, AssumeRolePolicyDocument=json.dumps(trust),
-                                 Description="PokeTact frontend deployment from protected production environment")
+                                 Description="PokeTact deployment from protected production environment")
     except iam.exceptions.EntityAlreadyExistsException:
         # Only an explicit migration of this exact repository's old subject is allowed.
         existing = iam.get_role(RoleName=role)
@@ -56,19 +56,15 @@ def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=
                 raise RuntimeError("Existing deployment role has different trust; review required") from None
             iam.update_assume_role_policy(RoleName=role, PolicyDocument=json.dumps(trust))
         result = existing
-    bucket = state["bucket"]
     distribution = f"arn:aws:cloudfront::{account}:distribution/{state['distribution_id']}"
     policy = {"Version": "2012-10-17", "Statement": [
-        {"Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": f"arn:aws:s3:::{bucket}"},
-        {"Effect": "Allow", "Action": ["s3:PutObject"],
-         "Resource": [f"arn:aws:s3:::{bucket}/index.html", f"arn:aws:s3:::{bucket}/assets/*"]},
         {"Effect": "Allow", "Action": ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"],
          "Resource": distribution},
     ]}
     iam.put_role_policy(RoleName=role, PolicyName="FrontendPublish", PolicyDocument=json.dumps(policy))
     output = state_path.with_name("github-production-secrets.json")
     values = {
-        "AWS_ROLE_ARN": result["Role"]["Arn"], "FRONTEND_BUCKET": bucket,
+        "AWS_ROLE_ARN": result["Role"]["Arn"],
         "CLOUDFRONT_DISTRIBUTION_ID": state["distribution_id"],
         "PRODUCTION_URL": f"https://www.{state['domain']}",
     }

@@ -16,7 +16,8 @@ export default defineConfig({
     trace: 'off',
   },
   webServer: {
-    command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1',
+    command: 'cp -R public .next/standalone/ && cp -R .next/static .next/standalone/.next/ && node .next/standalone/server.js',
+    env: { HOSTNAME: '127.0.0.1', PORT: '5173' },
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: true,
   },

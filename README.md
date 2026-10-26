@@ -15,7 +15,7 @@ Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓�
 
 | 영역 | 구성 |
 |---|---|
-| 프론트엔드 | React, TypeScript, Vite, Tailwind CSS |
+| 프론트엔드 | Next.js 16.4.3 App Router, React, TypeScript, Tailwind CSS |
 | 백엔드 | Python, FastAPI |
 | RAG | LangChain, LangGraph, pgvector |
 | 저장 | PostgreSQL, JSON 기준 자료 |

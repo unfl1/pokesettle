@@ -102,3 +102,7 @@ origin-token.*
 github-production-secrets.json
 /out/
 /releases/
+
+# Next.js build and generated type entry
+frontend/.next/
+frontend/next-env.d.ts

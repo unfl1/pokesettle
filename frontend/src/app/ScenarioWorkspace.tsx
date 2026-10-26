@@ -1,0 +1,12 @@
+"use client";
+import { useRouter } from 'next/navigation';
+import { useWorkspaceContext } from './providers';
+import TeamWorkspace from '../features/team/components/TeamWorkspace';
+export default function ScenarioWorkspace() {
+  const workspace = useWorkspaceContext();
+  const router = useRouter();
+  return <div data-testid="scenario-page"><TeamWorkspace sessionReady={workspace.session.isSuccess} onAsk={question => {
+    if (question) workspace.setDraft(question);
+    router.push('/chat');
+  }} /></div>;
+}

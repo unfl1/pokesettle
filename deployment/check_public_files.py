@@ -14,10 +14,12 @@ PATTERNS = [
 
 def check():
     failures = []
-    for name in subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0"):
+    for name in subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"]).decode().split("\0"):
         if not name:
             continue
         path = Path(name)
+        if not path.exists():
+            continue
         if ({".secrets", ".aws", "private", "runtime", "backups", "node_modules"} & set(path.parts)
                 or path.suffix in {".pem", ".key", ".dump", ".sqlite3", ".log"}
                 or path.name.startswith(".env") and path.name not in {".env.example", ".env.production.example"}

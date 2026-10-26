@@ -46,6 +46,35 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  frontend:
+    image: poketact-frontend:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.frontend
+    restart: unless-stopped
+    environment:
+      GA_ID: ${GA_ID:-}
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/chat').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   index:
     <<: *backend
     profiles: [setup]

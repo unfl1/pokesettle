@@ -54,8 +54,14 @@ jobs:
         run: uv run pytest -q
       - name: Frontend build
         run: pnpm --dir frontend run build
+      - name: Frontend regression tests
+        run: |
+          pnpm --dir frontend exec playwright install --with-deps chromium
+          CHROME_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux*/chrome' -type f | head -1) pnpm --dir frontend test:e2e
       - name: Build production image
         run: docker build --file deployment/docker/Dockerfile --tag "poketact-backend:$GITHUB_SHA" .
+      - name: Build Next.js production server
+        run: docker build --file deployment/docker/Dockerfile.frontend --tag "poketact-frontend:$GITHUB_SHA" .
       - name: Verify packaged application and calculator
         run: docker run --rm --network none --entrypoint python "poketact-backend:$GITHUB_SHA" -m backend.scripts.smoke_image
       - name: Validate monitoring configuration
@@ -68,9 +74,8 @@ jobs:
       - name: Package immutable production release
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
-          mkdir -p out/frontend
-          cp -R frontend/dist/index.html frontend/dist/assets out/frontend/
-          docker save --output "$RUNNER_TEMP/image.tar" "poketact-backend:$GITHUB_SHA"
+          mkdir -p out
+          docker save --output "$RUNNER_TEMP/image.tar" "poketact-backend:$GITHUB_SHA" "poketact-frontend:$GITHUB_SHA"
           uv run python -m deployment.package_release --image "$RUNNER_TEMP/image.tar" --output out/backend-release.tar.gz
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

@@ -183,13 +183,13 @@ test('팀 편집·저장·갱신·복원·삭제 및 챗봇 질문 초안 연결
   const own = page.getByRole('region', { name: '내 팀', exact: true });
   await own.getByRole('button', { name: '포켓몬 추가' }).click();
   await own.getByRole('button', { name: '테스트1 풀' }).click();
-  await page.getByLabel('팀 이름', { exact: true }).fill('개인 구성');
+  await page.getByRole('textbox', { name: '팀 이름', exact: true }).fill('개인 구성');
   await page.getByRole('button', { name: '내 팀 저장', exact: true }).click();
   await expect(page.getByText('팀 저장 완료', { exact: true })).toBeVisible();
   await page
     .getByRole('button', { name: '이 구성으로 챗봇에 질문 준비' })
     .click();
-  await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/내 팀\(테스트1\)/);
+  await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue(/내 팀\(테스트1\)/);
   await page
     .getByRole('link', { name: '6:6 시나리오', exact: true })
     .click();
@@ -199,19 +199,19 @@ test('팀 편집·저장·갱신·복원·삭제 및 챗봇 질문 초안 연결
     .getByRole('link', { name: '6:6 시나리오', exact: true })
     .click();
   await page
-    .getByLabel('저장한 내 팀', { exact: true })
+    .getByRole('combobox', { name: '저장한 내 팀', exact: true })
     .selectOption({ label: '개인 구성' });
   await expect(own.getByText('테스트1', { exact: true })).toBeVisible();
-  await page.getByLabel('팀 이름', { exact: true }).fill('수정한 구성');
+  await page.getByRole('textbox', { name: '팀 이름', exact: true }).fill('수정한 구성');
   await page.getByRole('button', { name: '내 팀 저장', exact: true }).click();
-  await expect(page.getByLabel('저장한 내 팀', { exact: true })).toContainText(
+  await expect(page.getByRole('combobox', { name: '저장한 내 팀', exact: true })).toContainText(
     '수정한 구성',
   );
   await page
     .getByRole('button', { name: '저장된 팀 삭제', exact: true })
     .click();
   await expect(
-    page.getByLabel('저장한 내 팀', { exact: true }),
+    page.getByRole('combobox', { name: '저장한 내 팀', exact: true }),
   ).not.toContainText('수정한 구성');
   await expect(own.getByText('테스트1', { exact: true })).toBeVisible();
 });
@@ -221,9 +221,9 @@ test('선출 20개·근거·상성 결과 및 입력 변경 시 이전 결과 �
 }) => {
   await fixture(page);
   await openTeams(page);
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page
-    .getByLabel('상대 팀 불러오기', { exact: true })
+    .getByRole('combobox', { name: '상대 팀 불러오기', exact: true })
     .selectOption('seed');
   await page.getByRole('button', { name: '타입 상성 분석' }).click();
   await expect(
@@ -258,9 +258,9 @@ test('모바일 전투 비교·메가 사용 상태·가로 넘침 없음', asyn
   await page.setViewportSize({ width: 390, height: 844 });
   await fixture(page);
   await openTeams(page);
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page
-    .getByLabel('상대 팀 불러오기', { exact: true })
+    .getByRole('combobox', { name: '상대 팀 불러오기', exact: true })
     .selectOption('seed');
   await page
     .getByRole('button', { name: '현재 전투 비교', exact: true })
@@ -321,8 +321,8 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await openTeams(page);
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
-  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   const submit = panel.getByRole('button', { name: '참조 피해 계산', exact: true });
   await expect(submit).toBeDisabled();
@@ -367,42 +367,42 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
 test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ page }) => {
   await fixture(page);
   await page.goto('/scenario');
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
-  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
-  await page.getByLabel('팀 이름', { exact: true }).fill('편집 중인 팀');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
+  await page.getByRole('textbox', { name: '팀 이름', exact: true }).fill('편집 중인 팀');
   await page.getByRole('button', { name: '현재 전투 비교', exact: true }).click();
   await page.getByRole('combobox', { name: '메가 사용 상태', exact: true }).selectOption('used');
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.getByRole('region', { name: '내 팀', exact: true })).toBeHidden();
-  await page.getByLabel('포켓몬 질문').fill('메뉴를 오가도 유지할 질문');
+  await page.getByRole('textbox', { name: '포켓몬 질문', exact: true }).fill('메뉴를 오가도 유지할 질문');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
-  await expect(page.getByLabel('팀 이름', { exact: true })).toHaveValue('편집 중인 팀');
+  await expect(page.getByRole('textbox', { name: '팀 이름', exact: true })).toHaveValue('편집 중인 팀');
   await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
-  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('메뉴를 오가도 유지할 질문');
+  await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue('메뉴를 오가도 유지할 질문');
 });
 
 
 test('추천 선봉 적용과 전략 근거 질문 연결', async ({ page }) => {
   await fixture(page);
   await openTeams(page);
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
-  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
   await page.getByRole('button', { name: '3마리·선봉 추천', exact: true }).click();
   await page.getByRole('button', { name: '추천 선봉으로 전투 비교', exact: true }).click();
   await expect(page.getByRole('combobox', { name: '현재 내 포켓몬', exact: true })).toHaveValue('0');
   await page.getByRole('button', { name: '팀·선출 비교', exact: true }).click();
   await page.getByRole('button', { name: '이 선출의 전략 근거 질문하기', exact: true }).click();
-  await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/추천 선출은 테스트1, 테스트2, 테스트3이고 선봉은 테스트1/);
-  await expect(page.getByLabel('포켓몬 질문')).toHaveValue(/입력한 공격/);
+  await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue(/추천 선출은 테스트1, 테스트2, 테스트3이고 선봉은 테스트1/);
+  await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue(/입력한 공격/);
 });
 
 
 test('피해 계산 기술의 타입·습득 필터 및 공격자 변경 초기화', async ({ page }) => {
   await fixture(page);
   await openTeams(page);
-  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
-  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
+  await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
   const moves = panel.getByLabel('계산 기술', { exact: true });

@@ -336,7 +336,7 @@ test('네트워크 재시도, 진행 중 새로고침, HTML은 텍스트로 표�
   control.failNext();
   await page.getByLabel('포켓몬 질문').fill('<img src=x onerror=alert(1)>');
   await page.getByRole('button', { name: '질문 보내기' }).click();
-  await expect(page.getByRole('alert')).toContainText('응답이 지연되었습니다.');
+  await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText('응답이 지연되었습니다.');
   await page.getByRole('button', { name: '다시 시도', exact: true }).click();
   await expect(page.getByText('원문 자료를 확인하고 있어요')).toBeVisible();
   await page.reload();
@@ -351,7 +351,7 @@ for (const missing of ['MODEL_KEY_MISSING', 'INDEX_NOT_READY'])
   test(`${missing} 안내와 도감 질문 전송 허용`, async ({ page }) => {
     await fixture(page, [missing]);
     await page.goto('/');
-    await expect(page.getByRole('alert')).toContainText(
+    await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText(
       missing === 'INDEX_NOT_READY' ? '색인이 준비되지' : '모델 연결 설정',
     );
     await page.getByLabel('포켓몬 질문').fill('타입 알려줘');
@@ -532,7 +532,7 @@ for (const missingSprite of [false, true])
         },
       }),
     );
-    await page.route('**/PokeAPI/sprites/**', (route) => {
+    await page.route('**/_next/image?**', (route) => {
       if (route.request().url().includes('official-artwork') || missingSprite)
         return route.fulfill({ status: 404 });
       return route.fulfill({
@@ -551,7 +551,7 @@ for (const missingSprite of [false, true])
     else
       await expect(
         page.getByRole('img', { name: '피카츄 이미지', exact: true }),
-      ).toHaveAttribute('src', `${root}/25.png`);
+      ).toHaveAttribute('src', /\/_next\/image\?url=https%3A%2F%2Fraw\.githubusercontent\.com%2FPokeAPI%2Fsprites%2Fmaster%2Fsprites%2Fpokemon%2F25\.png&w=\d+&q=75/);
     await expect(page.getByRole('heading', { name: '종족값', exact: true })).toBeVisible();
     await expect(
       page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
@@ -705,4 +705,33 @@ test('챗봇 진입은 도감을 요청하지 않고 메뉴·뒤로 가기로 �
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
   await expect(page).toHaveURL(/pokemon=pokemon%3A1/);
+});
+
+test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', async ({ page, request }) => {
+  const html = await request.get('/pokedex');
+  expect(html.status()).toBe(200);
+  expect(html.headers()['x-powered-by']).toBeUndefined();
+  expect(await html.text()).toContain('포켓몬의 타입·특성·종족값과 기술을 확인하세요.');
+  const rsc = await request.get('/meta', { headers: { RSC: '1' } });
+  expect(rsc.headers()['content-type']).toContain('text/x-component');
+
+  await fixture(page);
+  const fonts = new Set<string>();
+  const hydrationErrors: string[] = [];
+  page.on('request', request => {
+    if (new URL(request.url()).pathname.endsWith('.woff2')) fonts.add(request.url());
+  });
+  page.on('pageerror', error => hydrationErrors.push(error.message));
+  await page.goto('/chat');
+  await expect(page.getByLabel('포켓몬 질문')).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  expect(fonts.size).toBeGreaterThan(0);
+  expect(fonts.size).toBeLessThan(92);
+  expect([...fonts].some(url => url.includes('/_next/static/'))).toBe(true);
+  expect([...fonts].some(url => url.includes('/fonts/pretendard/'))).toBe(true);
+  await expect(page.locator('[data-testid="pokedex-page"], [data-testid="scenario-page"]')).toHaveCount(0);
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
+  await expect(page.locator('[data-testid="chat-page"]')).toHaveCount(0);
+  expect(hydrationErrors).toEqual([]);
 });
