@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Swords, TrendingUp, X } from 'lucide-react';
-import { useWorkspaceContext } from './providers';
+import { useWorkspaceContext } from '../../providers/AppProviders';
 
 const navigation = [
   { id: 'chat', path: '/chat', label: '챗봇', icon: MessageSquare },

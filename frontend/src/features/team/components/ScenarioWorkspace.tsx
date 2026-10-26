@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import { useWorkspaceContext } from './providers';
-import TeamWorkspace from '../features/team/components/TeamWorkspace';
+import { useWorkspaceContext } from '../../../providers/AppProviders';
+import TeamWorkspace from './TeamWorkspace';
 export default function ScenarioWorkspace() {
   const workspace = useWorkspaceContext();
   const router = useRouter();
