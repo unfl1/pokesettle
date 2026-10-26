@@ -244,8 +244,8 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
 
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
-  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
-  await page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '챗봇', exact: true }).click();
+  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서' })).toBeVisible();
+  await page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link', { name: /챗봇/ }).click();
   await expect(input).toHaveValue('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?');
 
   await page.reload();
@@ -744,7 +744,12 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect(page).toHaveURL('/');
-  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서' })).toBeVisible();
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('navigation', { name: '주 메뉴' })).toHaveCount(0);
+  await expect(page.getByRole('banner')).toHaveCount(0);
+  await expect(page.getByRole('contentinfo', { name: '저작권 및 운영 안내' })).toBeVisible();
+  await expect(page.locator('.site-footer')).toHaveCount(0);
   const menus = page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link');
   await expect(menus).toHaveCount(4);
   const paths = ['/chat', '/pokedex', '/meta', '/scenario'];
@@ -752,8 +757,10 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
     await expect(menus.nth(index)).toHaveAttribute('href', paths[index]);
     await menus.nth(index).click();
     await expect(page).toHaveURL(paths[index]);
+    await expect(page.getByRole('navigation', { name: '주 메뉴' })).toBeVisible();
+    await expect(page.getByRole('contentinfo')).toBeVisible();
     await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
-    await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서' })).toBeVisible();
   }
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
