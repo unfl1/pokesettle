@@ -149,7 +149,7 @@ def test_current_matchup_fits_input_limit_without_losing_calculation(setup, monk
             assert input_reservation(messages[0].content, payload, Generation.model_json_schema()) <= settings.model_max_input_tokens
             if top_k == 6:
                 duplicated = {**payload, 'battle_context_from_user_inputs_and_type_tool': context}
-                assert input_reservation(messages[0].content, duplicated, Generation.model_json_schema()) > settings.model_max_input_tokens
+                assert input_reservation(messages[0].content, duplicated, Generation.model_json_schema()) > input_reservation(messages[0].content, payload, Generation.model_json_schema())
             sent.append(payload)
             return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
 
@@ -174,3 +174,82 @@ def test_current_matchup_fits_input_limit_without_losing_calculation(setup, monk
         assert payload['battle_context_from_user_inputs_and_type_tool'] == context
     assert state['battle_context'] == context
     assert reservations and max(reservations) <= settings.model_max_input_tokens + settings.model_max_output_tokens
+
+
+def test_registered_strategy_collection_uses_only_answer_model_and_preserves_sources(setup, monkeypatch):
+    import json
+
+    from backend.app.data_preparation.sources import CombinedSource
+    from backend.app.schemas import Candidate
+    from backend.tests.conftest import document
+
+    source = CombinedSource(setup.source.client, directory=setup.settings.data_dir, wikipedia_enabled=False)
+    source.strategy.notes = [{
+        'pokemon_id': 'pokemon:1', 'slug': 'synthetic-strategy', 'title': 'Synthetic strategy',
+        'body': 'TEST ONLY: conditional strategy; no verified Champions claims.',
+        'references': ['https://example.org/synthetic-reference'],
+    }]
+    subject = Candidate(
+        candidate_id='pokeapi:pokemon-species:1', title='Test subject', summary='Synthetic subject',
+        source_url='https://pokeapi.co/api/v2/pokemon-species/1/', resource='pokemon-species',
+        resource_id='1', is_subject_document=True,
+    )
+    ability = Candidate(
+        candidate_id='pokeapi:ability:1', title='Test ability', summary='Synthetic ability',
+        source_url='https://pokeapi.co/api/v2/ability/1/', resource='ability', resource_id='1',
+    )
+    monkeypatch.setattr(source.primary, 'subject', lambda pokemon: subject)
+    monkeypatch.setattr(source.primary, 'search', lambda query, pokemon: [ability] if query == 'test-ability' else [subject])
+    monkeypatch.setattr(source.primary, 'fetch_document', lambda candidate: document(candidate.candidate_id))
+    setup.service.source = source
+    request = ChatRequest(pokemon_id='pokemon:1', question='운영 전략 추천', client_request_id=uuid4())
+    result = setup.service.chat(request, setup.store.new_session())
+    assert [purpose for purpose, payload in setup.model.calls] == ['generate']
+    assert setup.vectors.docs.get(where={'pokemon_id': 'pokemon:1'})['ids']
+    assert result['citations'] and result['citations'][0]['source_url']
+
+    # Complete source text and applicability reach the model; citation metadata stays on the server.
+    payload = setup.model.calls[0][1]
+    assert any(item['source_type'] == 'curated' and item['verification_status'] == 'assumed' for item in payload['evidence'])
+    original = build_graph(setup.vectors, setup.model).invoke({
+        'pokemon_id': 'pokemon:1', 'question': request.question,
+    })['evidence']
+    by_id = {item['evidence_id']: item for item in original}
+    for item in payload['evidence']:
+        full = by_id[item['evidence_id']]
+        assert item['text'] == full['text']
+        assert item['verification_status'] == full['verification_status']
+        assert item['collected_at'] == full['collected_at']
+        assert 'source_url' not in item and 'licence_url' not in item
+    before = len(json.dumps(original, ensure_ascii=False).encode())
+    after = len(json.dumps(payload['evidence'], ensure_ascii=False, separators=(',', ':')).encode())
+    assert after < before * 0.85
+
+
+@pytest.mark.parametrize('question,wikipedia_enabled', [
+    ('특성 효과를 설명해줘', False),
+    ('챔피언스 최신 규칙과 운영 전략', False),
+    ('용의춤을 쓰는 운영 전략 추천', False),
+    ('피카츄와 리자몽 비교 추천', False),
+    ('운영 전략 추천', True),
+])
+def test_ambiguous_or_optional_source_queries_keep_model_planning(setup, question, wikipedia_enabled):
+    from backend.app.data_preparation.sources import CombinedSource
+
+    source = CombinedSource(setup.source.client, directory=setup.settings.data_dir, wikipedia_enabled=wikipedia_enabled)
+    pokemon = setup.catalog.get('pokemon:1')
+    assert source.plan_queries(pokemon, question) is None
+    assert source.select_candidates(pokemon, question, setup.source.search('test', pokemon)) is None
+
+
+@pytest.mark.parametrize('question', [
+    '테스트1 운영법을 알려줘',
+    '테스트1 전략을 근거와 함께 설명해줘',
+    'how to build test-species-1?',
+])
+def test_only_plain_species_strategy_requests_use_local_query_planning(setup, question):
+    from backend.app.data_preparation.sources import CombinedSource
+
+    source = CombinedSource(setup.source.client, directory=setup.settings.data_dir, wikipedia_enabled=False)
+    plan = source.plan_queries(setup.catalog.get('pokemon:1'), question)
+    assert plan is not None and [item.query for item in plan.queries] == ['test-ability']
