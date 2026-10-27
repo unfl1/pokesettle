@@ -1,3 +1,5 @@
+import { useI18n } from '../../i18n/I18nProvider';
+
 export const typeLabels: Record<string, string> = {
   normal: '노말',
   fire: '불꽃',
@@ -18,3 +20,8 @@ export const typeLabels: Record<string, string> = {
   steel: '강철',
   fairy: '페어리',
 };
+
+export function useTypeLabels() {
+  const { t } = useI18n();
+  return Object.fromEntries(Object.entries(typeLabels).map(([type, label]) => [type, t(label)]));
+}

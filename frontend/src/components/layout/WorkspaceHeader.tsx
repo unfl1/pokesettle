@@ -1,5 +1,8 @@
 "use client";
+import { useI18n } from '../../i18n/I18nProvider';
 
+import LanguageSwitcher from './LanguageSwitcher';
+import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -13,7 +16,8 @@ const navigation = [
   { id: 'scenario', path: '/scenario', label: '6:6 시나리오', icon: Swords },
 ] as const;
 export default function WorkspaceHeader() {
-  const pathname = usePathname();
+  const { locale, t: translate } = useI18n();
+  const pathname = withoutLocale(usePathname());
   const params = useSearchParams();
   const search = params.size ? `?${params.toString()}` : '';
   const [pokedexSearch, setPokedexSearch] = useState('');
@@ -25,19 +29,20 @@ export default function WorkspaceHeader() {
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <Link href="/" className="brand" aria-label="PokeTact 홈">
+          <Link href={localizedPath(locale)} className="brand" aria-label={translate("PokeTact 홈")}>
             <span className="brand-symbol" aria-hidden="true"><span /></span>
             PokeTact<span className="brand-tag">BETA</span>
           </Link>
-          <nav className="primary-nav" aria-label="주 메뉴">
+          <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
-              <Link key={id} href={id === 'pokedex' ? `${path}${pokedexSearch}` : path} aria-current={view === id ? 'page' : undefined}>
-                <Icon size={17} strokeWidth={1.8} /><span>{label}</span>
+              <Link key={id} href={localizedPath(locale, id === 'pokedex' ? `${path}${pokedexSearch}` : path)} aria-current={view === id ? 'page' : undefined}>
+                <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
               </Link>
             ))}
           </nav>
           <div className="header-actions">
-            <button className="help-button" aria-label="이용 안내" aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
+            <LanguageSwitcher />
+            <button className="help-button" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
               <CircleHelp size={19} />
             </button>
           </div>
@@ -45,29 +50,29 @@ export default function WorkspaceHeader() {
       </header>
 <div className="workspace-main workspace-notices">
         {showHelp && (
-          <section className="notice help-notice" aria-label="이용 안내">
+          <section className="notice help-notice" aria-label={translate("이용 안내")}>
             <ShieldCheck size={20} />
             <div>
-              <h2>출처를 확인하며 읽어 주세요.</h2>
-              <p>챗봇에서는 배틀 상황을 질문하고, 도감에서는 포켓몬 정보를 살펴보세요. 6:6 시나리오에서는 팀을 구성하고 비교할 수 있어요. 일반 도감 정보는 Champions 사용 가능 여부를 보장하지 않아요. 대화 기록은 현재 브라우저의 세션에 연결되며, 쿠키가 만료되거나 삭제되면 다시 접근할 수 없어요.</p>
+              <h2>{translate("출처를 확인하며 읽어 주세요.")}</h2>
+              <p>{translate("챗봇에서는 배틀 상황을 질문하고, 도감에서는 포켓몬 정보를 살펴보세요. 6:6 시나리오에서는 팀을 구성하고 비교할 수 있어요. 일반 도감 정보는 Champions 사용 가능 여부를 보장하지 않아요. 대화 기록은 현재 브라우저의 세션에 연결되며, 쿠키가 만료되거나 삭제되면 다시 접근할 수 없어요.")}</p>
             </div>
-            <button aria-label="이용 안내 닫기" onClick={() => setShowHelp(false)}><X size={18} /></button>
+            <button aria-label={translate("이용 안내 닫기")} onClick={() => setShowHelp(false)}><X size={18} /></button>
           </section>
         )}
         {(w.status.error || w.session.error) && (
           <div className="notice" role="alert">
             <CircleHelp size={18} /><span>{w.status.error?.message ?? w.session.error?.message}</span>
-            <button onClick={w.refresh}>다시 연결</button>
+            <button onClick={w.refresh}>{translate("다시 연결")}</button>
           </div>
         )}
         {w.status.data && !ready && pathname === '/chat' && (
           <div className="notice" role="alert">
             <CircleHelp size={18} />
             <div>
-              <strong>{w.status.data.missing.includes('INDEX_NOT_READY') ? '도감 색인이 준비되지 않았어요.' : '답변 모델 연결 설정이 필요해요.'}</strong>
-              <p>도감 기본 질문과 정보 조회는 계속 이용할 수 있어요. 전략 답변은 서비스 준비 후 이용해 주세요.</p>
+              <strong>{w.status.data.missing.includes('INDEX_NOT_READY') ? translate("도감 색인이 준비되지 않았어요.") : translate("답변 모델 연결 설정이 필요해요.")}</strong>
+              <p>{translate("도감 기본 질문과 정보 조회는 계속 이용할 수 있어요. 전략 답변은 서비스 준비 후 이용해 주세요.")}</p>
             </div>
-            <button onClick={w.refresh}>다시 확인</button>
+            <button onClick={w.refresh}>{translate("다시 확인")}</button>
           </div>
         )}
 

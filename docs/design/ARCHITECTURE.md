@@ -12,11 +12,16 @@
 
 > 2026-10-22 구조 정리: 실행 코드를 `backend/app`으로 이동하고 기능별 `APIRouter`·공통 의존성·예외 처리·미들웨어를 분리함. 현재 경로는 [앱 진입점](../../backend/app/main.py)과 [API 라우터](../../backend/app/api/router.py) 참조. 단계별 업데이트 문구는 당시 기록으로 유지함.
 
-- 프런트엔드: Next.js 16.4.3 App Router, `src/app/layout.tsx`·경로별 `page.tsx` 서버 컴포넌트 적용
+- 프런트엔드: Next.js 16.4.3 App Router, `src/app/[lang]/layout.tsx`·`[lang]/(root)` 기능별 `page.tsx` 서버 컴포넌트 적용
 - 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
 - 통계: `@next/third-parties/google`의 `GoogleAnalytics`, 런타임 `GA_ID` 설정 시 활성화, CloudFront SSR 응답 캐시 비활성화
+- 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 모든 언어 `/{lang}/{feature}` 접두사, 기본 언어 `ko`, `zh`는 간체(`zh-Hans`) 제공
+- 라우팅: Next.js `proxy.ts`에서 기존 기능 주소를 `/ko/...`로 308 연결, 미지원 언어·알 수 없는 경로는 404 유지, 언어 전환 시 기능·쿼리·해시 유지
+- 번역: `next/root-params` 기반 서버 사전 로딩, `I18nProvider`에서 현재 언어 사전만 클라이언트에 전달, 원문·API 데이터·챗봇 생성 응답은 자동 번역하지 않고 제공 언어 안내 표시
+- SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 언어별 sitemap 20개 URL·robots 제공
+- 참고: [review-in-korea 언어 구조](https://github.com/jihyukboin/review-in-korea/blob/main/docs/language/multilingual-architecture.md)의 레지스트리·경로 생성·언어 검증·SEO 책임 분리 참고, 기본 언어 접두사 생략 정책은 적용하지 않음
 
 ## 1. 구조와 책임
 

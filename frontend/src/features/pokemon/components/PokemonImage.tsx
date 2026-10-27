@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from '../../../i18n/I18nProvider';
+
 import Image from 'next/image';
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
@@ -31,6 +33,7 @@ export default function PokemonImage({
   pokemon: Pick<PokemonSummary, 'nameKo' | 'nameEn' | 'images'>;
   size: 'small' | 'large';
 }) {
+  const { t: translate } = useI18n();
   const [failed, setFailed] = useState<string[]>([]);
   const source = [pokemon.images?.spriteUrl]
     .map(safeImage)
@@ -43,7 +46,7 @@ export default function PokemonImage({
       width={size === 'large' ? 80 : 32}
       height={size === 'large' ? 80 : 32}
       sizes={size === 'large' ? '80px' : '32px'}
-      alt={size === 'large' ? `${name} 이미지` : ''}
+      alt={size === 'large' ? translate('{name} 이미지', { name }) : ''}
       loading={size === 'large' ? 'eager' : 'lazy'}
       fetchPriority={size === 'large' ? 'high' : 'auto'}
       decoding="async"
@@ -54,7 +57,7 @@ export default function PokemonImage({
     <span
       className={`inline-flex items-center justify-center text-muted shrink-0 ${imageSizes[size]}`}
       role={size === 'large' ? 'img' : undefined}
-      aria-label={size === 'large' ? `${name} 이미지 없음` : undefined}
+      aria-label={size === 'large' ? translate('{name} 이미지 없음', { name }) : undefined}
       aria-hidden={size === 'small' ? true : undefined}
     >
       <ImageOff size={size === 'large' ? 24 : 14} />

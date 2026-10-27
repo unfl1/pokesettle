@@ -93,7 +93,7 @@ python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'r
 - 서버 준비 상태 실패 시 이전 API·기존 Next.js 이미지로 복구, 최초 Next.js 전환 실패 시 새 프론트 컨테이너 정지, 실패 실행은 Actions에서 실패로 표시
 - 현재·이전 릴리스 설정 및 이미지 보관, 그보다 오래된 전용 릴리스 정리
 - API 컨테이너 교체 중 짧은 중단 가능, 무중단 배포 보장 없음
-- 서버 배포 성공 후 CloudFront `/*` 캐시 무효화 및 완료 대기, 홈(`/`)·챗봇(`/chat`)의 경로·서버 렌더링·Next.js 정적 자산·API 준비 상태 검사
+- 서버 배포 성공 후 CloudFront `/*` 캐시 무효화 및 완료 대기, 홈(`/ko`)·챗봇(`/ko/chat`)의 경로·서버 렌더링·Next.js 정적 자산·API 준비 상태 검사
 - 공개 검사 실패 시 서버 배포는 이미 반영된 상태일 수 있음, 서버 내부 준비 상태와 CloudFront·Nginx 공개 경로를 각각 확인
 - S3 정적 파일 업로드 없음, 최초 Next.js 전환 시 아래 HTTPS 서버 원본 연결을 별도로 적용해야 함
 - `down -v` 사용 금지, 사용자 데이터 복원은 별도 백업·복구 절차 적용
@@ -237,6 +237,8 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - S3 정적 ZIP 업로드·SPA `index.html` 재작성 제거, Next.js App Router 경로·RSC 응답·이미지 최적화 서버 사용
 - CI에서 백엔드·프런트엔드 이미지를 함께 빌드·패키징하고 Compose로 기동
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상, Docker 빌드는 `http://api:8000`
+- 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
+- SEO 원본 도메인: 기본 `https://www.chikorita.xyz`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드
@@ -250,6 +252,16 @@ pnpm --dir frontend run build
 pnpm --dir frontend run typecheck
 pnpm --dir frontend test:e2e
 ```
+
+### Codex Next.js DevTools MCP
+
+- 설정: `frontend/.codex/config.toml`, `pnpm dlx next-devtools-mcp@latest` 표준 입출력 서버, 최초 실행 시 패키지 내려받기
+- 실행 조건: Node.js·pnpm이 Codex 실행 환경의 `PATH`에 존재, `frontend` 작업 디렉터리에서 새 Codex 세션 시작, 신뢰한 프로젝트의 설정 로드 필요
+- 개발 서버: `pnpm --dir frontend dev`, 기본 포트 `5173`, Next.js 내장 `/_next/mcp` 연결
+- 확인 도구: `nextjs_index`의 `port: "5173"`으로 서버 검색, `nextjs_call`의 `get_routes`·`get_errors`·`get_compilation_issues`로 경로·오류 분석
+- 범위: 개발 전용 도구, 프로덕션 Next.js 서버는 MCP 분석 대상 제외
+- E2E 포트 분리: 기존 개발 서버 실행 중 `PLAYWRIGHT_PORT=5174 pnpm --dir frontend test:e2e`, 새 빌드 서버에서 검증
+- 근거: [Next.js MCP](https://nextjs.org/docs/app/guides/mcp), [Codex MCP 설정](https://learn.chatgpt.com/docs/extend/mcp), 확인일 `2026-10-27`
 
 - 프로덕션 이미지: `deployment/docker/Dockerfile.frontend`, `.next/standalone`·`.next/static`·`public` 포함
 - 운영 설정: `deployment/docker/compose.production.yaml`, `deployment/docker/.env.production.example`

@@ -1,10 +1,11 @@
+import { useI18n } from '../../../i18n/I18nProvider';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
 import { pokemonApi } from '../../pokemon/api';
 import type { TeamMember, MoveInput } from '../types';
 import { TypeBadge } from '../../pokemon/components/TypeBadge';
-import { typeLabels } from '../../pokemon/typeLabels';
+import { useTypeLabels } from '../../pokemon/typeLabels';
 import PokemonImage from '../../pokemon/components/PokemonImage';
 
 export const control =
@@ -23,6 +24,8 @@ function MemberCard({
   onChange: (value: TeamMember) => void;
   onRemove: () => void;
 }) {
+  const typeLabels = useTypeLabels();
+  const { t: translate } = useI18n();
   const detail = useQuery({
     queryKey: ['team-pokemon', member.pokemonId],
     queryFn: () => pokemonApi.detail(member.pokemonId),
@@ -43,7 +46,7 @@ function MemberCard({
         <button
           className="shrink-0 text-muted"
           onClick={onRemove}
-          aria-label={`${index + 1}번 멤버 제거`}
+          aria-label={translate('{number}번 멤버 제거', { number: index + 1 })}
         >
           <Trash2 size={14} />
         </button>
@@ -54,18 +57,17 @@ function MemberCard({
         </p>
       )}
       <details className="mt-2 text-[14px] text-muted">
-        <summary className="cursor-pointer">기술·HP·알려진 정보 입력</summary>
+        <summary className="cursor-pointer">{translate("기술·HP·알려진 정보 입력")}</summary>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1">
-            남은 HP (%)
-            <input
+             {translate("남은 HP (%)")} <input
               className={control}
-              aria-label={`${index + 1}번 HP`}
+              aria-label={translate('{number}번 HP', { number: index + 1 })}
               type="number"
               min="0"
               max="100"
               value={member.hpPercent ?? ''}
-              placeholder="미확인"
+              placeholder={translate("미확인")}
               onChange={(e) =>
                 onChange({
                   ...member,
@@ -76,24 +78,22 @@ function MemberCard({
             />
           </label>
           <label className="flex flex-col gap-1">
-            특성
-            <input
+             {translate("특성")} <input
               className={control}
               maxLength={80}
               value={member.ability ?? ''}
-              placeholder="미확인"
+              placeholder={translate("미확인")}
               onChange={(e) =>
                 onChange({ ...member, ability: e.target.value || null })
               }
             />
           </label>
           <label className="col-span-2 flex flex-col gap-1">
-            도구
-            <input
+             {translate("도구")} <input
               className={control}
               maxLength={80}
               value={member.item ?? ''}
-              placeholder="미확인 · 효과 계산 제외"
+              placeholder={translate("미확인 · 효과 계산 제외")}
               onChange={(e) =>
                 onChange({ ...member, item: e.target.value || null })
               }
@@ -101,9 +101,7 @@ function MemberCard({
           </label>
         </div>
         <p className="my-2 leading-[1.8]">
-          기술은 직접 입력한 시나리오입니다. 실제 습득·사용 가능 여부는
-          미확인입니다.
-        </p>
+           {translate("기술은 직접 입력한 시나리오입니다. 실제 습득·사용 가능 여부는 미확인입니다.")} </p>
         {member.moves.map((move, slot) => (
           <div
             className="mb-2 grid grid-cols-[minmax(0,1fr)_72px_72px_24px] gap-1"
@@ -111,10 +109,10 @@ function MemberCard({
           >
             <input
               className={control}
-              aria-label={`${index + 1}번 기술 ${slot + 1} 이름`}
+              aria-label={translate('{number}번 기술 {slot} 이름', { number: index + 1, slot: slot + 1 })}
               value={move.name}
               maxLength={80}
-              placeholder="기술 이름"
+              placeholder={translate("기술 이름")}
               onChange={(e) =>
                 onChange({
                   ...member,
@@ -126,7 +124,7 @@ function MemberCard({
             />
             <select
               className={control}
-              aria-label={`${index + 1}번 기술 ${slot + 1} 타입`}
+              aria-label={translate('{number}번 기술 {slot} 타입', { number: index + 1, slot: slot + 1 })}
               value={move.type}
               onChange={(e) =>
                 onChange({
@@ -145,7 +143,7 @@ function MemberCard({
             </select>
             <select
               className={control}
-              aria-label={`${index + 1}번 기술 ${slot + 1} 분류`}
+              aria-label={translate('{number}번 기술 {slot} 분류', { number: index + 1, slot: slot + 1 })}
               value={move.category}
               onChange={(e) =>
                 onChange({
@@ -161,12 +159,12 @@ function MemberCard({
                 })
               }
             >
-              <option value="physical">물리</option>
-              <option value="special">특수</option>
-              <option value="status">변화</option>
+              <option value="physical">{translate("물리")}</option>
+              <option value="special">{translate("특수")}</option>
+              <option value="status">{translate("변화")}</option>
             </select>
             <button
-              aria-label={`기술 ${slot + 1} 제거`}
+              aria-label={translate('기술 {slot} 제거', { slot: slot + 1 })}
               onClick={() =>
                 onChange({
                   ...member,
@@ -195,8 +193,7 @@ function MemberCard({
               })
             }
           >
-            기술 추가
-          </button>
+             {translate("기술 추가")} </button>
         )}
       </details>
     </li>
@@ -212,6 +209,7 @@ export default function TeamEditor({
   members: TeamMember[];
   onChange: (value: TeamMember[]) => void;
 }) {
+  const { t: translate } = useI18n();
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
@@ -246,8 +244,7 @@ export default function TeamEditor({
       </ul>
       {!members.length && (
         <p className="py-6 text-center text-[14px] text-muted">
-          포켓몬을 추가해 팀을 구성하세요.
-        </p>
+           {translate("포켓몬을 추가해 팀을 구성하세요.")} </p>
       )}
       {members.length < 6 && (
         <button
@@ -256,16 +253,15 @@ export default function TeamEditor({
           onClick={() => setOpen(!open)}
         >
           <Plus size={14} />
-          포켓몬 추가
-        </button>
+           {translate("포켓몬 추가")} </button>
       )}
       {open && members.length < 6 && (
         <div className="mt-3">
           <input
             className={`${control} w-full`}
-            aria-label={`${title} 포켓몬 검색`}
+            aria-label={translate('{title} 포켓몬 검색', { title })}
             maxLength={200}
-            placeholder="포켓몬 이름 검색"
+            placeholder={translate("포켓몬 이름 검색")}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -274,19 +270,17 @@ export default function TeamEditor({
           />
           {found.isFetching && (
             <p role="status" className="py-2 text-[14px] text-accent">
-              검색 중…
-            </p>
+               {translate("검색 중…")} </p>
           )}
           {found.error && (
             <p role="alert" className="py-2 text-[14px] text-warning">
               {found.error.message}
               <button className={action} onClick={() => void found.refetch()}>
-                다시 시도
-              </button>
+                 {translate("다시 시도")} </button>
             </p>
           )}
           {!found.isPending && !found.error && !found.data?.items.length && (
-            <p className="py-3 text-[14px]">검색 결과가 없습니다.</p>
+            <p className="py-3 text-[14px]">{translate("검색 결과가 없습니다.")}</p>
           )}
           <div className="my-2 max-h-55 overflow-auto">
             {found.data?.items.map((p) => (
@@ -329,8 +323,7 @@ export default function TeamEditor({
               disabled={offset === 0 || found.isFetching}
               onClick={() => setOffset(Math.max(0, offset - 100))}
             >
-              이전
-            </button>
+               {translate("이전")} </button>
             <span className="text-[14px] text-muted">
               {offset + 1}–{offset + (found.data?.items.length ?? 0)} /{' '}
               {found.data?.total ?? 0}
@@ -342,8 +335,7 @@ export default function TeamEditor({
               }
               onClick={() => setOffset(offset + 100)}
             >
-              다음
-            </button>
+               {translate("다음")} </button>
           </div>
         </div>
       )}

@@ -743,7 +743,7 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL('/ko');
   await expect(page.getByRole('heading', { name: '배틀 준비는 PokeTact에서' })).toBeVisible();
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('navigation', { name: '주 메뉴' })).toHaveCount(0);
@@ -752,7 +752,7 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
   await expect(page.locator('.site-footer')).toHaveCount(0);
   const menus = page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link');
   await expect(menus).toHaveCount(4);
-  const paths = ['/chat', '/pokedex', '/meta', '/scenario'];
+  const paths = ['/ko/chat', '/ko/pokedex', '/ko/meta', '/ko/scenario'];
   for (let index = 0; index < paths.length; index++) {
     await expect(menus.nth(index)).toHaveAttribute('href', paths[index]);
     await menus.nth(index).click();

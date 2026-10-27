@@ -106,3 +106,8 @@ github-production-secrets.json
 # Next.js build and generated type entry
 frontend/.next/
 frontend/next-env.d.ts
+
+# Shared frontend MCP configuration; other machine configuration remains ignored
+!frontend/.codex/
+frontend/.codex/*
+!frontend/.codex/config.toml

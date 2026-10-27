@@ -1,3 +1,4 @@
+import { useI18n } from '../../../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -33,6 +34,7 @@ const stages: Record<string, string> = {
 };
 
 export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
+  const { t: translate } = useI18n();
   const [historyOpen, setHistoryOpen] = useState(false);
   const historyToggle = useRef<HTMLButtonElement>(null);
   const historyClose = useRef<HTMLButtonElement>(null);
@@ -57,20 +59,19 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
   const loading = w.messages.isPending && Boolean(w.conversationId);
   return (
     <div className="chat-layout" data-history-open={historyOpen}>
-      <aside id="chat-history" className="chat-sidebar" aria-label="채팅 내역"
+      <aside id="chat-history" className="chat-sidebar" aria-label={translate("채팅 내역")}
         onKeyDown={(event) => { if (event.key === 'Escape') closeHistory(); }}>
         <div className="chat-sidebar-heading">
-          <h2>채팅 내역</h2>
-          <button ref={historyClose} className="chat-history-close" onClick={closeHistory} aria-label="채팅 내역 닫기"><X size={18} /></button>
+          <h2>{translate("채팅 내역")}</h2>
+          <button ref={historyClose} className="chat-history-close" onClick={closeHistory} aria-label={translate("채팅 내역 닫기")}><X size={18} /></button>
         </div>
         <button className="chat-new" onClick={() => { w.createNew(); closeHistory(); }}
           disabled={w.busy || !w.session.isSuccess}
-          title="빈 전투 상태로 새 대화 시작 · 이전 기록은 보관">
-          <SquarePen size={17} />새 채팅
-        </button>
-        <nav className="chat-history-list" aria-label="대화 기록 선택">
-          {w.conversations.isPending && <p role="status">채팅 내역을 불러오고 있어요.</p>}
-          {w.conversations.isSuccess && !w.conversations.data.items.length && <p>아직 저장된 채팅이 없어요.</p>}
+          title={translate("빈 전투 상태로 새 대화 시작 · 이전 기록은 보관")}>
+          <SquarePen size={17} />{translate("새 채팅")} </button>
+        <nav className="chat-history-list" aria-label={translate("대화 기록 선택")}>
+          {w.conversations.isPending && <p role="status">{translate("채팅 내역을 불러오고 있어요.")}</p>}
+          {w.conversations.isSuccess && !w.conversations.data.items.length && <p>{translate("아직 저장된 채팅이 없어요.")}</p>}
           {w.conversations.data?.items.map((conversation) => (
             <button key={conversation.conversationId}
               aria-current={conversation.conversationId === w.conversationId ? 'page' : undefined}
@@ -81,19 +82,18 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
             </button>
           ))}
         </nav>
-        <p className="chat-history-note">채팅 내역은 현재 브라우저 세션에 보관돼요.</p>
+        <p className="chat-history-note">{translate("채팅 내역은 현재 브라우저 세션에 보관돼요.")}</p>
       </aside>
-      <section className="chat-panel" aria-label="전략 대화">
+      <section className="chat-panel" aria-label={translate("전략 대화")}>
       <header className="chat-panel-header">
-        <button ref={historyToggle} className="chat-history-toggle" aria-label="채팅 내역 열기"
+        <button ref={historyToggle} className="chat-history-toggle" aria-label={translate("채팅 내역 열기")}
           aria-expanded={historyOpen} aria-controls="chat-history" onClick={() => setHistoryOpen(true)}>
           <PanelLeft size={20} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-[14px] font-semibold">전략 챗봇</h1>
+          <h1 className="text-[14px] font-semibold">{translate("전략 챗봇")}</h1>
           <p className="mt-1 text-[14px] leading-relaxed text-muted">
-            포켓몬 배틀 상황을 물어보면, 근거를 바탕으로 전략을 안내해요.
-          </p>
+             {translate("포켓몬 배틀 상황을 물어보면, 근거를 바탕으로 전략을 안내해요.")} </p>
         </div>
       </header>
       <div
@@ -101,7 +101,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         ref={feed}
         tabIndex={0}
         role="log"
-        aria-label="대화 기록"
+        aria-label={translate("대화 기록")}
         aria-live="polite"
       >
         {loading && (
@@ -113,35 +113,33 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
               className="animate-loading motion-reduce:animate-none"
               size={17}
             />
-            이전 대화를 불러오고 있어요.
-          </div>
+             {translate("이전 대화를 불러오고 있어요.")} </div>
         )}
         {!loading && !items.length && !w.pending && (
           <div className="px-0 flex items-center flex-col text-center pt-12 pb-3 [&_h2]:text-[18px] [&_h2]:tracking-[-0.6px] [&_h2]:font-medium max-desktop:[&_h2]:text-[16px] max-phone:[&_h2]:text-[15px] [&>p]:mx-0 [&>p]:text-[14px] [&>p]:text-muted [&>p]:leading-[1.9] [&>p]:mt-[11px] [&>p]:mb-[23px]">
             <span className="border border-accent/19 grid place-items-center w-14 h-14 rounded-[17px] text-accent bg-accent/3 mb-5">
               <MessageSquare size={25} strokeWidth={1.8} aria-hidden="true" />
             </span>
-            <h2>어떤 배틀 상황이 궁금하세요?</h2>
+            <h2>{translate("어떤 배틀 상황이 궁금하세요?")}</h2>
             <p>
-              내 포켓몬과 상대, 현재 상황을 알려주세요.
-            </p>
+               {translate("내 포켓몬과 상대, 현재 상황을 알려주세요.")} </p>
             <div className="gap-2.5 flex flex-wrap justify-center [&_button]:px-3 [&_button]:py-[11px] [&_button]:border [&_button]:border-line [&_button]:gap-[9px] [&_button]:flex [&_button]:items-center [&_button]:rounded-[7px] [&_button]:text-ink [&_button]:text-[14px] [&_button]:bg-surface max-phone:[&_button]:text-[14px] [&_svg]:text-muted">
               <button
                 onClick={() =>
-                  w.setDraft('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?')
+                  w.setDraft(translate("나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?"))
                 }
               >
                 <BookOpenText size={16} />
-                <span>현재 대면에서 어떻게 할까?</span>
+                <span>{translate("현재 대면에서 어떻게 할까?")}</span>
                 <ArrowRight size={15} />
               </button>
               <button
                 onClick={() =>
-                  w.setDraft('상대와 교체 가능한 팀원을 알려주면 교체 후보를 비교해 줘.')
+                  w.setDraft(translate("상대와 교체 가능한 팀원을 알려주면 교체 후보를 비교해 줘."))
                 }
               >
                 <FileSearch size={16} />
-                <span>교체 후보를 비교하고 싶어요</span>
+                <span>{translate("교체 후보를 비교하고 싶어요")}</span>
                 <ArrowRight size={15} />
               </button>
             </div>
@@ -157,7 +155,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
                 className="mt-0 mr-0 mb-6 ml-auto max-w-[85%] w-fit [&>span]:block [&>span]:text-muted [&>span]:text-right [&>span]:text-[14px] [&>span]:mb-[7px] [&_p]:px-4 [&_p]:py-3 [&_p]:border [&_p]:border-accent/14 [&_p]:bg-accent/4 [&_p]:rounded-[9px_2px_9px_9px] [&_p]:text-[14px] [&_p]:leading-[1.8] [&_p]:whitespace-pre-wrap [&_p]:wrap-anywhere"
                 data-testid="user-message"
               >
-                <span>나의 요청</span>
+                <span>{translate("나의 요청")}</span>
                 <p>{w.pending.question}</p>
               </div>
             )}
@@ -171,10 +169,9 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
               />
               <div>
                 <strong>
-                  {stages[w.job.data?.stage ?? 'validating'] ??
-                    '요청을 처리하고 있어요'}
+                  {translate(stages[w.job.data?.stage ?? 'validating'] ?? '요청을 처리하고 있어요')}
                 </strong>
-                <p>다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.</p>
+                <p>{translate("다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.")}</p>
               </div>
             </div>
           </>
@@ -189,8 +186,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           <span>{error}</span>
           {w.failure?.retryable && w.failure.request ? (
             <button onClick={w.retry} disabled={w.busy}>
-              다시 시도
-            </button>
+               {translate("다시 시도")} </button>
           ) : w.job.error || w.messages.error || w.conversations.error ? (
             <button
               onClick={() => {
@@ -200,8 +196,7 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
               }}
             >
               <RefreshCw size={13} />
-              다시 확인
-            </button>
+               {translate("다시 확인")} </button>
           ) : null}
         </div>
       )}
@@ -213,13 +208,12 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         }}
       >
         <label className="sr-only" htmlFor="chat-question">
-          포켓몬 질문
-        </label>
+           {translate("포켓몬 질문")} </label>
         <textarea
           id="chat-question"
           rows={2}
           maxLength={2000}
-          placeholder="메시지를 입력하세요…"
+          placeholder={translate("메시지를 입력하세요…")}
           value={w.draft}
           onChange={(e) => w.setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -236,12 +230,11 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
         <div className="gap-2.5 flex justify-between items-center mt-[9px] [&>span]:gap-[5px] [&>span]:flex [&>span]:items-center [&>span]:text-[14px] [&>span]:text-muted max-phone:[&>span]:text-[14px]">
           <span>
             <CircleHelp size={12} />
-            답변에 사용한 출처와 미확인 정보를 함께 안내해요.
-          </span>
+             {translate("답변에 사용한 출처와 미확인 정보를 함께 안내해요.")} </span>
           <button
             className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-white shrink-0"
             type="submit"
-            aria-label="질문 보내기"
+            aria-label={translate("질문 보내기")}
             disabled={!w.canSend || !w.draft.trim()}
           >
             {w.busy ? (
