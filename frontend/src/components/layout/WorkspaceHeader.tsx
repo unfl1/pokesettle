@@ -29,13 +29,13 @@ export default function WorkspaceHeader() {
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <Link href={localizedPath(locale)} className="brand" aria-label={translate("PokeTact 홈")}>
+          <Link prefetch={false} href={localizedPath(locale)} className="brand" aria-label={translate("PokeTact 홈")}>
             <span className="brand-symbol" aria-hidden="true"><span /></span>
             PokeTact<span className="brand-tag">BETA</span>
           </Link>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
-              <Link key={id} href={localizedPath(locale, id === 'pokedex' ? `${path}${pokedexSearch}` : path)} aria-current={view === id ? 'page' : undefined}>
+              <Link prefetch={false} key={id} href={localizedPath(locale, id === 'pokedex' ? `${path}${pokedexSearch}` : path)} aria-current={view === id ? 'page' : undefined}>
                 <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
               </Link>
             ))}

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const languages = [
   { code: 'ko', html: 'ko', home: '배틀 준비는 PokeTact에서', pokedex: '도감', select: '언어', chat: '전략 챗봇' },
@@ -7,9 +7,28 @@ const languages = [
   { code: 'zh', html: 'zh-Hans', home: '用 PokeTact 准备对战', pokedex: '图鉴', select: '语言', chat: '策略助手' },
 ];
 
+const browserErrors = new WeakMap<Page, string[]>();
+
 test.beforeEach(async ({ page }) => {
+  const errors: string[] = [];
+  browserErrors.set(page, errors);
+  page.on('pageerror', error => errors.push(error.message));
   // Routing and UI localization must work independently of backend availability.
   await page.route('**/api/**', route => route.fulfill({ status: 503, json: { error: { code: 'OFFLINE', message: 'Offline' } } }));
+});
+
+
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  console.error('Metadata navigation diagnostics', {
+    browserErrors: browserErrors.get(page),
+    page: await page.evaluate(() => ({
+      url: location.href,
+      title: document.title,
+      canonical: [...document.querySelectorAll('link[rel="canonical"]')].map(node => ({ href: node.getAttribute('href'), parent: node.parentElement?.tagName })),
+      openGraph: [...document.querySelectorAll('meta[property="og:url"]')].map(node => node.getAttribute('content')),
+    })),
+  });
 });
 
 for (const language of languages) {
@@ -110,12 +129,11 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
       await page.goto(`/${language.code}`);
       await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
       const canonical = page.locator('head link[rel="canonical"]');
-      await expect(canonical).toHaveCount(1);
-      await expect(canonical).toHaveAttribute('href', `https://www.chikorita.xyz/${language.code}/pokedex`);
+      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
       await page.getByRole('link', { name: /PokeTact/ }).click();
-      await expect(canonical).toHaveAttribute('href', `https://www.chikorita.xyz/${language.code}`);
+      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}`]);
       await page.goBack();
-      await expect(canonical).toHaveAttribute('href', `https://www.chikorita.xyz/${language.code}/pokedex`);
+      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
       await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.chikorita.xyz/${language.code}/pokedex`);
     }
   } finally {

@@ -9,6 +9,7 @@ import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import { ArrowRight, BookOpen, MessageSquare, Swords, TrendingUp } from 'lucide-react';
 
+// Keep metadata-only prefetches from racing route metadata during navigation.
 const menus = [
   { href: '/chat', title: '챗봇', description: '이 상황에서는 어떻게 할까? 근거와 함께 물어보세요.', action: '질문하기', color: 'red', icon: MessageSquare },
   { href: '/pokedex', title: '도감', description: '타입부터 특성, 기술까지. 포켓몬을 더 알아보세요.', action: '찾아보기', color: 'yellow', icon: BookOpen },
@@ -38,7 +39,7 @@ export default async function Home() {
         </header>
         <nav className="home-menus" aria-label={translate("시작할 메뉴 선택")}>
           {menus.map(({ href, title, description, action, color, icon: Icon }) => (
-            <Link key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
+            <Link prefetch={false} key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
               <span className="home-menu-icon" aria-hidden="true"><Icon size={23} strokeWidth={1.8} /></span>
               <span className="home-menu-copy"><h2>{translate(title)}</h2><span>{translate(description)}</span></span>
               <span className="home-menu-action" aria-hidden="true"><span>{translate(action)}</span><ArrowRight size={17} /></span>
