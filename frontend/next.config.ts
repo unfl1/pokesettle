@@ -4,6 +4,8 @@ const apiOrigin = process.env.API_ORIGIN ?? 'http://127.0.0.1:8000';
 const config: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  // Local dictionary metadata must be ready with the page, including client navigation.
+  htmlLimitedBots: /.*/,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'raw.githubusercontent.com', pathname: '/PokeAPI/sprites/**' }],
     minimumCacheTTL: 86400,

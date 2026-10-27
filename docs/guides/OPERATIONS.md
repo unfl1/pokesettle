@@ -239,6 +239,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상, Docker 빌드는 `http://api:8000`
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - SEO 원본 도메인: 기본 `https://www.chikorita.xyz`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
+- SEO 출력: 로컬 사전 메타데이터는 `htmlLimitedBots: /.*/`로 스트리밍을 비활성화하고 초기 `<head>`에서 확정, 초기 응답은 메타데이터 생성 완료까지 대기
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드
