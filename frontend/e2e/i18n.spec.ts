@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const languages = [
   { code: 'ko', html: 'ko', home: '배틀 준비는 PokeTact에서', pokedex: '도감', select: '언어', chat: '전략 챗봇' },
@@ -7,9 +7,28 @@ const languages = [
   { code: 'zh', html: 'zh-Hans', home: '用 PokeTact 准备对战', pokedex: '图鉴', select: '语言', chat: '策略助手' },
 ];
 
+const browserErrors = new WeakMap<Page, string[]>();
+
 test.beforeEach(async ({ page }) => {
+  const errors: string[] = [];
+  browserErrors.set(page, errors);
+  page.on('pageerror', error => errors.push(error.message));
   // Routing and UI localization must work independently of backend availability.
   await page.route('**/api/**', route => route.fulfill({ status: 503, json: { error: { code: 'OFFLINE', message: 'Offline' } } }));
+});
+
+
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  console.error('Metadata navigation diagnostics', {
+    browserErrors: browserErrors.get(page),
+    page: await page.evaluate(() => ({
+      url: location.href,
+      title: document.title,
+      canonical: [...document.querySelectorAll('link[rel="canonical"]')].map(node => ({ href: node.getAttribute('href'), parent: node.parentElement?.tagName })),
+      openGraph: [...document.querySelectorAll('meta[property="og:url"]')].map(node => node.getAttribute('content')),
+    })),
+  });
 });
 
 for (const language of languages) {
@@ -26,12 +45,12 @@ for (const language of languages) {
     await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
     await expect(page).toHaveURL(`/${language.code}/pokedex`);
     await expect(page.getByRole('heading', { name: language.pokedex, exact: true })).toBeVisible();
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://www.chikorita.xyz/${language.code}/pokedex`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://www.chikorita.xyz/${language.code}/pokedex`);
     for (const alternate of languages) {
-      await expect(page.locator(`link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://www.chikorita.xyz/${alternate.code}/pokedex`);
+      await expect(page.locator(`head link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://www.chikorita.xyz/${alternate.code}/pokedex`);
     }
-    await expect(page.locator('link[hreflang="x-default"]')).toHaveAttribute('href', 'https://www.chikorita.xyz/ko/pokedex');
-    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', `https://www.chikorita.xyz/${language.code}/pokedex`);
+    await expect(page.locator('head link[hreflang="x-default"]')).toHaveAttribute('href', 'https://www.chikorita.xyz/ko/pokedex');
+    await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.chikorita.xyz/${language.code}/pokedex`);
     await page.goto(`/${language.code}/chat`);
     await expect(page.getByRole('heading', { name: language.chat, exact: true })).toBeVisible();
     for (const width of [1440, 390, 320]) {
@@ -95,4 +114,36 @@ test('root layout reserves the gutter when document overflow changes', async ({ 
   });
   expect(widths.long).toBe(widths.initial);
   expect(widths.hidden).toBe(widths.initial);
+});
+
+test('metadata remains in head across navigation on a slower browser', async ({ page, request }) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  try {
+    for (const language of languages) {
+      const response = await request.get(`/${language.code}/pokedex`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 Chrome/142.0.0.0 Safari/537.36' },
+      });
+      const head = (await response.text()).split('</head>')[0];
+      expect(head).toContain(`rel="canonical" href="https://www.chikorita.xyz/${language.code}/pokedex"`);
+      await page.goto(`/${language.code}`);
+      await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
+      const canonical = page.locator('head link[rel="canonical"]');
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      }).toPass({ timeout: 5000 });
+      await page.getByRole('link', { name: /PokeTact/ }).click();
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}`]);
+      }).toPass({ timeout: 5000 });
+      await page.goBack();
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      }).toPass({ timeout: 5000 });
+      await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.chikorita.xyz/${language.code}/pokedex`);
+    }
+  } finally {
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    await cdp.detach();
+  }
 });

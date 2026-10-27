@@ -14,6 +14,7 @@
 
 - 프런트엔드: Next.js 16.4.3 App Router, `src/app/[lang]/layout.tsx`·`[lang]/(root)` 기능별 `page.tsx` 서버 컴포넌트 적용
 - 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
+- 화면 레이아웃: 홈과 기능 페이지를 `[lang]/(root)`에 함께 배치, `WorkspaceShell`에서 경로에 따라 홈의 공통 chrome만 제외, 기능별 서버 페이지 유지, 홈 문서 이동 시 초안만 일회성 탭 저장소로 전달
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
 - 통계: `@next/third-parties/google`의 `GoogleAnalytics`, 런타임 `GA_ID` 설정 시 활성화, CloudFront SSR 응답 캐시 비활성화

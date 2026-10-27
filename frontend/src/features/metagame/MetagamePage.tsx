@@ -76,7 +76,7 @@ export default function MetagamePage() {
               <PokemonImage key={pokemon.nameEn} pokemon={pokemon} size="large" />
               <h2 className="min-w-0 break-words text-lg font-semibold">{pokemon.nameKo ?? pokemon.nameEn} <span className="text-[14px] text-muted">{translate('순위 {rank}', { rank: pokemon.rank })}</span></h2>
             </div>
-            {pokemon.pokemonId && <Link className="text-[14px] text-accent" href={localizedPath(locale, `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`)}>{translate("도감 보기 →")}</Link>}
+            {pokemon.pokemonId && <Link prefetch={false} className="text-[14px] text-accent" href={localizedPath(locale, `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`)}>{translate("도감 보기 →")}</Link>}
           </div>
           <p className="mb-5 text-[14px] leading-6 text-muted">{translate("수집된 한국어 이름이 없는 항목은 원문으로 표시해요. 현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.")}</p>
           <div className="grid grid-cols-2 gap-5 max-phone:grid-cols-1">
