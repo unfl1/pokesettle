@@ -233,7 +233,7 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
   await page.goto('/chat');
   const input = page.getByLabel('포켓몬 질문');
   const send = page.getByRole('button', { name: '질문 보내기' });
-  await expect(page.getByRole('button', { name: '대화 초기화', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '새 채팅', exact: true })).toBeEnabled();
   await expect(input).toHaveValue('');
   await expect(send).toBeDisabled();
 
@@ -249,7 +249,7 @@ test('접속 시 빈 초안, 예시 클릭 후 메뉴 복귀 시 유지 및 새�
   await expect(input).toHaveValue('나 피카츄가 선봉인데 상대가 갸라도스야. 어떻게 할까?');
 
   await page.reload();
-  await expect(page.getByRole('button', { name: '대화 초기화', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '새 채팅', exact: true })).toBeEnabled();
   await expect(input).toHaveValue('');
   await expect(send).toBeDisabled();
   expect(chatRequests).toEqual([]);
@@ -285,13 +285,13 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue('이어서 물어볼 초안');
   await expect(page.getByRole('button', { name: '이 포켓몬으로 대화하기' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '전략 챗봇', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: '대화 초기화', exact: true }).click();
+  await page.getByRole('button', { name: '새 채팅', exact: true }).click();
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await expect(page.getByLabel('포켓몬 질문')).toHaveValue('');
   await page.getByLabel('포켓몬 질문').fill('마스카나 대 라우드본');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('마스카나 대 라우드본');
-  await page.getByLabel('대화 기록 선택').selectOption({ label: '피카츄 타입' });
+  await page.getByRole('navigation', { name: '대화 기록 선택' }).getByRole('button', { name: '피카츄 타입', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await page.getByRole('button', { name: '피카츄 선택' }).click();
@@ -768,4 +768,49 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
   expect(errors).toEqual([]);
+});
+
+test('채팅 내역 선택과 메시지 내부 스크롤, 모바일 내역 열기·닫기', async ({ page }) => {
+  await fixture(page);
+  const conversations = Array.from({ length: 40 }, (_, index) => ({
+    conversationId: `history-${index}`, pokemonId: 'global', title: `저장된 대화 ${index}`, messageCount: 30,
+  }));
+  await page.route('**/api/conversations?*', route => route.fulfill({ json: { data: { items: conversations, total: conversations.length } } }));
+  await page.route('**/api/conversations/*/messages?*', route => route.fulfill({ json: { data: {
+    items: Array.from({ length: 30 }, (_, index) => ({ messageId: `message-${index}`, role: 'user', content: `긴 메시지 ${index}\n${'배틀 상황을 확인해 주세요.\n'.repeat(6)}` })), total: 30,
+  } } }));
+  await page.goto('/chat');
+  const history = page.getByRole('navigation', { name: '대화 기록 선택' });
+  const feed = page.getByRole('log', { name: '대화 기록' });
+  await expect(page.getByTestId('user-message')).toHaveCount(30);
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    if (width <= 780) await page.getByRole('button', { name: '채팅 내역 열기' }).click();
+    await expect(history).toBeVisible();
+    expect(await history.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true);
+    await history.getByRole('button', { name: '저장된 대화 1', exact: true }).click();
+    if (width <= 780) await expect(history).toBeHidden();
+    await expect(page.getByLabel('포켓몬 질문')).toBeInViewport();
+    await expect(page.getByRole('button', { name: '질문 보내기' })).toBeInViewport();
+    const bounds = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight, width: document.documentElement.scrollWidth,
+      viewportHeight: innerHeight, viewportWidth: innerWidth,
+    }));
+    expect(bounds.height).toBeLessThanOrEqual(bounds.viewportHeight);
+    expect(bounds.width).toBeLessThanOrEqual(bounds.viewportWidth);
+    await expect.poll(() => feed.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true);
+    await feed.hover();
+    await feed.evaluate(el => { el.scrollTop = 0; });
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => feed.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => scrollY)).toBe(0);
+    if (width <= 780) {
+      await page.getByRole('button', { name: '채팅 내역 열기' }).click();
+      await page.getByRole('button', { name: '채팅 내역 닫기' }).focus();
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('button', { name: '채팅 내역 열기' })).toBeFocused();
+    }
+  }
+  await page.getByRole('link', { name: '도감', exact: true }).click();
+  await expect(page.locator('html')).not.toHaveCSS('overflow-y', 'hidden');
 });
