@@ -129,11 +129,17 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
       await page.goto(`/${language.code}`);
       await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
       const canonical = page.locator('head link[rel="canonical"]');
-      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      }).toPass({ timeout: 5000 });
       await page.getByRole('link', { name: /PokeTact/ }).click();
-      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}`]);
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}`]);
+      }).toPass({ timeout: 5000 });
       await page.goBack();
-      await expect.poll(() => canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      await expect(async () => {
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.chikorita.xyz/${language.code}/pokedex`]);
+      }).toPass({ timeout: 5000 });
       await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.chikorita.xyz/${language.code}/pokedex`);
     }
   } finally {
