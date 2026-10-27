@@ -233,7 +233,15 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 "battle_context_from_user_inputs_and_type_tool": battle_context,
                 "history_for_interpretation_only": state.get("history", []),
                 "regulation_id": state.get("regulation_id"),
-                "evidence": state["evidence"],
+                # Attribution and storage metadata stay server-side for citation rendering.
+                # Keep complete text and applicability fields; never truncate source claims.
+                "evidence": [
+                    {key: item[key] for key in (
+                        "evidence_id", "document_id", "text", "title", "source_type", "pokemon_id",
+                        "game", "battle_format", "regulation_id", "verification_status", "collected_at",
+                    ) if key in item}
+                    for item in state["evidence"]
+                ],
                 "allowed_versions_by_evidence": {
                     item["evidence_id"]: sorted(
                         set(re.findall(r"Description \([^,\n]+, ([a-z0-9-]+)\):", item["text"]))

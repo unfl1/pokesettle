@@ -34,12 +34,14 @@ class KnowledgeService:
         with self.collection_lock:
             started = time.monotonic()
             stage("extracting_queries")
-            plan_key = digest([pokemon_id, question, regulation_id, PROMPT_VERSION])
+            plan_key = digest([self.source.name, pokemon_id, question, regulation_id, PROMPT_VERSION, "resource-routing-v1"])
             plan_data = self.store.get("query_plan", plan_key)
             if plan_data:
                 plan = QueryPlan.model_validate(plan_data)
             else:
-                plan = self.model.invoke(
+                planner = getattr(self.source, "plan_queries", None)
+                plan = planner(pokemon, question) if planner else None
+                plan = plan if plan is not None else self.model.invoke(
                     "queries",
                     QUERY_PROMPT,
                     {
@@ -62,7 +64,7 @@ class KnowledgeService:
             for query in dict.fromkeys(queries):
                 stage("searching")
                 search_key = digest([self.source.name, pokemon_id, query, regulation_id, "generic"])
-                key = digest([search_key, question, PROMPT_VERSION])
+                key = digest([search_key, question, PROMPT_VERSION, "resource-routing-v1"])
                 cached = self.store.get("query_complete", key)
                 if cached:
                     # Reapply splitter configuration to cached bodies without fetching again.
@@ -92,7 +94,9 @@ class KnowledgeService:
                 all_candidates.update({c.candidate_id: c for c in candidates})
             if pending:
                 stage("filtering")
-                selection = self.model.invoke(
+                selector = getattr(self.source, "select_candidates", None)
+                selection = selector(pokemon, question, list(all_candidates.values())) if selector else None
+                selection = selection if selection is not None else self.model.invoke(
                     "selection",
                     SELECTION_PROMPT,
                     {

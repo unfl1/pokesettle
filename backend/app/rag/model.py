@@ -77,7 +77,7 @@ class StructuredModel:
                     ).invoke(
                         [
                             SystemMessage(content=system),
-                            HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str)),
+                            HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str, separators=(",", ":"))),
                         ]
                     )
                     if response["parsing_error"] is not None or response["parsed"] is None:
