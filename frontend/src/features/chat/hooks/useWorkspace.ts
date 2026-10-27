@@ -38,7 +38,7 @@ function readPending(): Record<string, PendingJob> {
   }
 }
 
-export function useWorkspace() {
+export function useWorkspace(initialDraft = '') {
   const pokemonId = 'workspace';
   const cache = useQueryClient();
   const session = useQuery({
@@ -87,7 +87,7 @@ export function useWorkspace() {
     } catch { /* storage may be disabled */ }
     setRestored(true);
   }, []);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({ workspace: initialDraft });
   const [failure, setFailure] = useState<Failure | null>(null);
   const [lastRequests, setLastRequests] = useState<Record<string, SendRequest>>(
     {},

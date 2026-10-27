@@ -239,9 +239,9 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상, Docker 빌드는 `http://api:8000`
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - SEO 원본 도메인: 기본 `https://www.chikorita.xyz`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
-- 화면 경계: 홈·작업 화면을 `[lang]/(root)` 공통 레이아웃에 배치, `WorkspaceShell`에서 홈의 헤더·푸터만 제외, 클라이언트 이동과 대화·팀 초안 유지
+- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 전체 문서 이동으로 metadata 수명 분리
+- 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: `prefetch={false}`로 자동 선조회와 실제 이동의 metadata 경합 방지
-- SEO 출력: `htmlLimitedBots: /.*/`로 metadata streaming 비활성화, 로컬 사전 metadata와 경로 콘텐츠를 함께 확정
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드

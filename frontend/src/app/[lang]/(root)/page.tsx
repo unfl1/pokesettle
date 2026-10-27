@@ -4,7 +4,6 @@ import LanguageSwitcher from '../../../components/layout/LanguageSwitcher';
 import { pageMetadata } from '../../../i18n/metadata';
 
 import { getI18n } from '../../../i18n/server';
-import Link from 'next/link';
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import { ArrowRight, BookOpen, MessageSquare, Swords, TrendingUp } from 'lucide-react';
@@ -38,11 +37,11 @@ export default async function Home() {
         </header>
         <nav className="home-menus" aria-label={translate("시작할 메뉴 선택")}>
           {menus.map(({ href, title, description, action, color, icon: Icon }) => (
-            <Link prefetch={false} key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
+            <a key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
               <span className="home-menu-icon" aria-hidden="true"><Icon size={23} strokeWidth={1.8} /></span>
               <span className="home-menu-copy"><h2>{translate(title)}</h2><span>{translate(description)}</span></span>
               <span className="home-menu-action" aria-hidden="true"><span>{translate(action)}</span><ArrowRight size={17} /></span>
-            </Link>
+            </a>
           ))}
         </nav>
       </div>
