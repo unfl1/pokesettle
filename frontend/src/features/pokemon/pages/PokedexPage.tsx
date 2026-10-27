@@ -1,6 +1,8 @@
 "use client";
+import { useI18n } from '../../../i18n/I18nProvider';
 
 import { useWorkspaceContext } from "../../../providers/AppProviders";
+import { localizedPath } from '../../../i18n/config';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -12,6 +14,7 @@ import PokemonImage from '../components/PokemonImage';
 import type { PokemonSummary } from '../types';
 
 export default function PokedexPage() {
+  const { locale, t: translate } = useI18n();
   const workspace = useWorkspaceContext();
   const ready = Boolean(workspace.status.data?.ready);
   const sessionReady = workspace.session.isSuccess;
@@ -65,18 +68,18 @@ export default function PokedexPage() {
     else setSubmittedCondition(condition.trim());
   }
   function choose(pokemon: PokemonSummary) {
-    window.history.pushState(null, '', `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`);
+    window.history.pushState(null, '', localizedPath(locale, `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`));
   }
 
   return (
     <div className="pokedex-layout">
       <section
         className="border border-line rounded-[12px] bg-surface overflow-hidden"
-        aria-label="포켓몬 탐색"
+        aria-label={translate("포켓몬 탐색")}
       >
         <div className="px-[19px] pt-[21px] pb-[17px] flex justify-between items-center max-tablet:px-[17px] max-tablet:py-4 [&_h2]:text-[14px] [&_h2]:font-semibold [&_svg]:text-muted max-tablet:[&>svg]:hidden">
           <div>
-            <h2>포켓몬 찾기</h2>
+            <h2>{translate("포켓몬 찾기")}</h2>
           </div>
           <Search size={19} />
         </div>
@@ -87,34 +90,31 @@ export default function PokedexPage() {
           <div
             className="p-[3px] mx-4 border border-line gap-[3px] flex mt-0 mb-[15px] bg-canvas rounded-[7px] max-tablet:mb-2.5 [&_button]:px-[3px] [&_button]:py-2 [&_button]:gap-1.5 [&_button]:flex-1 [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:text-[14px] [&_button]:text-muted [&_button]:rounded-[4px] [&_[aria-pressed=true]]:bg-surface [&_[aria-pressed=true]]:text-ink"
             role="group"
-            aria-label="검색 방식"
+            aria-label={translate("검색 방식")}
           >
             <button
               aria-pressed={mode === 'name'}
               onClick={() => setMode('name')}
             >
               <Search size={13} />
-              이름 검색
-            </button>
+               {translate("이름 검색")} </button>
             <button
               aria-pressed={mode === 'conditions'}
               onClick={() => setMode('conditions')}
             >
               <Sparkles size={13} />
-              조건으로 찾기
-            </button>
+               {translate("조건으로 찾기")} </button>
           </div>
           {mode === 'name' ? (
             <div className="p-2.5 mx-4 my-0 border border-line gap-2 flex items-center bg-canvas rounded-[7px] text-muted [&_input]:border-0 [&_input]:border-[currentColor] [&_input]:w-full [&_input]:bg-[transparent] [&_input]:outline-none [&_input]:text-[14px] [&_input]:min-w-0 [&_input]:text-ink">
               <Search size={16} />
               <label className="sr-only" htmlFor="pokemon-name">
-                포켓몬 이름 검색
-              </label>
+                 {translate("포켓몬 이름 검색")} </label>
               <input
                 id="pokemon-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="이름을 입력하세요"
+                placeholder={translate("이름을 입력하세요")}
                 maxLength={200}
               />
             </div>
@@ -127,14 +127,13 @@ export default function PokedexPage() {
               }}
             >
               <label className="sr-only" htmlFor="pokemon-condition">
-                자연어 검색 조건
-              </label>
+                 {translate("자연어 검색 조건")} </label>
               <textarea
                 id="pokemon-condition"
                 rows={3}
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                placeholder="예: 전기 타입이고 스피드 종족값이 90 이상"
+                placeholder={translate("예: 전기 타입이고 스피드 종족값이 90 이상")}
                 maxLength={2000}
               />
               <button
@@ -155,8 +154,8 @@ export default function PokedexPage() {
                   <SlidersHorizontal size={14} />
                 )}
                 {discovery.isFetching
-                  ? '조건을 확인하고 있어요'
-                  : '조건에 맞는 포켓몬 찾기'}
+                  ? translate("조건을 확인하고 있어요")
+                  : translate("조건에 맞는 포켓몬 찾기")}
                 <ArrowRight size={14} />
               </button>
             </form>
@@ -168,8 +167,8 @@ export default function PokedexPage() {
             >
               <span className="gap-1.5 text-[14px] tracking-[0.7px] text-muted flex items-center">
                 {discoveryResult!.status === 'needs_clarification'
-                  ? '조건 확인이 필요해요'
-                  : '해석한 조건'}
+                  ? translate("조건 확인이 필요해요")
+                  : translate("해석한 조건")}
               </span>
               <p>{discoveryResult!.interpretation}</p>
               {discoveryResult!.unknownConditions.map((text, i) => (
@@ -177,10 +176,7 @@ export default function PokedexPage() {
               ))}
               {discoveryResult!.excludedUnknownCount > 0 && (
                 <small>
-                  미확인 속성이 있는{' '}
-                  {discoveryResult!.excludedUnknownCount}종을 확정
-                  결과에서 제외했습니다.
-                </small>
+                   {translate('미확인 속성이 있는 {count}종을 확정 결과에서 제외했습니다.', { count: discoveryResult!.excludedUnknownCount })} </small>
               )}
             </div>
           )}
@@ -198,26 +194,24 @@ export default function PokedexPage() {
                     : void discovery.refetch()
                 }
               >
-                다시 시도
-              </button>
+                 {translate("다시 시도")} </button>
             </div>
           )}
           <div className="px-4.5 flex items-center justify-between pt-5 pb-2.5 text-[14px] text-muted max-tablet:pt-3 [&_span:last-child]:gap-[7px] [&_span:last-child]:flex [&_span:last-child]:items-center">
             <span>
               {isDiscovery
-                ? '조건 검색 결과'
+                ? translate("조건 검색 결과")
                 : name
-                  ? '이름 검색 결과'
-                  : '전체 도감'}
+                  ? translate("이름 검색 결과")
+                  : translate("전체 도감")}
             </span>
             <span>
-              {total}개 항목
-              <ArrowDown size={10} />
+              {translate('{count}개 항목', { count: total })} <ArrowDown size={10} />
             </span>
           </div>
           <div
             className="px-2 h-[560px] overflow-auto pt-0 pb-2.5 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] max-tablet:h-70 max-tablet:grid max-tablet:grid-cols-1 max-tablet:[align-content:start] max-tablet:gap-y-0 max-tablet:gap-x-1"
-            aria-label="포켓몬 목록"
+            aria-label={translate("포켓몬 목록")}
             aria-busy={activeList.isFetching}
           >
             {activeList.isPending ? (
@@ -229,19 +223,17 @@ export default function PokedexPage() {
                   size={18}
                   className="animate-loading motion-reduce:animate-none"
                 />
-                도감을 불러오고 있어요.
-              </div>
+                 {translate("도감을 불러오고 있어요.")} </div>
             ) : !results.length ? (
               <div className="px-2.5 py-7.5 gap-[13px] text-center text-muted text-[14px] flex items-center flex-col [&_strong]:text-[14px] [&_strong]:font-medium [&_p]:text-[14px] [&_p]:leading-[1.9]">
                 <Search size={25} />
                 <strong>
                   {discoveryResult?.status === 'needs_clarification'
-                    ? '조건을 조금 더 알려 주세요.'
-                    : '일치하는 포켓몬이 없어요.'}
+                    ? translate("조건을 조금 더 알려 주세요.")
+                    : translate("일치하는 포켓몬이 없어요.")}
                 </strong>
                 <p>
-                  이름이나 조건을 바꿔 보세요.
-                </p>
+                   {translate("이름이나 조건을 바꿔 보세요.")} </p>
               </div>
             ) : (
               results.map((p) => (
@@ -249,7 +241,7 @@ export default function PokedexPage() {
                   className="px-2.5 py-[13px] border border-[transparent] gap-[7px] flex items-center w-full text-left rounded-[7px] mb-[3px] min-h-16 max-phone:px-[5px] max-phone:py-2.5 max-phone:gap-[5px] [&:hover:not([aria-pressed=true])]:bg-canvas aria-pressed:border-accent/28 aria-pressed:bg-accent/4 [&>svg]:text-muted [&>svg]:w-[11px] max-phone:[&>svg]:hidden [&[aria-pressed=true]>svg]:text-accent group"
                   key={p.pokemonId}
                   onClick={() => choose(p)}
-                  aria-label={`${p.nameKo ?? p.nameEn} 선택`}
+                  aria-label={translate('{name} 선택', { name: p.nameKo ?? p.nameEn })}
                   aria-pressed={p.pokemonId === pokemonId}
                 >
                   <span className="text-[14px] tabular-nums text-muted max-phone:hidden group-aria-pressed:text-accent">
@@ -282,8 +274,8 @@ export default function PokedexPage() {
                 disabled={activeList.isFetchingNextPage}
               >
                 {activeList.isFetchingNextPage
-                  ? '더 불러오는 중…'
-                  : `더 보기 (${results.length} / ${total})`}
+                  ? translate("더 불러오는 중…")
+                  : translate('더 보기 ({loaded} / {total})', { loaded: results.length, total })}
               </button>
             )}
           </div>
@@ -299,8 +291,7 @@ export default function PokedexPage() {
               className="animate-loading motion-reduce:animate-none"
               size={21}
             />
-            포켓몬 정보를 불러오고 있어요.
-          </div>
+             {translate("포켓몬 정보를 불러오고 있어요.")} </div>
         ) : selectedDetail.error ? (
           <div
             className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[14px] text-muted"
@@ -314,8 +305,7 @@ export default function PokedexPage() {
               }}
               className="gap-[5px] text-[14px] text-ink flex items-center ml-auto whitespace-nowrap"
             >
-              다시 확인
-            </button>
+               {translate("다시 확인")} </button>
           </div>
         ) : (
           selectedDetail.data && (
