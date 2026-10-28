@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-PokeTact is a RAG-based Pokémon Champions ranked singles strategy assistant.
+PokeSettle is a RAG-based Pokémon Champions ranked singles strategy assistant.
 
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: Python, FastAPI

@@ -1,1 +1,1 @@
-"""PokeTact Phase 1 backend."""
+"""PokeSettle Phase 1 backend."""

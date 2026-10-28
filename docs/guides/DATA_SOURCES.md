@@ -147,7 +147,7 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 ## 조건부 전략 RAG 초기 자료
 
 - 확인일: 2026-10-22
-- 원본: `data/strategy/notes.json`, PokeTact가 직접 작성한 조건부 분석, CC BY 4.0
+- 원본: `data/strategy/notes.json`, PokeSettle이 직접 작성한 조건부 분석, CC BY 4.0
 - 범위: 기본 망나뇽·이상해꽃·리자몽 3종, 일반 메커니즘 기반 육성 방향·대면 판단·추가 입력 질문
 - 기초 근거: PokéAPI의 종·특성·기술 리소스, 문서 안에 개별 URL 기록
 - 분석의 `verification_status=assumed`·`game=generic` 유지, Champions 합법성·정확한 추천 세트·실전 성과 보장 없음

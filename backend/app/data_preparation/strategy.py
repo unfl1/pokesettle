@@ -18,7 +18,7 @@ class StrategySource:
             Candidate(
                 candidate_id=f"poketact:strategy:{note['slug']}",
                 title=note["title"],
-                summary="PokeTact가 직접 작성한 조건부 전략 분석. 일반 규칙 기반 가설이며 Champions 검증·실전 성과를 주장하지 않음. "
+                summary="PokeSettle이 직접 작성한 조건부 전략 분석. 일반 규칙 기반 가설이며 Champions 검증·실전 성과를 주장하지 않음. "
                 + note["body"][:240],
                 source_url="https://github.com/unfl1/poketact/blob/develop/data/strategy/notes.json",
                 resource="strategy-note",
@@ -48,7 +48,7 @@ class StrategySource:
             source_type="curated",
             body="\n".join(
                 [
-                    "작성: PokeTact. 일반 메커니즘을 연결한 조건부 분석, 외부 전략 원문 전재 없음.",
+                    "작성: PokeSettle. 일반 메커니즘을 연결한 조건부 분석, 외부 전략 원문 전재 없음.",
                     "Game: generic; format: singles; Champions applicability: unknown; analysis: assumed.",
                     note["body"],
                     "기초 메커니즘 참고 출처:",
@@ -56,8 +56,8 @@ class StrategySource:
                 ]
             ),
             collected_at="2026-10-22T00:00:00+00:00",
-            revision_id=digest(note),
-            licence="PokeTact original conditional analysis · CC BY 4.0; underlying Pokémon rights reserved",
+            revision_id=digest(["pokesettle-strategy-render-v1", note]),
+            licence="PokeSettle original conditional analysis · CC BY 4.0; underlying Pokémon rights reserved",
             licence_url="https://creativecommons.org/licenses/by/4.0/",
             battle_format="singles",
             verification_status="assumed",

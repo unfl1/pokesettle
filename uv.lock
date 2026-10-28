@@ -1959,7 +1959,7 @@ wheels = [
 ]
 
 [[package]]
-name = "poketact-ai"
+name = "pokesettle-ai"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

@@ -29,7 +29,7 @@ def provision(domain, token_path, state_path):
                           if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewerExceptHostHeader")
         distribution = cf.create_distribution(DistributionConfig={
             "CallerReference": f"poketact-{domain}-{time.time_ns()}",
-            "Comment": f"PokeTact Next.js {domain}", "Enabled": True,
+            "Comment": f"PokeSettle Next.js {domain}", "Enabled": True,
             "DefaultRootObject": "", "HttpVersion": "http2and3",
             "IsIPV6Enabled": True, "PriceClass": "PriceClass_All",
             "Origins": {"Quantity": 1, "Items": [{

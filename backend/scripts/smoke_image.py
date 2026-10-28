@@ -7,7 +7,7 @@ from backend.app.main import app
 
 
 def check_image():
-    assert app.title == "PokeTact"
+    assert app.title == "PokeSettle"
     catalog = Catalog(ROOT / "data/pokemon.json")
     assert catalog.battle_names["held_item"]["choice-scarf"] == "구애스카프"
     assert catalog.battle_names["stat_alignment"]["jolly"] == "명랑"

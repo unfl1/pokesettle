@@ -43,7 +43,7 @@ def create_app(settings=None, *, service=None, usage=None):
         finally:
             telemetry.close()
 
-    app = FastAPI(title="PokeTact", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="PokeSettle", version="0.1.0", lifespan=lifespan)
     app.state.service = service
     app.state.settings = settings
     app.state.metagame = MetagameService()

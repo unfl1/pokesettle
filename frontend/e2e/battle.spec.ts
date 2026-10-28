@@ -380,7 +380,7 @@ test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ pag
   await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue('메뉴를 오가도 유지할 질문');
-  await page.getByRole('link', { name: 'PokeTact 홈', exact: true }).click();
+  await page.getByRole('link', { name: 'PokeSettle 홈', exact: true }).click();
   await page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link', { name: /챗봇/ }).click();
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue('메뉴를 오가도 유지할 질문');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();

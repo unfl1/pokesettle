@@ -29,9 +29,9 @@ export default function WorkspaceHeader() {
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <a href={localizedPath(locale)} className="brand" aria-label={translate("PokeTact 홈")}>
+          <a href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
             <span className="brand-symbol" aria-hidden="true"><span /></span>
-            PokeTact<span className="brand-tag">BETA</span>
+            PokeSettle<span className="brand-tag">BETA</span>
           </a>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (

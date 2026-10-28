@@ -1,4 +1,4 @@
-# PokeTact — Project Specification
+# PokeSettle — Project Specification
 
 > **Purpose:** Build a Pokémon Champions ranked-singles preparation and battle-review assistant that combines verifiable RAG evidence with deterministic battle analysis.
 >

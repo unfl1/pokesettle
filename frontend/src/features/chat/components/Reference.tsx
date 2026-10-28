@@ -122,7 +122,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
             ? translate("근거 기반 운용 가이드")
             : result.feature === 'catalog_reference'
               ? translate("도감 바로 답변")
-            : 'PokeTact'}
+            : 'PokeSettle'}
         </span>
         <span
           className="px-[5px] py-[3px] border border-line ml-auto text-[14px] text-muted rounded-[4px]"

@@ -44,7 +44,7 @@ def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=
     role = "poketact-github-production"
     try:
         result = iam.create_role(RoleName=role, AssumeRolePolicyDocument=json.dumps(trust),
-                                 Description="PokeTact deployment from protected production environment")
+                                 Description="PokeSettle deployment from protected production environment")
     except iam.exceptions.EntityAlreadyExistsException:
         # Only an explicit migration of this exact repository's old subject is allowed.
         existing = iam.get_role(RoleName=role)

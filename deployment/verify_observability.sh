@@ -71,7 +71,7 @@ deadline = time.monotonic() + 180
 for attempt in range(90):
     try:
         assert get('/api/health')['database'] == 'ok'
-        assert get('/api/dashboards/uid/poketact-operations')['dashboard']['title'] == 'PokeTact Operations'
+        assert get('/api/dashboards/uid/poketact-operations')['dashboard']['title'] == 'PokeSettle Operations'
         metrics = get('/api/datasources/proxy/uid/prometheus/api/v1/query?query=up')
         jobs = {row['metric']['job']: row['value'][1] for row in metrics['data']['result']}
         assert jobs.get('node') == '1' and jobs.get('loki') == '1'
