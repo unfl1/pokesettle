@@ -106,3 +106,27 @@ def test_session_isolation_and_cross_pokemon_conversation(setup):
         assert client.get(f"/api/jobs/{job_id}").status_code == 404
     setup.store.recover_jobs()
     assert setup.store.job(job_id, session_a)["status"] == "interrupted"
+
+
+def test_delete_conversation_checks_owner_and_removes_messages_and_battle_state(setup):
+    owner, other = setup.store.new_session(), setup.store.new_session()
+    conversation_id = setup.store.conversation(owner, None, None)
+    kept_id = setup.store.conversation(owner, None, None)
+    setup.store.save_exchange(conversation_id, "question", "answer", battle_state={"turn": 1})
+    with TestClient(create_app(setup.settings, service=setup.service)) as client:
+        path = f"/api/conversations/{conversation_id}"
+        assert client.delete(path).status_code == 401
+        client.cookies.set("pokecoach_session", other)
+        assert client.delete(path).status_code == 404
+        assert setup.store.messages(owner, conversation_id)["total"] == 2
+        client.cookies.set("pokecoach_session", owner)
+        assert client.delete(path).status_code == 204
+        assert client.delete(path).status_code == 404
+        assert client.get(f"{path}/messages").status_code == 404
+        assert setup.store.get("battle_state", conversation_id) is None
+        assert [item["conversation_id"] for item in setup.store.conversations(owner)["items"]] == [kept_id]
+        with setup.store.connect() as db:
+            assert db.execute(
+                "SELECT COUNT(*) AS total FROM messages WHERE conversation_id=%s",
+                (conversation_id,),
+            ).fetchone()["total"] == 0

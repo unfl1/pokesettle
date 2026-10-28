@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query, Request
+from fastapi.responses import Response
 
 from backend.app.api.dependencies import CatalogDep, ServiceDep, SettingsDep, StoreDep
 from backend.app.api.responses import ok
@@ -57,3 +58,9 @@ def conversation_messages(
     store: StoreDep,
 ):
     return ok(request, store.messages(session(request, store), conversation_id, limit, offset))
+
+
+@router.delete("/conversations/{conversation_id}")
+def conversation_delete(request: Request, conversation_id: str, *, store: StoreDep):
+    store.delete_conversation(session(request, store), conversation_id)
+    return Response(status_code=204)

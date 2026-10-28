@@ -155,6 +155,21 @@ class Store:
             "offset": offset,
         }
 
+    def delete_conversation(self, session_id, conversation_id):
+        with self.connect() as db:
+            owner = db.execute(
+                "SELECT id FROM conversations WHERE id=%s AND session_id=%s FOR UPDATE",
+                (conversation_id, session_id),
+            ).fetchone()
+            if not owner:
+                raise ServiceError("RESOURCE_NOT_FOUND", "대화를 찾을 수 없습니다.", 404)
+            db.execute("DELETE FROM messages WHERE conversation_id=%s", (conversation_id,))
+            db.execute(
+                "DELETE FROM cache WHERE namespace='battle_state' AND key=%s",
+                (conversation_id,),
+            )
+            db.execute("DELETE FROM conversations WHERE id=%s", (conversation_id,))
+
     def messages(self, session_id, conversation_id, limit=50, offset=0):
         with self.connect() as db:
             owner = db.execute(

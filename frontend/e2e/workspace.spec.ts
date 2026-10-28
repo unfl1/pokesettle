@@ -106,6 +106,12 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
       const items = Object.values(conversations).flat().sort((a, b) => Number(b.conversationId.split('-').pop()) - Number(a.conversationId.split('-').pop()));
       return ok({ items, total: items.length });
     }
+    if (/^\/api\/conversations\/[^/]+$/.test(path) && request.method() === 'DELETE') {
+      const id = path.split('/')[3];
+      for (const key of Object.keys(conversations)) conversations[key] = conversations[key].filter(item => item.conversationId !== id);
+      delete messages[id];
+      return route.fulfill({ status: 204 });
+    }
     if (/^\/api\/conversations\/[^/]+\/messages$/.test(path)) {
       const items = messages[path.split('/')[3]] ?? [];
       return ok({ items, total: items.length });
@@ -820,4 +826,61 @@ test('채팅 내역 선택과 메시지 내부 스크롤, 모바일 내역 열�
   }
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.locator('html')).not.toHaveCSS('overflow-y', 'hidden');
+});
+
+
+test('채팅방 삭제 확인·취소·실패·재시도 및 새로고침 후 유지', async ({ page }) => {
+  await fixture(page);
+  await page.goto('/chat');
+  await page.getByLabel('포켓몬 질문').fill('첫 번째 대화');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await page.getByRole('button', { name: '새 채팅', exact: true }).click();
+  const history = page.getByRole('navigation', { name: '대화 기록 선택' });
+  const dialog = page.getByRole('dialog');
+  await history.getByRole('button', { name: '채팅방 삭제: 첫 번째 대화', exact: true }).click();
+  await expect(dialog).toHaveAccessibleName('정말 삭제하겠습니까?');
+  await dialog.getByRole('button', { name: '아니오', exact: true }).click();
+  await expect(history.getByRole('button', { name: '첫 번째 대화', exact: true })).toBeVisible();
+  await history.getByRole('button', { name: '채팅방 삭제: 첫 번째 대화', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+  await history.getByRole('button', { name: '채팅방 삭제: 첫 번째 대화', exact: true }).click();
+  await page.route('**/api/conversations/conversation-1', route => route.fulfill({ status: 503, json: { error: { code: 'SERVER_ERROR', message: '삭제 실패' } } }), { times: 1 });
+  await dialog.getByRole('button', { name: '네', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toHaveText('삭제 실패');
+  await expect(history.getByRole('button', { name: '첫 번째 대화', exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: '네', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(history.getByRole('button', { name: '첫 번째 대화', exact: true })).toHaveCount(0);
+  await expect(history.getByRole('button', { name: '새 대화', exact: true })).toHaveAttribute('aria-current', 'page');
+  await history.getByRole('button', { name: '채팅방 삭제: 새 대화', exact: true }).click();
+  await dialog.getByRole('button', { name: '네', exact: true }).click();
+  await expect(history).toContainText('아직 저장된 채팅이 없어요.');
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('poketact-conversation'))).toBeNull();
+  await page.reload();
+  await expect(history).toContainText('아직 저장된 채팅이 없어요.');
+  await expect(page.getByRole('button', { name: '질문 보내기' })).toBeDisabled();
+});
+
+
+test('모바일 채팅방 삭제 확인창과 빈 대화 전환', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await fixture(page);
+  await page.goto('/chat');
+  await page.getByLabel('포켓몬 질문').fill('모바일 대화');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
+  await page.getByRole('button', { name: '채팅 내역 열기' }).click();
+  await page.getByRole('button', { name: '채팅방 삭제: 모바일 대화', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeInViewport();
+  await expect(dialog.getByRole('button', { name: '아니오', exact: true })).toBeFocused();
+  await dialog.getByRole('button', { name: '네', exact: true }).click();
+  await expect(page.getByRole('navigation', { name: '대화 기록 선택' })).toContainText('아직 저장된 채팅이 없어요.');
+  await page.getByRole('button', { name: '채팅 내역 닫기' }).click();
+  await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
+  await page.getByLabel('포켓몬 질문').fill('삭제 후 새 질문');
+  await expect(page.getByRole('button', { name: '질문 보내기' })).toBeEnabled();
 });

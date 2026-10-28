@@ -64,7 +64,10 @@ export function useWorkspace(initialDraft = '') {
     : (conversations.data?.items[0]?.conversationId ?? null);
   useEffect(() => {
     if (!restored) return;
-    try { if (conversationId) sessionStorage.setItem('poketact-conversation', conversationId); }
+    try {
+      if (conversationId) sessionStorage.setItem('poketact-conversation', conversationId);
+      else sessionStorage.removeItem('poketact-conversation');
+    }
     catch { /* storage may be disabled */ }
   }, [conversationId, restored]);
   const messages = useQuery({
@@ -225,7 +228,23 @@ export function useWorkspace(initialDraft = '') {
       void cache.invalidateQueries({ queryKey: ['conversations', id] });
     },
   });
-  const busy = Boolean(pending) || send.isPending || createConversation.isPending;
+  const deleteConversation = useMutation({
+    mutationFn: chatApi.deleteConversation,
+    onSuccess: async (_, id) => {
+      await cache.cancelQueries({ queryKey: ['conversations', pokemonId] });
+      cache.setQueryData<typeof conversations.data>(['conversations', pokemonId], previous =>
+        previous ? { ...previous, items: previous.items.filter(item => item.conversationId !== id), total: Math.max(0, previous.total - 1) } : previous,
+      );
+      if (id === conversationId) {
+        setChoices(previous => ({ ...previous, [pokemonId]: null }));
+        setDrafts(previous => ({ ...previous, [pokemonId]: '' }));
+        setFailure(null);
+      }
+      cache.removeQueries({ queryKey: ['messages', id], exact: true });
+      await cache.invalidateQueries({ queryKey: ['conversations', pokemonId] });
+    },
+  });
+  const busy = Boolean(pending) || send.isPending || createConversation.isPending || deleteConversation.isPending;
   return {
     session,
     status,
@@ -236,6 +255,7 @@ export function useWorkspace(initialDraft = '') {
     pending,
     busy,
     createConversation,
+    deleteConversation,
     createNew: () => createConversation.mutate(pokemonId),
     failure: failure?.pokemonId === pokemonId ? failure : null,
     draft: drafts[pokemonId] ?? '',

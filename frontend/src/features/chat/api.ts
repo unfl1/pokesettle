@@ -27,6 +27,8 @@ export const chatApi = {
   },
   newConversation: (_id?: string) =>
     post<{ conversationId: string }>('/conversations', {}),
+  deleteConversation: (id: string) =>
+    request<void>(`/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   chat: (
     pokemonId: string,
     question: string,

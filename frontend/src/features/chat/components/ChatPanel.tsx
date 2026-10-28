@@ -36,6 +36,12 @@ const stages: Record<string, string> = {
 export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
   const { t: translate } = useI18n();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ conversationId: string; title: string } | null>(null);
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (deleteTarget) deleteDialog.current?.showModal();
+    else deleteDialog.current?.close();
+  }, [deleteTarget]);
   const historyToggle = useRef<HTMLButtonElement>(null);
   const historyClose = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -73,17 +79,38 @@ export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
           {w.conversations.isPending && <p role="status">{translate("채팅 내역을 불러오고 있어요.")}</p>}
           {w.conversations.isSuccess && !w.conversations.data.items.length && <p>{translate("아직 저장된 채팅이 없어요.")}</p>}
           {w.conversations.data?.items.map((conversation) => (
-            <button key={conversation.conversationId}
-              aria-current={conversation.conversationId === w.conversationId ? 'page' : undefined}
-              title={conversation.title}
-              disabled={w.busy}
-              onClick={() => { w.chooseConversation(conversation.conversationId); closeHistory(); }}>
-              <MessageSquare size={15} /><span>{conversation.title}</span>
-            </button>
+            <div className="chat-history-row" key={conversation.conversationId}>
+              <button className="chat-history-select"
+                aria-current={conversation.conversationId === w.conversationId ? 'page' : undefined}
+                title={conversation.title}
+                disabled={w.busy}
+                onClick={() => { w.chooseConversation(conversation.conversationId); closeHistory(); }}>
+                <MessageSquare size={15} /><span>{conversation.title}</span>
+              </button>
+              <button className="chat-history-delete" disabled={w.busy}
+                aria-label={translate("채팅방 삭제: {title}", { title: conversation.title })}
+                title={translate("채팅방 삭제")}
+                onClick={() => { w.deleteConversation.reset(); setDeleteTarget(conversation); }}>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
           ))}
         </nav>
         <p className="chat-history-note">{translate("채팅 내역은 현재 브라우저 세션에 보관돼요.")}</p>
       </aside>
+      <dialog ref={deleteDialog} className="chat-delete-dialog" aria-labelledby="chat-delete-title"
+        onCancel={event => { if (w.deleteConversation.isPending) event.preventDefault(); else setDeleteTarget(null); }}
+        onClose={() => setDeleteTarget(null)}>
+        <h2 id="chat-delete-title">{translate("정말 삭제하겠습니까?")}</h2>
+        <p className="chat-delete-title">{deleteTarget?.title}</p>
+        {w.deleteConversation.error && <p role="alert">{w.deleteConversation.error.message}</p>}
+        <div className="chat-delete-actions">
+          <button autoFocus disabled={w.deleteConversation.isPending} onClick={() => setDeleteTarget(null)}>{translate("아니오")}</button>
+          <button className="chat-delete-confirm" disabled={w.busy} onClick={() => {
+            if (deleteTarget) w.deleteConversation.mutate(deleteTarget.conversationId, { onSuccess: () => setDeleteTarget(null) });
+          }}>{translate(w.deleteConversation.isPending ? "삭제 중…" : "네")}</button>
+        </div>
+      </dialog>
       <section className="chat-panel" aria-label={translate("전략 대화")}>
       <header className="chat-panel-header">
         <button ref={historyToggle} className="chat-history-toggle" aria-label={translate("채팅 내역 열기")}
