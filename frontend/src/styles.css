@@ -162,7 +162,7 @@
   .home-content { grid-column: 1 / -1; grid-row: 2; }
 }
 .home-intro { text-align: center; margin-bottom: 30px; }
-.home-intro h1 { margin-bottom: 0; font-size: 32px; font-weight: 750; line-height: 1.4; letter-spacing: -1.4px; }
+.home-intro h1 { margin-bottom: 0; font-size: 32px; font-weight: 750; line-height: 1.4; letter-spacing: -1.4px; transform: translateY(-16px); }
 .home-title-typing { display: inline-block; min-height: 1.4em; }
 .home-title-character { display: inline-block; width: 0; overflow: hidden; vertical-align: bottom; white-space: pre; visibility: hidden; animation: home-title-reveal 0s var(--reveal-delay) forwards; }
 .home-title-cursor { display: inline-block; margin-left: .18em; font-weight: 400; animation: home-title-blink 500ms ease-in-out infinite alternate; }

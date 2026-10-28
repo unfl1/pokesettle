@@ -6,7 +6,7 @@ from langgraph.graph import END, START, StateGraph
 
 from backend.app.battle.conversation import coach_fallback
 from backend.app.core.errors import ServiceError
-from backend.app.rag.prompts import GENERATION_PROMPT
+from backend.app.rag.prompts import BATTLE_GENERATION_PROMPT, GENERATION_PROMPT
 from backend.app.rag.retriever import retrieve
 from backend.app.schemas import Generation
 from backend.app.storage import digest
@@ -249,8 +249,9 @@ def build_graph(vector_store, model, stage=lambda _: None):
                     for item in state["evidence"]
                 },
             }
+            prompt = BATTLE_GENERATION_PROMPT if state.get("battle_context") else GENERATION_PROMPT
             for attempt in range(2):
-                output = model.invoke("generate", GENERATION_PROMPT, payload, Generation)
+                output = model.invoke("generate", prompt, payload, Generation)
                 stage("validating_citations")
                 if state.get("battle_context"):
                     calculated = coach_fallback(state["battle_context"], state["evidence"])

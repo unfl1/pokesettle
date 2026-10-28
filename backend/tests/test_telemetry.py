@@ -144,3 +144,13 @@ def test_http_observation_finishes_before_background_job():
     with TestClient(app) as client:
         assert client.get("/test/background").status_code == 200
     assert 'route="/test/background",status="200"} 1.0' in observed[0]
+
+
+@pytest.mark.parametrize('usage', [None, {}, {'input_tokens': True, 'output_tokens': 1, 'total_tokens': 2},
+                                 {'input_tokens': 5, 'output_tokens': 2, 'total_tokens': 99}])
+def test_invalid_provider_usage_is_not_reported_as_actual_tokens(usage):
+    telemetry = Telemetry()
+    telemetry.record_model_usage('PRIVATE_PURPOSE', usage)
+    metrics = generate_latest(telemetry.registry).decode()
+    assert 'poketact_model_tokens_total{' not in metrics
+    assert 'PRIVATE_PURPOSE' not in metrics

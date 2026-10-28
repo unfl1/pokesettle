@@ -253,3 +253,27 @@ def test_only_plain_species_strategy_requests_use_local_query_planning(setup, qu
     source = CombinedSource(setup.source.client, directory=setup.settings.data_dir, wikipedia_enabled=False)
     plan = source.plan_queries(setup.catalog.get('pokemon:1'), question)
     assert plan is not None and [item.query for item in plan.queries] == ['test-ability']
+
+
+@pytest.mark.parametrize('battle', [False, True])
+def test_generation_uses_battle_instructions_only_with_calculated_context(setup, monkeypatch, battle):
+    from backend.app.rag.prompts import BATTLE_GENERATION_PROMPT, GENERATION_PROMPT
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    pid = 'pokemon:25'
+    setup.vectors.upsert_metadata([catalog.get(pid)])
+    context = evaluate_state({'own_id': pid, 'opponent_id': 'pokemon:9'}, catalog, ROOT / 'data') if battle else None
+    prompts = []
+
+    def invoke(purpose, prompt, payload, schema):
+        prompts.append(prompt)
+        return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    build_graph(setup.vectors, setup.model).invoke({
+        'pokemon_id': pid, 'question': '설명해줘', 'battle_context': context,
+    })
+    assert prompts == [BATTLE_GENERATION_PROMPT if battle else GENERATION_PROMPT]
+    assert 'damage_comparisons' not in GENERATION_PROMPT
+    assert 'damage_comparisons' in BATTLE_GENERATION_PROMPT
+    assert 'Champions 적용 여부가 unknown' in GENERATION_PROMPT

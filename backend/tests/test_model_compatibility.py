@@ -183,3 +183,70 @@ def test_current_material_is_never_truncated_to_fit_input_limit(monkeypatch):
         assert error.value.code == 'MODEL_INPUT_LIMIT'
     finally:
         active_usage.reset(token)
+
+
+def test_history_has_own_budget_even_when_model_input_has_room():
+    import json
+
+    from backend.app.rag.model import prepare_payload
+
+    history = [
+        {'role': role, 'content': ('이전 질문' if role == 'user' else '이전 답변') * 120}
+        for _ in range(6) for role in ('user', 'assistant')
+    ]
+    payload = {'question': '이어서 설명해줘', 'history_for_interpretation_only': history,
+               'evidence': [{'text': '현재 근거'}]}
+    prepared = prepare_payload('test', payload, {}, 100_000)
+    kept = prepared['history_for_interpretation_only']
+    assert 0 < len(kept) < len(history)
+    assert len(json.dumps(kept, ensure_ascii=False).encode()) <= 6000
+    assert kept[0]['role'] == 'user'
+    assert kept == history[-len(kept):]
+    assert prepared['evidence'] == payload['evidence']
+    assert len(history) == 12
+
+
+@pytest.mark.parametrize('settlement_fails', [False, True])
+def test_invalid_structured_response_settles_before_retry(monkeypatch, settlement_fails):
+    from backend.app.core.telemetry import Telemetry
+    from backend.app.core.usage import active_usage
+
+    events = []
+    metadata = {'input_tokens': 100, 'output_tokens': 20, 'total_tokens': 120}
+    result = Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        def with_structured_output(self, *args, **kwargs):
+            return self
+
+        def invoke(self, messages):
+            events.append('invoke')
+            invalid = events.count('invoke') == 1
+            return {'parsed': None if invalid else result,
+                    'parsing_error': ValueError('invalid') if invalid else None,
+                    'raw': SimpleNamespace(usage_metadata=metadata)}
+
+    def settle(ticket, usage):
+        events.append('settle')
+        assert usage == metadata
+        if settlement_fails:
+            raise RuntimeError('database unavailable')
+
+    monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
+    telemetry = Telemetry()
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, settle=settle), 'test'))
+    try:
+        model = StructuredModel(Settings(api_key='synthetic', chat_model='test'), telemetry)
+        if settlement_fails:
+            with pytest.raises(RuntimeError, match='database unavailable'):
+                model.invoke('generate', 'test', {}, Generation)
+            assert events == ['invoke', 'settle']
+        else:
+            assert model.invoke('generate', 'test', {}, Generation) == result
+            assert events == ['invoke', 'settle', 'invoke', 'settle']
+        assert telemetry.model_tokens.labels('generate', 'input')._value.get() == 100 * events.count('invoke')
+    finally:
+        active_usage.reset(token)
