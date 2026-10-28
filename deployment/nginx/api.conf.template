@@ -25,6 +25,13 @@ server {
     location / { return 404; }
 }
 
+# Retired and unknown hostnames must not inherit the root-domain redirect.
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_reject_handshake on;
+}
+
 server {
     listen 80;
     listen [::]:80;
