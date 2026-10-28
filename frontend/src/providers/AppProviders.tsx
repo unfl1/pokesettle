@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useTeamDraft } from '../features/team/hooks/useTeamDraft';
 import { useWorkspace } from '../features/chat/hooks/useWorkspace';
@@ -16,7 +16,7 @@ export function useTeamDraftContext() {
 function WorkspaceProvider({ children, initial }: { children: ReactNode; initial: NavigationDraft | null }) {
   const workspace = useWorkspace(initial?.draft);
   const teamDraft = useTeamDraft(initial?.team);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const save = () => {
       const { own, opponent, name, selectedId, notice, tab, ownActive, opponentActive,
         attackTypes, megaUsed, megaTargetId, switchBlocked } = teamDraft;
@@ -37,7 +37,13 @@ export function useWorkspaceContext() {
 }
 export function AppProviders({ children }: { children: ReactNode }) {
   const [initial, setInitial] = useState<NavigationDraft | null>(null);
-  useEffect(() => setInitial(takeNavigationDraft()), []);
+  const restored = useRef(false);
+  // Restore before a visible link can navigate away with the empty initial state.
+  useLayoutEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    setInitial(takeNavigationDraft());
+  }, []);
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
   }));

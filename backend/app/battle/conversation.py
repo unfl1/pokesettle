@@ -723,11 +723,15 @@ def coach_fallback(context, evidence):
     own_types = "/".join(type_labels[t] for t in context.get("own_types", []))
     enemy_types = "/".join(type_labels[t] for t in context.get("opponent_types", []))
     risks = [item for item in context["defense"] if item["multiplier"] > 1]
-    reason = f"상대 {context['opponent_name']}의 타입은 {enemy_types}, 내 {context['own_name']}의 타입은 {own_types}이에요. "
+    reason = f"상대 {context['opponent_name']}의 타입은 {enemy_types}, 내 {context['own_name']}의 타입은 {own_types} 타입이에요. "
     if risks and "공격하는 쪽을 추천해요" not in direction:
         reason += "타입 상성상 상대의 " + ", ".join(
             f"{type_labels[item['type']]} 공격을 {item['multiplier']:g}배" for item in risks
         ) + "로 받는 불리한 대면이기 때문이에요."
+    elif any(item["multiplier"] > 1 for item in attack_candidates):
+        reason += "타입 상성상 상대의 " + ", ".join(
+            f"{type_labels[item['type']]} {item['multiplier']:g}배 약점" for item in attack_candidates[:2]
+        ) + "을 찌르기 때문이에요."
     elif attack_candidates:
         reason += "타입 상성상 " + ", ".join(
             f"{type_labels[item['type']]} 공격이 {item['multiplier']:g}배" for item in attack_candidates[:2]
