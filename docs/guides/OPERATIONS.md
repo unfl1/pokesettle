@@ -43,12 +43,16 @@ sudo bash deployment/bootstrap_server.sh dedicated-deploy-key.pub
 
 ```bash
 # GitHub 인증이 있는 로컬 터미널에서 현재 subject prefix 조회
-gh api repos/unfl1/poketact/actions/oidc/customization/sub --jq .sub_claim_prefix
+gh api repos/unfl1/pokesettle/actions/oidc/customization/sub --jq .sub_claim_prefix
 # CloudShell에서 위 조회 결과를 그대로 사용, 실제 ID는 Git에 기록하지 않음
-python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'repo:OWNER@OWNER_ID/REPO@REPO_ID'
+python3 bootstrap_github_oidc.py --repository unfl1/pokesettle --subject-prefix 'repo:OWNER@OWNER_ID/REPO@REPO_ID'
 ```
 
 - 최신 저장소의 subject에는 이름과 영구 ID가 함께 포함됨, 이름만으로 신뢰 조건을 추측하지 않음
+- 저장소 이름 변경 시 영구 ID가 같아도 OIDC subject의 이름 변경으로 기존 IAM 신뢰 조건과 불일치 가능, `sts:AssumeRoleWithWebIdentity` 실패 시 현재 prefix와 IAM 조건 비교
+- 이름 변경 복구: GitHub 소유자·저장소 ID 동일성 확인 → IAM 기존 정책을 백업하고 정확한 `sub`의 저장소 이름만 교체 → 정책 재조회 검증 → 실패한 배포 job만 재실행
+- 기존 audience·production 환경·배포 브랜치 main 제한·권한 정책 유지, 와일드카드·이전/새 저장소 동시 허용 금지
+- `--migrate-legacy-subject`는 같은 이름의 기존 ID 없는 subject 전환용이며 저장소 이름 변경을 자동 승인하지 않음
 - 기존 이름 전용 조건을 이전할 때만 `--migrate-legacy-subject` 추가, 같은 저장소의 기존 정확 일치 조건만 교체하며 다른 신뢰 조건은 변경 거부
 
 - GitHub `production` 환경만 신뢰하는 OIDC 역할 생성, 장기 AWS 액세스 키 미발급

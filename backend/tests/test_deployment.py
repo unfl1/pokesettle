@@ -125,8 +125,13 @@ def test_forced_command_rejects_shell_and_non_sha_arguments(command):
         receiver.main(command)
 
 
-@pytest.mark.parametrize("prefix", ["repo:unfl1/poketact", "repo:unfl1@111/poketact@222"])
-def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkeypatch, prefix):
+@pytest.mark.parametrize("repository,prefix", [
+    ("unfl1/poketact", "repo:unfl1/poketact"),
+    ("unfl1/poketact", "repo:unfl1@111/poketact@222"),
+    ("unfl1/pokesettle", "repo:unfl1/pokesettle"),
+    ("unfl1/pokesettle", "repo:unfl1@111/pokesettle@222"),
+])
+def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkeypatch, repository, prefix):
     calls = {}
 
     class IAM:
@@ -148,7 +153,7 @@ def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkey
     bootstrap = importlib.import_module("deployment.aws.bootstrap_github_oidc")
     state = tmp_path / "poketact-deployment.json"
     state.write_text(json.dumps({"distribution_id": "synthetic-distribution", "domain": "example.com"}))
-    bootstrap.configure(state, "unfl1/poketact", prefix)
+    bootstrap.configure(state, repository, prefix)
     condition = calls["trust"]["Statement"][0]["Condition"]["StringEquals"]
     assert condition["token.actions.githubusercontent.com:sub"] == prefix + ":environment:production"
     actions = {a for statement in calls["policy"]["Statement"] for a in statement["Action"]}
@@ -156,10 +161,11 @@ def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkey
     output = tmp_path / "github-production-secrets.json"
     assert output.stat().st_mode & 0o777 == 0o600
     assert json.loads(output.read_text())["PRODUCTION_URL"] == "https://www.example.com"
+    other_name = "pokesettle" if repository.endswith("/poketact") else "poketact"
     for invalid in ("repo:*/*", "repo:other@111/poketact@222", "repo:unfl1@111/other@222",
-                    prefix + ":environment:other"):
+                    f"repo:unfl1@111/{other_name}@222", prefix + ":environment:other"):
         with pytest.raises(ValueError):
-            bootstrap.validate_subject_prefix(invalid, "unfl1/poketact")
+            bootstrap.validate_subject_prefix(invalid, repository)
 
 
 @pytest.mark.parametrize("old_subject,allowed", [

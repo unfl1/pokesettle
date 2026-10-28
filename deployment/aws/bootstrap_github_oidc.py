@@ -77,7 +77,7 @@ def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, default=Path.home() / "poketact-deployment.json")
-    parser.add_argument("--repository", default="unfl1/poketact")
+    parser.add_argument("--repository", default="unfl1/pokesettle")
     parser.add_argument("--subject-prefix", required=True,
                         help="Exact sub_claim_prefix from the GitHub repository OIDC API")
     parser.add_argument("--migrate-legacy-subject", action="store_true",
