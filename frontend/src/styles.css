@@ -177,6 +177,8 @@
 .home-menu-tail { position: absolute; left: -29px; top: 34%; width: 32px; height: 40px; overflow: visible; pointer-events: none; }
 .home-menu-tail path { fill: var(--home-fill); stroke: var(--home-outline); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .home-menu:nth-child(even) .home-menu-tail { left: auto; right: -29px; transform: scaleX(-1); }
+.home-menu.home-menu-green .home-menu-tail { transform: scaleY(-1); }
+.home-menu.home-menu-blue .home-menu-tail { transform: scale(-1, -1); }
 .home-menu-red { --home-tone: var(--color-accent); }
 .home-menu-yellow { --home-tone: var(--color-highlight-ink); --home-fill: color-mix(in srgb, var(--color-highlight) 20%, var(--color-surface)); }
 .home-menu-green { --home-tone: #43ad86; }
