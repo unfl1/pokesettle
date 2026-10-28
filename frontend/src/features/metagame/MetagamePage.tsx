@@ -55,7 +55,13 @@ export default function MetagamePage() {
         </div>}
       </div>
       {data?.stale && <p className="notice" role="status">{translate("최신 자료에 연결하지 못해 임시 보관한 데이터를 표시하고 있어요. 기준일을 확인해 주세요.")}</p>}
-      {query.isPending && <p role="status" className="p-6 text-muted">{translate("싱글 메타를 불러오고 있어요.")}</p>}
+      {query.isPending && <div role="status" className="rounded-xl border border-line bg-surface p-6 text-muted">
+        <p>{translate("싱글 메타를 불러오고 있어요.")}</p>
+        <p className="mt-2 text-[14px]">{translate("최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.")}</p>
+        <div aria-hidden="true" className="mt-5 grid gap-3">
+          {[0, 1, 2, 3, 4].map(row => <div key={row} className="h-12 rounded-lg bg-canvas motion-safe:animate-pulse" />)}
+        </div>
+      </div>}
       {query.error && <div className="notice" role="alert"><p>{query.error.message}</p><button onClick={() => void query.refetch()}>{translate("다시 시도")}</button></div>}
       {data && !data.items.length && <p role="status">{translate("표시할 싱글 순위 데이터가 없어요.")}</p>}
       {pokemon && data && <div className="grid grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] gap-5 max-tablet:grid-cols-1">

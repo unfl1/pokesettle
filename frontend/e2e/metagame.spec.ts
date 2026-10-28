@@ -80,3 +80,22 @@ test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page }
   await expect(page.getByText('합성 기술')).toBeVisible();
   await expect(page.getByRole('img', { name: '합성 포켓몬 이미지 없음' })).toBeVisible();
 });
+
+
+test('메타 응답을 기다리는 동안 외부 조회 안내와 로딩 영역 표시', async ({ page }) => {
+  let release!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/meta/singles') {
+      await waiting;
+      await route.fulfill({ json: { data: meta } });
+    } else await route.fulfill({ json: { data: { active: true, ready: true, items: [] } } });
+  });
+  await page.goto('/ko/meta');
+  await expect(page.getByText('최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.')).toBeVisible();
+  await expect(page.getByRole('region', { name: '싱글 사용 순위' })).toHaveCount(0);
+  release();
+  await expect(page.getByText('합성 기술')).toBeVisible();
+  await expect(page.getByText('최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.')).toHaveCount(0);
+});

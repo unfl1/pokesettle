@@ -37,7 +37,7 @@ def render_answer(generated, evidence, regulation_id):
             raise ServiceError("GENERATION_INVALID", "유보 응답의 형식이 올바르지 않습니다.")
     elif not generated.claims:
         raise ServiceError("GENERATION_INVALID", "주장에 근거가 없습니다.")
-    used, sentences, facts = {}, [], []
+    used, sentences, facts, versions = {}, [], [], []
     for claim in generated.claims:
         if re.search(r"\[근거|https?://", claim.text):
             raise ServiceError("GENERATION_INVALID", "인용 표식은 서버에서만 생성할 수 있습니다.")
@@ -54,19 +54,10 @@ def render_answer(generated, evidence, regulation_id):
             raise ServiceError(
                 "GENERATION_INVALID", "인용 본문에서 게임 버전을 확인할 수 없습니다."
             )
-        version_notice = (
-            (" (원문 버전: " + ", ".join(dict.fromkeys(claim.source_versions)) + ")")
-            if claim.source_versions
-            else ""
-        )
+        versions.extend(claim.source_versions)
         for item in selected:
             used[item["evidence_id"]] = item
-        sentences.append(
-            claim.text
-            + version_notice
-            + " "
-            + " ".join(f"[근거 {item['number']}]" for item in selected)
-        )
+        sentences.append(claim.text)
         facts.append(
             {
                 "text": claim.text,
@@ -105,6 +96,11 @@ def render_answer(generated, evidence, regulation_id):
                 ]
             }
         )
+    if sentences:
+        source_line = " ".join(f"[근거 {item['number']}]" for item in sorted(used.values(), key=lambda e: e["number"]))
+        if versions:
+            source_line += " (원문 버전: " + ", ".join(dict.fromkeys(versions)) + ")"
+        sentences.append(source_line)
     return {
         "answer_status": "partial"
         if generated.claims and generated.unknowns
