@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+import pytest
+
 from backend.app.battle.conversation import BattleUpdate, evaluate_state, merge_state
 from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
@@ -232,7 +234,7 @@ def test_pikachu_gyarados_product_and_action_first_output_rejects_model_two_time
     )["result"]
     assert "4배 약점" in result["answer"]
     assert "전기 공격은 갸라도스에게 2배입니다" not in result["answer"]
-    assert result["answer"].startswith("타입 상성만 보면 전기 타입 기술로 공격")
+    assert result["answer"].startswith("전기 타입 기술로 공격")
     assert "땅 타입" in result["answer"] and "교체에 주의" in result["answer"]
     assert result["citations"][0]["source_type"] == "calculation"
 
@@ -452,7 +454,7 @@ def test_coach_answer_is_concise_and_all_type_names_are_korean():
         {"own_id": "pokemon:25", "opponent_id": "pokemon:130"}, catalog, ROOT / "data"
     )
     answer = coach_fallback(context, [{"evidence_id": "calc", "source_type": "calculation"}])
-    assert len(answer.claims) <= 3
+    assert len(answer.claims) <= 5
     assert len(answer.unknowns) == 0
     assert len(answer.assumptions) == 0
     assert "water" not in str(answer) and "flying" not in str(answer)
@@ -501,8 +503,41 @@ def test_general_recommendation_precedes_cautions_without_routine_questions():
         ROOT / "data",
     )
     answer = coach_fallback(context, [{"evidence_id": "calc", "source_type": "calculation"}])
-    assert answer.claims[0].text == "타입 상성만 보면 10만볼트로 공격하는 쪽을 추천해요."
+    assert answer.claims[0].text == "10만볼트로 공격하는 쪽을 추천해요."
     assert "4배" in answer.claims[1].text
     assert answer.claims[-1].text.startswith("다만,\n")
     assert "땅 타입" in answer.claims[-1].text
     assert answer.unknowns == []
+
+
+def test_venusaur_charizard_action_reason_alternative_and_limits_order():
+    from backend.app.battle.conversation import coach_fallback
+    from backend.app.rag.graph import render_answer
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    context = evaluate_state({"own_id": "pokemon:3", "opponent_id": "pokemon:6"}, catalog, ROOT / "data")
+    evidence = [{"source_type": "calculation", "evidence_id": "calc", "number": 1,
+                 "text": "synthetic calculation", "game": "generic", "verification_status": "assumed"}]
+    answer = coach_fallback(context, evidence)
+    assert answer.claims[0].text.endswith("교체하는 쪽을 추천해요.")
+    assert "불리한 대면" in answer.claims[1].text
+    alternatives = next(claim.text for claim in answer.claims if "바위 4배" in claim.text)
+    assert "물 2배" in alternatives and "전기 2배" in alternatives
+    assert "실제로 배워 가지고" in alternatives
+    assert answer.claims[-1].text.startswith("다만,\n")
+    rendered = render_answer(answer, evidence, None)
+    assert rendered["answer"].endswith("[근거 1]")
+    assert rendered["answer"].count("[근거 1]") == 1
+    assert rendered["answer"].index("교체하는 쪽을 추천") < rendered["answer"].index("불리한 대면") < rendered["answer"].index("바위 4배") < rendered["answer"].index("다만,\n")
+    assert all(fact["evidence_ids"] == ["calc"] for fact in rendered["facts"])
+
+
+@pytest.mark.parametrize("side", ["own", "opponent"])
+def test_fainted_pokemon_never_gets_weakness_attack_alternative(side):
+    from backend.app.battle.conversation import coach_fallback
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    context = evaluate_state({"own_id": "pokemon:3", "opponent_id": "pokemon:6",
+                              f"{side}_hp_percent": 0}, catalog, ROOT / "data")
+    answer = coach_fallback(context, [{"source_type": "calculation", "evidence_id": "calc"}])
+    assert not any("공격도 고려해 보세요" in claim.text for claim in answer.claims)

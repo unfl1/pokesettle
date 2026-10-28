@@ -106,6 +106,12 @@ export function EvidenceCard({
 
 export function Answer({ result, id }: { result: GroundedResult; id: string }) {
   const { t: translate } = useI18n();
+  const citedNumbers = [...new Set([...result.answer.matchAll(/\[근거 (\d+)\]/g)]
+    .map(match => Number(match[1])))].filter(number => result.citations.some(c => c.number === number));
+  const answerText = result.answer.replace(/\s*\[근거 \d+\]/g, '').trim();
+  const displayAnswer = citedNumbers.length
+    ? `${answerText}\n\n${citedNumbers.map(number => `[근거 ${number}]`).join(' ')}`
+    : answerText;
   return (
     <div className="mb-7" data-testid="answer-body">
       <div
@@ -135,28 +141,12 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
               : translate("근거 포함")}
         </span>
       </div>
-      {result.battleContext && (
-        <div className="mb-3 rounded-[6px] border border-line p-3 text-[14px] leading-[1.9] text-muted" aria-label={translate("현재 전투 입력")}>
-          {result.battleContext.scope === 'generic_team_selection' ? <p>{translate("6대6 엔트리 비교")}{result.battleContext.selection ? ` ${translate('· {count}개 선출 조합 평가', { count: result.battleContext.selection.candidateCount })}` : translate("· 엔트리 확인 필요")}</p> : <p>{translate("현재 입력:")} {result.battleContext.ownName ?? translate("내 포켓몬 미확인")}  {translate("/ 상대")} {result.battleContext.opponentName ?? translate("미확인")}</p>}
-          {result.battleContext.state.ownHpPercent !== undefined && <p>{translate("내 남은 HP:")} {result.battleContext.state.ownHpPercent}%</p>}
-          {result.battleContext.state.ownMoves?.length ? <p>{translate("입력한 기술:")} {result.battleContext.state.ownMoves.join(', ')}</p> : null}
-          {result.battleContext.state.requestedDefensiveType && <p>{translate("요청한 방어 타입:")} {result.battleContext.state.requestedDefensiveType}  {translate("· 가정 비교, 실제 사용 확정 아님")}</p>}
-          {result.battleContext.switches?.length ? <div className="mt-2" aria-label={translate("교체 후보 비교")}>
-            <p className="font-medium">{translate("교체 후보 · 타입 저항 기준 비교")}</p>
-            {result.battleContext.switches.map(option => <p key={option.pokemonId}>
-              {option.comparisonOrder}. {option.name}  {translate("· 최대 피격 배율")} {option.worstMultiplier}{translate("배")}{option.hpPercent != null ? ` · HP ${option.hpPercent}%` : translate("· HP 미입력")}
-            </p>)}
-            <p>{translate("같은 배율은 공동 순위 · 실제 생존·최선 행동 순위 아님")}</p>
-          </div> : null}
-          {result.battleContext.damageComparisons?.length ? <p>{translate("명시한 중립 조건의 참조 피해 계산 포함 · 실제 게임 검증과 구분")}</p> : <p>{translate("타입 기반 비교 · 실제 피해·선공·승률 미검증")}</p>}
-        </div>
-      )}
       <div
         className="text-[14px] leading-[1.95] text-ink whitespace-pre-wrap wrap-anywhere max-tablet:text-[14px]"
         data-testid="answer-text"
       >
         <CitedText
-          text={result.answer}
+          text={displayAnswer}
           citations={result.citations}
           prefix={id}
         />
@@ -179,6 +169,27 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
           ))}
         </details>
       )}
+      {result.battleContext && (
+        <div className="mt-4 mb-3 rounded-[6px] border border-line p-3 text-[14px] leading-[1.9] text-muted" aria-label={translate("현재 전투 입력")}>
+          {result.battleContext.scope === 'generic_team_selection' ? <p>{translate("6대6 엔트리 비교")}{result.battleContext.selection ? ` ${translate('· {count}개 선출 조합 평가', { count: result.battleContext.selection.candidateCount })}` : translate("· 엔트리 확인 필요")}</p> : <p>{translate("현재 입력:")} {result.battleContext.ownName ?? translate("내 포켓몬 미확인")}  {translate("/ 상대")} {result.battleContext.opponentName ?? translate("미확인")}</p>}
+          {result.battleContext.state.ownHpPercent !== undefined && <p>{translate("내 남은 HP:")} {result.battleContext.state.ownHpPercent}%</p>}
+          {result.battleContext.state.ownMoves?.length ? <p>{translate("입력한 기술:")} {result.battleContext.state.ownMoves.join(', ')}</p> : null}
+          {result.battleContext.state.requestedDefensiveType && <p>{translate("요청한 방어 타입:")} {result.battleContext.state.requestedDefensiveType}  {translate("· 가정 비교, 실제 사용 확정 아님")}</p>}
+          {result.battleContext.switches?.length ? <div className="mt-2" aria-label={translate("교체 후보 비교")}>
+            <p className="font-medium">{translate("교체 후보 · 타입 저항 기준 비교")}</p>
+            {result.battleContext.switches.map(option => <p key={option.pokemonId}>
+              {option.comparisonOrder}. {option.name}  {translate("· 최대 피격 배율")} {option.worstMultiplier}{translate("배")}{option.hpPercent != null ? ` · HP ${option.hpPercent}%` : translate("· HP 미입력")}
+            </p>)}
+            <p>{translate("같은 배율은 공동 순위 · 실제 생존·최선 행동 순위 아님")}</p>
+          </div> : null}
+          {result.battleContext.damageComparisons?.length ? <p>{translate("명시한 중립 조건의 참조 피해 계산 포함 · 실제 게임 검증과 구분")}</p> : <p>{translate("타입 기반 비교 · 실제 피해·선공·승률 미검증")}</p>}
+        </div>
+      )}
+      {result.guideLimitations?.map((line, i) => (
+        <p className="text-[14px] text-muted leading-[1.8] mt-2.5" key={i}>
+          {line}
+        </p>
+      ))}
       {result.citations.length ? (
         <div className="gap-[7px] mt-[17px] flex flex-col [&>p]:mb-0.5">
           <p className="gap-1.5 text-[14px] tracking-[0.7px] text-muted flex items-center">
@@ -194,11 +205,6 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
           {result.citationNotice ?? translate("이 답변에 인용된 근거가 없습니다.")}
         </p>
       )}
-      {result.guideLimitations?.map((line, i) => (
-        <p className="text-[14px] text-muted leading-[1.8] mt-2.5" key={i}>
-          {line}
-        </p>
-      ))}
     </div>
   );
 }

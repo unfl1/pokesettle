@@ -620,6 +620,9 @@ test('조건부 전략 출처·라이선스와 추가 질문을 기본 표시', 
   await expect(page.getByRole('link', { name: /PokeSettle original conditional analysis/ })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/');
   await expect(page.getByText('현재 HP와 네 기술을 알려주세요.')).toBeVisible();
   await expect(page.getByTestId('answer-state')).toHaveText('일부 확인');
+  const text = await page.getByTestId('answer-text').textContent();
+  expect(text?.trim()).toMatch(/1$/);
+
 });
 
 
@@ -630,6 +633,10 @@ test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복�
   await page.getByRole('button', { name: '질문 보내기' }).click();
   const context = page.getByLabel('현재 전투 입력');
   await expect(context).toContainText('이상해꽃 / 상대 리자몽');
+  expect(await page.getByTestId('answer-text').evaluate((node) => {
+    const context = document.querySelector('[aria-label="현재 전투 입력"]');
+    return !!context && !!(node.compareDocumentPosition(context) & Node.DOCUMENT_POSITION_FOLLOWING);
+  })).toBe(true);
   await expect(context).toContainText('내 남은 HP: 40%');
   await expect(context).toContainText('가정 비교, 실제 사용 확정 아님');
   await expect(context).not.toContainText('입력한 기술:');

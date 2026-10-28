@@ -161,3 +161,21 @@ def test_selection_rejects_unsupported_model_species_commentary(setup):
     )["result"]
     assert "리자몽은 불꽃 공격에 약합니다" not in result["answer"]
     assert "조합을 추천" in result["answer"]
+
+
+def test_selection_action_first_and_sources_last():
+    from backend.app.rag.graph import render_answer
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    context = evaluate_state({"selection_requested": True, "own_team_ids": OWN,
+                              "opponent_team_ids": ENEMY}, catalog, ROOT / "data")
+    evidence = [{"source_type": "calculation", "evidence_id": "calc", "number": 1,
+                 "text": "synthetic selection", "game": "generic", "verification_status": "assumed"}]
+    answer = coach_fallback(context, evidence)
+    assert not answer.claims[0].text.startswith("타입 상성만")
+    assert "조합을 추천" in answer.claims[0].text
+    assert "때문이에요" in answer.claims[1].text
+    rendered = render_answer(answer, evidence, None)
+    assert rendered["answer"].endswith("[근거 1]")
+    assert rendered["answer"].count("[근거 1]") == 1
+    assert answer.claims[-1].text.startswith("다만,\n")
