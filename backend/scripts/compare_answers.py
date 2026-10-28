@@ -19,12 +19,7 @@ from backend.app.rag.prompts import GENERATION_PROMPT
 from backend.app.schemas import Document, Model
 from backend.app.storage import Store, digest, now
 
-BASELINE_PROMPT = """당신은 한국어 포켓몬 지식 도우미입니다.
-외부 문서·검색·도구 없이 기존 지식만으로 주어진 질문에 답하세요.
-일반 도감 정보와 Champions의 실제 규칙·적격성을 구분하고 모르는 내용은 유보하세요.
-모르는 경기 승률·데미지·KO·규칙 숫자를 만들거나 출처·인용을 지어내지 마세요.
-최대 5개의 짧은 사실 문장으로 답하고 가정·미확인은 별도로 기록하세요.
-abstained이면 claims를 비우고 unknowns에 이유를 적으세요. 지정된 구조만 출력하세요."""
+BASELINE_PROMPT = """Answer briefly in Korean using prior knowledge only, without documents, search or tools. Distinguish generic Pokédex information from verified Champions rules/eligibility; defer unknown facts. Invent no damage, KO, win rates, rules, sources or citations. Separate assumptions and unknowns. For abstained, leave claims empty and explain why in unknowns."""
 
 
 class EvaluationCase(Model):

@@ -43,12 +43,16 @@ sudo bash deployment/bootstrap_server.sh dedicated-deploy-key.pub
 
 ```bash
 # GitHub 인증이 있는 로컬 터미널에서 현재 subject prefix 조회
-gh api repos/unfl1/poketact/actions/oidc/customization/sub --jq .sub_claim_prefix
+gh api repos/unfl1/pokesettle/actions/oidc/customization/sub --jq .sub_claim_prefix
 # CloudShell에서 위 조회 결과를 그대로 사용, 실제 ID는 Git에 기록하지 않음
-python3 bootstrap_github_oidc.py --repository unfl1/poketact --subject-prefix 'repo:OWNER@OWNER_ID/REPO@REPO_ID'
+python3 bootstrap_github_oidc.py --repository unfl1/pokesettle --subject-prefix 'repo:OWNER@OWNER_ID/REPO@REPO_ID'
 ```
 
 - 최신 저장소의 subject에는 이름과 영구 ID가 함께 포함됨, 이름만으로 신뢰 조건을 추측하지 않음
+- 저장소 이름 변경 시 영구 ID가 같아도 OIDC subject의 이름 변경으로 기존 IAM 신뢰 조건과 불일치 가능, `sts:AssumeRoleWithWebIdentity` 실패 시 현재 prefix와 IAM 조건 비교
+- 이름 변경 복구: GitHub 소유자·저장소 ID 동일성 확인 → IAM 기존 정책을 백업하고 정확한 `sub`의 저장소 이름만 교체 → 정책 재조회 검증 → 실패한 배포 job만 재실행
+- 기존 audience·production 환경·배포 브랜치 main 제한·권한 정책 유지, 와일드카드·이전/새 저장소 동시 허용 금지
+- `--migrate-legacy-subject`는 같은 이름의 기존 ID 없는 subject 전환용이며 저장소 이름 변경을 자동 승인하지 않음
 - 기존 이름 전용 조건을 이전할 때만 `--migrate-legacy-subject` 추가, 같은 저장소의 기존 정확 일치 조건만 교체하며 다른 신뢰 조건은 변경 거부
 
 - GitHub `production` 환경만 신뢰하는 OIDC 역할 생성, 장기 AWS 액세스 키 미발급
@@ -141,7 +145,9 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 - 적용 경로: 챗봇·가이드·문서 수집·자연어 포켓몬 검색, 기본 GET 도감 조회와 계산기는 유료 모델 호출 없음
 - 일반 종별 전략·육성·배경 질문: 기본 출처 조합에서 검색어를 종 이름·등록 특성으로 생성하고 정확한 리소스·자체 전략 후보를 로컬 선별, 검색어 생성·후보 선별용 모델 호출 생략
 - 명시한 기술·특성 효과·다른 포켓몬·규칙 등 해석할 조건이 남거나 Wikipedia 출처를 활성화한 경우 기존 모델 검색어 생성·선별 경로 유지, 답변 생성·인용 검증·적용 범위 제한 유지
-- 계산 답변이 준비된 전투는 전략 보충 설명 최대 2개만 전용 스키마로 생성, 추천 행동·계산 수치·주의사항은 서버에서 렌더링
+- 영어 프롬프트·한국어 답변 지시 사용, 스키마와 서버가 보장하는 배열 상한·출력 형식 및 중복 말투 설명 제거, 근거·가정·Champions 적용 범위 지시 유지
+- 계산 답변이 준비된 전투는 공통 근거 규칙과 보충 설명 전용 지시만 사용, 전략 보충 설명 최대 2개를 전용 스키마로 생성, 추천 행동·계산 수치·주의사항은 서버에서 렌더링
+- `PROMPT_VERSION=conversation-coach-v5`로 검색 계획·수집 완료 캐시 구분, 생성·검색 조건 캐시는 프롬프트 본문 변경으로 자동 구분, 전환 직후 최초 요청은 재생성 가능
 - 선출 또는 보충 설명에 사용할 근거가 없는 전투는 인용 검증 후 계산 답변 직접 반환, 생성 호출 생략
 - 직전 답변이 전투이고 명확한 재설명·요약 문구만 입력한 경우 기존 상태로 재계산, 상태 추출 호출 생략; 변경사항을 포함한 문장·모호한 후속 질문·다른 주제 이후 요청은 기존 모델 해석 유지
 - 도감 가이드는 개인 대화 이력을 입력에서 제외하고 검증된 생성 결과 캐시 사용, 매 요청의 문서 수집·검색 후 현재 근거로 인용 재검증
