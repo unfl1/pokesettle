@@ -17,7 +17,7 @@ const menus = [
 
 export default async function Home() {
   const { locale, t: translate } = await getI18n();
-  const homeTitle = translate('배틀 준비는 PokeTact에서');
+  const homeTitle = translate('배틀 준비는 PokeSettle에서');
   return <div className="home-shell">
     <div className="home-language"><Suspense><LanguageSwitcher /></Suspense></div>
     <main id="main-content" tabIndex={-1} className="home-page">
@@ -50,12 +50,12 @@ export default async function Home() {
       </div>
     </main>
     <footer className="home-legal" aria-label={translate("저작권 및 운영 안내")}>
-      <p>{translate("PokeTact는 영리 목적 없이 운영하는 비공식 팬 프로젝트이며, Pokémon 공식 서비스가 아닙니다.")}</p>
+      <p>{translate("PokeSettle은 영리 목적 없이 운영하는 비공식 팬 프로젝트이며, Pokémon 공식 서비스가 아닙니다.")}</p>
       <p>{translate("포켓몬 및 관련 캐릭터·이미지의 권리는 각 권리자에게 있습니다. ©2019 Pokémon. ©1995-2019 Nintendo/Creatures Inc. /GAME FREAK inc.")}</p>
     </footer>
   </div>;
 }
 
 export async function generateMetadata() {
-  return pageMetadata('/', '배틀 준비는 PokeTact에서', '포켓몬 도감과 문서 근거를 함께 확인하는 PokeTact');
+  return pageMetadata('/', '배틀 준비는 PokeSettle에서', '포켓몬 도감과 문서 근거를 함께 확인하는 PokeSettle');
 }

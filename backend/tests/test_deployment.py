@@ -30,11 +30,11 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             return Response(url, json.dumps({"data": {"ready": failure != "api"}}))
         if url == base + asset:
             return Response(url, "js", 404 if failure == "asset_status" else 200)
-        marker = "배틀 준비는 PokeTact에서" if url == base + "/ko" else "전략 챗봇"
+        marker = "배틀 준비는 PokeSettle에서" if url == base + "/ko" else "전략 챗봇"
         if failure == "old_home" and url == base + "/ko":
             marker = "전략 챗봇"
         if failure == "chat" and url == base + "/ko/chat":
-            marker = "PokeTact"
+            marker = "PokeSettle"
         html = marker + (f'<script src="{asset}"></script>' if failure != "assets" else "")
         return Response(base + "/ko/chat" if failure == "redirect" else url, html)
 

@@ -106,7 +106,7 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 
 - 로컬 `http://127.0.0.1:13000` 접속, 관리자 이름 `admin`
 - 비밀번호는 서버 `/etc/poketact/observability.env`에서 비공개 확인, 최초 로그인 후 사용자 직접 변경 권장
-- `PokeTact` 폴더 → `PokeTact Operations`: API 상태·요청률·p95 지연·5xx·모델 시도·CPU·메모리·디스크·경보·로그
+- `PokeSettle` 폴더 → `PokeSettle Operations`: API 상태·요청률·p95 지연·5xx·모델 시도·CPU·메모리·디스크·경보·로그
 - Grafana·Prometheus·Loki·지표 포트 인터넷 공개 없음, Grafana만 호스트 loopback 바인딩
 - Grafana Explore → Loki → `{job="poketact"} | json`으로 운영 이벤트 검색
 - Prometheus 규칙: 지표 단절·5xx·지연·모델 실패·메모리·디스크 경보, 현재 상태를 대시보드에서 조회
@@ -249,13 +249,34 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - CI에서 백엔드·프런트엔드 이미지를 함께 빌드·패키징하고 Compose로 기동
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상, Docker 빌드는 `http://api:8000`
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
-- SEO 원본 도메인: 기본 `https://www.chikorita.xyz`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
+- SEO 원본 도메인: 기본 `https://www.pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
 - 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 전체 문서 이동으로 metadata 수명 분리
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: `prefetch={false}`로 자동 선조회와 실제 이동의 metadata 경합 방지
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드
+
+### 서비스 이름과 운영 도메인
+
+- 서비스 이름: `PokeSettle`, 대표 주소: `https://www.pokesettle.com`
+- 도메인 등록·DNS: LETO, 기존 CloudFront 배포·Lightsail 서버 재사용
+
+| 호스트 | DNS | 동작 |
+| --- | --- | --- |
+| `www.pokesettle.com` | CloudFront 배포 주소 CNAME | Next.js·FastAPI 서비스 |
+| `pokesettle.com` | Lightsail 고정 IP A | HTTPS `www.pokesettle.com`으로 308 이동 |
+| `api.pokesettle.com` | Lightsail 고정 IP A | CloudFront 인증 헤더를 확인하는 HTTPS 원본 |
+| ACM 검증 호스트 | ACM 지정 CNAME | CloudFront 인증서 발급·자동 갱신 |
+
+- CloudFront 인증서: `us-east-1` ACM의 `www.pokesettle.com`, 서버 인증서: Certbot의 `pokesettle.com`·`api.pokesettle.com`
+- 이전 치코리타 도메인: 최종 CloudFront 별칭·Nginx 호스트·CORS·DNS 연결에서 제거, 새 서비스로 이동 처리 없음
+- 전환 순서: 새 DNS·인증서 → Nginx 새 원본 준비 → 앱 배포·CORS 변경 → CloudFront 새 별칭·원본 전환 → 공개 검사 → 이전 도메인 연결 정리
+- GitHub production 환경의 `PRODUCTION_URL`도 `https://www.pokesettle.com`으로 변경 필요
+- 기존 저장 데이터 호환성: Compose 프로젝트·DB·볼륨·서버 경로·메트릭·문서 ID·세션 키·비공개 원본 헤더의 `poketact` 식별자 유지
+- GitHub 저장소 `unfl1/poketact` 및 로컬 디렉터리 유지, 공개 서비스 이름과 별도 관리
+- 원본 수신기 교체 시 새 이름과 이전 이름의 준비 상태를 모두 인식하여 이전 이미지 롤백 허용
+- 도메인 변경 전 브라우저 쿠키·sessionStorage는 새 도메인으로 자동 이전되지 않음, 기존 DB 데이터는 유지하되 새 주소에서는 새 세션 시작
 
 ### 로컬 실행과 빌드
 

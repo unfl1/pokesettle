@@ -23,7 +23,7 @@ class SourceClient:
         self.cache_hits = 0
         self.session = requests.Session()
         contact = settings.source_contact or "https://github.com/unfl1/poketact"
-        self.session.headers["User-Agent"] = f"PokeTact/0.1 ({contact}) educational local research"
+        self.session.headers["User-Agent"] = f"PokeSettle/0.1 ({contact}) educational local research"
 
     def fetch(self, url, *, expect_json=True):
         parsed = urlparse(url)

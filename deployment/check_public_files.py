@@ -23,7 +23,7 @@ def check():
         if ({".secrets", ".aws", "private", "runtime", "backups", "node_modules"} & set(path.parts)
                 or path.suffix in {".pem", ".key", ".dump", ".sqlite3", ".log"}
                 or path.name.startswith(".env") and path.name not in {".env.example", ".env.production.example"}
-                or path.name.startswith("poketact-deployment") and path.suffix == ".json"
+                or path.name.startswith(("poketact-deployment", "pokesettle-deployment")) and path.suffix == ".json"
                 or path.name.startswith("origin-token")):
             failures.append(name + ": private artifact")
         try:

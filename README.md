@@ -1,6 +1,8 @@
-# PokeTact
+# PokeSettle
 
 Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 포켓몬 전략 챗봇
+
+서비스: [PokeSettle](https://www.pokesettle.com)
 
 ## 주요 기능
 

@@ -47,7 +47,7 @@ class MetagameService:
         # Paths are generated from validated provider fields; never accept user URLs.
         with requests.get(
             SOURCE_URL + path,
-            headers={"User-Agent": "PokeTact/0.2 (https://github.com/unfl1/poketact)"},
+            headers={"User-Agent": "PokeSettle/0.2 (https://github.com/unfl1/poketact)"},
             timeout=(5, 15),
             allow_redirects=False,
             stream=True,

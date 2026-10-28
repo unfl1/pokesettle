@@ -68,7 +68,8 @@ def ready():
         if not json.load(response)["data"]["ready"]:
             raise RuntimeError("API is not ready")
     with urllib.request.urlopen("http://127.0.0.1:3001/ko/chat", timeout=10) as response:
-        if "PokeTact" not in response.read().decode():
+        html = response.read().decode()
+        if not any(brand in html for brand in ("PokeSettle", "PokeTact")):
             raise RuntimeError("Frontend is not ready")
     with urllib.request.urlopen("http://127.0.0.1:3000/api/health", timeout=10) as response:
         if json.load(response).get("database") != "ok":
