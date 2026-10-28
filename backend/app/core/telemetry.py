@@ -44,6 +44,10 @@ class Telemetry:
             "poketact_reserved_tokens", "Conservative reserved tokens, not billed usage",
             registry=self.registry,
         )
+        self.model_tokens = Counter(
+            "poketact_model_tokens", "Provider reported tokens, including invalid structured responses",
+            ["purpose", "direction"], registry=self.registry,
+        )
         # A dedicated logger avoids collecting third-party logs or raw provider errors.
         self.logger = logging.Logger("poketact.operational", level=logging.INFO)
         self.server = None
@@ -72,6 +76,18 @@ class Telemetry:
 
     def emit(self, **fields):
         self.logger.info(json.dumps({"timestamp": time.time(), **fields}, separators=(",", ":")))
+
+    def record_model_usage(self, purpose, usage):
+        if not isinstance(usage, dict):
+            return
+        counts = [usage.get(key) for key in ("input_tokens", "output_tokens", "total_tokens")]
+        if any(type(value) is not int or value < 0 for value in counts):
+            return
+        if counts[2] <= 0 or counts[0] + counts[1] != counts[2]:
+            return
+        purpose = purpose if purpose in PURPOSES else "other"
+        for direction, count in zip(("input", "output"), counts):
+            self.model_tokens.labels(purpose, direction).inc(count)
 
     @contextmanager
     def model_attempt(self, purpose):

@@ -14,7 +14,7 @@ def input_reservation(system, payload, schema_data):
     return len(json.dumps([system, payload, schema_data], ensure_ascii=False, default=str).encode()) + 1024
 
 
-def prepare_payload(system, payload, schema_data, input_limit):
+def prepare_payload(system, payload, schema_data, input_limit, history_byte_limit=6000):
     """Keep past prose for interpretation, never resend stored result objects."""
     history_key = "history_for_interpretation_only"
     if history_key not in payload:
@@ -28,7 +28,13 @@ def prepare_payload(system, payload, schema_data, input_limit):
             history.append({"role": message["role"], "content": content})
     prepared = {**payload, history_key: history}
     # Current inputs and evidence take priority over old interpretation-only prose.
-    while history and input_reservation(system, prepared, schema_data) > input_limit:
+    while history and (
+        len(json.dumps(history, ensure_ascii=False).encode()) > history_byte_limit
+        or input_reservation(system, prepared, schema_data) > input_limit
+    ):
+        history.pop(0)
+    # Do not leave an answer whose user question was removed from the window.
+    while history and history[0]["role"] == "assistant":
         history.pop(0)
     return prepared
 
@@ -70,6 +76,7 @@ class StructuredModel:
         attempts = min(2, self.settings.max_retries + 1)
         for attempt in range(attempts):
             reservation = usage[0].reserve(usage[1], input_bound + self.settings.model_max_output_tokens)
+            response = None
             try:
                 with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
                     response = model.with_structured_output(
@@ -96,6 +103,13 @@ class StructuredModel:
                         retryable=True,
                     ) from None
             else:
-                # Settlement failures must not trigger a second paid provider call.
-                usage[0].settle(reservation, getattr(response["raw"], "usage_metadata", None))
                 return response["parsed"]
+            finally:
+                # Received responses cost tokens even if structured parsing fails.
+                # Settlement stays outside the retry handler: DB errors must not
+                # trigger another paid call. Unknown outcomes retain reservations.
+                if response is not None:
+                    metadata = getattr(response["raw"], "usage_metadata", None)
+                    if self.telemetry:
+                        self.telemetry.record_model_usage(purpose, metadata)
+                    usage[0].settle(reservation, metadata)
