@@ -47,6 +47,7 @@ Phase 1·2 경로와 Phase 3의 일반 타입 시나리오 경로 구현. Champi
 | GET `/api/jobs/{jobId}` | 처리 단계·결과·안전한 오류 | Phase 1 |
 | POST `/api/conversations` | 포켓몬과 독립된 새 대화 생성 | Phase 2, Phase 1 채팅 검증 시 최소 저장 계약 선행 |
 | GET `/api/conversations` | 세션 전체 대화 목록 | Phase 2 |
+| DELETE `/api/conversations/{id}` | 세션 소유 대화와 메시지·전투 상태 삭제, 성공 204, 미소유·없는 대화 404 | 구현함 |
 | GET `/api/conversations/{id}/messages` | 저장 메시지·실제 인용 복원 | Phase 2 |
 | POST `/api/pokemon/search` | 자연어 조건 탐색 | Phase 2 |
 | POST `/api/pokemon/{id}/guide` | 근거 기반 운용 가이드 작업 접수 | Phase 2 |
