@@ -7,6 +7,7 @@ from backend.app.battle.conversation import (
     BattleUpdate,
     evaluate_state,
     grounded_update,
+    is_battle_reexplanation,
     merge_state,
     needs_battle_update,
     resolve_named_opponent,
@@ -232,9 +233,20 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
+        history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
+        previous_answer = history[-1].get("content") if history and history[-1].get("role") == "assistant" else None
         previous_battle = self.store.get("battle_state", conversation_id) or {}
         battle_state, battle_context = previous_battle, None
-        if feature is None and needs_battle_update(request.question, previous_battle):
+        if (
+            feature is None
+            and isinstance(previous_answer, dict)
+            and previous_answer.get("battle_context")
+            and is_battle_reexplanation(request.question, previous_battle)
+        ):
+            battle_context = evaluate_state(
+                battle_state, self.catalog, self.settings.data_dir, self.settings
+            )
+        elif feature is None and needs_battle_update(request.question, previous_battle):
             stage("interpreting_battle")
             candidate_ids = list(
                 dict.fromkeys(
@@ -388,7 +400,9 @@ class KnowledgeService:
                 "question": request.question,
                 "retrieval_query": request.question + " " + " ".join(collection["queries"]),
                 "regulation_id": request.regulation_id,
-                "history": self.store.history(conversation_id),
+                # Guides are public reference answers, independent of private conversation.
+                "history": history,
+                "cache_guide": feature == "pokemon_guide",
             }
         )
         stage("saving")
