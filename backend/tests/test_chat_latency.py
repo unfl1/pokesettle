@@ -279,8 +279,8 @@ def test_generation_uses_battle_instructions_only_with_calculated_context(setup,
     })
     assert prompts == [BATTLE_EXPLANATION_PROMPT if battle else GENERATION_PROMPT]
     assert 'damage_comparisons' not in GENERATION_PROMPT
-    assert '최대 2개' in BATTLE_EXPLANATION_PROMPT
-    assert 'Champions 적용 여부가 unknown' in GENERATION_PROMPT
+    assert 'supplemental_evidence_ids' in BATTLE_EXPLANATION_PROMPT
+    assert 'Champions applicability is unknown' in GENERATION_PROMPT
 
 
 @pytest.mark.parametrize('question,expected', [
