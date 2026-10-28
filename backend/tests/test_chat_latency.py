@@ -7,7 +7,8 @@ from backend.app.battle.conversation import BattleUpdate, evaluate_state
 from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.rag.graph import build_graph
-from backend.app.schemas import ChatRequest, Generation
+from backend.app.schemas import BattleExplanation, ChatRequest, Generation
+from backend.tests.conftest import document
 
 
 @pytest.mark.parametrize('battle,research', [(True, False), (False, False), (True, True)])
@@ -21,6 +22,7 @@ def test_only_evaluated_battles_reuse_prepared_index_without_external_collection
     def collect(*args):
         assert not (battle and not research), 'simple evaluated battle must not collect external documents'
         collected.append(args)
+        setup.vectors.index_document(args[0], document('poketact:strategy:test', 'TEST ONLY: conditional strategy.'))
         return {'queries': []}
 
     def invoke(purpose, prompt, payload, schema):
@@ -36,7 +38,7 @@ def test_only_evaluated_battles_reuse_prepared_index_without_external_collection
         question = '내 선봉은 마스카나이고 상대 선봉은 라우드본이야. 특성 설명과 근거를 검색해줘'
     result = setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), setup.store.new_session())
     assert bool(collected) == (not battle or research)
-    assert 'generate' in invoked  # Strategy generation and RAG remain available.
+    assert ('generate' in invoked) == (not battle or research)
     if battle:
         assert result['citations']
         assert '악 타입 기술로 공격' in result['answer']
@@ -73,6 +75,7 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
     setup.service.settings = settings
     setup.service.model = StructuredModel(settings)
     setup.vectors.upsert_metadata([catalog.get('pokemon:908'), catalog.get('pokemon:911')])
+    setup.vectors.index_document('pokemon:908', document('poketact:strategy:test', 'TEST ONLY: conditional strategy.'))
     sent = []
 
     class Client:
@@ -104,7 +107,7 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
             assert result['battle_context']['state']['own_id'] == 'pokemon:908'
     finally:
         active_usage.reset(token)
-    generations = [payload for schema, payload in sent if schema is Generation]
+    generations = [payload for schema, payload in sent if schema is BattleExplanation]
     assert len(generations) == 7
     assert generations[-1]['history_for_interpretation_only']
     assert all(isinstance(message['content'], str) for message in generations[-1]['history_for_interpretation_only'])
@@ -257,11 +260,12 @@ def test_only_plain_species_strategy_requests_use_local_query_planning(setup, qu
 
 @pytest.mark.parametrize('battle', [False, True])
 def test_generation_uses_battle_instructions_only_with_calculated_context(setup, monkeypatch, battle):
-    from backend.app.rag.prompts import BATTLE_GENERATION_PROMPT, GENERATION_PROMPT
+    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT, GENERATION_PROMPT
 
     catalog = Catalog(ROOT / 'data/pokemon.json')
     pid = 'pokemon:25'
     setup.vectors.upsert_metadata([catalog.get(pid)])
+    setup.vectors.index_document(pid, document('poketact:strategy:test', 'TEST ONLY: conditional strategy.'))
     context = evaluate_state({'own_id': pid, 'opponent_id': 'pokemon:9'}, catalog, ROOT / 'data') if battle else None
     prompts = []
 
@@ -273,7 +277,148 @@ def test_generation_uses_battle_instructions_only_with_calculated_context(setup,
     build_graph(setup.vectors, setup.model).invoke({
         'pokemon_id': pid, 'question': '설명해줘', 'battle_context': context,
     })
-    assert prompts == [BATTLE_GENERATION_PROMPT if battle else GENERATION_PROMPT]
+    assert prompts == [BATTLE_EXPLANATION_PROMPT if battle else GENERATION_PROMPT]
     assert 'damage_comparisons' not in GENERATION_PROMPT
-    assert 'damage_comparisons' in BATTLE_GENERATION_PROMPT
+    assert '최대 2개' in BATTLE_EXPLANATION_PROMPT
     assert 'Champions 적용 여부가 unknown' in GENERATION_PROMPT
+
+
+@pytest.mark.parametrize('question,expected', [
+    ('다시 설명해줘!', True), ('요약해줘', True), ('왜 그런지 설명해줘?', True),
+    ('상대가 바뀌면?', False), ('HP 40%야. 다시 설명해줘', False),
+    ('그럼 어떻게 할까?', False), ('다시 설명해줘. 상대는 리자몽', False),
+    ('새 전투야 요약해줘', False),
+])
+def test_reexplanation_recognizes_only_explicit_unchanged_requests(question, expected):
+    from backend.app.battle.conversation import is_battle_reexplanation
+
+    assert is_battle_reexplanation(question, {'own_id': 'pokemon:25'}) == expected
+    assert not is_battle_reexplanation(question, {})
+
+
+def test_reexplanation_reuses_state_but_changes_and_topic_switches_use_extraction(setup, monkeypatch):
+    from backend.app.battle.conversation import InputEvidence
+
+    setup.service.catalog = catalog = Catalog(ROOT / 'data/pokemon.json')
+    setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
+    setup.vectors.upsert_metadata([catalog.get('pokemon:25'), catalog.get('pokemon:130')])
+    monkeypatch.setattr(setup.service, 'collect', lambda *args: {'queries': []})
+    calls = []
+
+    def invoke(purpose, prompt, payload, schema):
+        calls.append(purpose)
+        assert purpose == 'battle_state', 'no supplemental evidence should mean no generation'
+        if '40%' in payload['question']:
+            return BattleUpdate(relevant=True, own_hp_percent=40,
+                                input_evidence=[InputEvidence(field='own_hp_percent', quote='HP 40%')])
+        return BattleUpdate(relevant=True, own_id='pokemon:25', opponent_id='pokemon:130')
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    session = setup.store.new_session()
+    first = setup.service.chat(ChatRequest(question='내 선봉 피카츄 상대 갸라도스', client_request_id=uuid4()), session)
+    cid = first['conversation_id']
+
+    def ask(question):
+        return setup.service.chat(ChatRequest(question=question, conversation_id=cid, client_request_id=uuid4()), session)
+
+    second = ask('다시 설명해줘')
+    assert calls == ['battle_state']
+    assert second['battle_context'] == first['battle_context']
+    assert second['citations'] and second['user_message_id'] != first['user_message_id']
+    third = ask('내 HP 40%야. 다시 설명해줘')
+    assert len(calls) == 2 and third['battle_context']['state']['own_hp_percent'] == 40
+    ask('그럼 상대가 바뀌면?')
+    assert len(calls) == 3
+    setup.store.save_exchange(cid, '다른 주제', {'answer': '일반 설명'})
+    ask('요약해줘')
+    assert len(calls) == 4  # A stale battle must not replace the most recent topic.
+
+
+def test_battle_supplement_schema_and_citation_validation(setup, monkeypatch):
+    from pydantic import ValidationError
+
+    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    pid = 'pokemon:25'
+    setup.vectors.upsert_metadata([catalog.get(pid)])
+    setup.vectors.index_document(pid, document('poketact:strategy:test', 'TEST ONLY: conditional strategy.'))
+    context = evaluate_state({'own_id': pid, 'opponent_id': 'pokemon:130'}, catalog, ROOT / 'data')
+    calls = []
+
+    def invoke(purpose, prompt, payload, schema):
+        assert schema is BattleExplanation and prompt == BATTLE_EXPLANATION_PROMPT
+        calls.append(payload.copy())
+        eid = payload['supplemental_evidence_ids'][0]
+        # Valid supporting ID plus an invented ID must still fail validation.
+        return BattleExplanation(claims=[{'text': '조건부 보충 설명',
+                                         'evidence_ids': [eid, 'invented'] if len(calls) == 1 else [eid]}])
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    result = build_graph(setup.vectors, setup.model).invoke({
+        'pokemon_id': pid, 'question': '어떻게 해?', 'battle_context': context,
+    })['result']
+    assert len(calls) == 2
+    assert set(calls[1]['previous_invalid_output']) == {'claims'}
+    assert '조건부 보충 설명' in result['answer'] and result['citations']
+    assert result['answer'].index('조건부 보충 설명') < result['answer'].index('다만,')
+    with pytest.raises(ValidationError):
+        BattleExplanation(claims=[{'text': 'test', 'evidence_ids': ['test']}] * 3)
+
+
+def test_guide_cache_reuses_validated_answer_across_sessions_without_private_history(setup):
+    session = setup.store.new_session()
+    cid = setup.store.conversation(session, 'pokemon:1', None)
+    setup.store.save_exchange(cid, 'PRIVATE QUESTION', {'answer': 'PRIVATE ANSWER'})
+    request = ChatRequest(pokemon_id='pokemon:1', question='운용 가이드', conversation_id=cid, client_request_id=uuid4())
+    first = setup.service.chat(request, session, feature='pokemon_guide')
+    second = setup.service.chat(request.model_copy(update={'conversation_id': None, 'client_request_id': uuid4()}),
+                                setup.store.new_session(), feature='pokemon_guide')
+    generated = [payload for purpose, payload in setup.model.calls if purpose == 'generate']
+    assert len(generated) == 1 and generated[0]['history_for_interpretation_only'] == []
+    assert first['answer'] == second['answer'] and first['citations'] == second['citations']
+    assert first['conversation_id'] != second['conversation_id']
+    assert first['assistant_message_id'] != second['assistant_message_id']
+    assert 'PRIVATE' not in second['answer']
+
+
+@pytest.mark.parametrize('change', ['question', 'regulation', 'evidence', 'prompt', 'model', 'endpoint', 'output_limit'])
+def test_guide_cache_invalidates_when_generation_inputs_change(setup, monkeypatch, change):
+    import backend.app.rag.graph as graph_module
+
+    state = {'pokemon_id': 'pokemon:1', 'question': '가이드', 'cache_guide': True}
+    graph = build_graph(setup.vectors, setup.model)
+    graph.invoke(state)
+    graph.invoke(state)
+    assert len(setup.model.calls) == 1
+    if change in {'question', 'regulation'}:
+        state['question' if change == 'question' else 'regulation_id'] = 'changed'
+    elif change == 'evidence':
+        setup.vectors.index_document('pokemon:1', document('new-source', 'TEST ONLY: new reference.'))
+    elif change == 'prompt':
+        monkeypatch.setattr(graph_module, 'GENERATION_PROMPT', graph_module.GENERATION_PROMPT + '\nChanged')
+    else:
+        field = {'model': 'chat_model', 'endpoint': 'base_url', 'output_limit': 'model_max_output_tokens'}[change]
+        setup.vectors.settings = replace(setup.settings, **{field: 1000 if change == 'output_limit' else 'changed'})
+    graph.invoke(state)
+    assert len(setup.model.calls) == 2
+
+
+@pytest.mark.parametrize('mode', ['ordinary_chat', 'private_history', 'abstained', 'invalid_cache'])
+def test_guide_cache_never_reuses_unvalidated_or_personalized_results(setup, monkeypatch, mode):
+    state = {'pokemon_id': 'pokemon:1', 'question': '가이드', 'cache_guide': mode != 'ordinary_chat'}
+    if mode == 'private_history':
+        state['history'] = [{'role': 'user', 'content': 'private context'}]
+    if mode == 'abstained':
+        setup.model.abstain = True
+    graph = build_graph(setup.vectors, setup.model)
+    graph.invoke(state)
+    if mode == 'invalid_cache':
+        original = setup.store.get
+        monkeypatch.setattr(setup.store, 'get', lambda namespace, key:
+                            {'answer_status': 'answered', 'claims': [{'text': 'bad', 'evidence_ids': ['invented']}],
+                             'assumptions': [], 'unknowns': []}
+                            if namespace == 'guide_answer' else original(namespace, key))
+    result = graph.invoke(state)['result']
+    assert len(setup.model.calls) == 2
+    assert 'bad' not in result['answer']

@@ -3,12 +3,17 @@ import re
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from pydantic import ValidationError
 
 from backend.app.battle.conversation import coach_fallback
 from backend.app.core.errors import ServiceError
-from backend.app.rag.prompts import BATTLE_GENERATION_PROMPT, GENERATION_PROMPT
+from backend.app.rag.prompts import (
+    BATTLE_EXPLANATION_PROMPT,
+    BATTLE_GENERATION_PROMPT,
+    GENERATION_PROMPT,
+)
 from backend.app.rag.retriever import retrieve
-from backend.app.schemas import Generation
+from backend.app.schemas import BattleExplanation, Generation
 from backend.app.storage import digest
 
 
@@ -22,6 +27,7 @@ class RagState(TypedDict, total=False):
     context_pokemon_ids: list[str]
     battle_context: dict | None
     result: dict
+    cache_guide: bool
 
 
 def render_answer(generated, evidence, regulation_id):
@@ -207,12 +213,21 @@ def build_graph(vector_store, model, stage=lambda _: None):
 
     def generate_node(state):
         stage("generating")
-        if (state.get("battle_context") or {}).get("scope") == "generic_team_selection":
-            calculated = coach_fallback(state["battle_context"], state["evidence"])
-            if calculated:
-                # Selection uses only computed claims; a model call would be discarded.
-                stage("validating_citations")
-                return {"result": render_answer(calculated, state["evidence"], state.get("regulation_id"))}
+        context = state.get("battle_context")
+        calculated = coach_fallback(context, state["evidence"]) if context else None
+        supplemental_ids = {
+            item["evidence_id"] for item in state["evidence"]
+            if item.get("source_type") not in {"metadata", "calculation"}
+            and not item.get("document_id", "").startswith("pokeapi:move:")
+            and not (
+                item.get("document_id", "").startswith("pokeapi:ability:")
+                and context
+                and not any(context.get("state", {}).get(key) for key in ("own_ability", "opponent_ability"))
+            )
+        }
+        if calculated and (context.get("scope") == "generic_team_selection" or not supplemental_ids):
+            stage("validating_citations")
+            return {"result": render_answer(calculated, state["evidence"], state.get("regulation_id"))}
         if not state["evidence"]:
             output = Generation(
                 answer_status="abstained", claims=[], assumptions=[], unknowns=["검색된 근거 없음"]
@@ -249,90 +264,70 @@ def build_graph(vector_store, model, stage=lambda _: None):
                     for item in state["evidence"]
                 },
             }
-            prompt = BATTLE_GENERATION_PROMPT if state.get("battle_context") else GENERATION_PROMPT
+            prompt = BATTLE_GENERATION_PROMPT if context else GENERATION_PROMPT
+            schema = Generation
+            if calculated:
+                prompt, schema = BATTLE_EXPLANATION_PROMPT, BattleExplanation
+                payload["supplemental_evidence_ids"] = sorted(supplemental_ids)
+            cache_key = None
+            if state.get("cache_guide") and not context and not state.get("history"):
+                settings = getattr(model, "settings", vector_store.settings)
+                cache_key = digest([
+                    "guide-generation-v1", prompt, schema.model_json_schema(), payload,
+                    state["evidence"], vector_store.retrieval_settings,
+                    settings.chat_model, settings.base_url, settings.model_max_output_tokens,
+                ])
+                cached = vector_store.store.get("guide_answer", cache_key)
+                if cached:
+                    try:
+                        output = Generation.model_validate(cached)
+                        result = render_answer(output, state["evidence"], state.get("regulation_id"))
+                    except (ValidationError, ServiceError):
+                        pass  # Stale or invalid cache entries never bypass citation validation.
+                    else:
+                        if output.claims and output.answer_status != "abstained":
+                            stage("validating_citations")
+                            return {"result": result}
             for attempt in range(2):
-                output = model.invoke("generate", prompt, payload, Generation)
+                output = model.invoke("generate", prompt, payload, schema)
+                raw_output = output
                 stage("validating_citations")
-                if state.get("battle_context"):
-                    calculated = coach_fallback(state["battle_context"], state["evidence"])
-                    if calculated:
-                        # Numerical type multipliers are rendered from the rule engine only.
-                        # Keep non-numerical sourced explanations after the action-first lead.
-                        extra = [
-                            claim
-                            for claim in output.claims
-                            if not re.search(
-                                r"(?:\d+(?:\.\d+)?\s*(?:배|[×x])|[×x]\s*\d|(?:두|네|반)\s*배)",
-                                claim.text,
-                            )
-                        ]
-                        context = state["battle_context"]
-                        # A move definition cannot establish ownership or matchup damage.
-                        # Battle move/type advice is rendered from the user's inputs and tool.
-                        move_evidence = {
-                            item["evidence_id"]
+                if calculated:
+                    extra = [
+                        claim for claim in output.claims
+                        if supplemental_ids.intersection(claim.evidence_ids)
+                        and not re.search(
+                            r"(?:\d+(?:\.\d+)?\s*(?:배|[×x])|[×x]\s*\d|(?:두|네|반)\s*배)",
+                            claim.text,
+                        )
+                        and not any(
+                            item["evidence_id"] in claim.evidence_ids
+                            and item.get("source_type") not in {"metadata", "calculation"}
+                            and item["evidence_id"] not in supplemental_ids
                             for item in state["evidence"]
-                            if item.get("document_id", "").startswith("pokeapi:move:")
-                        }
-                        extra = [
-                            claim for claim in extra
-                            if not move_evidence.intersection(claim.evidence_ids)
-                        ]
-                        if context.get("scope") == "generic_team_selection":
-                            # The selection rank is computed, not an invitation to invent
-                            # per-species abilities or reinterpret unrelated strategy prose.
-                            extra = []
-                        if not any(
-                            context["state"].get(key) for key in ("own_ability", "opponent_ability")
-                        ):
-                            ability_evidence = {
-                                item["evidence_id"]
-                                for item in state["evidence"]
-                                if item.get("document_id", "").startswith("pokeapi:ability:")
-                            }
-                            extra = [
-                                claim
-                                for claim in extra
-                                if not ability_evidence.intersection(claim.evidence_ids)
-                            ]
-                        output = Generation(
-                            answer_status="partial",
-                            claims=[
-                                *[
-                                    claim
-                                    for claim in calculated.claims
-                                    if not claim.text.startswith("다만,\n")
-                                ],
-                                *[
-                                    claim
-                                    for claim in extra
-                                    if any(
-                                        item["evidence_id"] in claim.evidence_ids
-                                        and item.get("source_type")
-                                        not in {"metadata", "calculation"}
-                                        for item in state["evidence"]
-                                    )
-                                ][:2],
-                                *[
-                                    claim
-                                    for claim in calculated.claims
-                                    if claim.text.startswith("다만,\n")
-                                ],
-                            ],
-                            assumptions=list(dict.fromkeys(calculated.assumptions)),
-                            unknowns=list(dict.fromkeys(calculated.unknowns))[:2],
                         )
+                    ][:2]
+                    output = Generation(
+                        answer_status="partial",
+                        claims=[
+                            *[c for c in calculated.claims if not c.text.startswith("다만,\n")],
+                            *extra,
+                            *[c for c in calculated.claims if c.text.startswith("다만,\n")],
+                        ],
+                        assumptions=list(dict.fromkeys(calculated.assumptions)),
+                        unknowns=list(dict.fromkeys(calculated.unknowns))[:2],
+                    )
                 try:
-                    return {
-                        "result": render_answer(
-                            output, state["evidence"], state.get("regulation_id")
-                        )
-                    }
+                    result = render_answer(output, state["evidence"], state.get("regulation_id"))
                 except ServiceError as error:
                     payload["validation_feedback"] = error.message
-                    payload["previous_invalid_output"] = output.model_dump()
+                    payload["previous_invalid_output"] = raw_output.model_dump()
                     if attempt == 0:
                         stage("generating")
+                else:
+                    if cache_key and output.claims and output.answer_status != "abstained":
+                        vector_store.store.put("guide_answer", cache_key, output.model_dump())
+                    return {"result": result}
             output = Generation(
                 answer_status="abstained",
                 claims=[],

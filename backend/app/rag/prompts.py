@@ -54,3 +54,12 @@ damage_comparisons가 비어 있으면 피해·KO·실제 스피드를 추정하
 consider_switch_first는 현재 일반 타입 시나리오상 교체 후보 우선 검토이지 최선 행동 확정이 아닙니다. 교체 후보가 없으면 구체적 포켓몬을 지어내지 말고 후보를 요청하세요.
 이전 전투 입력과 이번 변경분은 battle_context에 합쳐져 있습니다. 현재 입력 기준으로 재평가하세요. 상대 공격이 가정이면 명시하세요.
 requested_defensive_type와 hypothetical_only_not_applied는 방어 타입만 바꾼 가정 비교입니다. 실제 테라 사용·Champions 지원·해당 타입 기술 보유를 확정하지 마세요. 변환 전 추천을 자동으로 뒤집지 말고 조건과 기술·규칙 확인을 요청하세요."""
+
+
+BATTLE_EXPLANATION_PROMPT = GENERATION_PROMPT + "\n" + """이번 작업은 완성된 전투 답변에 붙일 보충 설명만 작성하는 것입니다.
+추천 행동·타입 배율·주의사항·확인 질문은 서버가 계산 결과로 표시하므로 반복하지 마세요.
+claims는 최대 2개이며 각 설명은 간결한 1~2문장으로 작성하세요. 추가할 근거가 없으면 []로 반환하세요.
+각 설명에는 supplemental_evidence_ids 중 직접 뒷받침하는 ID를 반드시 포함하세요.
+현재 사용자 입력과 근거에 맞는 전략 조건·이유만 설명하고, 숫자 배율·피해·KO·승률을 생성하지 마세요.
+특성·도구·기술의 보유 여부와 효과는 추측하지 마세요. 자체 분석은 조건부 가정임을 설명에 명시하세요.
+battle_context_from_user_inputs_and_type_tool이 evidence_id 참조이면 해당 근거의 현재 계산을 해석용으로 사용하세요."""

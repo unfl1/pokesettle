@@ -127,6 +127,10 @@ class Generation(Model):
     unknowns: list[str]
 
 
+class BattleExplanation(Model):
+    claims: list[Claim] = Field(max_length=2)
+
+
 class ChatRequest(Model):
     pokemon_id: str | None = Field(default=None, min_length=1, max_length=80)
     question: str = Field(min_length=1, max_length=2000)
