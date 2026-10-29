@@ -541,3 +541,48 @@ def test_fainted_pokemon_never_gets_weakness_attack_alternative(side):
                               f"{side}_hp_percent": 0}, catalog, ROOT / "data")
     answer = coach_fallback(context, [{"source_type": "calculation", "evidence_id": "calc"}])
     assert not any("공격도 고려해 보세요" in claim.text for claim in answer.claims)
+
+
+@pytest.mark.parametrize('moves', [None, ['지진', '아이언테일']])
+def test_steelix_darmanitan_attack_answer_has_one_caveat_and_no_repeated_alternative(moves):
+    from backend.app.battle.conversation import coach_fallback
+    from backend.app.rag.graph import render_answer
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    state = {'own_id': 'pokemon:208', 'opponent_id': 'pokemon:555'}
+    if moves is not None:
+        state['own_moves'] = moves
+    context = evaluate_state(state, catalog, ROOT / 'data')
+    evidence = [{'source_type': 'calculation', 'evidence_id': 'calc', 'number': 1,
+                 'text': 'synthetic calculation', 'game': 'generic', 'verification_status': 'assumed'}]
+    generated = coach_fallback(context, evidence)
+    answer = render_answer(generated, evidence, None)['answer']
+    assert '공격하는 쪽을 추천해요' in generated.claims[0].text
+    assert ('지진' if moves else '땅 타입 기술') in generated.claims[0].text
+    assert answer.count('다만') == 1
+    assert answer.count('땅 2배') == 1
+    assert '강철 공격은 0.5배로 반감' in answer
+    assert '다른 기술을 쓰거나 교체' not in answer
+    assert '공격도 고려' not in answer
+    assert '기술머신' not in answer
+    assert '불꽃 공격도 2배' in answer
+    assert answer.count('선공 여부') == 1
+    assert 'KO나 승률' in answer
+    if moves is None:
+        assert '실제로 있다는 가정' in answer
+    else:
+        assert '실제로 있다는 가정' not in answer
+
+
+def test_switch_answer_keeps_distinct_attack_alternative_without_a_second_caveat():
+    from backend.app.battle.conversation import coach_fallback
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    context = evaluate_state({'own_id': 'pokemon:3', 'opponent_id': 'pokemon:6'}, catalog, ROOT / 'data')
+    generated = coach_fallback(context, [{'source_type': 'calculation', 'evidence_id': 'calc'}])
+    answer = '\n\n'.join(claim.text for claim in generated.claims)
+    assert '교체하는 쪽을 추천' in generated.claims[0].text
+    assert '바위 4배' in answer and '실제로 배워 가지고 있다면 공격도 고려' in answer
+    assert answer.count('다만') == 1
+    assert '기술머신' not in answer
+    assert '남은 HP·선공 여부' in answer

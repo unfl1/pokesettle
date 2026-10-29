@@ -719,12 +719,13 @@ def coach_fallback(context, evidence):
         direction = f"{label}로 공격하는 쪽을 추천해요."
         if attack_candidates[0]["multiplier"] == 1:
             direction += " 약점을 찌르지는 못해도 반감되지는 않아서, 상성 때문에 교체를 서두를 필요는 적어요."
+    recommends_attack = "공격하는 쪽을 추천해요" in direction
     texts = [direction]
     own_types = "/".join(type_labels[t] for t in context.get("own_types", []))
     enemy_types = "/".join(type_labels[t] for t in context.get("opponent_types", []))
     risks = [item for item in context["defense"] if item["multiplier"] > 1]
     reason = f"상대 {context['opponent_name']}의 타입은 {enemy_types}, 내 {context['own_name']}의 타입은 {own_types} 타입이에요. "
-    if risks and "공격하는 쪽을 추천해요" not in direction:
+    if risks and not recommends_attack:
         reason += "타입 상성상 상대의 " + ", ".join(
             f"{type_labels[item['type']]} 공격을 {item['multiplier']:g}배" for item in risks
         ) + "로 받는 불리한 대면이기 때문이에요."
@@ -768,22 +769,26 @@ def coach_fallback(context, evidence):
                 + ("통하지 않아요." if item["multiplier"] == 0 else f"{item['multiplier']:g}배로 반감돼요.")
                 for item in ineffective
             )
-            + " 반감되지 않는 다른 기술을 쓰거나 교체를 고려해 보세요."
+            + ("" if recommends_attack else " 반감되지 않는 다른 기술을 쓰거나 교체를 고려해 보세요.")
         )
     weaknesses = sorted(context.get("opponent_weaknesses", []), key=lambda item: -item["multiplier"])
-    if weaknesses and context["state"].get("own_hp_percent") != 0 and context["state"].get("opponent_hp_percent") != 0:
+    if (
+        weaknesses
+        and not recommends_attack
+        and context["state"].get("own_hp_percent") != 0
+        and context["state"].get("opponent_hp_percent") != 0
+    ):
         options = ", ".join(f"{type_labels[item['type']]} {item['multiplier']:g}배" for item in weaknesses)
         texts.append(
-            f"다만 {context['opponent_name']}도 {options} 약점이 있어요. "
-            "해당 타입의 공격 기술을 실제로 배워 가지고 있고 먼저 공격하거나 버틸 수 있다면 공격도 고려해 보세요. "
-            "기술머신을 갖고 있는 것만으로 그 기술을 사용할 수 있는 것은 아니에요."
+            f"{context['opponent_name']}의 약점은 {options}예요. "
+            "해당 타입의 공격 기술을 실제로 배워 가지고 있다면 공격도 고려해 보세요."
         )
     if any(item.get("ground_switch_immunity") for item in attack_candidates):
         warnings.append("상대 엔트리에 땅 타입이 있다면 전기 기술을 무효화하는 교체에 주의하세요.")
-    if risks and "공격하는 쪽을 추천해요" in direction:
+    if risks and recommends_attack:
         warnings.append("상대의 " + ", ".join(
             f"{type_labels[item['type']]} 공격도 {item['multiplier']:g}배" for item in risks
-        ) + "로 받으므로, 먼저 공격하거나 버틸 수 있는지 확인해 주세요.")
+        ) + "로 받아요.")
     if context.get("type_change"):
         change = context["type_change"]
         warnings.append(
