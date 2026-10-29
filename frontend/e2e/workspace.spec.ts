@@ -602,10 +602,21 @@ test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', as
   const selected = page.getByRole('link', { name: '피카츄 선택' });
   const other = page.getByRole('link', { name: '이상해씨 선택' });
   await expect(selected).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: '주 메뉴' })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
   await selected.hover();
   await expect(selected).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-  await other.hover();
-  await expect(other).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  // Header hydration/font swaps can move a card after hover() has positioned
+  // the pointer. Retry positioning and assert the actual hover state together.
+  await expect(async () => {
+    await other.hover();
+    const appearance = await other.evaluate(element => ({
+      hovered: element.matches(':hover'),
+      background: getComputedStyle(element).backgroundColor,
+    }));
+    expect(appearance.hovered).toBe(true);
+    expect(appearance.background).not.toBe('rgba(0, 0, 0, 0)');
+  }).toPass({ timeout: 5000 });
   const input = page.getByLabel('포켓몬 이름 검색');
   await input.focus();
   await expect(input).toHaveCSS('outline-width', '2px');
