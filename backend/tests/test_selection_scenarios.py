@@ -37,7 +37,8 @@ def test_real_six_vs_six_checks_all_combinations_and_explains_three_with_lead():
     answer = coach_fallback(context, [{"source_type": "calculation", "evidence_id": "calc"}])
     assert len(context["selection"]["candidates"]) == 3
     assert "조합을 추천" in answer.claims[0].text and "선봉으로는" in answer.claims[0].text
-    assert answer.claims[-1].text.startswith("다만,\n")
+    assert "자기 타입의 공격을 쓴다고 가정하면" in answer.claims[1].text
+    assert all("다만," not in claim.text for claim in answer.claims)
     assert context["probability"] is None
 
 
@@ -178,4 +179,5 @@ def test_selection_action_first_and_sources_last():
     rendered = render_answer(answer, evidence, None)
     assert rendered["answer"].endswith("[근거 1]")
     assert rendered["answer"].count("[근거 1]") == 1
-    assert answer.claims[-1].text.startswith("다만,\n")
+    assert "자기 타입의 공격을 쓴다고 가정하면" in answer.claims[1].text
+    assert all("다만," not in claim.text for claim in answer.claims)

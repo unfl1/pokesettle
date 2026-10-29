@@ -604,8 +604,7 @@ def coach_fallback(context, evidence):
         parts = best["components"]
         texts = [
             f"{team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
-            f"타입 상성 기준으로 이 조합에 포함된 공격 타입이 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 수 있기 때문이에요. 상대가 쓸 것으로 가정한 공격을 반감하거나 무효화하는 대응은 {parts['resisted_scenarios']}개예요.",
-            "다만,\n기술을 알려주지 않은 멤버는 자기 타입의 공격 기술이 있다고 가정했어요. 특성·도구·실제 기술·스피드와 상대 선출에 따라 추천이 달라질 수 있어요. 비교 점수는 승률을 뜻하지 않아요.",
+            f"타입 상성 기준으로 이 조합에 포함된 공격 타입이 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 수 있기 때문이에요. 기술이 미공개인 멤버는 자기 타입의 공격을 쓴다고 가정하면, 이를 반감하거나 무효화하는 대응은 {parts['resisted_scenarios']}개예요.",
         ]
         return Generation(
             answer_status="partial",
@@ -716,7 +715,8 @@ def coach_fallback(context, evidence):
             if move
             else type_labels[attack_type] + " 타입 기술"
         )
-        direction = f"{label}로 공격하는 쪽을 추천해요."
+        condition = "이 있다면" if attack_candidates[0].get("basis") == "if_available" else "로"
+        direction = f"{label}{condition} 공격하는 쪽을 추천해요."
         if attack_candidates[0]["multiplier"] == 1:
             direction += " 약점을 찌르지는 못해도 반감되지는 않아서, 상성 때문에 교체를 서두를 필요는 적어요."
     recommends_attack = "공격하는 쪽을 추천해요" in direction
@@ -739,6 +739,10 @@ def coach_fallback(context, evidence):
         ) + "로 들어가므로 해당 공격을 비교해 볼 수 있어요."
     else:
         reason += "현재 알려진 공격 타입과 방어 상성만으로 비교한 판단이에요."
+    if any("상대의 미공개 공격" in value for value in context.get("assumptions", [])) and (
+        risks or context["switches"]
+    ):
+        reason += " 상대 기술은 아직 몰라서 상대 타입의 공격을 기준으로 비교했어요."
     texts.append(reason)
     warnings = []
     for item in context["switches"]:
@@ -798,14 +802,7 @@ def coach_fallback(context, evidence):
             + ", ".join(f"{item['type']} 공격 {item['multiplier']}배" for item in change["defense"])
             + "예요. 실제로 타입을 바꿀 수 있는지, 그 타입의 기술도 갖고 있는지는 따로 확인해야 해요."
         )
-    if any(item.get("basis") == "if_available" for item in context["attacks"]):
-        warnings.append("추천한 타입의 공격 기술이 실제로 있다는 가정이에요.")
-    if any("상대의 미공개 공격" in value for value in context.get("assumptions", [])):
-        warnings.append("상대 공격 기술이 공개되지 않아 상대 도감 타입의 공격을 가정했어요.")
-    warnings.append(
-        "남은 HP·선공 여부·특성·도구에 따라 선택은 달라질 수 있어요. 타입 배율만으로 KO나 승률을 알 수는 없어요."
-    )
-    texts.append("다만,\n" + "\n".join(warnings))
+    texts.extend(warnings)
     return Generation(
         answer_status="partial",
         claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],

@@ -361,7 +361,8 @@ def test_battle_supplement_schema_and_citation_validation(setup, monkeypatch):
     assert len(calls) == 2
     assert set(calls[1]['previous_invalid_output']) == {'claims'}
     assert '조건부 보충 설명' in result['answer'] and result['citations']
-    assert result['answer'].index('조건부 보충 설명') < result['answer'].index('다만,')
+    assert result['answer'].index('공격하는 쪽을 추천') < result['answer'].index('조건부 보충 설명')
+    assert '다만,' not in result['answer']
     with pytest.raises(ValidationError):
         BattleExplanation(claims=[{'text': 'test', 'evidence_ids': ['test']}] * 3)
 
