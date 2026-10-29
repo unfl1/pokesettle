@@ -5,9 +5,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[3]
-# Verified account allowance: 250K tokens/day shared across the model group.
-# Keep 20K headroom; this cap cannot be raised by an environment override.
+# Separate data-sharing groups: 2.5M for GPT-5.6 Luna, 250K for GPT-6 Luna.
+# Hard application ceilings retain headroom and cannot be raised via environment.
 DAILY_MODEL_TOKEN_CAP = 230_000
+PRIMARY_MODEL_TOKEN_CAP = 2_450_000
 
 
 @dataclass(frozen=True)
@@ -17,7 +18,7 @@ class Settings:
     database_url: str = field(default="postgresql://localhost:5432/poketact", repr=False)
     database_schema: str = "poketact"
     api_key: str = field(default="", repr=False)
-    chat_model: str = ""
+    chat_model: str = "gpt-5.6-luna"
     base_url: str | None = None
     embedding_model: str = "all-MiniLM-L6-v2"
     chunk_size: int = 1000
@@ -41,7 +42,8 @@ class Settings:
     usage_ip_requests_per_day: int = 400
     usage_global_concurrency: int = 2
     usage_calls_per_job: int = 8
-    usage_daily_tokens: int = DAILY_MODEL_TOKEN_CAP
+    usage_daily_tokens: int = PRIMARY_MODEL_TOKEN_CAP
+    usage_fallback_daily_tokens: int = DAILY_MODEL_TOKEN_CAP
     usage_daily_calls: int = 1000
     model_max_input_tokens: int = 24_000
     model_max_output_tokens: int = 2_000
@@ -61,7 +63,7 @@ class Settings:
             raise ValueError("시간 설정이 잘못되었습니다.")
         limits = (self.usage_requests_per_minute, self.usage_requests_per_day,
                   self.usage_global_concurrency, self.usage_calls_per_job, self.usage_ip_requests_per_day,
-                  self.usage_daily_tokens, self.usage_daily_calls,
+                  self.usage_daily_tokens, self.usage_fallback_daily_tokens, self.usage_daily_calls,
                   self.model_max_input_tokens, self.model_max_output_tokens)
         if any(value <= 0 for value in limits):
             raise ValueError("사용량 제한은 양수여야 합니다.")
@@ -81,7 +83,7 @@ class Settings:
             database_url=os.getenv("DATABASE_URL", "postgresql://localhost:5432/poketact"),
             database_schema=os.getenv("DATABASE_SCHEMA", "poketact"),
             api_key=os.getenv("OPENAI_API_KEY", ""),
-            chat_model=os.getenv("CHAT_MODEL", ""),
+            chat_model=os.getenv("CHAT_MODEL", "gpt-5.6-luna"),
             # Pass an explicit default: the SDK otherwise rereads an empty env value.
             base_url=os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1",
             embedding_model=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
@@ -109,7 +111,8 @@ class Settings:
             **{name: int(os.getenv(name.upper(), str(default))) for name, default in {
                 "usage_requests_per_minute": 3, "usage_requests_per_day": 200, "usage_ip_requests_per_day": 400,
                 "usage_global_concurrency": 2, "usage_calls_per_job": 8,
-                "usage_daily_tokens": DAILY_MODEL_TOKEN_CAP, "usage_daily_calls": 1000,
+                "usage_daily_tokens": PRIMARY_MODEL_TOKEN_CAP,
+                "usage_fallback_daily_tokens": DAILY_MODEL_TOKEN_CAP, "usage_daily_calls": 1000,
                 "model_max_input_tokens": 24_000, "model_max_output_tokens": 2_000,
             }.items()},
             telemetry_enabled=os.getenv("TELEMETRY_ENABLED", "false").lower() == "true",

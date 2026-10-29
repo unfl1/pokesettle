@@ -58,26 +58,28 @@ class StructuredModel:
         input_bound = input_reservation(system, payload, schema_data)
         if input_bound > self.settings.model_max_input_tokens:
             raise ServiceError("MODEL_INPUT_LIMIT", "현재 질문과 서버의 분석 자료가 처리 한도를 초과했습니다. 질문을 나누거나 비교할 대상을 줄여 주세요.", 422)
-        model = ChatOpenAI(
-            model=self.settings.chat_model,
-            reasoning_effort=(
-                "medium" if purpose == "battle_state" else "none"
-            ) if self.settings.chat_model == "gpt-6-luna" else None,
-            temperature=0
-            if purpose in {"discovery", "generate"} and self.settings.chat_model != "gpt-6-luna"
-            else None,
-            api_key=self.settings.api_key,
-            base_url=self.settings.base_url,
-            timeout=self.settings.llm_timeout,
-            # SDK retries must never bypass a reservation; retries happen explicitly below.
-            max_retries=0,
-            max_completion_tokens=self.settings.model_max_output_tokens,
-        )
         attempts = min(2, self.settings.max_retries + 1)
         for attempt in range(attempts):
-            reservation = usage[0].reserve(usage[1], input_bound + self.settings.model_max_output_tokens)
+            tokens = input_bound + self.settings.model_max_output_tokens
+            if self.settings.chat_model == "gpt-5.6-luna":
+                reservation, model_name = usage[0].reserve_model(usage[1], tokens)
+            else:
+                reservation = usage[0].reserve(usage[1], tokens)
+                model_name = self.settings.chat_model
             response = None
             try:
+                luna = model_name in {"gpt-5.6-luna", "gpt-6-luna"}
+                model = ChatOpenAI(
+                    model=model_name,
+                    reasoning_effort=("medium" if purpose == "battle_state" else "none") if luna else None,
+                    temperature=0 if purpose in {"discovery", "generate"} and not luna else None,
+                    api_key=self.settings.api_key,
+                    base_url=self.settings.base_url,
+                    timeout=self.settings.llm_timeout,
+                    # Each explicit retry must select and reserve its own model.
+                    max_retries=0,
+                    max_completion_tokens=self.settings.model_max_output_tokens,
+                )
                 with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
                     response = model.with_structured_output(
                         schema, method="json_schema", strict=True, include_raw=True
