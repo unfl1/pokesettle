@@ -1,5 +1,5 @@
 import { useI18n } from '../../../i18n/I18nProvider';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
 import { pokemonApi } from '../../pokemon/api';
@@ -44,7 +44,7 @@ function MemberCard({
           <TypeBadge type={t} key={t} />
         ))}
         <button
-          className="shrink-0 text-muted"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] text-muted hover:bg-canvas"
           onClick={onRemove}
           aria-label={translate('{number}번 멤버 제거', { number: index + 1 })}
         >
@@ -204,7 +204,9 @@ export default function TeamEditor({
   title,
   members,
   onChange,
+  children,
 }: {
+  children?: ReactNode;
   title: string;
   members: TeamMember[];
   onChange: (value: TeamMember[]) => void;
@@ -229,6 +231,7 @@ export default function TeamEditor({
           {members.length} / 6
         </span>
       </h2>
+      {children && <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-line pb-4">{children}</div>}
       <ul className="flex flex-col gap-2">
         {members.map((m, index) => (
           <MemberCard
@@ -242,9 +245,11 @@ export default function TeamEditor({
           />
         ))}
       </ul>
+      {members.length < 6 && <div className="mt-3 flex gap-2" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, index) => <span key={index} className={`h-1.5 flex-1 rounded-full ${index < members.length ? 'bg-accent' : 'bg-line'}`} />)}
+      </div>}
       {!members.length && (
-        <p className="py-6 text-center text-[14px] text-muted">
-           {translate("포켓몬을 추가해 팀을 구성하세요.")} </p>
+        <p className="py-6 text-center text-[14px] text-muted">{translate("포켓몬을 추가해 팀을 구성하세요.")}</p>
       )}
       {members.length < 6 && (
         <button
@@ -285,7 +290,7 @@ export default function TeamEditor({
           <div className="my-2 max-h-55 overflow-auto">
             {found.data?.items.map((p) => (
               <button
-                className="flex w-full items-center gap-2 rounded-[6px] p-2 text-left text-[14px] hover:bg-canvas"
+                className="flex w-full items-center gap-2 rounded-[6px] p-2 text-left text-[14px] hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
                 key={p.pokemonId}
                 disabled={members.some(
                   (m) =>

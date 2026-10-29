@@ -19,6 +19,7 @@ test('실제 API·DB·Node 계산기와 UI의 조건부 KO 연결', async ({ pag
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
   await page.getByLabel('저장한 내 팀', { exact: true }).selectOption({ label: '통합 공격자' });
   await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption({ label: '통합 방어자' });
+  await page.getByRole('button', { name: '피해 계산', exact: true }).click();
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:25');
   await panel.getByLabel('계산 기술', { exact: true }).selectOption('thunderbolt');

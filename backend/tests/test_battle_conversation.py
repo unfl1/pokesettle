@@ -235,7 +235,7 @@ def test_pikachu_gyarados_product_and_action_first_output_rejects_model_two_time
     )["result"]
     assert "4배 약점" in result["answer"]
     assert "전기 공격은 갸라도스에게 2배입니다" not in result["answer"]
-    assert result["answer"].startswith("전기 타입 기술로 공격")
+    assert result["answer"].startswith("전기 타입 기술이 있다면 공격")
     assert "땅 타입" in result["answer"] and "교체에 주의" in result["answer"]
     assert result["citations"][0]["source_type"] == "calculation"
 

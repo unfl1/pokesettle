@@ -41,7 +41,7 @@ def test_only_evaluated_battles_reuse_prepared_index_without_external_collection
     assert ('generate' in invoked) == (not battle or research)
     if battle:
         assert result['citations']
-        assert '악 타입 기술로 공격' in result['answer']
+        assert '악 타입 기술이 있다면 공격' in result['answer']
 
 
 def test_selection_retrieves_evidence_without_discarded_generation_call(setup):

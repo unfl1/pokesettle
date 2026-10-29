@@ -7,7 +7,7 @@ export interface TeamDraftState {
   name: string;
   selectedId: string;
   notice: string;
-  tab: 'team' | 'battle';
+  tab: 'team' | 'battle' | 'damage';
   ownActive: number;
   opponentActive: number;
   attackTypes: string[];
@@ -22,7 +22,7 @@ export function useTeamDraft(initial?: TeamDraftState) {
   const [name, setName] = useState(initial?.name ?? '내 팀'),
     [selectedId, setSelectedId] = useState(initial?.selectedId ?? '');
   const [notice, setNotice] = useState(initial?.notice ?? ''),
-    [tab, setTab] = useState<'team' | 'battle'>(initial?.tab ?? 'team');
+    [tab, setTab] = useState<'team' | 'battle' | 'damage'>(initial?.tab ?? 'team');
   const [ownActive, setOwnActive] = useState(initial?.ownActive ?? 0),
     [opponentActive, setOpponentActive] = useState(initial?.opponentActive ?? 0);
   const [attackTypes, setAttackTypes] = useState<string[]>(initial?.attackTypes ?? []),
