@@ -183,3 +183,11 @@ def test_japanese_and_chinese_name_search_and_summary_contract(setup):
             assert data["total"] == 1
             assert data["items"][0]["names"]["ja"] == "フシギダネ"
             assert data["items"][0]["slugs"]["zh"] == "妙蛙种子"
+    setup.model.discovery_plan = DiscoveryPlan(
+        filters=[{"field": "name", "operator": "eq", "value": "フシギダネ"}],
+        requires_clarification=False, unresolved_conditions=[], explanation="原文名検索",
+    )
+    result = discover(setup.service, DiscoveryRequest(query="フシギダネ"))
+    assert result["total"] == 1
+    assert result["items"][0]["names"]["ja"] == "フシギダネ"
+    assert result["items"][0]["slugs"]["zh"] == "妙蛙种子"

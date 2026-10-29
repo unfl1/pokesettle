@@ -32,8 +32,12 @@ def test_duplicate_species_is_rejected(setup):
 
 
 def test_subject_forced_and_repeated_question_never_recollects(setup):
+    setup.catalog.get("pokemon:1").names = {"ja": "フシギダネ"}
+    setup.catalog.get("pokemon:1").slugs = {"ja": "フシギダネ"}
     first = setup.service.collect("pokemon:1", "test question")
     assert first["subject_document_status"] == "indexed"
+    query_payload = next(payload for purpose, payload in setup.model.calls if purpose == "queries")
+    assert "names" not in query_payload["pokemon"] and "slugs" not in query_payload["pokemon"]
     decisions = first["reports"][0]["decisions"]
     assert next(d for d in decisions if d["candidate_id"] == "subject")["accepted"]
     assert not next(d for d in decisions if d["candidate_id"] == "extra")["accepted"]

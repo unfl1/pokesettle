@@ -380,6 +380,7 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 
 - 일반 도감 응답: `nameKo`·`nameEn` 유지, `names`·`slugs`의 ko/en/ja/zh 추가
 - `GET /api/pokemon?q=…`: 한국어·영어·일본어·중국어 이름 검색 지원, 세션 불필요
+- 조건 검색: 검증된 언어별 이름 필터 및 결과의 names·slugs 제공
 - 상세 응답: `nameSources`·`nameLicenceUrl`로 이름 원본·수집 시각·해시·이용 조건 제공
 - 웹 상세: `/{lang}/pokedex/{이름-slug}-{Pokémon 리소스 ID}`, 종 번호와 별도 폼 ID 구분
 - 기존 `?pokemon=pokemon:ID` 및 이전 이름 경로: ID 기준 최신 URL로 308 이동, 나머지 쿼리 유지

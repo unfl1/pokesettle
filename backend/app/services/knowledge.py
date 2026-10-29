@@ -46,7 +46,7 @@ class KnowledgeService:
                     "queries",
                     QUERY_PROMPT,
                     {
-                        "pokemon": pokemon.model_dump(),
+                        "pokemon": pokemon.model_dump(exclude={"names", "slugs"}),
                         "question": question,
                         "regulation_id": regulation_id,
                     },
