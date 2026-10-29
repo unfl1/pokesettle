@@ -306,9 +306,8 @@ def build_graph(vector_store, model, stage=lambda _: None):
                     output = Generation(
                         answer_status="partial",
                         claims=[
-                            *[c for c in calculated.claims if not c.text.startswith("다만,\n")],
+                            *calculated.claims,
                             *extra,
-                            *[c for c in calculated.claims if c.text.startswith("다만,\n")],
                         ],
                         assumptions=list(dict.fromkeys(calculated.assumptions)),
                         unknowns=list(dict.fromkeys(calculated.unknowns))[:2],
