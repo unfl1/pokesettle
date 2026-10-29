@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from uuid import uuid4
 
-from backend.app.core.config import DAILY_MODEL_TOKEN_CAP
+from backend.app.core.config import DAILY_MODEL_TOKEN_CAP, PRIMARY_MODEL_TOKEN_CAP
 from backend.app.core.errors import ServiceError
 
 active_usage = ContextVar("active_usage", default=None)
@@ -146,6 +146,13 @@ class UsageGuard:
             self.finish(lease)
 
     def reserve(self, lease, tokens):
+        return self._reserve(lease, tokens, route=False)[0]
+
+    def reserve_model(self, lease, tokens):
+        """Choose a model and reserve its full call atomically across workers."""
+        return self._reserve(lease, tokens, route=True)
+
+    def _reserve(self, lease, tokens, *, route):
         s = self.settings
         reservation = uuid4().hex
         if tokens <= 0 or tokens > s.model_max_input_tokens + s.model_max_output_tokens:
@@ -159,14 +166,27 @@ class UsageGuard:
             day = db.execute(
                 "SELECT to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') AS day"
             ).fetchone()["day"]
-            self.charge(
-                db, day + ":tokens", "global", tokens,
-                min(s.usage_daily_tokens, DAILY_MODEL_TOKEN_CAP),
-            )
+            model_name = s.chat_model
+            bucket = day + ":tokens"
+            limit = min(s.usage_daily_tokens, DAILY_MODEL_TOKEN_CAP)
+            if route and s.chat_model == "gpt-5.6-luna":
+                # Preserve the legacy bucket for GPT-6 Luna: a rollout must not
+                # reopen its budget if it has already been used today.
+                bucket = day + ":tokens:lightweight"
+                limit = min(s.usage_daily_tokens, PRIMARY_MODEL_TOKEN_CAP)
+                used = db.execute(
+                    "SELECT amount FROM usage_counters WHERE bucket=%s AND subject='global'",
+                    (bucket,),
+                ).fetchone()
+                if tokens + (used["amount"] if used else 0) > limit:
+                    model_name = "gpt-6-luna"
+                    bucket = day + ":tokens"
+                    limit = min(s.usage_fallback_daily_tokens, DAILY_MODEL_TOKEN_CAP)
+            self.charge(db, bucket, "global", tokens, limit)
             self.charge(db, day + ":calls", "global", 1, s.usage_daily_calls)
             db.execute(
                 "INSERT INTO usage_reservations VALUES (%s,%s,%s)",
-                (reservation, day + ":tokens", tokens),
+                (reservation, bucket, tokens),
             )
             db.execute(
                 "UPDATE usage_leases SET calls=calls+1, expires_at=now()+interval '15 minutes' WHERE id=%s",
@@ -174,7 +194,7 @@ class UsageGuard:
             )
         if self.telemetry:
             self.telemetry.reserved_tokens.inc(tokens)
-        return reservation
+        return reservation, model_name
 
     def settle(self, reservation, usage):
         # Missing, malformed or incomplete metadata must never reopen budget.

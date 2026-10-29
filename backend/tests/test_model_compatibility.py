@@ -7,7 +7,8 @@ from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
 
 
-def test_installed_sdk_preserves_usage_with_structured_response(monkeypatch):
+@pytest.mark.parametrize('selected_model', ['gpt-4.1-mini', 'gpt-5.6-luna', 'gpt-6-luna'])
+def test_installed_sdk_preserves_usage_with_structured_response(monkeypatch, selected_model):
     import json
 
     import httpx
@@ -22,7 +23,7 @@ def test_installed_sdk_preserves_usage_with_structured_response(monkeypatch):
         requests.append(json.loads(request.content))
         return httpx.Response(200, json={
             'id': 'synthetic-completion', 'object': 'chat.completion', 'created': 1,
-            'model': 'gpt-4.1-mini',
+            'model': selected_model,
             'choices': [{'index': 0, 'finish_reason': 'stop', 'message': {
                 'role': 'assistant', 'content': result.model_dump_json(), 'refusal': None,
             }}],
@@ -33,14 +34,19 @@ def test_installed_sdk_preserves_usage_with_structured_response(monkeypatch):
         monkeypatch.setattr('backend.app.rag.model.ChatOpenAI',
                             lambda **kwargs: ChatOpenAI(**kwargs, http_client=client))
         guard = SimpleNamespace(reserve=lambda *args: 'reservation',
+                                reserve_model=lambda *args: ('reservation', selected_model),
                                 settle=lambda ticket, usage: settled.append((ticket, usage)))
         token = active_usage.set((guard, 'lease'))
         try:
-            settings = Settings(api_key='synthetic', chat_model='gpt-4.1-mini', base_url='https://provider.test/v1')
+            settings = Settings(api_key='synthetic', chat_model=selected_model, base_url='https://provider.test/v1')
             assert StructuredModel(settings).invoke('generate', 'test', {}, Generation) == result
         finally:
             active_usage.reset(token)
     assert len(requests) == 1
+    assert requests[0]['model'] == selected_model
+    if 'luna' in selected_model:
+        assert 'temperature' not in requests[0]
+        assert requests[0]['reasoning_effort'] == 'none'
     assert requests[0]['response_format']['type'] == 'json_schema'
     assert settled[0][0] == 'reservation'
     assert {key: settled[0][1][key] for key in ('input_tokens', 'output_tokens', 'total_tokens')} == {
@@ -57,6 +63,8 @@ def test_empty_endpoint_uses_openai_and_custom_endpoint_is_preserved(monkeypatch
 
 
 @pytest.mark.parametrize('model, purpose, expected', [
+    ('gpt-5.6-luna', 'generate', None),
+    ('gpt-5.6-luna', 'battle_state', None),
     ('gpt-6-luna', 'generate', None),
     ('gpt-6-luna', 'discovery', None),
     ('gpt-6-luna', 'battle_state', None),
@@ -79,7 +87,7 @@ def test_structured_calls_preserve_contract_and_omit_unsupported_temperature(mon
     monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
     settings = Settings(api_key='synthetic-test-key', chat_model=model)
     from backend.app.core.usage import active_usage
-    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, settle=lambda *args: None), "test"))
+    token = active_usage.set((SimpleNamespace(reserve=lambda *args: None, reserve_model=lambda *args: (None, model), settle=lambda *args: None), "test"))
     try:
         assert StructuredModel(settings).invoke(purpose, 'test', {}, Generation) is result
     finally:
@@ -88,7 +96,7 @@ def test_structured_calls_preserve_contract_and_omit_unsupported_temperature(mon
     assert captured['max_completion_tokens'] == settings.model_max_output_tokens
     assert captured['model'] == model
     assert captured['temperature'] == expected
-    expected_reasoning = ('medium' if purpose == 'battle_state' else 'none') if model == 'gpt-6-luna' else None
+    expected_reasoning = ('medium' if purpose == 'battle_state' else 'none') if model in {'gpt-5.6-luna', 'gpt-6-luna'} else None
     assert captured['reasoning_effort'] == expected_reasoning
 
 

@@ -7,6 +7,10 @@ x-backend: &backend
     dockerfile: deployment/docker/Dockerfile
   env_file: .env.production
   environment:
+    # Keep the deployed routing policy in source, overriding legacy host env values.
+    CHAT_MODEL: gpt-5.6-luna
+    USAGE_DAILY_TOKENS: "2450000"
+    USAGE_FALLBACK_DAILY_TOKENS: "230000"
     DATABASE_URL: postgresql://poketact:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/poketact
     DATA_DIR: /app/data
     RUNTIME_DIR: /app/runtime

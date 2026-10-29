@@ -260,8 +260,8 @@ def test_model_no_context_oversize_and_exhausted_budget_never_call_provider(pg_s
         with pytest.raises(ServiceError) as error:
             model.invoke("generate", "x" * 25000, {}, Generation)
         assert error.value.code == "MODEL_INPUT_LIMIT"
-    # Creating a client is harmless; its invoke must never be reached when reserve fails.
-    assert len(constructed) == 1
+    # Budget rejection happens before even constructing the provider client.
+    assert not constructed
 
 
 def test_proxy_identity_ignores_spoofed_headers_and_groups_ipv6(pg_store):
@@ -314,6 +314,7 @@ def test_jobs_idempotency_and_discovery_share_limits(setup):
     "setting",
     [
         "usage_daily_tokens",
+        "usage_fallback_daily_tokens",
         "usage_daily_calls",
         "usage_requests_per_day",
         "model_max_output_tokens",
@@ -401,3 +402,149 @@ def test_database_failure_never_reaches_provider(pg_store, monkeypatch):
             with pytest.raises(RuntimeError, match="database unavailable"):
                 StructuredModel(s).invoke("generate", "test", {}, Generation)
     assert not invoked
+
+
+def seed_model_budget(store, suffix, amount):
+    with store.connect() as db:
+        db.execute(
+            """INSERT INTO usage_counters VALUES (
+            to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') || %s, 'global', %s)""",
+            (suffix, amount),
+        )
+
+
+def test_router_preserves_legacy_budget_settles_selected_group_and_blocks(pg_store):
+    from backend.app.core.config import PRIMARY_MODEL_TOKEN_CAP
+
+    settings = Settings(usage_daily_tokens=9_000_000, usage_fallback_daily_tokens=9_000_000)
+    guard = UsageGuard(pg_store, settings)
+    seed_model_budget(pg_store, ':tokens:lightweight', PRIMARY_MODEL_TOKEN_CAP - 100)
+    # Existing production GPT-6 usage must survive changing the primary model.
+    seed_model_budget(pg_store, ':tokens', DAILY_MODEL_TOKEN_CAP - 80)
+    with guard.scope(guard.begin(['one', 'ip-one'])):
+        lease = active_usage.get()[1]
+        ticket, model = guard.reserve_model(lease, 100)
+        assert model == 'gpt-5.6-luna'
+        fallback_ticket, model = guard.reserve_model(lease, 80)
+        assert model == 'gpt-6-luna'
+        guard.settle(fallback_ticket, {'input_tokens': 20, 'output_tokens': 10, 'total_tokens': 30})
+        restarted = UsageGuard(pg_store, settings)
+        assert restarted.reserve_model(lease, 50)[1] == 'gpt-6-luna'
+        with pytest.raises(ServiceError) as error:
+            restarted.reserve_model(lease, 1)
+        assert error.value.code == 'MODEL_BUDGET_EXHAUSTED'
+        # Invalid/missing usage must not reopen either model's budget.
+        guard.settle(ticket, None)
+        with pytest.raises(ServiceError):
+            restarted.reserve_model(lease, 1)
+    with pg_store.connect() as db:
+        counters = {r['bucket'].split(':', 1)[1]: r['amount'] for r in db.execute(
+            "SELECT bucket,amount FROM usage_counters WHERE subject='global'").fetchall()}
+        assert counters['tokens:lightweight'] == PRIMARY_MODEL_TOKEN_CAP
+        assert counters['tokens'] == DAILY_MODEL_TOKEN_CAP
+        assert counters['calls'] == 3
+
+
+def test_router_selects_fallback_before_full_next_call_exceeds_primary(pg_store, monkeypatch):
+    from backend.app.core.config import PRIMARY_MODEL_TOKEN_CAP
+
+    settings = Settings(api_key='synthetic', max_retries=1)
+    guard = UsageGuard(pg_store, settings)
+    seed_model_budget(pg_store, ':tokens:lightweight', PRIMARY_MODEL_TOKEN_CAP - 1)
+    called = []
+    result = Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+
+    class Client:
+        def __init__(self, **kwargs):
+            called.append(kwargs['model'])
+            assert kwargs['reasoning_effort'] == 'none'
+            assert kwargs['temperature'] is None
+
+        def with_structured_output(self, *args, **kwargs):
+            return self
+
+        def invoke(self, messages):
+            if len(called) == 1:
+                raise RuntimeError('unknown provider outcome')
+            return {'parsed': result, 'parsing_error': None,
+                    'raw': SimpleNamespace(usage_metadata={
+                        'input_tokens': 20, 'output_tokens': 10, 'total_tokens': 30})}
+
+    monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
+    with guard.scope(guard.begin(['one', 'ip-one'])):
+        assert StructuredModel(settings).invoke('generate', 'test', {}, Generation) is result
+    assert called == ['gpt-6-luna', 'gpt-6-luna']
+    with pg_store.connect() as db:
+        rows = db.execute("SELECT bucket,amount FROM usage_counters WHERE subject='global'").fetchall()
+        assert next(r['amount'] for r in rows if r['bucket'].endswith(':tokens')) > 30
+        assert next(r['amount'] for r in rows if r['bucket'].endswith(':lightweight')) == PRIMARY_MODEL_TOKEN_CAP - 1
+
+
+def test_router_atomic_selection_across_workers_and_persisted_restart(pg_store):
+    settings = Settings(usage_daily_tokens=100, usage_fallback_daily_tokens=50,
+                        usage_global_concurrency=20)
+    guard = UsageGuard(pg_store, settings)
+    leases = [guard.begin([str(i), 'ip-' + str(i)]) for i in range(12)]
+
+    def reserve(lease):
+        try:
+            return UsageGuard(pg_store, settings).reserve_model(lease, 25)[1]
+        except ServiceError as error:
+            assert error.code == 'MODEL_BUDGET_EXHAUSTED'
+            return 'blocked'
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        models = list(pool.map(reserve, leases))
+    assert models.count('gpt-5.6-luna') == 4
+    assert models.count('gpt-6-luna') == 2
+    assert models.count('blocked') == 6
+    with pytest.raises(ServiceError):
+        UsageGuard(pg_store, settings).reserve_model(leases[0], 1)
+
+
+def test_router_utc_reset_and_old_settlement_never_changes_new_day(pg_store):
+    settings = Settings(usage_daily_tokens=100, usage_fallback_daily_tokens=50)
+    guard = UsageGuard(pg_store, settings)
+    with guard.scope(guard.begin(['old', 'ip-old'])):
+        primary, _ = guard.reserve_model(active_usage.get()[1], 100)
+        fallback, _ = guard.reserve_model(active_usage.get()[1], 50)
+    with pg_store.connect() as db:
+        db.execute("UPDATE usage_counters SET bucket='2000-01-01' || substring(bucket from 11) WHERE subject='global'")
+        db.execute("UPDATE usage_reservations SET bucket='2000-01-01' || substring(bucket from 11)")
+    with guard.scope(guard.begin(['new', 'ip-new'])):
+        assert guard.reserve_model(active_usage.get()[1], 100)[1] == 'gpt-5.6-luna'
+        for ticket in [primary, fallback]:
+            guard.settle(ticket, {'input_tokens': 10, 'output_tokens': 5, 'total_tokens': 15})
+        with pg_store.connect() as db:
+            assert db.execute("SELECT amount FROM usage_counters WHERE bucket LIKE '%%:lightweight'").fetchone()['amount'] == 100
+        assert guard.reserve_model(active_usage.get()[1], 50)[1] == 'gpt-6-luna'
+
+
+def test_router_retries_reselect_model_and_shared_call_limit_is_preserved(pg_store, monkeypatch):
+    from backend.app.rag.model import input_reservation
+
+    amount = input_reservation('test', {}, Generation.model_json_schema()) + 2000
+    settings = Settings(api_key='synthetic', usage_daily_tokens=amount, usage_daily_calls=2,
+                        usage_calls_per_job=3, max_retries=1)
+    guard = UsageGuard(pg_store, settings)
+    called = []
+    result = Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
+
+    class Client:
+        def __init__(self, **kwargs):
+            called.append(kwargs['model'])
+
+        def with_structured_output(self, *args, **kwargs):
+            return self
+
+        def invoke(self, messages):
+            if len(called) == 1:
+                raise RuntimeError('unknown outcome retains primary reservation')
+            return {'parsed': result, 'parsing_error': None, 'raw': None}
+
+    monkeypatch.setattr('backend.app.rag.model.ChatOpenAI', Client)
+    with guard.scope(guard.begin(['one', 'ip-one'])):
+        assert StructuredModel(settings).invoke('generate', 'test', {}, Generation) is result
+        with pytest.raises(ServiceError):
+            StructuredModel(settings).invoke('generate', 'test', {}, Generation)
+    assert called == ['gpt-5.6-luna', 'gpt-6-luna']
