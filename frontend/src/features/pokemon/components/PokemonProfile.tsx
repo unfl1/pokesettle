@@ -1,6 +1,6 @@
 import type { Locale } from '../../../i18n/config';
 import { createTranslator, type Dictionary } from '../../../i18n/translate';
-import { pokemonName } from '../routing';
+import { pokemonName, referenceName } from '../routing';
 import LearnsetFilters from './LearnsetFilters';
 import { typeLabels } from '../typeNames';
 import { typeColors, lightTextTypes } from '../typeColors';
@@ -19,6 +19,8 @@ const statLabels: Record<StatName, string> = {
 export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }: { pokemon: PokemonDetail; locale: Locale; dictionary: Dictionary; headingLevel?: 1 | 2 }) {
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
   const translate = createTranslator(dictionary);
+  const description = pokemon.descriptions?.[locale] ?? (locale === 'ko' && pokemon.description ? { text: pokemon.description, version: pokemon.descriptionVersion } : pokemon.descriptions?.en);
+  const descriptionLanguage = pokemon.descriptions?.[locale] || locale === 'ko' ? locale : 'en';
   const maximum = Math.max(...Object.values(pokemon.baseStats));
   return (
     <section
@@ -29,7 +31,7 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
         <div className="border border-accent/17 w-20.5 h-20.5 rounded-[16px] bg-[radial-gradient(circle_at_40%_30%,_#fff0ee,_transparent_70%)] flex items-center justify-center text-accent relative shrink-0 overflow-hidden max-phone:w-16.5 max-phone:h-16.5 [&_svg]:mb-[7px]">
           <PokemonImage
             key={pokemon.pokemonId}
-            pokemon={{ nameKo: pokemonName(pokemon, locale), nameEn: pokemon.nameEn, images: pokemon.images }}
+            pokemon={pokemon}
             size="large"
           />
         </div>
@@ -48,7 +50,7 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
           <span className="text-[14px] text-muted">{translate("특성")}</span>
           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-2 mb-3">
             {(pokemon.abilityDetails ?? pokemon.abilities.map(name => ({name, nameKo: null}))).map(ability => <div key={ability.name}>
-              <strong className="block text-[14px] font-semibold text-ink">{ability.nameKo ?? translate("한국어 명칭 미등록")}</strong>
+              <strong className="block text-[14px] font-semibold text-ink">{referenceName(ability, locale)}</strong>
               <span className="block mt-1 text-[14px] text-muted">{ability.name}</span>
             </div>)}
           </div>
@@ -62,11 +64,12 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
         data-testid="profile-details"
       >
         <div className="px-5.5 pt-2.5 pb-4.5">
-          {pokemon.description && (
+          {(description || pokemon.description) && (
             <div className="mb-4 text-[14px] leading-relaxed text-ink">
               <h3 className="font-medium mb-1">{translate("도감 설명")}</h3>
-              <p lang="ko">{pokemon.description}</p>
-              {pokemon.descriptionVersion && <p className="text-[14px] text-muted mt-1">{translate("원본 게임:")} {pokemon.descriptionVersion}</p>}
+              <p lang={description ? descriptionLanguage : 'ko'}>{description?.text ?? pokemon.description}</p>
+              {(!pokemon.descriptions?.[locale] && locale !== 'ko') && <p className="mt-1 text-[13px] text-muted">{translate("선택한 언어의 설명이 없어 수집된 원문을 표시해요.")}</p>}
+              {(description?.version ?? pokemon.descriptionVersion) && <p className="text-[14px] text-muted mt-1">{translate("원본 게임:")} {description?.version ?? pokemon.descriptionVersion}</p>}
             </div>
           )}
           <div className="flex justify-between items-center mb-4 [&_h3]:text-[14px] [&_h3]:font-medium [&>span]:text-[14px] [&>span]:text-muted">
@@ -116,6 +119,11 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
             <p>{translate('누락된 폼명은 원본 영어 이름으로 표시해요.')}</p>
             {pokemon.nameSources.map(source => <p key={source.sourceUrl}><a className="text-link underline" href={source.sourceUrl} target="_blank" rel="noreferrer">{source.sourceUrl.split('/').pop()}</a> · {source.collectedAt.slice(0, 10)}</p>)}
             {pokemon.nameLicenceUrl && <a className="text-link underline" href={pokemon.nameLicenceUrl} target="_blank" rel="noreferrer">{translate('PokéAPI 이용 조건')}</a>}
+          </details>}
+          {!!pokemon.localizationSources?.length && <details className="mt-3 text-[14px] text-muted">
+            <summary className="cursor-pointer">{translate("번역 이름·설명 출처")}</summary>
+            {pokemon.localizationSources.map(source => <p key={source.url}><a className="text-link underline" href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()}</a> · {source.collectedAt.slice(0, 10)}</p>)}
+            {pokemon.localizationLicenceUrl && <a className="text-link underline" href={pokemon.localizationLicenceUrl} target="_blank" rel="noreferrer">{translate("PokéAPI 이용 조건")}</a>}
           </details>}
           {pokemon.formIdentifier && (
             <p className="text-[14px] text-muted mt-[15px]">

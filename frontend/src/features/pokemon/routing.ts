@@ -12,7 +12,7 @@ export function slugifyName(name: string) {
     .replace(/[^\p{L}\p{N}\p{M}]+/gu, '-').replace(/^-+|-+$/g, '');
 }
 export function pokemonName(pokemon: RoutePokemon, locale: Locale) {
-  return pokemon.names?.[locale] ?? pokemon.names?.en ?? (locale === 'ko' ? pokemon.nameKo : null) ?? pokemon.nameEn ?? pokemon.pokemonId;
+  return pokemon.names?.[locale] ?? (locale === 'ko' ? pokemon.nameKo : null) ?? pokemon.names?.en ?? pokemon.nameEn ?? pokemon.pokemonId;
 }
 export function pokemonSegment(pokemon: RoutePokemon, locale: Locale) {
   const match = /^pokemon:([1-9]\d*)$/.exec(pokemon.pokemonId);
@@ -26,4 +26,8 @@ export function pokemonPath(pokemon: RoutePokemon, locale: Locale) {
 export function idFromSegment(segment: string) {
   const match = /^.+-([1-9]\d*)$/.exec(segment.normalize('NFC'));
   return match ? `pokemon:${match[1]}` : null;
+}
+
+export function referenceName(entry: { names?: Partial<Record<Locale, string>>; nameKo?: string | null; nameEn?: string | null; name: string }, locale: Locale) {
+  return entry.names?.[locale] ?? (locale === 'ko' ? entry.nameKo : null) ?? entry.names?.en ?? entry.nameEn ?? entry.name;
 }

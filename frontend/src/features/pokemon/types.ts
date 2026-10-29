@@ -35,10 +35,13 @@ export interface PokemonDetail extends PokemonSummary {
   nameLicenceUrl?: string | null;
   baseStats: Record<StatName, number>;
   abilities: string[];
-  abilityDetails?: { name: string; nameKo: string | null }[];
+  abilityDetails?: { name: string; nameKo: string | null; names?: PokemonSummary['names'] }[];
+  descriptions?: Partial<Record<import('../../i18n/config').Locale, { text: string; version: string }>>;
+  localizationSources?: { url: string; collectedAt: string; contentHash: string }[];
+  localizationLicenceUrl?: string | null;
   description: string | null;
   descriptionVersion?: string;
-  learnset?: { versionGroup: string; moves: { name: string; method: string; level: number; type?: string | null; category?: string | null; power?: number | null; accuracy?: number | null }[] } | null;
+  learnset?: { versionGroup: string; moves: { name: string; nameEn?: string | null; names?: PokemonSummary['names']; method: string; level: number; type?: string | null; category?: string | null; power?: number | null; accuracy?: number | null }[] } | null;
   learnsetSources?: { url: string; collectedAt: string; contentHash: string }[];
   learnsetLicenceUrl?: string | null;
   availableMoves: string[] | null;

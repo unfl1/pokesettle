@@ -13,8 +13,10 @@ class Catalog:
         names_path = path.parent / "battle_names.json"
         self.battle_names = json.loads(names_path.read_text()) if names_path.exists() else {}
         species_path = path.parent / "documents" / "species.json"
+        self.localization = self.details.get("localization", {})
         self.move_details = {}
-        for move in self.details.get("move_details", []):
+        for original in self.details.get("move_details", []):
+            move = {**original, "names": self.localization.get("move", {}).get(original["name"], {})}
             for name in (move["name"], move.get("name_ko")):
                 if name:
                     self.move_details[name] = move
@@ -54,9 +56,13 @@ class Catalog:
         result["name_sources"] = self.name_sources
         result["name_licence_url"] = self.name_licence_url
         result["ability_details"] = [
-            {"name": name, "name_ko": self.details.get("ability_names", {}).get(name)}
+            {"name": name, "name_ko": self.details.get("ability_names", {}).get(name),
+             "names": self.localization.get("ability", {}).get(name, {})}
             for name in pokemon.abilities
         ]
+        result["descriptions"] = self.localization.get("descriptions", {}).get(str(pokemon.species_id), {})
+        result["localization_sources"] = self.localization.get("sources", [])
+        result["localization_licence_url"] = self.localization.get("licence_url")
         description = self.descriptions.get(pokemon_id)
         if description:
             label, text = description.split("): ", 1)
@@ -69,9 +75,10 @@ class Catalog:
                 "moves": [
                     {
                         **move,
+                        "name_en": self.move_details.get(move["name"], {}).get("name"),
                         **{
                             key: self.move_details.get(move["name"], {}).get(key)
-                            for key in ("type", "category", "power", "accuracy")
+                            for key in ("type", "category", "power", "accuracy", "names")
                         },
                     }
                     for move in detail["moves"]
@@ -80,7 +87,7 @@ class Catalog:
             if detail
             else None
         )
-        result["learnset_sources"] = self.details.get("sources", []) if detail else []
+        result["learnset_sources"] = (self.details.get("sources", []) + self.localization.get("sources", [])) if detail else []
         result["learnset_licence_url"] = self.details.get("licence_url") if detail else None
         return result
 

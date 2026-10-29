@@ -1,11 +1,13 @@
 """Build local, version-labelled learnsets without retrieval or model calls."""
 
+import argparse
 import csv
 import io
 import json
 from collections import defaultdict
 
 from backend.app.core.config import Settings
+from backend.app.data_preparation.localization import REFERENCE_TABLES, localized_reference
 from backend.app.data_preparation.pokeapi import LICENCE_URL
 from backend.app.http_client import SourceClient
 from backend.app.storage import Store
@@ -46,10 +48,10 @@ def build_details(tables):
     }
 
 
-def prepare(settings):
+def prepare(settings, *, localization_only=False):
     client = SourceClient(settings, Store(settings.database_url, settings.database_schema))
     tables, sources = {}, []
-    for name in [
+    detail_tables = [
         "abilities",
         "ability_names",
         "types",
@@ -58,42 +60,52 @@ def prepare(settings):
         "version_groups",
         "pokemon_move_methods",
         "pokemon_moves",
-    ]:
+    ]
+    for name in dict.fromkeys(REFERENCE_TABLES if localization_only else detail_tables + REFERENCE_TABLES):
         snapshot = client.fetch(f"{CSV_ROOT}/{name}.csv", expect_json=False)
         if not snapshot:
             raise ValueError(f"Missing source: {name}")
         tables[name] = list(csv.DictReader(io.StringIO(snapshot["body"])))
         sources.append({key: snapshot[key] for key in ["url", "collected_at", "content_hash"]})
         print(f"{name}: {len(tables[name])}", flush=True)
-    result = {
-        "sources": sources,
-        "licence_url": LICENCE_URL,
-        "scope": "Original game version reference; Champions learnsets unverified",
-        "pokemon": build_details(tables),
-    }
-    ability_names = {
-        r["ability_id"]: r["name"] for r in tables["ability_names"] if r["local_language_id"] == "3"
-    }
-    result["ability_names"] = {
-        r["identifier"]: ability_names[r["id"]]
-        for r in tables["abilities"]
-        if r["id"] in ability_names
-    }
-    type_names = {r["id"]: r["identifier"] for r in tables["types"]}
-    ko_names = {
-        r["move_id"]: r["name"] for r in tables["move_names"] if r["local_language_id"] == "3"
-    }
-    result["move_details"] = [
-        {
-            "name": r["identifier"],
-            "name_ko": ko_names.get(r["id"]),
-            "type": type_names[r["type_id"]],
-            "category": {"1": "status", "2": "physical", "3": "special"}[r["damage_class_id"]],
-            "power": int(r["power"]) if r["power"] else None,
-            "accuracy": int(r["accuracy"]) if r["accuracy"] else None,
+    path = settings.data_dir / "catalog_details.json"
+    if localization_only:
+        result = json.loads(path.read_text())
+    else:
+        result = {
+            "sources": sources,
+            "licence_url": LICENCE_URL,
+            "scope": "Original game version reference; Champions learnsets unverified",
+            "pokemon": build_details(tables),
         }
-        for r in tables["moves"]
-    ]
+        ability_names = {
+            r["ability_id"]: r["name"] for r in tables["ability_names"] if r["local_language_id"] == "3"
+        }
+        result["ability_names"] = {
+            r["identifier"]: ability_names[r["id"]]
+            for r in tables["abilities"]
+            if r["id"] in ability_names
+        }
+        type_names = {r["id"]: r["identifier"] for r in tables["types"]}
+        ko_names = {
+            r["move_id"]: r["name"] for r in tables["move_names"] if r["local_language_id"] == "3"
+        }
+        result["move_details"] = [
+            {
+                "name": r["identifier"],
+                "name_ko": ko_names.get(r["id"]),
+                "type": type_names[r["type_id"]],
+                "category": {"1": "status", "2": "physical", "3": "special"}[r["damage_class_id"]],
+                "power": int(r["power"]) if r["power"] else None,
+                "accuracy": int(r["accuracy"]) if r["accuracy"] else None,
+            }
+            for r in tables["moves"]
+        ]
+    result["localization"] = {
+        **localized_reference(tables),
+        "sources": [source for source in sources if source["url"].rsplit("/", 1)[-1].removesuffix(".csv") in REFERENCE_TABLES],
+        "licence_url": LICENCE_URL,
+    }
     path = settings.data_dir / "catalog_details.json"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -102,4 +114,7 @@ def prepare(settings):
 
 
 if __name__ == "__main__":
-    prepare(Settings.from_env())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--localization-only", action="store_true", help="Refresh display translations without changing battle or learnset data")
+    args = parser.parse_args()
+    prepare(Settings.from_env(), localization_only=args.localization_only)

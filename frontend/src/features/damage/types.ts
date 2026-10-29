@@ -34,7 +34,7 @@ export interface DamageMoveOptions {
   versionGroup: string | null;
   championsLearnsetVerified: boolean;
   items: {
-    name: string; nameKo: string | null; type: string | null;
+    names?: import('../pokemon/types').PokemonSummary['names']; name: string; nameKo: string | null; type: string | null;
     category: string | null; power: number | null; accuracy: number | null;
     methods: string[]; supported: boolean; unsupportedReason: string | null;
   }[];

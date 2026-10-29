@@ -153,3 +153,11 @@ def test_provider_reads_reject_redirects_limits_and_bad_payload(monkeypatch, sta
     monkeypatch.setattr("backend.app.services.metagame.requests.get", get)
     with pytest.raises(ValueError):
         MetagameService()._fetch("/data/meta/index.json")
+
+
+def test_meta_returns_localized_reference_names_without_replacing_provider_identifiers(meta):
+    meta.catalog.details["localization"] = {"move": {"test-move": {"en": "Test Move", "ja": "テスト技", "zh": "测试招式"}}}
+    result = meta.service.singles(meta.catalog)
+    entry = next(p for p in result["items"] if p["pokemon_id"] == "one")["groups"][0]["items"][0]
+    assert entry["name"] == "Test Move"
+    assert entry["names"]["ja"] == "テスト技"

@@ -1,3 +1,4 @@
+import { pokemonName } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useTeamDraftContext } from "../../../providers/AppProviders";
 import SelectionRecommendation from './SelectionRecommendation';
@@ -22,8 +23,14 @@ import {
 import { useTypeLabels } from '../../pokemon/typeLabels';
 import TeamEditor, { action, control } from './TeamEditor';
 
-function Evidence({ result }: { result: Context }) {
+function Evidence({ result, label }: { result: Context; label: (id: string) => string }) {
   const { t: translate } = useI18n();
+  const citationTitle = (citation: Context['citations'][number]) => {
+    const pokemonId = citation.sourceUrl.match(/\/pokemon\/(\d+)\/?$/)?.[1];
+    return pokemonId && citation.title.endsWith(' 도감')
+      ? translate('{name} 도감', { name: label(`pokemon:${pokemonId}`) })
+      : translate(citation.title);
+  };
   return (
     <div className="mt-4 border-t border-line pt-3 text-[14px] leading-[1.9]">
       <p className="text-accent">
@@ -31,14 +38,14 @@ function Evidence({ result }: { result: Context }) {
       <p className="mt-2 font-medium text-warning">{translate("미확인")}</p>
       <ul className="list-disc pl-4 text-muted">
         {result.unknowns.map((x) => (
-          <li key={x}>{x}</li>
+          <li key={x}>{translate(x)}</li>
         ))}
       </ul>
       <details className="mt-2 text-muted">
         <summary className="cursor-pointer">{translate("계산 가정과 출처")}</summary>
         <ul className="mt-2 list-disc pl-4">
           {result.assumptions.map((x) => (
-            <li key={x}>{x}</li>
+            <li key={x}>{translate(x)}</li>
           ))}
         </ul>
         <ul className="mt-2">
@@ -52,7 +59,7 @@ function Evidence({ result }: { result: Context }) {
                 target="_blank"
                 rel="noreferrer"
               >
-                {c.title}
+                {citationTitle(c)}
               </a>{' '}
               · {c.scope}  {translate("· 수집")} {c.collectedAt.slice(0, 10)}
             </li>
@@ -78,7 +85,7 @@ function AnalysisState({
       )}
       {error && (
         <p role="alert" className="mt-3 text-[14px] text-warning">
-          {error.message}  {translate("입력을 확인한 뒤 다시 분석해 주세요.")} </p>
+          {translate(error.message)}  {translate("입력을 확인한 뒤 다시 분석해 주세요.")} </p>
       )}
     </>
   );
@@ -92,7 +99,7 @@ export default function TeamWorkspace({
   sessionReady: boolean;
 }) {
   const typeLabels = useTypeLabels();
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const cache = useQueryClient();
   const { own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
     notice, setNotice, tab, setTab, ownActive, setOwnActive, opponentActive, setOpponentActive,
@@ -118,7 +125,7 @@ export default function TeamWorkspace({
   const records = details.flatMap((d) => (d.data ? [d.data] : []));
   const label = (id: string) => {
     const p = records.find((p) => p.pokemonId === id);
-    return p?.nameKo ?? p?.nameEn ?? id;
+    return p ? pokemonName(p, locale) : id;
   };
   const active = records.find((p) => p.pokemonId === activeId);
   const megaForms = useQuery({
@@ -136,7 +143,7 @@ export default function TeamWorkspace({
     mutationFn: (id?: string) => battleApi.save(name, own, id),
     onSuccess: (team) => {
       setSelectedId(team.teamId);
-      setNotice(translate("팀 저장 완료"));
+      setNotice("팀 저장 완료");
       void cache.invalidateQueries({ queryKey: ['saved-teams'] });
     },
   });
@@ -144,7 +151,7 @@ export default function TeamWorkspace({
     mutationFn: battleApi.remove,
     onSuccess: () => {
       setSelectedId('');
-      setNotice(translate("저장된 팀 삭제 완료 · 편집 중인 구성 유지"));
+      setNotice("저장된 팀 삭제 완료 · 편집 중인 구성 유지");
       void cache.invalidateQueries({ queryKey: ['saved-teams'] });
     },
   });
@@ -199,12 +206,12 @@ export default function TeamWorkspace({
       <h2 className="mb-3 text-[16px] font-semibold">{translate("1. 양쪽 팀 구성")}</h2>
       {notice && (
         <p role="status" className="mb-3 text-[14px] text-accent">
-          {notice}
+          {translate(notice)}
         </p>
       )}
       {(save.error || remove.error || teams.error) && (
         <p role="alert" className="mb-3 text-[14px] text-warning">
-          {(save.error ?? remove.error ?? teams.error)?.message}
+          {translate((save.error ?? remove.error ?? teams.error)?.message ?? "")}
           <button
             className={`${action} ml-2`}
             onClick={() => void teams.refetch()}
@@ -364,7 +371,7 @@ export default function TeamWorkspace({
                 ))}
               </ol>
               </details>
-              <Evidence result={selection.data} />
+              <Evidence result={selection.data} label={label} />
             </div>
           )}
           {summary.data && (
@@ -422,10 +429,10 @@ export default function TeamWorkspace({
               )}
               {summary.data.roleGaps.map((g) => (
                 <p className="mt-3 text-[14px] text-muted" key={g}>
-                  {g}
+                  {translate(g)}
                 </p>
               ))}
-              <Evidence result={summary.data} />
+              <Evidence result={summary.data} label={label} />
             </div>
           )}
         </section>
@@ -485,7 +492,7 @@ export default function TeamWorkspace({
                 <option value="">{translate("비교 안 함 / 폼 미확인")}</option>
                 {possibleMega.map((p) => (
                   <option key={p.pokemonId} value={p.pokemonId}>
-                    {p.nameKo ?? p.nameEn}
+                    {pokemonName(p, locale)}
                   </option>
                 ))}
               </select>
@@ -537,7 +544,7 @@ export default function TeamWorkspace({
           {battle.data && (
             <div className="mt-4">
               <p className="text-[14px] leading-[1.9] text-warning">
-                {battle.data.notice}
+                {translate(battle.data.notice)}
               </p>
               {(['attack', 'switch'] as const).map((kind) => (
                 <div className="mt-4" key={kind}>
@@ -559,15 +566,15 @@ export default function TeamWorkspace({
                           key={`${o.kind}-${o.pokemonId}-${o.label}`}
                         >
                           <strong className="font-medium">
-                            {o.label} ·{' '}
+                            {o.kind === 'switch' ? label(o.pokemonId) : o.label} ·{' '}
                             {o.multiplier === null
                               ? translate("효과 미계산")
                               : `${o.multiplier}×`}
                           </strong>
-                          <p className="mt-1 text-muted">{o.reason}</p>
+                          <p className="mt-1 text-muted">{translate(o.reason)}</p>
                           {o.risks.map((r) => (
                             <p className="mt-1 text-muted" key={r}>
-                              {r}
+                              {translate(r)}
                             </p>
                           ))}
                         </li>
@@ -584,7 +591,7 @@ export default function TeamWorkspace({
               ))}
               <h3 className="mt-4 text-[14px]">{translate("메가 상태")}</h3>
               <p className="mt-2 text-[14px] text-muted">
-                {battle.data.mega.reason}
+                {translate(battle.data.mega.reason)}
               </p>
               {battle.data.mega.typeComparison?.map((t) => (
                 <p className="mt-1 text-[14px]" key={t.attackType}>
@@ -592,7 +599,7 @@ export default function TeamWorkspace({
                   {t.after}×
                 </p>
               ))}
-              <Evidence result={battle.data} />
+              <Evidence result={battle.data} label={label} />
             </div>
           )}
         </section>

@@ -82,3 +82,23 @@ test('favicon은 16·32·48px 실제 ICO이며 상세 sitemap URL 중복 없음'
   expect(new Set(urls).size).toBe(urls.length);
   expect(xml.length).toBeLessThan(50 * 1024 * 1024);
 });
+
+test('도감과 메타의 데이터 이름·설명이 선택 언어를 따름', async ({ page }) => {
+  for (const row of [
+    {locale:'en',name:'Pikachu',ability:'Static',move:'Thunderbolt',description:'English fixture description.'},
+    {locale:'ja',name:'ピカチュウ',ability:'せいでんき',move:'１０まんボルト',description:'日本語のテスト説明。'},
+    {locale:'zh',name:'皮卡丘',ability:'静电',move:'十万伏特',description:'中文测试描述。'},
+  ]) {
+    await page.goto(`/${row.locale}/pokedex?pokemon=pokemon%3A25`);
+    await expect(page.getByRole('heading', {name:row.name,exact:true})).toBeVisible();
+    await expect(page.getByText(row.ability,{exact:true})).toBeVisible();
+    await expect(page.getByText(row.description,{exact:true})).toBeVisible();
+    await expect(page.getByTestId('pokemon-learnset')).toContainText(row.move);
+    await expect(page.getByTestId('pokemon-learnset')).not.toContainText('10만볼트');
+    await expect(page.getByTestId('profile-details')).not.toContainText('도감 설명');
+    await page.goto(`/${row.locale}/meta`);
+    await expect(page.getByRole('heading', {name:new RegExp(row.name)})).toBeVisible();
+    await expect(page.getByText(row.move,{exact:true})).toBeVisible();
+    await expect(page.locator('main')).not.toContainText('피카츄');
+  }
+});

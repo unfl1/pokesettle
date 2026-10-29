@@ -65,10 +65,53 @@ def test_localized_ability_names_preserve_source_identifiers():
     catalog = Catalog(ROOT / "data/pokemon.json")
     profile = catalog.profile("pokemon:1")
     assert profile["abilities"] == ["overgrow", "chlorophyll"]
-    assert profile["ability_details"] == [
+    assert [{"name": a["name"], "name_ko": a["name_ko"]} for a in profile["ability_details"]] == [
         {"name": "overgrow", "name_ko": "심록"},
         {"name": "chlorophyll", "name_ko": "엽록소"},
     ]
     assert any(
         source["url"].endswith("/ability_names.csv") for source in catalog.details["sources"]
     )
+
+
+def test_profile_localizes_reference_data_without_changing_identifiers():
+    from backend.app.catalog import Catalog
+    from backend.app.core.config import ROOT
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    profile = catalog.profile("pokemon:25")
+    thunderbolt = next(m for m in profile["learnset"]["moves"] if m["name"] == "10만볼트")
+    assert thunderbolt["name_en"] == "thunderbolt"
+    assert thunderbolt["names"] == {"ko": "10만볼트", "en": "Thunderbolt", "ja": "１０まんボルト", "zh": "十万伏特"}
+    assert {"ko", "en", "ja", "zh"} <= profile["descriptions"].keys()
+    assert all(row["text"] and row["version"] for row in profile["descriptions"].values())
+    assert profile["localization_sources"] and profile["localization_licence_url"]
+    assert catalog.profile("pokemon:1")["ability_details"][0]["names"]["ja"] == "しんりょく"
+    assert catalog.localization["held_item"]["leftovers"]["zh"] == "吃剩的东西"
+    assert catalog.localization["stat_alignment"]["adamant"]["en"] == "Adamant"
+
+
+def test_localized_reference_keeps_missing_names_absent_and_versions_per_language():
+    from backend.app.data_preparation.localization import localized_reference
+
+    tables = {
+        "languages": [{"id": str(i), "identifier": key} for i, key in enumerate(["ko", "en", "ja", "zh-hans"], 1)],
+        "versions": [{"id": "1", "identifier": "old"}, {"id": "2", "identifier": "new"}],
+        "pokemon_species_flavor_text": [
+            {"species_id": "1", "language_id": "2", "version_id": "1", "flavor_text": "Old English."},
+            {"species_id": "1", "language_id": "2", "version_id": "2", "flavor_text": "New\nEnglish."},
+            {"species_id": "1", "language_id": "3", "version_id": "1", "flavor_text": "日本語"},
+        ],
+    }
+    for table, labels, foreign_key in [
+        ("abilities", "ability_names", "ability_id"), ("moves", "move_names", "move_id"),
+        ("items", "item_names", "item_id"), ("natures", "nature_names", "nature_id"),
+    ]:
+        tables[table] = [{"id": "1", "identifier": "synthetic"}]
+        tables[labels] = [{foreign_key: "1", "local_language_id": "2", "name": "Synthetic"}]
+    result = localized_reference(tables)
+    assert result["move"]["synthetic"] == {"en": "Synthetic"}
+    assert result["descriptions"]["1"] == {
+        "en": {"text": "New English.", "version": "new"},
+        "ja": {"text": "日本語", "version": "old"},
+    }

@@ -7,6 +7,7 @@ async function fixture(page: Page) {
     speciesId: i + 1,
     nameKo: `테스트${i + 1}`,
     nameEn: `test-${i + 1}`,
+    names: {ko: `테스트${i + 1}`, en: `Test ${i + 1}`, ja: `テスト${i + 1}`, zh: `测试${i + 1}`},
     types: i % 2 ? ['fire'] : ['grass'],
     championsEligibilityStatus: 'unknown',
     scope: 'generic',
@@ -451,4 +452,20 @@ test('구성 진행 안내와 목적별 분석 전환 및 계산 입력 유지',
   await page.getByRole('button', { name: '피해 계산', exact: true }).click();
   await expect(damage.getByLabel('공격자 포켓몬')).toHaveValue('pokemon:1');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+
+test('팀 편집과 전투 포켓몬 이름이 선택 언어를 따름', async ({ page }) => {
+  await fixture(page);
+  for (const row of [
+    {locale:'en',own:'Your team',saved:'Saved teams',battle:'Current battle comparison',active:'Your active Pokémon',name:'Test 1'},
+    {locale:'ja',own:'自分のチーム',saved:'保存した自分のチーム',battle:'現在のバトル比較',active:'現在の自分のポケモン',name:'テスト1'},
+    {locale:'zh',own:'己方队伍',saved:'已保存的己方队伍',battle:'当前对战比较',active:'当前己方宝可梦',name:'测试1'},
+  ]) {
+    await page.goto(`/${row.locale}/scenario`);
+    await page.getByRole('combobox', {name:row.saved,exact:true}).selectOption('seed');
+    await expect(page.getByRole('region', {name:row.own,exact:true})).toContainText(row.name);
+    await page.getByRole('button', {name:row.battle,exact:true}).click();
+    await expect(page.getByRole('combobox', {name:row.active,exact:true})).toContainText(row.name);
+  }
 });

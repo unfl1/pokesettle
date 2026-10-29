@@ -1,4 +1,5 @@
 "use client";
+import { referenceName } from '../routing';
 import { useState } from 'react';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useTypeLabels } from '../typeLabels';
@@ -6,7 +7,7 @@ import { TypeBadge, typeColors } from './TypeBadge';
 import { lightTextTypes } from '../typeColors';
 import type { PokemonDetail } from '../types';
 export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDetail, 'learnset' | 'learnsetSources' | 'learnsetLicenceUrl'> }) {
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const typeLabels = useTypeLabels();
   const [learnMethod, setLearnMethod] = useState('all');
   const [learnType, setLearnType] = useState('all');
@@ -36,7 +37,7 @@ export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDeta
                         const entries = moves.filter(m => m.name === name);
                         const move = entries[0];
                         return <div key={name} className="rounded-lg border border-line border-l-[3px] bg-canvas px-3 py-2.5" style={{ borderLeftColor: typeColors[type] ?? '#8492a3' }}>
-                          <div className="flex items-center justify-between gap-2"><strong className="text-[14px] font-medium text-ink">{name}</strong><span className={`shrink-0 rounded px-1.5 py-0.5 text-[14px] font-medium ${{ physical: 'bg-orange-400/15 text-orange-700', special: 'bg-sky-400/15 text-sky-700', status: 'bg-violet-400/15 text-violet-700' }[move.category ?? ''] ?? 'text-slate-600'}`}>{{ physical: translate("물리"), special: translate("특수"), status: translate("변화") }[move.category ?? ''] ?? translate("분류 미확인")}</span></div>
+                          <div className="flex items-center justify-between gap-2"><strong className="text-[14px] font-medium text-ink">{referenceName(move, locale)}</strong><span className={`shrink-0 rounded px-1.5 py-0.5 text-[14px] font-medium ${{ physical: 'bg-orange-400/15 text-orange-700', special: 'bg-sky-400/15 text-sky-700', status: 'bg-violet-400/15 text-violet-700' }[move.category ?? ''] ?? 'text-slate-600'}`}>{{ physical: translate("물리"), special: translate("특수"), status: translate("변화") }[move.category ?? ''] ?? translate("분류 미확인")}</span></div>
                           <div className="mt-2 flex items-center gap-2 whitespace-nowrap text-[14px]">
                             <p className="inline-flex items-center gap-1 rounded px-2 py-1" style={{ backgroundColor: typeColors[type] ?? '#8492a3', color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}><span>{translate("위력")}</span> <strong className="font-semibold tabular-nums">{move.power ?? '—'}</strong></p>
                             <p className="inline-flex items-center gap-1 rounded bg-line px-2 py-1 text-muted"><span>{translate("명중")}</span> <strong className="font-semibold tabular-nums">{move.accuracy != null ? `${move.accuracy}%` : '—'}</strong></p>
