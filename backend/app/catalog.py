@@ -18,6 +18,8 @@ class Catalog:
             for name in (move["name"], move.get("name_ko")):
                 if name:
                     self.move_details[name] = move
+        self.name_sources = []
+        self.name_licence_url = None
         self.descriptions = {}
         if species_path.exists():
             for row in json.loads(species_path.read_text()):
@@ -26,8 +28,15 @@ class Catalog:
                 if korean:
                     self.descriptions[row["pokemon_id"]] = korean[-1]
         if path.exists():
-            records = [Pokemon.model_validate(row) for row in json.loads(path.read_text())]
+            names_path = path.parent / "pokemon_names.json"
+            name_snapshot = json.loads(names_path.read_text()) if names_path.exists() else {}
+            localized = {row["pokemon_id"]: row for row in name_snapshot.get("items", [])}
+            self.name_sources = name_snapshot.get("sources", [])
+            self.name_licence_url = name_snapshot.get("licence_url")
+            records = [Pokemon.model_validate({**row, **localized.get(row["pokemon_id"], {})}) for row in json.loads(path.read_text())]
             self.items = {row.pokemon_id: row for row in records}
+            if name_snapshot and set(localized) != set(self.items):
+                raise ValueError("Localized name snapshot does not match catalogue IDs")
             if len(records) != len(self.items) or len(
                 {p.species_id for p in records if p.is_default}
             ) != sum(p.is_default for p in records):
@@ -42,6 +51,8 @@ class Catalog:
     def profile(self, pokemon_id):
         pokemon = self.get(pokemon_id)
         result = pokemon.model_dump()
+        result["name_sources"] = self.name_sources
+        result["name_licence_url"] = self.name_licence_url
         result["ability_details"] = [
             {"name": name, "name_ko": self.details.get("ability_names", {}).get(name)}
             for name in pokemon.abilities

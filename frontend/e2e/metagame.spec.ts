@@ -46,7 +46,7 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
   await expect(page.getByText('0%', { exact: true })).toBeVisible();
   await expect(page.getByText(/데이터 기준일 2026-10-24/)).toBeVisible();
   await expect(page.getByRole('link', { name: meta.attribution })).toHaveAttribute('href', meta.sourceUrl);
-  await expect(page.getByRole('link', { name: '도감 보기' })).toHaveAttribute('href', '/ko/pokedex?pokemon=pokemon%3A25');
+  await expect(page.getByRole('link', { name: '도감 보기' })).toHaveAttribute('href', '/ko/pokedex/%ED%95%A9%EC%84%B1-%ED%8F%AC%EC%BC%93%EB%AA%AC-25');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));

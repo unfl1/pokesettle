@@ -7,6 +7,7 @@ import json
 from collections import defaultdict
 
 from backend.app.core.config import Settings
+from backend.app.data_preparation.localization import localized_routes
 from backend.app.data_preparation.pokeapi import LICENCE_URL, PokeApiSource
 from backend.app.http_client import SourceClient
 from backend.app.schemas import Document, Pokemon
@@ -15,6 +16,7 @@ from backend.app.storage import Store, digest
 CSV_ROOT = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv"
 SPRITES_ROOT = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
 TABLES = [
+    "languages",
     "pokemon",
     "pokemon_stats",
     "pokemon_types",
@@ -229,6 +231,7 @@ def prepare(settings, count=None):
     )
     for path, value in [
         (settings.data_dir / "pokemon.json", records),
+        (settings.data_dir / "pokemon_names.json", {"items": localized_routes(records, tables), "sources": [s for s in sources if s["source_id"] in {"pokeapi-csv:languages", "pokeapi-csv:pokemon_species_names", "pokeapi-csv:pokemon_forms", "pokeapi-csv:pokemon_form_names"}], "licence_url": LICENCE_URL}),
         (settings.data_dir / "documents" / "species.json", documents),
         (settings.data_dir / "sources.json", sources),
     ]:

@@ -419,5 +419,10 @@
   "정말 삭제하겠습니까?": "Are you sure you want to delete this chat?",
   "아니오": "No",
   "네": "Yes",
-  "삭제 중…": "Deleting…"
+  "삭제 중…": "Deleting…",
+  "{name}의 타입·특성·종족값과 기술을 확인하세요.": "Explore {name}’s types, abilities, base stats and moves.",
+  "포켓몬 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.": "Unable to load Pokémon data. Please try again shortly.",
+  "포켓몬을 찾을 수 없습니다.": "Pokémon not found.",
+  "이름 데이터 출처·수집일": "Name data sources and collection dates",
+  "누락된 폼명은 원본 영어 이름으로 표시해요.": "Missing form translations use the original English name."
 }

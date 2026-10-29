@@ -194,3 +194,13 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/LICENSE.txt` 유지
 - 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `pretendard-subsets.css`의 나머지 범위, 바이너리 수정 없음
 - 공식 API 근거: [Next Font](https://nextjs.org/docs/app/api-reference/components/font), [Next Image](https://nextjs.org/docs/app/api-reference/components/image), [Google Analytics](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
+
+
+### 다국어 포켓몬 이름 스냅샷
+
+- 수집일: 2026-10-29 UTC, `data/pokemon_names.json`의 원본별 `collected_at`·SHA-256 해시·이용 조건 보존
+- 원본: [languages.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/languages.csv), [pokemon_species_names.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv), [pokemon_forms.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_forms.csv), [pokemon_form_names.csv](https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_form_names.csv)
+- 범위: 기존 1,351개 Pokémon 리소스에 확인된 ko·en·ja·zh-hans 종·폼명 연결, 별도 폼은 종 번호 대신 Pokémon 리소스 ID로 식별
+- 누락 처리: 자동 번역·새 폼명 생성 제외, 영어 리소스명 fallback과 원문 언어 안내, 종족값·기술·Champions 적격성 변경 없음
+- 권리 범위: 기존 PokéAPI 이용 조건과 원권리자 권리 안내 유지, 이름 자료 추가를 이미지·게임 설명 재배포 허가로 해석하지 않음
+- 갱신: 기존 `backend.scripts.prepare_data` 파이프라인에서 동일 CSV 원본·수집 이력과 이름 스냅샷 동시 생성

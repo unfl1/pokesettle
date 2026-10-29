@@ -24,6 +24,7 @@ backend/calculator/*
 !data/
 data/*
 !data/pokemon.json
+!data/pokemon_names.json
 !data/catalog_details.json
 !data/battle_names.json
 !data/type_chart.json
@@ -57,6 +58,8 @@ frontend/*
 !frontend/next.config.ts
 !frontend/postcss.config.mjs
 !frontend/tsconfig.json
+!frontend/scripts/
+!frontend/scripts/**
 !frontend/src/
 !frontend/src/**
 !frontend/public/

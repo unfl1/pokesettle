@@ -2,29 +2,27 @@
 import { useI18n } from '../../../i18n/I18nProvider';
 
 import { useWorkspaceContext } from "../../../providers/AppProviders";
-import { localizedPath } from '../../../i18n/config';
+import Link from 'next/link';
+import { idFromSegment, pokemonName, pokemonPath } from '../routing';
+import type { Page } from '../../../types/api';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { usePathname } from 'next/navigation';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowRight, ChevronRight, CircleHelp, LoaderCircle, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { pokemonApi } from '../api';
-import { PokemonProfile } from '../components/PokemonProfile';
 import { TypeBadge } from '../components/TypeBadge';
 import PokemonImage from '../components/PokemonImage';
 import type { PokemonSummary } from '../types';
 
-export default function PokedexPage() {
+export default function PokedexPage({ initialPage, children }: { initialPage: Page<PokemonSummary> | null; children: ReactNode }) {
   const { locale, t: translate } = useI18n();
   const workspace = useWorkspaceContext();
   const ready = Boolean(workspace.status.data?.ready);
   const sessionReady = workspace.session.isSuccess;
-  const metadataCount = workspace.status.data?.metadataCount;
-  const params = useSearchParams();
-  const pokemonId = params.get('pokemon') ?? 'pokemon:25';
-  const selectedDetail = useQuery({
-    queryKey: ['detail', pokemonId, metadataCount],
-    queryFn: () => pokemonApi.detail(pokemonId),
-  });
+  const routeId = idFromSegment(decodeURIComponent(usePathname().split('/').at(-1) ?? ''));
+  const pokemonId = routeId ?? 'pokemon:25';
+  const Heading = routeId ? 'h2' : 'h1';
   const [mode, setMode] = useState<'name' | 'conditions'>('name');
   const [name, setName] = useState('');
   const [condition, setCondition] = useState('');
@@ -32,7 +30,9 @@ export default function PokedexPage() {
     null,
   );
   const list = useInfiniteQuery({
-    queryKey: ['catalog-pages', name.trim(), metadataCount],
+    queryKey: ['catalog-pages', name.trim()],
+    initialData: !name.trim() && initialPage ? { pages: [initialPage], pageParams: [initialPage.offset ?? 0] } : undefined,
+    staleTime: 60_000,
     queryFn: ({ pageParam }) => pokemonApi.pokemon(name.trim(), pageParam),
     initialPageParam: 0,
     getNextPageParam: (last) => {
@@ -44,7 +44,7 @@ export default function PokedexPage() {
     queryKey: [
       'discovery-pages',
       submittedCondition,
-      metadataCount,
+
     ],
     queryFn: ({ pageParam }) => pokemonApi.discover(submittedCondition!, pageParam),
     initialPageParam: 0,
@@ -67,11 +67,10 @@ export default function PokedexPage() {
     if (submittedCondition === condition.trim()) void discovery.refetch();
     else setSubmittedCondition(condition.trim());
   }
-  function choose(pokemon: PokemonSummary) {
-    window.history.pushState(null, '', localizedPath(locale, `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`));
-  }
 
-  return (
+
+  return (<>
+    <section className="page-intro"><Heading>{translate('도감')}</Heading><p>{translate('포켓몬의 타입·특성·종족값과 기술을 확인하세요.')}</p></section>
     <div className="pokedex-layout">
       <section
         className="border border-line rounded-[12px] bg-surface overflow-hidden"
@@ -88,19 +87,19 @@ export default function PokedexPage() {
           className="catalog-controls"
         >
           <div
-            className="p-[3px] mx-4 border border-line gap-[3px] flex mt-0 mb-[15px] bg-canvas rounded-[7px] max-tablet:mb-2.5 [&_button]:px-[3px] [&_button]:py-2 [&_button]:gap-1.5 [&_button]:flex-1 [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:text-[14px] [&_button]:text-muted [&_button]:rounded-[4px] [&_[aria-pressed=true]]:bg-surface [&_[aria-pressed=true]]:text-ink"
+            className="p-[3px] mx-4 border border-line gap-[3px] flex mt-0 mb-[15px] bg-canvas rounded-[7px] max-tablet:mb-2.5 [&_button]:px-[3px] [&_button]:py-2 [&_button]:gap-1.5 [&_button]:flex-1 [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:text-[14px] [&_button]:text-muted [&_button]:rounded-[4px] [&_[data-selected=true]]:bg-surface [&_[data-selected=true]]:text-ink"
             role="group"
             aria-label={translate("검색 방식")}
           >
             <button
-              aria-pressed={mode === 'name'}
-              onClick={() => setMode('name')}
+              data-selected={mode === 'name'}
+              onClick={() => { setMode('name'); workspace.enableDiscovery(false); }}
             >
               <Search size={13} />
                {translate("이름 검색")} </button>
             <button
-              aria-pressed={mode === 'conditions'}
-              onClick={() => setMode('conditions')}
+              data-selected={mode === 'conditions'}
+              onClick={() => { setMode('conditions'); workspace.enableDiscovery(); }}
             >
               <Sparkles size={13} />
                {translate("조건으로 찾기")} </button>
@@ -237,14 +236,15 @@ export default function PokedexPage() {
               </div>
             ) : (
               results.map((p) => (
-                <button
-                  className="px-2.5 py-[13px] border border-[transparent] gap-[7px] flex items-center w-full text-left rounded-[7px] mb-[3px] min-h-16 max-phone:px-[5px] max-phone:py-2.5 max-phone:gap-[5px] [&:hover:not([aria-pressed=true])]:bg-canvas aria-pressed:border-accent/28 aria-pressed:bg-accent/4 [&>svg]:text-muted [&>svg]:w-[11px] max-phone:[&>svg]:hidden [&[aria-pressed=true]>svg]:text-accent group"
+                <Link prefetch={false}
+                  className="px-2.5 py-[13px] border border-[transparent] gap-[7px] flex items-center w-full text-left rounded-[7px] mb-[3px] min-h-16 max-phone:px-[5px] max-phone:py-2.5 max-phone:gap-[5px] [&:hover:not([data-selected=true])]:bg-canvas data-[selected=true]:border-accent/28 data-[selected=true]:bg-accent/4 [&>svg]:text-muted [&>svg]:w-[11px] max-phone:[&>svg]:hidden [&[data-selected=true]>svg]:text-accent group"
                   key={p.pokemonId}
-                  onClick={() => choose(p)}
-                  aria-label={translate('{name} 선택', { name: p.nameKo ?? p.nameEn })}
-                  aria-pressed={p.pokemonId === pokemonId}
+                  href={pokemonPath(p, locale)}
+                  aria-label={translate('{name} 선택', { name: pokemonName(p, locale) })}
+                  aria-current={p.pokemonId === pokemonId ? 'page' : undefined}
+                  data-selected={p.pokemonId === pokemonId}
                 >
-                  <span className="text-[14px] tabular-nums text-muted max-phone:hidden group-aria-pressed:text-accent">
+                  <span className="text-[14px] tabular-nums text-muted max-phone:hidden group-data-[selected=true]:text-accent">
                     {String(
                       p.speciesId ?? p.pokemonId.split(':').at(-1),
                     ).padStart(3, '0')}
@@ -255,7 +255,7 @@ export default function PokedexPage() {
                     size="small"
                   />
                   <span className="min-w-0 [&_strong]:block [&_strong]:text-[14px] [&_strong]:font-medium [&_strong]:wrap-anywhere max-phone:[&_strong]:text-[14px] [&_small]:block [&_small]:text-[14px] [&_small]:text-muted [&_small]:mt-[3px] [&_small]:wrap-anywhere max-phone:[&_small]:text-[14px]">
-                    <strong>{p.nameKo ?? p.nameEn}</strong>
+                    <strong>{pokemonName(p, locale)}</strong>
                     <small>{p.nameEn}</small>
                   </span>
                   <span className="gap-1 ml-auto flex flex-col items-end max-phone:gap-[3px] max-phone:[&>span]:px-1 max-phone:[&>span]:py-0.5 max-phone:[&>span]:text-[14px]">
@@ -264,7 +264,7 @@ export default function PokedexPage() {
                     ))}
                   </span>
                   <ChevronRight size={14} />
-                </button>
+                </Link>
               ))
             )}
             {activeList.hasNextPage && (
@@ -281,41 +281,7 @@ export default function PokedexPage() {
           </div>
         </div>
       </section>
-      <div className="min-w-0">
-        {selectedDetail.isPending ? (
-          <div
-            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[14px] text-muted"
-            role="status"
-          >
-            <LoaderCircle
-              className="animate-loading motion-reduce:animate-none"
-              size={21}
-            />
-             {translate("포켓몬 정보를 불러오고 있어요.")} </div>
-        ) : selectedDetail.error ? (
-          <div
-            className="border border-line rounded-[12px] bg-surface overflow-hidden p-5.5 gap-2.5 flex items-center min-h-30 text-[14px] text-muted"
-            role="alert"
-          >
-            <CircleHelp size={20} />
-            <p>{selectedDetail.error.message}</p>
-            <button
-              onClick={() => {
-                void selectedDetail.refetch();
-              }}
-              className="gap-[5px] text-[14px] text-ink flex items-center ml-auto whitespace-nowrap"
-            >
-               {translate("다시 확인")} </button>
-          </div>
-        ) : (
-          selectedDetail.data && (
-            <PokemonProfile
-              key={selectedDetail.data.pokemonId}
-              pokemon={selectedDetail.data}
-            />
-          )
-        )}
-      </div>
+      <div className="min-w-0">{children}</div>
     </div>
-  );
+  </>);
 }

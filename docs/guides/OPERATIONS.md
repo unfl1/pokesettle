@@ -255,7 +255,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - CloudFront → HTTPS Nginx → Next.js standalone 서버(`127.0.0.1:3001`), `/api/*`는 FastAPI 연결
 - S3 정적 ZIP 업로드·SPA `index.html` 재작성 제거, Next.js App Router 경로·RSC 응답·이미지 최적화 서버 사용
 - CI에서 백엔드·프런트엔드 이미지를 함께 빌드·패키징하고 Compose로 기동
-- `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상, Docker 빌드는 `http://api:8000`
+- `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상 및 런타임 서버 조회 주소, Compose는 `http://api:8000`
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - SEO 원본 도메인: 기본 `https://www.pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
@@ -439,3 +439,13 @@ uv run --frozen python -m backend.scripts.index_data
 - [ONNX export 프로젝트](https://github.com/chroma-core/onnx-embedding): Apache-2.0 프로젝트. 기존 로컬 모델 캐시 재사용함. 배포 URL의 Chroma 명칭은 모델 호스팅 주소이며 ChromaDB 런타임 의존성과 구분함.
 
 - 모델 신규 다운로드는 SHA-256 `913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3` 검증 후 정규 파일 두 개만 추출함.
+
+
+### 공개 도감 SSR 빌드·검증
+
+- 프론트 빌드 전 이름 스냅샷과 도감 ID의 일치 검증 및 URL 인덱스 생성, Docker 빌드 입력에 `data/pokemon.json`·`data/pokemon_names.json` 포함
+- 정적 사이트맵: 기능 URL 20개 + 상세 URL 5,404개, 빌드 시 API·모델 호출 없음
+- 서버 SSR: API 연결 실패를 없는 포켓몬으로 처리하지 않음, 일반 도감은 메모리 카탈로그, 메타는 기존 서버 캐시의 기준일·stale 상태 사용
+- 프론트 E2E: `e2e/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
+- 공개 smoke: 홈·챗봇·정적 자산·API 준비 상태와 피카츄 상세의 실제 HTML 본문·canonical 확인
+- 전역 CSS: `frontend/src/globals.css`, 아이콘: 기존 SVG와 16·32·48px `app/favicon.ico`

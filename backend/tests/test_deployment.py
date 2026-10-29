@@ -12,7 +12,7 @@ from deployment.check_production import check as check_production
 from deployment.package_release import package
 
 
-@pytest.mark.parametrize("failure", [None, "old_home", "redirect", "host_redirect", "scheme_redirect", "chat", "assets", "asset_status", "api"])
+@pytest.mark.parametrize("failure", [None, "old_home", "redirect", "host_redirect", "scheme_redirect", "chat", "pokedex", "assets", "asset_status", "api"])
 def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
     base = "https://www.example.com"
     asset = "/_next/static/app.js"
@@ -35,6 +35,9 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             marker = "전략 챗봇"
         if failure == "chat" and url == base + "/ko/chat":
             marker = "PokeSettle"
+        if "/pokedex/" in url:
+            marker = (f'<link rel="canonical" href="{url}"><h1>피카츄</h1><div data-testid="profile-details">종족값</div>'
+                      if failure != "pokedex" else '<script>피카츄 종족값</script>')
         html = marker + (f'<script src="{asset}"></script>' if failure != "assets" else "")
         final_url = base + "/ko/chat" if failure == "redirect" else url
         if failure == "host_redirect":
@@ -49,7 +52,7 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             check_production(base)
     else:
         check_production(base)
-        assert calls == [base + "/ko", base + "/ko/chat", base + asset, base + "/api/status"]
+        assert calls == [base + "/ko", base + "/ko/chat", base + "/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25", base + asset, base + "/api/status"]
 
 
 def test_public_smoke_rejects_plain_http():

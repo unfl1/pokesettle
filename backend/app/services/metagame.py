@@ -150,6 +150,8 @@ class MetagameService:
                 items.append({
                     "name_en": row["name_en"], "name_ko": pokemon.name_ko if pokemon else None,
                     "pokemon_id": pokemon.pokemon_id if pokemon else None,
+                    "names": pokemon.names if pokemon else {},
+                    "slugs": pokemon.slugs if pokemon else {},
                     "images": pokemon.images.model_dump(mode="json") if pokemon and pokemon.images else None,
                     "rank": row["rank"], "groups": groups,
                 })

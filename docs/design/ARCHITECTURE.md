@@ -265,3 +265,15 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 기준 자료·색인 사전 확인, 비RAG는 질문만 전달하고 RAG는 기존 LangGraph 생성/검증 사용
 - 실제 모델 호출은 `--live`로 선택, 실행 결과·검토자 유형·fingerprint로 검토 연결
 - [답변 비교 명령](../../backend/scripts/compare_answers.py) 참조
+
+
+### 공개 도감·메타 렌더링
+
+- 도감 목록·상세: Next.js 서버에서 내부 FastAPI 조회 후 최초 HTML에 이름·타입·종족값·설명·출처·목록 링크 포함
+- 경계: 본문은 Server Component, 검색·기술 필터·이미지 실패 처리만 Client Component, 전체 도감 URL 인덱스의 클라이언트 전송 제외
+- URL 인덱스: `data/pokemon_names.json` → 프론트 빌드 시 `scripts/generate-pokemon-routes.mjs` → `src/generated/pokemon-routes.json`, ID 집합·빈 slug·경로 중복 검증
+- 리다이렉트·없는 ID: 스트리밍 이전 proxy에서 308·404 확정, 상세 canonical·hreflang·OG URL·사이트맵은 동일 인덱스 사용
+- 캐시: 공개 조회는 `no-store`, React `cache`로 렌더 요청 내 중복 조회 축소, 메타는 기존 백엔드 신선도 정책 및 클라이언트 staleTime 유지
+- 실행 환경: Compose `API_ORIGIN=http://api:8000`, 서버 조회에 개인 세션 쿠키 전달 제외, 빌드 시 운영 API 접속 불필요
+- 상태 유지: 채팅·팀 Provider 유지, 공개 화면의 세션·상태·대화 조회 비활성화, 조건 검색 활성화 시 필요한 세션·상태만 조회
+- 공통 로딩 경계 제거: JavaScript 미사용 상태에서도 공개 본문을 바로 확인하도록 페이지 본문 flush 이전 데이터 조회 완료

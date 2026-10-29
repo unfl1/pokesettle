@@ -9,7 +9,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import { pretendard } from '../fonts';
 import { AppProviders } from '../../providers/AppProviders';
 import '../pretendard-subsets.css';
-import '../../styles.css';
+import '../../globals.css';
 
 export const metadata: Metadata = { metadataBase: new URL(siteUrl) };
 export function generateStaticParams() {

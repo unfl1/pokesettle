@@ -374,3 +374,14 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 6시간 서버 메모리 캐시, 갱신 실패 시 최대 24시간 경과 전 데이터와 `stale=true` 제공, 실패 재요청 60초 대기, 사용 가능한 캐시가 없으면 `503 META_UNAVAILABLE`
 - 클라이언트 영구 보관 방지를 위해 응답에 `Cache-Control: no-store` 설정, 원본 데이터 다운로드·히스토리 재배포 경로 미제공
 - LLM 설정·도감 적격성 판정·RAG 색인과 독립적으로 조회, [출처·이용 조건](../guides/DATA_SOURCES.md) 참조
+
+
+### 다국어 이름과 상세 URL
+
+- 일반 도감 응답: `nameKo`·`nameEn` 유지, `names`·`slugs`의 ko/en/ja/zh 추가
+- `GET /api/pokemon?q=…`: 한국어·영어·일본어·중국어 이름 검색 지원, 세션 불필요
+- 상세 응답: `nameSources`·`nameLicenceUrl`로 이름 원본·수집 시각·해시·이용 조건 제공
+- 웹 상세: `/{lang}/pokedex/{이름-slug}-{Pokémon 리소스 ID}`, 종 번호와 별도 폼 ID 구분
+- 기존 `?pokemon=pokemon:ID` 및 이전 이름 경로: ID 기준 최신 URL로 308 이동, 나머지 쿼리 유지
+- 없는 ID·중복 pokemon 쿼리: 404, API 장애는 조회 오류로 구분
+- 이름 누락: 확인된 번역만 `names`에 포함, 누락된 폼은 원본 영어 이름·slug 사용, 완전 번역으로 표시하지 않음

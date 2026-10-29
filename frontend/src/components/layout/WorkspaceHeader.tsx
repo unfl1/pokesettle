@@ -20,9 +20,9 @@ export default function WorkspaceHeader() {
   const pathname = withoutLocale(usePathname());
   const params = useSearchParams();
   const search = params.size ? `?${params.toString()}` : '';
-  const [pokedexSearch, setPokedexSearch] = useState('');
-  useEffect(() => { if (pathname === '/pokedex') setPokedexSearch(search); }, [pathname, search]);
-  const view = pathname.slice(1);
+  const [pokedexLocation, setPokedexLocation] = useState('/pokedex');
+  useEffect(() => { if (pathname.split('/')[1] === 'pokedex') setPokedexLocation(`${pathname}${search}`); }, [pathname, search]);
+  const view = pathname.split('/')[1];
   const [showHelp, setShowHelp] = useState(false);
   const w = useWorkspaceContext();
   const ready = Boolean(w.status.data?.ready);
@@ -35,7 +35,7 @@ export default function WorkspaceHeader() {
           </a>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
-              <Link prefetch={false} key={id} href={localizedPath(locale, id === 'pokedex' ? `${path}${pokedexSearch}` : path)} aria-current={view === id ? 'page' : undefined}>
+              <Link prefetch={false} key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>
                 <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
               </Link>
             ))}
@@ -59,7 +59,7 @@ export default function WorkspaceHeader() {
             <button aria-label={translate("이용 안내 닫기")} onClick={() => setShowHelp(false)}><X size={18} /></button>
           </section>
         )}
-        {(w.status.error || w.session.error) && (
+        {((view === 'chat' || view === 'scenario') && (w.status.error || w.session.error)) && (
           <div className="notice" role="alert">
             <CircleHelp size={18} /><span>{w.status.error?.message ?? w.session.error?.message}</span>
             <button onClick={w.refresh}>{translate("다시 연결")}</button>

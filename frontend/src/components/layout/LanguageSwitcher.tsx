@@ -14,7 +14,10 @@ export default function LanguageSwitcher() {
       const nextLocale = event.target.value;
       if (!isLocale(nextLocale)) return;
       const query = search.size ? `?${search.toString()}` : '';
-      router.push(`${localizedPath(nextLocale, withoutLocale(pathname))}${query}${window.location.hash}`);
+      const alternate = withoutLocale(pathname).startsWith('/pokedex/')
+        ? document.head.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${localeRegistry[nextLocale].htmlLang}"]`)?.href : null;
+      const path = alternate ? new URL(alternate).pathname : localizedPath(nextLocale, withoutLocale(pathname));
+      router.push(`${path}${query}${window.location.hash}`);
     }}>
       {locales.map(language => <option key={language} value={language} lang={localeRegistry[language].htmlLang}>{localeRegistry[language].label}</option>)}
     </select>

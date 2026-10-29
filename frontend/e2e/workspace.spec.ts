@@ -284,7 +284,7 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(1);
   await page.getByLabel('포켓몬 질문').fill('이어서 물어볼 초안');
   await page.getByRole('link', { name: '도감', exact: true }).click();
-  await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await page.getByRole('link', { name: '이상해씨 선택' }).click();
   await expect(page.getByRole('region', { name: '전략 대화' })).toBeHidden();
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
@@ -300,7 +300,7 @@ test('도감 선택과 독립된 대화·초안 유지, 초기화와 기존 기�
   await page.getByRole('navigation', { name: '대화 기록 선택' }).getByRole('button', { name: '피카츄 타입', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await page.getByRole('link', { name: '도감', exact: true }).click();
-  await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await page.getByRole('link', { name: '피카츄 선택' }).click();
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.locator('[data-testid="user-message"] p')).toHaveText('피카츄 타입');
   await page.reload();
@@ -330,8 +330,8 @@ test('도감 가이드 버튼 제거와 자연어 검색의 명확화·빈 결�
   ).toBeVisible();
   await input.fill('전기 타입 스피드 90 이상');
   await search.click();
-  await expect(page.getByRole('button', { name: '피카츄 선택' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '이상해씨 선택' })).toHaveCount(
+  await expect(page.getByRole('link', { name: '피카츄 선택' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '이상해씨 선택' })).toHaveCount(
     0,
   );
 });
@@ -411,9 +411,9 @@ test('모바일 상단 메뉴로 챗봇과 도감을 분리하고 선택 URL 유
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
   await expect(page.getByRole('region', { name: '전략 대화' })).toBeHidden();
-  await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await page.getByRole('link', { name: '이상해씨 선택' }).click();
   await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/pokedex\?pokemon=pokemon%3A1/);
+  await expect(page).toHaveURL(/pokedex\/.*-1/);
   await page.reload();
   await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
@@ -484,14 +484,14 @@ test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', 
   await page.goto('/pokedex');
   await page.getByRole('button', { name: '더 보기 (100 / 205)' }).click();
   await expect(
-    page.getByRole('button', { name: '전체테스트200 선택', exact: true }),
+    page.getByRole('link', { name: '전체테스트200 선택', exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: '더 보기 (200 / 205)' }).click();
   await page
-    .getByRole('button', { name: '전체테스트205 선택', exact: true })
+    .getByRole('link', { name: '전체테스트205 선택', exact: true })
     .click();
   await expect(
-    page.getByRole('heading', { name: '전체테스트205', exact: true }),
+    page.getByRole('heading', { name: '쏘콘', exact: true }),
   ).toBeVisible();
   await page
     .getByRole('button', { name: '조건으로 찾기', exact: true })
@@ -501,15 +501,16 @@ test('100개 이후 목록과 조건 검색 결과도 불러와 대화 연결', 
   await page.getByRole('button', { name: '더 보기 (100 / 205)' }).click();
   await page.getByRole('button', { name: '더 보기 (200 / 205)' }).click();
   await expect(
-    page.getByRole('button', { name: '전체테스트205 선택', exact: true }),
+    page.getByRole('link', { name: '전체테스트205 선택', exact: true }),
   ).toBeVisible();
 });
 
 for (const missingSprite of [false, true])
   test(`이미지 실패 대체 처리: sprite missing=${missingSprite}`, async ({
-    page,
+    page, request,
   }) => {
     await fixture(page);
+    await request.post('http://127.0.0.1:' + (process.env.FIXTURE_API_PORT ?? '5198') + '/__fixture', { data: { images: true } });
     const root =
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
     await page.route('**/api/pokemon/pokemon%3A25', (route) =>
@@ -564,6 +565,7 @@ for (const missingSprite of [false, true])
     await expect(
       page.getByRole('link', { name: '이미지 출처: PokéAPI sprites' }),
     ).toHaveAttribute('href', 'https://github.com/PokeAPI/sprites');
+    await request.post('http://127.0.0.1:' + (process.env.FIXTURE_API_PORT ?? '5198') + '/__fixture', { data: { images: false } });
   });
 
 test('상단 메뉴와 독립 화면의 반응형 레이아웃 유지', async ({ page }) => {
@@ -597,9 +599,9 @@ test('선택·호버·키보드 포커스와 모션 감소 스타일 유지', as
     }),
   );
   await page.goto('/pokedex');
-  const selected = page.getByRole('button', { name: '피카츄 선택' });
-  const other = page.getByRole('button', { name: '이상해씨 선택' });
-  await expect(selected).toHaveAttribute('aria-pressed', 'true');
+  const selected = page.getByRole('link', { name: '피카츄 선택' });
+  const other = page.getByRole('link', { name: '이상해씨 선택' });
+  await expect(selected).toHaveAttribute('aria-current', 'page');
   await selected.hover();
   await expect(selected).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await other.hover();
@@ -663,7 +665,7 @@ test('대화 응답의 전투 상태·타입 변경 가정 표시와 기록 복�
   await expect(page.getByText('lightning-rod', { exact: true })).toBeVisible();
   await expect(page.getByTestId('pokemon-learnset')).toContainText('10만볼트');
   await expect(page.getByTestId('pokemon-learnset')).toContainText('트레이닝');
-  await page.getByRole('button', { name: '이상해씨 선택' }).click();
+  await page.getByRole('link', { name: '이상해씨 선택' }).click();
   await expect(page.getByText('이상해씨 도감 설명', { exact: true })).toBeVisible();
   await expect(page.locator('[data-testid="user-message"]')).toHaveCount(0);
 });
@@ -678,10 +680,10 @@ test('습득 기술을 타입별 카드로 표시하고 습득 방법으로 필�
   await expect(electric).toContainText('명중 100%');
   await expect(electric).toContainText('특수');
   await expect(normal).toContainText('울음소리');
-  await page.getByLabel('기술 타입 필터').selectOption('electric');
+  await page.getByRole('region', { name: '선택한 포켓몬 정보' }).getByLabel('기술 타입 필터').selectOption('electric');
   await expect(normal).toHaveCount(0);
   await expect(electric).toContainText('10만볼트');
-  await page.getByLabel('기술 타입 필터').selectOption('all');
+  await page.getByRole('region', { name: '선택한 포켓몬 정보' }).getByLabel('기술 타입 필터').selectOption('all');
   await page.getByRole('button', { name: '트레이닝', exact: true }).click();
   await expect(normal).toHaveCount(0);
   await expect(electric).toContainText('10만볼트');
@@ -712,14 +714,16 @@ test('챗봇 진입은 도감을 요청하지 않고 메뉴·뒤로 가기로 �
   await expect(page.getByRole('heading', { name: '전략 챗봇' })).toBeVisible();
   expect(catalogRequests).toHaveLength(0);
   await page.getByRole('link', { name: '도감', exact: true }).click();
-  await page.getByRole('button', { name: '이상해씨 선택' }).click();
-  await page.getByRole('button', { name: '피카츄 선택' }).click();
+  await page.getByRole('link', { name: '이상해씨 선택' }).click();
+  await expect(page).toHaveURL(/pokedex\/.*-1$/);
+  await page.getByRole('link', { name: '피카츄 선택' }).click();
+  await expect(page).toHaveURL(/pokedex\/.*-25$/);
   await page.goBack();
   await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.getByRole('heading', { name: '이상해씨', exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/pokemon=pokemon%3A1/);
+  await expect(page).toHaveURL(/pokedex\/.*-1/);
 });
 
 test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', async ({ page, request }) => {
