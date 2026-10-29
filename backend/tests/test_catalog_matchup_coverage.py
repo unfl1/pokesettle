@@ -117,7 +117,7 @@ def test_chat_pipeline_crosses_all_generations_and_overrides_stale_model_opponen
 @pytest.mark.parametrize("own,enemy,expected", [
     (445, 823, ["교체하는 쪽을 추천", "땅 공격은 통하지 않아요", "드래곤 공격은 0.5배로 반감"]),
     (823, 445, ["공격하는 쪽을 추천", "반감되지"]),
-    (908, 445, ["풀 타입 기술로 공격", "반감되지"]),
+    (908, 445, ["풀 타입 기술이 있다면 공격", "반감되지"]),
     (25, 635, ["교체하는 쪽을 추천", "전기 공격은 0.5배로 반감"]),
 ])
 def test_action_first_coaching_includes_resisted_and_immune_attacks(catalog, own, enemy, expected):
@@ -129,8 +129,9 @@ def test_action_first_coaching_includes_resisted_and_immune_attacks(catalog, own
     for fragment in expected:
         assert fragment in text
     assert "보유 기술과 교체 후보를 함께 비교해야" not in text
-    assert answer.claims[-1].text.startswith("다만,\n")
-    assert "실제로 있다는 가정" in text
+    assert "다만,\n" not in text
+    if "공격하는 쪽을 추천" in answer.claims[0].text:
+        assert "타입 기술이 있다면" in answer.claims[0].text
 
 
 def test_explicit_coverage_move_replaces_conditional_switch_recommendation(catalog):

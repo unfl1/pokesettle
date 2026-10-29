@@ -49,7 +49,7 @@ def test_every_ordered_catalog_pair_has_action_reason_and_cautions():
         first = answer.claims[0].text
         assert "공격" in first or "교체" in first
         assert "보유 기술과 교체 후보를 함께 비교해야" not in first
-        assert answer.claims[-1].text.startswith("다만,\n")
+        assert all("다만,\n" not in claim.text for claim in answer.claims)
         assert all(c.evidence_ids == [EVIDENCE[0]["evidence_id"]] for c in answer.claims)
         assert context["probability"] is None
         best = max(a["multiplier"] for a in context["attacks"])
@@ -97,6 +97,6 @@ def test_every_catalog_entry_participates_in_six_vs_six_on_both_sides():
             answer = coach_fallback(context, EVIDENCE)
             assert "조합을 추천" in answer.claims[0].text
             assert "선봉으로는" in answer.claims[0].text
-            assert answer.claims[-1].text.startswith("다만,\n")
+            assert all("다만,\n" not in claim.text for claim in answer.claims)
             checked += 1
     print(f"FULL_SELECTION catalog={len(catalog.items)} six_vs_six_scenarios={checked}")
