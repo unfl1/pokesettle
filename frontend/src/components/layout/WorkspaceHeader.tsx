@@ -6,13 +6,14 @@ import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Swords, TrendingUp, X } from 'lucide-react';
+import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, TrendingUp, X } from 'lucide-react';
 import { useWorkspaceContext } from '../../providers/AppProviders';
 
 const navigation = [
   { id: 'chat', path: '/chat', label: '챗봇', icon: MessageSquare },
   { id: 'pokedex', path: '/pokedex', label: '도감', icon: BookOpen },
   { id: 'meta', path: '/meta', label: '메타 순위', icon: TrendingUp },
+  { id: 'pobti', path: '/pobti', label: '포BTI', icon: Sparkles },
   { id: 'scenario', path: '/scenario', label: '6:6 시나리오', icon: Swords },
 ] as const;
 export default function WorkspaceHeader() {

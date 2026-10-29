@@ -215,3 +215,10 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 수집 이력: 2026-10-29 갱신, 기존 캐시의 2026-10-21·22 수집본 포함. 테이블별 원본 URL·수집일·해시·라이선스는 `localization.sources`·`licence_url`에 보존함
 - 갱신: `python -m backend.scripts.prepare_catalog_details --localization-only`, 기존 수치·습득 기술·한국어 호환 필드 유지함
 - 권리 범위: 기존 PokéAPI 라이선스와 원권리자 권리 안내 유지, 번역 데이터 추가를 Champions 적격성·효과 검증이나 이미지 이용 허가로 해석하지 않음
+
+### 포BTI 결과 이미지 (2026-10-29)
+
+- 출처: 기존 도감과 같은 [PokéAPI sprites](https://github.com/PokeAPI/sprites), [권리 표기](https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt) 재사용함
+- 연결: 기존 도감 라우트 데이터의 기본 포켓몬 ID로 16개 결과 이미지를 연결함
+- 표시: 공식 일러스트 URL 우선, 실패 시 기본 스프라이트와 대체 아이콘 순으로 표시함
+- 권리: Pokémon © The Pokémon Company 표기, 원본 이미지 파일 Git 추가 없음

@@ -7,7 +7,7 @@ export const localeRegistry = {
 export type Locale = keyof typeof localeRegistry;
 export const locales = Object.keys(localeRegistry) as Locale[];
 export const defaultLocale: Locale = 'ko';
-export const featurePaths = ['', '/chat', '/pokedex', '/meta', '/scenario'] as const;
+export const featurePaths = ['', '/chat', '/pokedex', '/meta', '/scenario', '/pobti'] as const;
 export function isLocale(value: string): value is Locale {
   return Object.hasOwn(localeRegistry, value);
 }

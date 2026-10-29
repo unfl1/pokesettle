@@ -71,7 +71,7 @@ test('language switch retains the feature, query, and fragment', async ({ page }
 });
 
 test('legacy URLs redirect once; unsupported locales and unknown paths return 404', async ({ request }) => {
-  for (const path of ['/', '/chat', '/pokedex?pokemon=pokemon%3A25', '/meta', '/scenario']) {
+  for (const path of ['/', '/chat', '/pokedex?pokemon=pokemon%3A25', '/meta', '/scenario', '/pobti']) {
     const response = await request.get(path, { maxRedirects: 0 });
     expect(response.status()).toBe(308);
     const destination = new URL(response.headers().location, response.url());
@@ -86,7 +86,7 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
-  expect(xml.match(/<loc>/g)).toHaveLength(5424);
+  expect(xml.match(/<loc>/g)).toHaveLength(5428);
   for (const language of languages) {
     expect(xml).toContain(`<loc>https://www.pokesettle.com/${language.code}/scenario</loc>`);
     expect(xml).toContain(`hreflang="${language.html}"`);

@@ -6,12 +6,13 @@ import { pageMetadata } from '../../../i18n/metadata';
 import { getI18n } from '../../../i18n/server';
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
-import { ArrowRight, BookOpen, MessageSquare, Swords, TrendingUp } from 'lucide-react';
+import { ArrowRight, BookOpen, MessageSquare, Sparkles, Swords, TrendingUp } from 'lucide-react';
 
 const menus = [
   { href: '/chat', title: '챗봇', description: '이 상황에서는 어떻게 할까? 근거와 함께 물어보세요.', action: '질문하기', color: 'red', icon: MessageSquare },
   { href: '/pokedex', title: '도감', description: '타입부터 특성, 기술까지. 포켓몬을 더 알아보세요.', action: '찾아보기', color: 'yellow', icon: BookOpen },
   { href: '/meta', title: '메타 순위', description: '랭크 배틀에서 주목할 포켓몬을 살펴보세요.', action: '살펴보기', color: 'green', icon: TrendingUp },
+  { href: '/pobti', title: '포BTI', description: '모험 속 12가지 선택으로 나의 성향과 어울리는 포켓몬을 만나 보세요.', action: '시작하기', color: 'purple', icon: Sparkles },
   { href: '/scenario', title: '6:6 시나리오', description: '내 팀과 상대 팀을 구성하고 비교해 보세요.', action: '비교하기', color: 'blue', icon: Swords },
 ] as const;
 
