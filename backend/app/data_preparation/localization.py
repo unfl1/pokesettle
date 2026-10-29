@@ -42,3 +42,45 @@ def localized_routes(records, tables):
     if len({r["pokemon_id"] for r in result}) != len(result):
         raise ValueError("Duplicate localized resource IDs")
     return result
+
+
+REFERENCE_TABLES = [
+    "languages", "abilities", "ability_names", "moves", "move_names",
+    "items", "item_names", "natures", "nature_names",
+    "pokemon_species_flavor_text", "versions",
+]
+
+
+def localized_reference(tables):
+    """Preserve upstream labels and per-language flavor-text versions, never translate."""
+    languages = {r["identifier"]: r["id"] for r in tables["languages"]}
+    locales = {languages[language]: locale for locale, language in LOCALE_LANGUAGES.items()}
+    result = {}
+    for category, entities, labels, foreign_key in [
+        ("ability", "abilities", "ability_names", "ability_id"),
+        ("move", "moves", "move_names", "move_id"),
+        ("held_item", "items", "item_names", "item_id"),
+        ("stat_alignment", "natures", "nature_names", "nature_id"),
+    ]:
+        identifiers = {r["id"]: r["identifier"] for r in tables[entities]}
+        names = {}
+        for row in tables[labels]:
+            locale = locales.get(row["local_language_id"])
+            if locale and row["name"] and row[foreign_key] in identifiers:
+                names.setdefault(identifiers[row[foreign_key]], {})[locale] = row["name"]
+        result[category] = names
+    versions = {r["id"]: r["identifier"] for r in tables["versions"]}
+    descriptions = {}
+    latest = {}
+    for row in tables["pokemon_species_flavor_text"]:
+        locale = locales.get(row["language_id"])
+        key = (row["species_id"], locale)
+        version = int(row["version_id"])
+        if locale and row["flavor_text"].strip() and version > latest.get(key, -1):
+            latest[key] = version
+            descriptions.setdefault(row["species_id"], {})[locale] = {
+                "text": " ".join(row["flavor_text"].split()),
+                "version": versions[row["version_id"]],
+            }
+    result["descriptions"] = descriptions
+    return result

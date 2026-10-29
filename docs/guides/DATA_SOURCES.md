@@ -204,3 +204,14 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 누락 처리: 자동 번역·새 폼명 생성 제외, 영어 리소스명 fallback과 원문 언어 안내, 종족값·기술·Champions 적격성 변경 없음
 - 권리 범위: 기존 PokéAPI 이용 조건과 원권리자 권리 안내 유지, 이름 자료 추가를 이미지·게임 설명 재배포 허가로 해석하지 않음
 - 갱신: 기존 `backend.scripts.prepare_data` 파이프라인에서 동일 CSV 원본·수집 이력과 이름 스냅샷 동시 생성
+
+### 화면 표시용 다국어 기술·특성·설명
+
+- `data/catalog_details.json`의 `localization`에 한국어·영어·일본어·중국어 간체 이름과 언어별 도감 설명 보존함
+- 출처: 기존 [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv)의 `languages`, `abilities`, `ability_names`, `moves`, `move_names`, `items`, `item_names`, `natures`, `nature_names`, `pokemon_species_flavor_text`, `versions`
+- 이름은 원본 리소스 ID와 언어 ID로 연결함. 누락 번역은 생성하지 않으며, 표시 시 영어 원문으로 대체함
+- 설명은 언어별 가장 최근 원본 버전과 문장을 함께 보존함. 언어마다 기준 게임이 다를 수 있으며, 해당 언어 자료가 없으면 수집된 영어·한국어 원문과 안내 표시함
+- 설명 범위: 종 1,025개 중 한국어 898개·영어 1,025개·일본어 898개·중국어 간체 722개, 폼별 독립 설명으로 해석하지 않음
+- 수집 이력: 2026-10-29 갱신, 기존 캐시의 2026-10-21·22 수집본 포함. 테이블별 원본 URL·수집일·해시·라이선스는 `localization.sources`·`licence_url`에 보존함
+- 갱신: `python -m backend.scripts.prepare_catalog_details --localization-only`, 기존 수치·습득 기술·한국어 호환 필드 유지함
+- 권리 범위: 기존 PokéAPI 라이선스와 원권리자 권리 안내 유지, 번역 데이터 추가를 Champions 적격성·효과 검증이나 이미지 이용 허가로 해석하지 않음

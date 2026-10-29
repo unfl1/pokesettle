@@ -1,7 +1,7 @@
 "use client";
 import { useI18n } from '../../i18n/I18nProvider';
 
-import { pokemonPath } from '../pokemon/routing';
+import { pokemonPath, pokemonName, referenceName } from '../pokemon/routing';
 import { localeRegistry } from '../../i18n/config';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { request } from '../../lib/apiClient';
 import PokemonImage from '../pokemon/components/PokemonImage';
 import type { PokemonImages, PokemonSummary } from '../pokemon/types';
 
-type Entry = { name: string; nameKo: string | null; rank: number; percentage: number | null };
+type Entry = { names?: PokemonSummary['names']; name: string; nameKo: string | null; rank: number; percentage: number | null };
 type MetaPokemon = {
   nameEn: string; nameKo: string | null; pokemonId: string | null; rank: number;
   images: PokemonImages | null; names?: PokemonSummary['names']; slugs?: PokemonSummary['slugs'];
@@ -74,7 +74,7 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
               <button aria-pressed={pokemon.nameEn === item.nameEn} onClick={() => setSelected(item.nameEn)} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-pressed:bg-accent/8 aria-pressed:text-accent">
                 <span className="w-8 shrink-0 text-[14px] tabular-nums">{translate('순위 {rank}', { rank: item.rank })}</span>
                 <PokemonImage pokemon={item} size="small" />
-                <span className="min-w-0 break-words text-[14px]">{item.nameKo ?? item.nameEn}<small className="block text-[14px] text-muted">{item.nameEn}</small></span>
+                <span className="min-w-0 break-words text-[14px]">{pokemonName({ ...item, pokemonId: item.pokemonId ?? item.nameEn }, locale)}<small className="block text-[14px] text-muted">{item.nameEn}</small></span>
               </button>
             </li>)}
           </ol>
@@ -83,7 +83,7 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <PokemonImage key={pokemon.nameEn} pokemon={pokemon} size="large" />
-              <h2 className="min-w-0 break-words text-lg font-semibold">{pokemon.nameKo ?? pokemon.nameEn} <span className="text-[14px] text-muted">{translate('순위 {rank}', { rank: pokemon.rank })}</span></h2>
+              <h2 className="min-w-0 break-words text-lg font-semibold">{pokemonName({ ...pokemon, pokemonId: pokemon.pokemonId ?? pokemon.nameEn }, locale)} <span className="text-[14px] text-muted">{translate('순위 {rank}', { rank: pokemon.rank })}</span></h2>
             </div>
             {pokemon.pokemonId && <Link prefetch={false} className="text-[14px] text-accent" href={pokemonPath({ pokemonId: pokemon.pokemonId, nameKo: pokemon.nameKo, nameEn: pokemon.nameEn, names: pokemon.names, slugs: pokemon.slugs }, locale)}>{translate("도감 보기 →")}</Link>}
           </div>
@@ -93,7 +93,7 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
               <h3 className="mb-2 font-semibold text-[14px]">{translate(labels[group.category] ?? group.category)} <span className="font-normal text-[14px] text-muted">{translate("채용률")}</span></h3>
               {!group.items.length ? <p className="text-[14px] text-muted">{translate("제공된 정보 없음")}</p> : <ul className="space-y-2">
                 {group.items.map(entry => <li key={`${entry.rank}-${entry.name}`} className="flex items-center justify-between gap-3 rounded-md bg-canvas p-2 text-[14px]">
-                  <span className="min-w-0 break-words">{entry.nameKo ?? entry.name}</span>
+                  <span className="min-w-0 break-words">{referenceName(entry, locale)}</span>
                   <span className="shrink-0 tabular-nums text-muted">{entry.percentage === null ? translate("미제공") : `${entry.percentage}%`}</span>
                 </li>)}
               </ul>}

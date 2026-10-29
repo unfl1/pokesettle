@@ -1,3 +1,4 @@
+import { useI18n } from '../../../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import type { TeamMember } from '../types';
 
@@ -17,9 +18,10 @@ export interface TeamDraftState {
 }
 
 export function useTeamDraft(initial?: TeamDraftState) {
+  const { t } = useI18n();
   const [own, setOwn] = useState<TeamMember[]>(initial?.own ?? []),
     [opponent, setOpponent] = useState<TeamMember[]>(initial?.opponent ?? []);
-  const [name, setName] = useState(initial?.name ?? '내 팀'),
+  const [name, setName] = useState(initial?.name ?? t('내 팀')),
     [selectedId, setSelectedId] = useState(initial?.selectedId ?? '');
   const [notice, setNotice] = useState(initial?.notice ?? ''),
     [tab, setTab] = useState<'team' | 'battle' | 'damage'>(initial?.tab ?? 'team');

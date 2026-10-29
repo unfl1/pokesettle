@@ -386,3 +386,10 @@ Phase 0에서는 문서만 점검함. Phase 1·2 실행 검증과 남은 한계�
 - 기존 `?pokemon=pokemon:ID` 및 이전 이름 경로: ID 기준 최신 URL로 308 이동, 나머지 쿼리 유지
 - 없는 ID·중복 pokemon 쿼리: 404, API 장애는 조회 오류로 구분
 - 이름 누락: 확인된 번역만 `names`에 포함, 누락된 폼은 원본 영어 이름·slug 사용, 완전 번역으로 표시하지 않음
+
+### 다국어 표시 데이터
+
+- 도감 상세의 `abilityDetails[].names`, `learnset.moves[].names`에 `ko/en/ja/zh` 이름 맵 추가함. 기존 `name`·`nameKo` 유지, 습득 기술에 원본 식별자 `nameEn` 추가함
+- `descriptions`는 언어별 `{text, version}` 반환, `localizationSources`·`localizationLicenceUrl`로 원본 URL·수집일·해시·이용 조건 제공함. 기존 `description`·`descriptionVersion` 유지함
+- 메타 세팅의 `groups[].items[].names`와 피해 계산 기술 목록의 `items[].names`에 동일 언어 이름 제공함. 공급자 이름·계산 요청 식별자 유지함
+- 번역 누락 시 영어 이름·수집 원문을 사용하며, 모델로 공식 명칭이나 설명 생성하지 않음

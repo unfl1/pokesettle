@@ -20,7 +20,7 @@ export default function SelectionRecommendation({ plan, label, pokemon, onApply,
     <h2 className="text-base font-semibold">{translate("추천 3마리와 선봉")}</h2>
     <p className="mt-2 font-medium text-accent">{names(plan.pokemonIds)}</p>
     <p className="mt-2 text-[14px]">{translate("선봉 추천:")} <strong>{label(plan.leadId)}</strong></p>
-    <p className="mt-1 text-[14px] text-muted">{plan.leadReason}</p>
+    <p className="mt-1 text-[14px] text-muted">{translate(plan.leadReason)}</p>
     <div className="mt-4 grid gap-3 tablet:grid-cols-3">
       {plan.members.map(m => <div key={m.pokemonId} className="rounded-lg border border-line bg-surface p-3 text-[14px] leading-6">
         <div className="mb-2 flex items-center gap-2">

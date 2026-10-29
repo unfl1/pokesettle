@@ -3,6 +3,7 @@
 import { useI18n } from '../../../i18n/I18nProvider';
 
 import Image from 'next/image';
+import { pokemonName } from '../routing';
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import type { PokemonSummary } from '../types';
@@ -30,15 +31,15 @@ export default function PokemonImage({
   pokemon,
   size,
 }: {
-  pokemon: Pick<PokemonSummary, 'nameKo' | 'nameEn' | 'images'>;
+  pokemon: Pick<PokemonSummary, 'nameKo' | 'nameEn' | 'images' | 'names'>;
   size: 'small' | 'large';
 }) {
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const [failed, setFailed] = useState<string[]>([]);
   const source = [pokemon.images?.spriteUrl]
     .map(safeImage)
     .find((url) => url && !failed.includes(url));
-  const name = pokemon.nameKo ?? pokemon.nameEn;
+  const name = pokemonName({ ...pokemon, pokemonId: pokemon.nameEn }, locale);
   return source ? (
     <Image
       className={`object-contain shrink-0 ${imageSizes[size]}`}

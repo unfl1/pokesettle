@@ -138,13 +138,19 @@ class MetagameService:
                     for category in ("held_item", "stat_alignment")
                 },
             }
+            localized = {
+                category: {name_key(key): value for key, value in entries.items()}
+                for category, entries in catalog.details.get("localization", {}).items()
+                if category in CATEGORIES
+            }
             items = []
             for row in data["items"][:limit]:
                 pokemon = names.get(name_key(row["name_en"]))
                 groups = []
                 for category, entries in row["sets"].items():
                     groups.append({"category": category, "items": [
-                        {**entry, "name_ko": translations.get(category, {}).get(name_key(entry["name"]))}
+                        {**entry, "name_ko": translations.get(category, {}).get(name_key(entry["name"])),
+                         "names": localized.get(category, {}).get(name_key(entry["name"]), {})}
                         for entry in entries
                     ]})
                 items.append({

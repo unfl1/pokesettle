@@ -1,3 +1,4 @@
+import { pokemonName } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -25,7 +26,7 @@ function MemberCard({
   onRemove: () => void;
 }) {
   const typeLabels = useTypeLabels();
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const detail = useQuery({
     queryKey: ['team-pokemon', member.pokemonId],
     queryFn: () => pokemonApi.detail(member.pokemonId),
@@ -38,7 +39,7 @@ function MemberCard({
         <span className="text-[14px] text-muted">{index + 1}</span>
         {p && <PokemonImage pokemon={p} size="small" />}
         <strong className="min-w-0 flex-1 text-[14px] font-medium wrap-anywhere">
-          {p?.nameKo ?? p?.nameEn ?? member.pokemonId}
+          {p ? pokemonName(p, locale) : member.pokemonId}
         </strong>
         {p?.types.map((t) => (
           <TypeBadge type={t} key={t} />
@@ -211,7 +212,7 @@ export default function TeamEditor({
   members: TeamMember[];
   onChange: (value: TeamMember[]) => void;
 }) {
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
@@ -313,7 +314,7 @@ export default function TeamEditor({
                 }}
               >
                 <PokemonImage pokemon={p} size="small" />
-                {p.nameKo ?? p.nameEn}
+                {pokemonName(p, locale)}
                 <span className="ml-auto flex gap-1">
                   {p.types.map((t) => (
                     <TypeBadge key={t} type={t} />

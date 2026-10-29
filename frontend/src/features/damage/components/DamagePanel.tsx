@@ -1,3 +1,4 @@
+import { referenceName } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -42,7 +43,7 @@ function MemberInput({ title, members, value, onChange, label }: {
       </select>
     </label>
     <label className="mt-3 flex flex-col gap-1 text-[14px]">{title}  {translate("성향")} <select className={control} value={value.alignment} onChange={(e) => onChange({ ...value, alignment: e.target.value })}>
-        {alignments.map((name) => <option key={name}>{name}</option>)}
+        {alignments.map((name) => <option key={name} value={name}>{translate(name)}</option>)}
       </select>
     </label>
     <p className="mt-3 text-[14px]">{translate("Champions 능력 포인트 (SP) · 합계")} {total} / 66</p>
@@ -62,7 +63,7 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
   own: TeamMember[]; opponent: TeamMember[]; label: (id: string) => string; sessionReady: boolean;
 }) {
   const typeLabels = useTypeLabels();
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
   const [attacker, setAttacker] = useState(initial);
   const [defender, setDefender] = useState(initial);
   const [move, setMove] = useState('');
@@ -79,7 +80,7 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
   const filteredMoves = options.data?.items.filter(m =>
     (moveType === 'all' || m.type === moveType) &&
     (moveMethod === 'all' || m.methods.includes(moveMethod)) &&
-    `${m.nameKo ?? ''} ${m.name}`.toLowerCase().includes(moveSearch.toLowerCase())
+    `${referenceName(m, locale)} ${m.nameKo ?? ''} ${m.name}`.toLowerCase().includes(moveSearch.toLowerCase())
   ) ?? [];
   const selectedMove = filteredMoves.find(m => m.name === move && m.supported);
   const [neutral, setNeutral] = useState(false);
@@ -126,11 +127,11 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
       </div>
       <label className="mt-3 flex flex-col gap-1 text-[14px]">{translate("계산 기술")} <select aria-label={translate("계산 기술")} className={control} value={filteredMoves.some(m => m.name === move) ? move : ''} disabled={!options.data?.items.length || options.isFetching} onChange={e => setMove(e.target.value)}>
           <option value="">{translate("기술을 선택하세요")}</option>
-          {[...new Set(filteredMoves.map(m => m.type ?? 'unknown'))].map(t => <optgroup key={t} label={typeLabels[t] ?? translate("타입 미확인")}>{filteredMoves.filter(m => (m.type ?? 'unknown') === t).map(m => <option key={m.name} value={m.name} disabled={!m.supported}>{m.nameKo ?? m.name} · {m.name} · {m.supported ? translate('위력 {power} / 명중 {accuracy}', { power: m.power ?? '—', accuracy: m.accuracy ?? '—' }) : translate('미지원: {reason}', { reason: m.unsupportedReason ?? '' })}</option>)}</optgroup>)}
+          {[...new Set(filteredMoves.map(m => m.type ?? 'unknown'))].map(t => <optgroup key={t} label={typeLabels[t] ?? translate("타입 미확인")}>{filteredMoves.filter(m => (m.type ?? 'unknown') === t).map(m => <option key={m.name} value={m.name} disabled={!m.supported}>{referenceName(m, locale)} · {m.name} · {m.supported ? translate('위력 {power} / 명중 {accuracy}', { power: m.power ?? '—', accuracy: m.accuracy ?? '—' }) : translate('미지원: {reason}', { reason: translate(m.unsupportedReason ?? '') })}</option>)}</optgroup>)}
         </select>
       </label>
       {options.data && !filteredMoves.length && <p className="mt-2 text-[14px] text-muted">{translate("조건에 맞는 기술이 없습니다.")}</p>}
-      {selectedMove && <div className="mt-3 flex flex-wrap items-center gap-2 text-[14px]"><TypeBadge type={selectedMove.type ?? 'unknown'} /><span>{selectedMove.nameKo ?? selectedMove.name} · {selectedMove.category === 'physical' ? translate("물리") : translate("특수")}  {translate("· 위력")} {selectedMove.power ?? '—'}  {translate("· 명중")} {selectedMove.accuracy ?? '—'}</span></div>}
+      {selectedMove && <div className="mt-3 flex flex-wrap items-center gap-2 text-[14px]"><TypeBadge type={selectedMove.type ?? 'unknown'} /><span>{referenceName(selectedMove, locale)} · {selectedMove.category === 'physical' ? translate("물리") : translate("특수")}  {translate("· 위력")} {selectedMove.power ?? '—'}  {translate("· 명중")} {selectedMove.accuracy ?? '—'}</span></div>}
     </div>
     <label className="my-3 flex flex-col gap-1 text-[14px]">{translate("방어자 남은 HP (실수치)")} <input aria-label={translate("방어자 남은 HP (실수치)")} className={control} type="number" min={1} step={1} value={currentHp}
         placeholder={translate("비우면 최대 HP 가정")} onChange={(e) => setCurrentHp(e.target.value)} />
@@ -143,10 +144,10 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
     <button className={action} disabled={!valid || result.busy} onClick={result.run}>{translate("참조 피해 계산")}</button>
     {!sessionReady && <p className="mt-2 text-[14px]">{translate("세션 연결 후 계산할 수 있습니다.")}</p>}
     {result.busy && <p role="status" className="mt-3 text-[14px] text-accent">{translate("참조 피해 계산 중…")}</p>}
-    {result.error && <p role="alert" className="mt-3 text-[14px] text-warning">{result.error.message}  {translate("입력 또는 계산기 연결을 확인하고 다시 시도하세요.")}</p>}
+    {result.error && <p role="alert" className="mt-3 text-[14px] text-warning">{translate(result.error.message)}  {translate("입력 또는 계산기 연결을 확인하고 다시 시도하세요.")}</p>}
     {damage && result.data && <div className="mt-4 border-t border-line pt-3 text-[14px] leading-[1.9]">
       <h3 className="text-[14px] text-accent">{translate("참조 피해 범위:")} {damage.minimum}–{damage.maximum} HP</h3>
-      <p>{translate("방어자 최대 HP:")} {damage.defenderStats.hp} · {damage.move.name}  {translate("· 위력")} {damage.move.power}</p>
+      <p>{translate("방어자 최대 HP:")} {damage.defenderStats.hp} · {selectedMove ? referenceName(selectedMove, locale) : damage.move.name}  {translate("· 위력")} {damage.move.power}</p>
       {result.data.calculation.conditionalKo && <div className="my-2" aria-label={translate("조건부 KO 결과")}>
         <p>{translate("단일 타격 KO 조건 충족:")} {translate('{qualifying} / {total}개 피해 후보', { qualifying: result.data.calculation.conditionalKo.qualifyingRolls, total: result.data.calculation.conditionalKo.totalRolls })}</p>
         <p>{translate("기준 HP:")} {result.data.calculation.conditionalKo.currentHp} / {result.data.calculation.conditionalKo.maximumHp}
@@ -157,7 +158,7 @@ export default function DamagePanel({ own, opponent, label, sessionReady }: {
       <details className="mt-2"><summary className="cursor-pointer">{translate("피해 후보 16개·계산 가정·출처")}</summary>
         <p className="mt-2 wrap-anywhere">{translate("피해 후보:")} {damage.rolls.join(', ')}</p>
         <p>{result.data.engine.name} {result.data.engine.version}  {translate("· 레벨")} {result.data.engine.level}</p>
-        <ul className="list-disc pl-4">{[...result.data.assumptions, ...result.data.unknowns].map((s) => <li key={s}>{s}</li>)}</ul>
+        <ul className="list-disc pl-4">{[...result.data.assumptions, ...result.data.unknowns].map((s) => <li key={s}>{translate(s)}</li>)}</ul>
         {result.data.citations.map((c) => <p key={c.sourceUrl}><a className="text-link underline" href={c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined} target="_blank" rel="noreferrer">{c.title}</a> · {c.version}</p>)}
       </details>
     </div>}
