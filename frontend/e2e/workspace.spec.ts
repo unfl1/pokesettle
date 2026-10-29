@@ -766,7 +766,7 @@ test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', asyn
   expect(hydrationErrors).toEqual([]);
 });
 
-test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음', async ({ page }) => {
+test('홈의 다섯 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음', async ({ page }) => {
   await fixture(page);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -779,8 +779,8 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
   await expect(page.getByRole('contentinfo', { name: '저작권 및 운영 안내' })).toBeVisible();
   await expect(page.locator('.site-footer')).toHaveCount(0);
   const menus = page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link');
-  await expect(menus).toHaveCount(4);
-  const paths = ['/ko/chat', '/ko/pokedex', '/ko/meta', '/ko/scenario'];
+  const paths = ['/ko/chat', '/ko/pokedex', '/ko/meta', '/ko/pobti', '/ko/scenario'];
+  await expect(menus).toHaveCount(paths.length);
   for (let index = 0; index < paths.length; index++) {
     await expect(menus.nth(index)).toHaveAttribute('href', paths[index]);
     await menus.nth(index).click();
@@ -792,7 +792,7 @@ test('홈의 네 메뉴 이동과 로고 복귀, 모바일 가로 넘침 없음'
   }
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
-    await expect(menus.nth(3)).toBeVisible();
+    await expect(menus.last()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
   expect(errors).toEqual([]);
