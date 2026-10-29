@@ -241,6 +241,7 @@ test('선출 20개·근거·상성 결과 및 입력 변경 시 이전 결과 �
   await expect(
     page.getByRole('region', { name: '팀 분석 결과' }).locator('ol > li'),
   ).toHaveCount(20);
+  await page.getByText('타입 상성 기반 참고용 · 승률과 실제 피해를 보장하지 않아요', { exact: true }).click();
   await expect(
     page.getByText('선출 점수는 비교용이며 승률이 아닙니다.', { exact: false }),
   ).toBeVisible();
@@ -323,6 +324,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   await openTeams(page);
   await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
+  await page.getByRole('button', { name: '피해 계산', exact: true }).click();
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   const submit = panel.getByRole('button', { name: '참조 피해 계산', exact: true });
   await expect(submit).toBeDisabled();
@@ -411,6 +413,7 @@ test('피해 계산 기술의 타입·습득 필터 및 공격자 변경 초기�
   await openTeams(page);
   await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
+  await page.getByRole('button', { name: '피해 계산', exact: true }).click();
   const panel = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
   const moves = panel.getByLabel('계산 기술', { exact: true });
@@ -424,4 +427,28 @@ test('피해 계산 기술의 타입·습득 필터 및 공격자 변경 초기�
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:2');
   await expect(moves).toHaveValue('');
   await expect(panel.getByRole('button', { name: '참조 피해 계산', exact: true })).toBeDisabled();
+});
+
+test('구성 진행 안내와 목적별 분석 전환 및 계산 입력 유지', async ({ page }) => {
+  await fixture(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openTeams(page);
+  await expect(page.getByText('선출 추천까지 내 팀 6마리, 상대 팀 6마리를 더 추가하세요.')).toBeVisible();
+  await expect(page.getByRole('button', { name: '3마리·선봉 추천', exact: true })).toBeDisabled();
+  const damage = page.getByRole('region', { name: '참조 데미지 계산', exact: true });
+  await expect(damage).toBeHidden();
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await expect(page.getByText('선출 추천까지 내 팀 0마리, 상대 팀 6마리를 더 추가하세요.')).toBeVisible();
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await expect(page.getByText('준비 완료! 선출 추천을 눌러 조합을 확인하세요.')).toBeVisible();
+  await expect(page.getByRole('button', { name: '3마리·선봉 추천', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: '피해 계산', exact: true }).click();
+  await expect(page.getByRole('region', { name: '팀 분석 결과', exact: true })).toHaveCount(0);
+  await damage.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
+  await page.getByRole('button', { name: '현재 전투 비교', exact: true }).click();
+  await expect(damage).toBeHidden();
+  await expect(page.getByRole('region', { name: '전투 분석', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '피해 계산', exact: true }).click();
+  await expect(damage.getByLabel('공격자 포켓몬')).toHaveValue('pokemon:1');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

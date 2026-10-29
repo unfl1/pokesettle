@@ -424,5 +424,20 @@
   "포켓몬 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.": "Unable to load Pokémon data. Please try again shortly.",
   "포켓몬을 찾을 수 없습니다.": "Pokémon not found.",
   "이름 데이터 출처·수집일": "Name data sources and collection dates",
-  "누락된 폼명은 원본 영어 이름으로 표시해요.": "Missing form translations use the original English name."
+  "누락된 폼명은 원본 영어 이름으로 표시해요.": "Missing form translations use the original English name.",
+  "누구를 내보낼지, 먼저 골라보세요": "Choose who to send into battle",
+  "양쪽 팀을 추가하면 추천 3마리와 선봉을 확인할 수 있어요.": "Add both teams to see a suggested trio and lead.",
+  "준비 순서": "Preparation steps",
+  "내 팀 구성": "Build your team",
+  "상대 팀 구성": "Build opponent team",
+  "추천 선출 확인": "View suggested selection",
+  "타입 상성 기반 참고용 · 승률과 실제 피해를 보장하지 않아요": "Type-based reference · No guarantee of win rates or actual damage",
+  "1. 양쪽 팀 구성": "1. Build both teams",
+  "2. 궁금한 내용 선택": "2. Choose what to compare",
+  "피해 계산": "Damage calculator",
+  "공격과 교체 선택지": "Attack and switch options",
+  "기술별 참조 피해 범위": "Reference damage by move",
+  "준비 완료! 선출 추천을 눌러 조합을 확인하세요.": "Ready! Request a selection to see the suggested trio.",
+  "선출 추천까지 내 팀 {own}마리, 상대 팀 {opponent}마리를 더 추가하세요.": "Add {own} more to your team and {opponent} to the opponent for selection suggestions.",
+  "선봉": "Lead"
 }

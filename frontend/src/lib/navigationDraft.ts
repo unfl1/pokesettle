@@ -27,7 +27,7 @@ export function takeNavigationDraft(): NavigationDraft | null {
       !Number.isFinite(value.savedAt) || Date.now() - value.savedAt > 30 * 60 * 1000 ||
       !team || !isMembers(team.own) || !isMembers(team.opponent) ||
       !['name', 'selectedId', 'notice', 'megaUsed', 'megaTargetId', 'switchBlocked'].every(field => typeof team[field] === 'string') ||
-      !['team', 'battle'].includes(team.tab) ||
+      !['team', 'battle', 'damage'].includes(team.tab) ||
       ![team.ownActive, team.opponentActive].every(index => Number.isInteger(index) && index >= 0 && index < 6) ||
       !Array.isArray(team.attackTypes) || !team.attackTypes.every((type: unknown) => typeof type === 'string')) return null;
     return { draft: value.draft, team };
