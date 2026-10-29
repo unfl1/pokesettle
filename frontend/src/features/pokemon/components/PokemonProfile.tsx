@@ -28,7 +28,7 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
       aria-label={translate("선택한 포켓몬 정보")}
     >
       <div className="px-5.5 py-[17px] gap-4.5 flex items-center max-desktop:px-[17px] max-desktop:gap-[13px] max-tablet:gap-3.5 max-phone:flex-wrap">
-        <div className="border border-accent/17 w-20.5 h-20.5 rounded-[16px] bg-[radial-gradient(circle_at_40%_30%,_#fff0ee,_transparent_70%)] flex items-center justify-center text-accent relative shrink-0 overflow-hidden max-phone:w-16.5 max-phone:h-16.5 [&_svg]:mb-[7px]">
+        <div className="border border-line w-20.5 h-20.5 rounded-[16px] bg-surface flex items-center justify-center text-muted relative shrink-0 overflow-hidden max-phone:w-16.5 max-phone:h-16.5 [&_svg]:mb-[7px]">
           <PokemonImage
             key={pokemon.pokemonId}
             pokemon={pokemon}
