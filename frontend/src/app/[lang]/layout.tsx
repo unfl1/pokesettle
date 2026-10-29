@@ -23,7 +23,7 @@ export default async function RootLayout({ children, params }: LayoutProps<'/[la
   await connection();
   const gaId = process.env.GA_ID;
   return (
-    <html lang={localeRegistry[lang].htmlLang} style={{ scrollbarGutter: 'stable' }} className={`${pretendard.variable} font-sans text-ink bg-canvas`}>
+    <html lang={localeRegistry[lang].htmlLang} style={{ scrollbarGutter: 'stable' }} className={`${pretendard.variable} font-sans text-ink bg-surface`}>
       <body>
         <I18nProvider locale={lang} dictionary={dictionary}><AppProviders>{children}</AppProviders></I18nProvider>
         {gaId && /^G-[A-Z0-9]+$/.test(gaId) && <GoogleAnalytics gaId={gaId} />}
