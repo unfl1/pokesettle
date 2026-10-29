@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useTypeLabels } from '../typeLabels';
 import { TypeBadge, typeColors } from './TypeBadge';
+import { lightTextTypes } from '../typeColors';
 import type { PokemonDetail } from '../types';
 export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDetail, 'learnset' | 'learnsetSources' | 'learnsetLicenceUrl'> }) {
   const { t: translate } = useI18n();
@@ -30,15 +31,15 @@ export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDeta
                   const unique = [...new Set(moves.map(m => m.name))];
                   return <section key={type} aria-label={translate('{type} 타입 기술', { type: typeLabels[type] ?? (type === 'unknown' ? translate('타입 미확인') : type) })}>
                     <div className="flex items-center gap-2 mb-2"><TypeBadge type={type === 'unknown' ? translate("타입 미확인") : type} /><span className="text-[14px] text-muted">{translate('{count}개', { count: unique.length })}</span></div>
-                    <div className="grid grid-cols-4 gap-2 max-tablet:grid-cols-2 max-phone:grid-cols-1">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-2">
                       {unique.map(name => {
                         const entries = moves.filter(m => m.name === name);
                         const move = entries[0];
                         return <div key={name} className="rounded-lg border border-line border-l-[3px] bg-canvas px-3 py-2.5" style={{ borderLeftColor: typeColors[type] ?? '#8492a3' }}>
                           <div className="flex items-center justify-between gap-2"><strong className="text-[14px] font-medium text-ink">{name}</strong><span className={`shrink-0 rounded px-1.5 py-0.5 text-[14px] font-medium ${{ physical: 'bg-orange-400/15 text-orange-700', special: 'bg-sky-400/15 text-sky-700', status: 'bg-violet-400/15 text-violet-700' }[move.category ?? ''] ?? 'text-slate-600'}`}>{{ physical: translate("물리"), special: translate("특수"), status: translate("변화") }[move.category ?? ''] ?? translate("분류 미확인")}</span></div>
-                          <div className="mt-2 grid grid-cols-2 gap-2 text-[14px]">
-                            <p className="rounded bg-highlight px-2 py-1"><span className="text-highlight-ink">{translate("위력")} </span><strong className="font-semibold text-highlight-ink tabular-nums">{move.power ?? '—'}</strong></p>
-                            <p className="rounded bg-cyan-400/10 px-2 py-1"><span className="text-cyan-700">{translate("명중")} </span><strong className="font-semibold text-cyan-900 tabular-nums">{move.accuracy != null ? `${move.accuracy}%` : '—'}</strong></p>
+                          <div className="mt-2 flex items-center gap-2 whitespace-nowrap text-[14px]">
+                            <p className="inline-flex items-center gap-1 rounded px-2 py-1" style={{ backgroundColor: typeColors[type] ?? '#8492a3', color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}><span>{translate("위력")}</span> <strong className="font-semibold tabular-nums">{move.power ?? '—'}</strong></p>
+                            <p className="inline-flex items-center gap-1 rounded bg-line px-2 py-1 text-muted"><span>{translate("명중")}</span> <strong className="font-semibold tabular-nums">{move.accuracy != null ? `${move.accuracy}%` : '—'}</strong></p>
                           </div>
                           <p className="text-[14px] text-muted mt-1">{entries.map(m => m.method === 'level-up' ? translate('레벨업 Lv.{level}', { level: m.level ?? '—' }) : ({ machine: translate("기술머신·비전머신"), egg: translate("알 기술"), tutor: translate("기술 가르침"), train: translate("트레이닝") }[m.method] ?? m.method)).join(' · ')}</p>
                         </div>;
