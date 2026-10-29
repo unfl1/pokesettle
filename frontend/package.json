@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 5173",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "prebuild": "node scripts/generate-pokemon-routes.mjs",
+    "pretypecheck": "node scripts/generate-pokemon-routes.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.0",

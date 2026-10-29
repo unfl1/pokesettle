@@ -47,7 +47,7 @@ def pokemon_list(
         raise ServiceError("UNKNOWN_REGULATION", "등록되지 않은 규칙입니다.", 422)
     items = list(catalog.items.values())
     if q:
-        items = [p for p in items if q.casefold() in f"{p.name_ko or ''} {p.name_en}".casefold()]
+        items = [p for p in items if q.casefold() in f"{p.name_ko or ''} {p.name_en} {' '.join(p.names.values())}".casefold()]
     if type_:
         items = [p for p in items if type_ in p.types]
     if regulation_id:
@@ -63,6 +63,8 @@ def pokemon_list(
                 "pokemon_id",
                 "name_ko",
                 "name_en",
+                "names",
+                "slugs",
                 "types",
                 "champions_eligibility_status",
                 "scope",

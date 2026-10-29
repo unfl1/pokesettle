@@ -54,6 +54,7 @@ services:
     restart: unless-stopped
     environment:
       GA_ID: ${GA_ID:-}
+      API_ORIGIN: http://api:8000
     ports:
       - "127.0.0.1:3001:3001"
     depends_on:

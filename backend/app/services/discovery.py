@@ -100,7 +100,7 @@ def discover(service, request):
         matching, uncertain = True, False
         for condition, expected in predicates:
             if condition.field == "name":
-                actual = [pokemon.name_en.casefold(), (pokemon.name_ko or "").casefold()]
+                actual = [name.casefold() for name in [pokemon.name_en, pokemon.name_ko or "", *pokemon.names.values()]]
             elif condition.field.startswith("base_stats."):
                 actual = getattr(pokemon.base_stats, condition.field.split(".")[1])
             else:
@@ -149,6 +149,8 @@ def result(matches, request, plan, unknowns, excluded_unknown):
                 "images": pokemon.images.model_dump(mode="json") if pokemon.images else None,
                 "name_ko": pokemon.name_ko,
                 "name_en": pokemon.name_en,
+                "names": pokemon.names,
+                "slugs": pokemon.slugs,
                 "types": pokemon.types,
                 "champions_eligibility_status": pokemon.champions_eligibility_status,
                 "scope": "generic",

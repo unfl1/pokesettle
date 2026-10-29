@@ -94,7 +94,7 @@
 
 .page-intro { padding: 42px 0 30px; }
 .eyebrow { display: flex; align-items: center; gap: 6px; color: var(--color-accent); font-size: 14px; font-weight: 700; letter-spacing: 1.4px; }
-.page-intro h1 { font-size: 30px; font-weight: 750; letter-spacing: -1.1px; margin: 12px 0 9px; line-height: 1.4; color: #1b2538; }
+.page-intro h1, .page-intro h2 { font-size: 30px; font-weight: 750; letter-spacing: -1.1px; margin: 12px 0 9px; line-height: 1.4; color: #1b2538; }
 .page-intro p { color: #64748b; font-size: 14px; line-height: 1.8; }
 
 .pokedex-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -119,12 +119,12 @@
   .workspace-main { padding: 0 20px 32px; }
   .pokedex-layout { grid-template-columns: 1fr; }
   .pokedex-layout > section { position: static; }
-  .page-intro h1 { font-size: 26px; }
+  .page-intro h1, .page-intro h2 { font-size: 26px; }
 }
 @media (max-width: 540px) {
   .workspace-main { padding: 0 14px 28px; }
   .page-intro { padding: 28px 3px 24px; }
-  .page-intro h1 { font-size: 24px; letter-spacing: -.9px; }
+  .page-intro h1, .page-intro h2 { font-size: 24px; letter-spacing: -.9px; }
   .page-intro p { font-size: 14px; }
   .notice { padding: 12px; font-size: 14px; gap: 9px; }
 }

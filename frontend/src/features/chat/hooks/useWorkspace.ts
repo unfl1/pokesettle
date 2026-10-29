@@ -38,24 +38,26 @@ function readPending(): Record<string, PendingJob> {
   }
 }
 
-export function useWorkspace(initialDraft = '') {
+export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabled = true) {
   const pokemonId = 'workspace';
   const cache = useQueryClient();
   const session = useQuery({
     queryKey: ['session'],
+    enabled: sessionEnabled,
     queryFn: systemApi.session,
     staleTime: Infinity,
     retry: false,
   });
   const status = useQuery({
     queryKey: ['status'],
+    enabled: sessionEnabled,
     queryFn: systemApi.status,
-    refetchInterval: 15000,
+    refetchInterval: sessionEnabled ? 15000 : false,
   });
   const conversations = useQuery({
     queryKey: ['conversations', pokemonId],
     queryFn: () => chatApi.conversations(pokemonId),
-    enabled: session.isSuccess,
+    enabled: chatEnabled && session.isSuccess,
   });
   const [choices, setChoices] = useState<Record<string, string | null>>({});
   const [restored, setRestored] = useState(false);
@@ -73,7 +75,7 @@ export function useWorkspace(initialDraft = '') {
   const messages = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => chatApi.messages(conversationId!),
-    enabled: session.isSuccess && Boolean(conversationId),
+    enabled: chatEnabled && session.isSuccess && Boolean(conversationId),
   });
   useEffect(() => {
     if (messages.error instanceof ApiError && messages.error.code === 'RESOURCE_NOT_FOUND') {
@@ -157,7 +159,7 @@ export function useWorkspace(initialDraft = '') {
   const job = useQuery({
     queryKey: ['job', pending?.jobId],
     queryFn: () => chatApi.job(pending!.jobId),
-    enabled: session.isSuccess && Boolean(pending),
+    enabled: chatEnabled && session.isSuccess && Boolean(pending),
     retry: 1,
     refetchInterval: (query) =>
       ['completed', 'failed', 'interrupted'].includes(

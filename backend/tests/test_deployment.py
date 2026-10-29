@@ -12,7 +12,7 @@ from deployment.check_production import check as check_production
 from deployment.package_release import package
 
 
-@pytest.mark.parametrize("failure", [None, "old_home", "redirect", "chat", "assets", "asset_status", "api"])
+@pytest.mark.parametrize("failure", [None, "old_home", "redirect", "host_redirect", "scheme_redirect", "chat", "pokedex", "assets", "asset_status", "api"])
 def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
     base = "https://www.example.com"
     asset = "/_next/static/app.js"
@@ -35,8 +35,16 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             marker = "전략 챗봇"
         if failure == "chat" and url == base + "/ko/chat":
             marker = "PokeSettle"
+        if "/pokedex/" in url:
+            marker = (f'<link rel="canonical" href="{url}"><h1>피카츄</h1><div data-testid="profile-details">종족값</div>'
+                      if failure != "pokedex" else '<script>피카츄 종족값</script>')
         html = marker + (f'<script src="{asset}"></script>' if failure != "assets" else "")
-        return Response(base + "/ko/chat" if failure == "redirect" else url, html)
+        final_url = base + "/ko/chat" if failure == "redirect" else url
+        if failure == "host_redirect":
+            final_url = url.replace("www.example.com", "other.example.com")
+        if failure == "scheme_redirect":
+            final_url = url.replace("https:", "http:")
+        return Response(final_url, html)
 
     monkeypatch.setattr("deployment.check_production.urllib.request.urlopen", open_url)
     if failure:
@@ -44,7 +52,7 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             check_production(base)
     else:
         check_production(base)
-        assert calls == [base + "/ko", base + "/ko/chat", base + asset, base + "/api/status"]
+        assert calls == [base + "/ko", base + "/ko/chat", base + "/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25", base + asset, base + "/api/status"]
 
 
 def test_public_smoke_rejects_plain_http():
@@ -235,7 +243,7 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
         def get_distribution_config(self, **kwargs):
             return {"ETag": "version", "DistributionConfig": {
                 "Origins": {"Items": [{"Id": "frontend-s3"}]},
-                "DefaultCacheBehavior": {"ForwardedValues": {}, "DefaultTTL": 300},
+                "DefaultCacheBehavior": {"ForwardedValues": {}, "DefaultTTL": 300, "ViewerProtocolPolicy": "https-only"},
                 "DefaultRootObject": "index.html",
                 "CacheBehaviors": {"Items": [{"PathPattern": "/assets/*"}]},
                 "CustomErrorResponses": {"Quantity": 1},
@@ -274,6 +282,8 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
     config = calls["config"]
     default = config["DefaultCacheBehavior"]
     assert config["DefaultRootObject"] == ""
+    assert default["ViewerProtocolPolicy"] == "redirect-to-https"
+    assert all(item["ViewerProtocolPolicy"] == "redirect-to-https" for item in config.get("CacheBehaviors", {}).get("Items", []))
     assert default["CachePolicyId"] == "no-cache"
     assert default["OriginRequestPolicyId"] == "viewer-headers"
     assert "ForwardedValues" not in default

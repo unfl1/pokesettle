@@ -134,3 +134,60 @@ def test_discovery_pagination_reuses_plan_and_refreshes_when_catalog_changes(set
     setup.catalog.items["pokemon:101"] = Pokemon.model_validate(record(101))
     assert discover(setup.service, query)["total"] == 101
     assert len([c for c in setup.model.calls if c[0] == "discovery"]) == 2
+
+
+def test_localized_routes_keep_verified_form_names_and_original_fallbacks():
+    from backend.app.data_preparation.localization import localized_routes, slugify_name
+
+    tables, _ = bulk_tables()
+    tables["languages"] = [{"identifier": name, "id": str(number)} for name, number in [("ko", 3), ("en", 9), ("ja", 11), ("zh-hans", 12)]]
+    records, _ = build_snapshots(tables, [{"source_id": f"pokeapi-csv:{name}", "source_url": "https://example.com/source", "collected_at": "2026-10-29"} for name in TABLES])
+    rows = localized_routes(records, tables)
+    form = next(row for row in rows if row["pokemon_id"] == "pokemon:10001")
+    assert "테스트 폼" in form["names"]["ko"]
+    assert "ja" not in form["names"] and "zh" not in form["names"]
+    assert form["slugs"]["ja"] == form["slugs"]["en"]
+    assert slugify_name("피카츄 (오리지널캡)") == "피카츄-오리지널캡"
+    assert slugify_name("니드런♀") != slugify_name("니드런♂")
+
+
+def test_localized_catalog_snapshot_matches_all_routes_and_preserves_source_records():
+    from pathlib import Path
+
+    from backend.app.data_preparation.localization import slugify_name
+
+    data = Path(__file__).resolve().parents[2] / "data"
+    snapshot = json.loads((data / "pokemon_names.json").read_text())
+    original = json.loads((data / "pokemon.json").read_text())
+    generated = json.loads((data.parent / "frontend/src/generated/pokemon-routes.json").read_text())
+    assert {item["pokemon_id"] for item in original} == {item["pokemon_id"] for item in snapshot["items"]}
+    assert len(generated) == len(original) == len({item["pokemonId"] for item in generated})
+    assert generated == [{"pokemonId": row["pokemon_id"], "names": row["names"], "slugs": row["slugs"]} for row in snapshot["items"]]
+    assert all(source["content_hash"] and source["collected_at"] for source in snapshot["sources"])
+    catalogue = Catalog(data / "pokemon.json")
+    assert catalogue.get("pokemon:10094").names["ja"] == "ピカチュウ (オリジナルキャップ)"
+    assert catalogue.get("pokemon:10094").slugs["ko"] == "피카츄-오리지널캡"
+    for locale in ["ko", "en", "ja", "zh"]:
+        paths = [row["slugs"][locale] + "-" + row["pokemonId"].split(":")[1] for row in generated]
+        assert len(paths) == len(set(paths))
+        assert all(slugify_name(row["slugs"][locale]) == row["slugs"][locale] for row in generated)
+
+
+def test_japanese_and_chinese_name_search_and_summary_contract(setup):
+    pokemon = setup.catalog.get("pokemon:1")
+    pokemon.names = {"ja": "フシギダネ", "zh": "妙蛙种子"}
+    pokemon.slugs = {"ja": "フシギダネ", "zh": "妙蛙种子"}
+    with TestClient(create_app(setup.settings, service=setup.service)) as client:
+        for name in pokemon.names.values():
+            data = client.get("/api/pokemon", params={"q": name}).json()["data"]
+            assert data["total"] == 1
+            assert data["items"][0]["names"]["ja"] == "フシギダネ"
+            assert data["items"][0]["slugs"]["zh"] == "妙蛙种子"
+    setup.model.discovery_plan = DiscoveryPlan(
+        filters=[{"field": "name", "operator": "eq", "value": "フシギダネ"}],
+        requires_clarification=False, unresolved_conditions=[], explanation="原文名検索",
+    )
+    result = discover(setup.service, DiscoveryRequest(query="フシギダネ"))
+    assert result["total"] == 1
+    assert result["items"][0]["names"]["ja"] == "フシギダネ"
+    assert result["items"][0]["slugs"]["zh"] == "妙蛙种子"

@@ -14,7 +14,7 @@ from backend.app.services.metagame import MetagameService
 def meta():
     service = MetagameService()
     catalog = SimpleNamespace(items={
-        "one": SimpleNamespace(name_en="Test-Mon", name_ko="합성 포켓몬", pokemon_id="one", images=None)
+        "one": SimpleNamespace(name_en="Test-Mon", name_ko="합성 포켓몬", pokemon_id="one", images=None, names={"ko": "합성 포켓몬"}, slugs={"ko": "합성-포켓몬"})
     }, details={"move_details": [{"name": "test-move", "name_ko": "합성 기술"}]}, battle_names={})
     index = {"seasons": [
         {"season": "M1", "dates": ["01_10_2026"], "formats": ["Singles"]},
@@ -71,6 +71,8 @@ def test_real_names_and_image_metadata_are_connected_without_changing_percentage
     result = meta.service.singles(catalog)
     pokemon = result["items"][0]
     assert pokemon["pokemon_id"] == "pokemon:445"
+    assert pokemon["names"]["ja"] == "ガブリアス"
+    assert pokemon["slugs"]["ko"] == "한카리아스"
     assert pokemon["images"]["sprite_url"].endswith("/445.png")
     groups = {group["category"]: group["items"] for group in pokemon["groups"]}
     assert [x["name_ko"] for x in groups["held_item"]] == ["구애스카프", "한카리아스나이트Z", None]

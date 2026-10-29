@@ -16,6 +16,8 @@ export interface PokemonSummary {
   pokemonId: string;
   nameKo: string | null;
   nameEn: string;
+  names?: Partial<Record<import('../../i18n/config').Locale, string>>;
+  slugs?: Partial<Record<import('../../i18n/config').Locale, string>>;
   types: string[];
   championsEligibilityStatus: 'unknown' | 'eligible' | 'ineligible';
   scope: string;
@@ -29,6 +31,8 @@ export type StatName =
   | 'speed';
 export interface PokemonDetail extends PokemonSummary {
   speciesId: number;
+  nameSources?: { sourceUrl: string; collectedAt: string; contentHash: string }[];
+  nameLicenceUrl?: string | null;
   baseStats: Record<StatName, number>;
   abilities: string[];
   abilityDetails?: { name: string; nameKo: string | null }[];

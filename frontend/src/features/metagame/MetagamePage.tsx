@@ -1,21 +1,22 @@
 "use client";
 import { useI18n } from '../../i18n/I18nProvider';
 
-import { localizedPath, localeRegistry } from '../../i18n/config';
+import { pokemonPath } from '../pokemon/routing';
+import { localeRegistry } from '../../i18n/config';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { request } from '../../lib/apiClient';
 import PokemonImage from '../pokemon/components/PokemonImage';
-import type { PokemonImages } from '../pokemon/types';
+import type { PokemonImages, PokemonSummary } from '../pokemon/types';
 
 type Entry = { name: string; nameKo: string | null; rank: number; percentage: number | null };
 type MetaPokemon = {
   nameEn: string; nameKo: string | null; pokemonId: string | null; rank: number;
-  images: PokemonImages | null;
+  images: PokemonImages | null; names?: PokemonSummary['names']; slugs?: PokemonSummary['slugs'];
   groups: { category: string; items: Entry[] }[];
 };
-type SinglesMeta = {
+export type SinglesMeta = {
   items: MetaPokemon[]; season: string; dataDate: string;
   collectedAt: string; providerGeneratedAt: string | null; stale: boolean;
   sourceUrl: string; termsUrl: string; attribution: string;
@@ -26,11 +27,13 @@ const labels: Record<string, string> = {
   move: '기술', held_item: '도구', ability: '특성', stat_alignment: '성격',
 };
 
-export default function MetagamePage() {
+export default function MetagamePage({ initialData, initialDataUpdatedAt }: { initialData?: SinglesMeta; initialDataUpdatedAt?: number } = {}) {
   const { locale, t: translate } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
   const query = useQuery({
     queryKey: ['meta', 'singles'],
+    initialData,
+    initialDataUpdatedAt,
     queryFn: () => request<SinglesMeta>('/meta/singles'),
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -82,7 +85,7 @@ export default function MetagamePage() {
               <PokemonImage key={pokemon.nameEn} pokemon={pokemon} size="large" />
               <h2 className="min-w-0 break-words text-lg font-semibold">{pokemon.nameKo ?? pokemon.nameEn} <span className="text-[14px] text-muted">{translate('순위 {rank}', { rank: pokemon.rank })}</span></h2>
             </div>
-            {pokemon.pokemonId && <Link prefetch={false} className="text-[14px] text-accent" href={localizedPath(locale, `/pokedex?pokemon=${encodeURIComponent(pokemon.pokemonId)}`)}>{translate("도감 보기 →")}</Link>}
+            {pokemon.pokemonId && <Link prefetch={false} className="text-[14px] text-accent" href={pokemonPath({ pokemonId: pokemon.pokemonId, nameKo: pokemon.nameKo, nameEn: pokemon.nameEn, names: pokemon.names, slugs: pokemon.slugs }, locale)}>{translate("도감 보기 →")}</Link>}
           </div>
           <p className="mb-5 text-[14px] leading-6 text-muted">{translate("수집된 한국어 이름이 없는 항목은 원문으로 표시해요. 현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.")}</p>
           <div className="grid grid-cols-2 gap-5 max-phone:grid-cols-1">

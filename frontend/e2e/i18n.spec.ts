@@ -64,9 +64,9 @@ for (const language of languages) {
 test('language switch retains the feature, query, and fragment', async ({ page }) => {
   await page.goto('/ko/pokedex?pokemon=pokemon%3A1#main-content');
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
-  await expect(page).toHaveURL('/en/pokedex?pokemon=pokemon%3A1#main-content');
+  await expect(page).toHaveURL('/en/pokedex/bulbasaur-1#main-content');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('ja');
-  await expect(page).toHaveURL('/ja/pokedex?pokemon=pokemon%3A1#main-content');
+  await expect(page).toHaveURL('/ja/pokedex/フシギダネ-1#main-content');
   await expect(page.getByRole('link', { name: '図鑑', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
@@ -86,7 +86,7 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
-  expect(xml.match(/<loc>/g)).toHaveLength(20);
+  expect(xml.match(/<loc>/g)).toHaveLength(5424);
   for (const language of languages) {
     expect(xml).toContain(`<loc>https://www.pokesettle.com/${language.code}/scenario</loc>`);
     expect(xml).toContain(`hreflang="${language.html}"`);

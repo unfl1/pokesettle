@@ -49,7 +49,7 @@ def connect(state_path, token_path):
     for pattern in ("/api", "/api/*"):
         behaviors.append({
             "PathPattern": pattern, "TargetOriginId": "backend-api",
-            "ViewerProtocolPolicy": "https-only", "Compress": True,
+            "ViewerProtocolPolicy": "redirect-to-https", "Compress": True,
             "SmoothStreaming": False, "FieldLevelEncryptionId": "",
             "LambdaFunctionAssociations": {"Quantity": 0},
             "FunctionAssociations": {"Quantity": 0},
@@ -62,7 +62,7 @@ def connect(state_path, token_path):
     config["DefaultRootObject"] = ""
     config["CustomErrorResponses"] = {"Quantity": 0}
     default = config["DefaultCacheBehavior"]
-    default.update(TargetOriginId="backend-api", CachePolicyId=cache_id,
+    default.update(TargetOriginId="backend-api", ViewerProtocolPolicy="redirect-to-https", CachePolicyId=cache_id,
                    OriginRequestPolicyId=request_id,
                    AllowedMethods={"Quantity": 7,
                                    "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],

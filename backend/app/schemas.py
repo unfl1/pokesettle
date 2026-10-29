@@ -44,6 +44,8 @@ class Pokemon(Model):
     images: PokemonImages | None = None
     name_ko: str | None
     name_en: str
+    names: dict[str, str] = Field(default_factory=dict)
+    slugs: dict[str, str] = Field(default_factory=dict)
     types: list[str] = Field(min_length=1, max_length=2)
     base_stats: Stats
     abilities: list[str]
