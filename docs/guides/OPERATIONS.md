@@ -269,6 +269,9 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 ### 서비스 이름과 운영 도메인
 
 - 서비스 이름: `PokeSettle`, 대표 주소: `https://www.pokesettle.com`
+- 대표 주소 정책: LETO DNS·기존 인증서 유지, 루트 HTTP·HTTPS는 Nginx에서 동일 경로·쿼리의 www HTTPS로 308 이동
+- CloudFront HTTP 정책: 기본·`/api`·`/api/*` 모두 `redirect-to-https`, GET·HEAD는 301, HTTP/1.1 이상 쓰기 요청은 메서드·본문을 유지하는 307 이동
+- 배포 검사: 예상 경로·본문 외 최종 호스트도 비교, 대표 주소에서 다른 호스트로 이동하면 실패 처리
 - 도메인 등록·DNS: LETO, 기존 CloudFront 배포·Lightsail 서버 재사용
 
 | 호스트 | DNS | 동작 |

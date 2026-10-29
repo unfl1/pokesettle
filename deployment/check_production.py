@@ -15,7 +15,8 @@ def check(base):
     for path, marker in pages.items():
         with urllib.request.urlopen(urljoin(base, path), timeout=15) as response:
             html = response.read().decode()
-            if response.status != 200 or urlsplit(response.url).path != path or marker not in html:
+            if (response.status != 200 or urlsplit(response.url).path != path
+                    or urlsplit(response.url)[:2] != urlsplit(base)[:2] or marker not in html):
                 raise ValueError("Server-rendered content not found")
         page_assets = re.findall(r'(?:src|href)="(/_next/static/[^"\s]+)"', html)
         if not page_assets:
