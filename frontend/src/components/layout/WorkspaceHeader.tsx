@@ -5,6 +5,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, TrendingUp, X } from 'lucide-react';
 import { useWorkspaceContext } from '../../providers/AppProviders';
@@ -31,7 +32,7 @@ export default function WorkspaceHeader() {
       <header className="site-header">
         <div className="header-inner">
           <a href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
-            <span className="brand-symbol" aria-hidden="true"><span /></span>
+            <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo" priority />
             PokeSettle<span className="brand-tag">BETA</span>
           </a>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>

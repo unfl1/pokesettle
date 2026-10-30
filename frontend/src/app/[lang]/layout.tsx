@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { isLocale, localeRegistry, locales } from '../../i18n/config';
 import { getDictionary } from '../../i18n/server';
@@ -11,6 +11,7 @@ import { AppProviders } from '../../providers/AppProviders';
 import '../pretendard-subsets.css';
 import '../../globals.css';
 
+export const viewport: Viewport = { themeColor: '#0057ff' };
 export const metadata: Metadata = { metadataBase: new URL(siteUrl) };
 export function generateStaticParams() {
   return locales.map(lang => ({ lang }));

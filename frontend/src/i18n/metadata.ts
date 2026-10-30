@@ -18,9 +18,10 @@ export async function pageMetadata(path: string, titleKey: string, descriptionKe
     alternates: { canonical: url, languages: languageAlternates(path) },
     openGraph: {
       title, description, url, siteName: 'PokeSettle', type: 'website',
+      images: [{ url: '/logo.png', alt: 'PokeSettle' }],
       locale: localeRegistry[locale].openGraphLocale,
       alternateLocale: locales.filter((other: Locale) => other !== locale).map(other => localeRegistry[other].openGraphLocale),
     },
-    twitter: { card: 'summary', title, description },
+    twitter: { card: 'summary', title, description, images: ['/logo.png'] },
   };
 }
