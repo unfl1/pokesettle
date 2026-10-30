@@ -165,7 +165,6 @@
   .home-trainer img { width: auto; height: 180px; }
   .home-content { grid-column: 1 / -1; grid-row: 2; }
 }
-.home-logo { display: block; width: 88px; height: 88px; margin: 0 auto 24px; object-fit: contain; }
 .home-intro { text-align: center; margin-bottom: 30px; }
 .home-intro h1 { margin-bottom: 0; font-size: 32px; font-weight: 750; line-height: 1.4; letter-spacing: -1.4px; transform: translateY(-16px); }
 .home-title-typing { display: inline-block; min-height: 1.4em; }
@@ -180,10 +179,11 @@
 .home-menus { display: grid; gap: 12px; }
 .home-menu { --home-fill: color-mix(in srgb, var(--home-tone) 9%, var(--color-surface)); --home-outline: color-mix(in srgb, var(--home-tone) 68%, var(--color-muted)); position: relative; display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 23px 25px; border: 2px solid var(--home-outline); border-radius: 26px; background: var(--home-fill); text-decoration: none; box-shadow: 0 2px 8px color-mix(in srgb, var(--home-tone) 6%, transparent); }
 /* Overlap the card edge so its border does not cut through the tail. */
-.home-menu-tail { position: absolute; left: -30px; top: calc(50% - 20px); width: 32px; height: 40px; overflow: visible; pointer-events: none; }
+.home-menu-tail { position: absolute; left: -30px; top: calc(50% - 20px); width: 32px; height: 40px; overflow: visible; pointer-events: none; transform: scale(1, var(--tail-direction, 1)); }
 .home-menu-tail path { fill: var(--home-fill); stroke: var(--home-outline); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .home-menu-tail path.home-menu-tail-seam { fill: none; stroke: var(--home-fill); stroke-width: 4; stroke-linecap: butt; }
-.home-menu:nth-child(even) .home-menu-tail { left: auto; right: -30px; transform: scaleX(-1); }
+.home-menu:nth-child(even) .home-menu-tail { left: auto; right: -30px; transform: scale(-1, var(--tail-direction, 1)); }
+.home-menu-green, .home-menu-blue, .home-menu-purple { --tail-direction: -1; }
 .home-menu-red { --home-tone: #c63f46; }
 .home-menu-yellow { --home-tone: var(--color-highlight-ink); --home-fill: color-mix(in srgb, var(--color-highlight) 20%, var(--color-surface)); }
 .home-menu-green { --home-tone: #43ad86; }

@@ -27,7 +27,6 @@ export default async function Home() {
       </div>
       <div className="home-content">
         <header className="home-intro">
-          <Image src="/logo.png" alt="PokeSettle" width={88} height={88} className="home-logo" priority />
           <h1 aria-label={homeTitle}>
             <span className="home-title-typing" aria-hidden="true">
               {Array.from(homeTitle).map((character, index) => (
