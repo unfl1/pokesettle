@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState, type ReactNode } from 'react';
-import Link from 'next/link';
+import NavigationLink from './NavigationLink';
 import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, TrendingUp, X } from 'lucide-react';
@@ -31,15 +31,15 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <a href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
+          <NavigationLink href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
             <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo" priority />
             PokeSettle<span className="brand-tag">BETA</span>
-          </a>
+          </NavigationLink>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
-              <Link prefetch={false} key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>
+              <NavigationLink key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>
                 <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
-              </Link>
+              </NavigationLink>
             ))}
           </nav>
           <div className="header-actions">

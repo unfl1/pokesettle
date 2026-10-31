@@ -263,11 +263,13 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - SEO 원본 도메인: 기본 `https://www.pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
-- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 전체 문서 이동으로 metadata 수명 분리
+- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 Next Link 이동으로 공통 Provider·초안 유지
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
-- 내부 링크: `prefetch={false}`로 자동 선조회와 실제 이동의 metadata 경합 방지
+- 내부 링크: 메뉴·홈 카드·브랜드의 사전 조회 및 클릭 대기 표시 적용, 도감·메타는 RSC 이동에서 로딩 안내와 스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
+- 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
+- `PUBLIC_DATA_CACHE_SECONDS=0`: 공개 SSR 캐시 비활성화 옵션, 상태를 변경하는 E2E fixture의 검사 간 격리에 사용, 운영 기본값은 60초
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
-- `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성
+- `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, `/analytics/config`의 no-store 응답으로 클라이언트에서 조회, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성, 페이지 정적 생성 유지
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드
 
 ### 서비스 이름과 운영 도메인
@@ -308,10 +310,10 @@ pnpm --dir frontend test:e2e
 
 - 설정: `frontend/.codex/config.toml`, `pnpm dlx next-devtools-mcp@latest` 표준 입출력 서버, 최초 실행 시 패키지 내려받기
 - 실행 조건: Node.js·pnpm이 Codex 실행 환경의 `PATH`에 존재, `frontend` 작업 디렉터리에서 새 Codex 세션 시작, 신뢰한 프로젝트의 설정 로드 필요
-- 개발 서버: `pnpm --dir frontend dev`, 기본 포트 `5173`, Next.js 내장 `/_next/mcp` 연결
-- 확인 도구: `nextjs_index`의 `port: "5173"`으로 서버 검색, `nextjs_call`의 `get_routes`·`get_errors`·`get_compilation_issues`로 경로·오류 분석
+- 개발 서버: `pnpm --dir frontend dev`, 기본 포트 `3000`, Next.js 내장 `/_next/mcp` 연결
+- 확인 도구: `nextjs_index`의 `port: "3000"`으로 서버 검색, `nextjs_call`의 `get_routes`·`get_errors`·`get_compilation_issues`로 경로·오류 분석
 - 범위: 개발 전용 도구, 프로덕션 Next.js 서버는 MCP 분석 대상 제외
-- E2E 포트 분리: 기존 개발 서버 실행 중 `PLAYWRIGHT_PORT=5174 pnpm --dir frontend test:e2e`, 새 빌드 서버에서 검증
+- E2E 포트 분리: 기존 개발 서버 실행 중 `PLAYWRIGHT_PORT=3002 pnpm --dir frontend test:e2e`, 새 빌드 서버에서 검증
 - 근거: [Next.js MCP](https://nextjs.org/docs/app/guides/mcp), [Codex MCP 설정](https://learn.chatgpt.com/docs/extend/mcp), 확인일 `2026-10-27`
 
 - 프로덕션 이미지: `deployment/docker/Dockerfile.frontend`, `.next/standalone`·`.next/static`·`public` 포함
@@ -451,5 +453,6 @@ uv run --frozen python -m backend.scripts.index_data
 - 정적 사이트맵: 기능 URL 20개 + 상세 URL 5,404개, 빌드 시 API·모델 호출 없음
 - 서버 SSR: API 연결 실패를 없는 포켓몬으로 처리하지 않음, 일반 도감은 메모리 카탈로그, 메타는 기존 서버 캐시의 기준일·stale 상태 사용
 - 프론트 E2E: `e2e/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
+- 공개 캐시 검사: `pnpm --dir frontend build` 후 `pnpm --dir frontend test:public-cache`, 기본 캐시 활성 상태에서 원본 호출 수·실패 응답 복구·런타임 GA 설정 검증
 - 공개 smoke: 홈·챗봇·정적 자산·API 준비 상태와 피카츄 상세의 실제 HTML 본문·canonical 확인
 - 전역 CSS: `frontend/src/globals.css`, 아이콘: 기존 SVG와 16·32·48px `app/favicon.ico`

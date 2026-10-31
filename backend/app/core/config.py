@@ -31,7 +31,7 @@ class Settings:
     llm_timeout: float = 60
     max_retries: int = 2
     request_interval: float = 1
-    allowed_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
+    allowed_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000")
     source_contact: str = ""
     wikipedia_enabled: bool = False
     damage_node_binary: str = "node"
@@ -100,7 +100,7 @@ class Settings:
             allowed_origins=tuple(
                 x.strip()
                 for x in os.getenv(
-                    "ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+                    "ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
                 ).split(",")
                 if x.strip()
             ),
