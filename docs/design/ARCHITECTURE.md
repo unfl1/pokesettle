@@ -22,6 +22,7 @@
 - 라우팅: Next.js `proxy.ts`에서 기존 기능 주소를 `/ko/...`로 308 연결, 미지원 언어·알 수 없는 경로는 404 유지, 언어 전환 시 기능·쿼리·해시 유지
 - 번역: `next/root-params` 기반 서버 사전 로딩, `I18nProvider`에서 현재 언어 사전만 클라이언트에 전달, 원문·API 데이터·챗봇 생성 응답은 자동 번역하지 않고 제공 언어 안내 표시
 - SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 언어별 sitemap 20개 URL·robots 제공
+- SEO 전환: metadata 스트리밍을 비활성화해 이전 경로의 head 정보와 다음 경로 정보의 경합 방지, 본문 Suspense 스트리밍·Link 사전 조회 유지
 - 참고: [review-in-korea 언어 구조](https://github.com/jihyukboin/review-in-korea/blob/main/docs/language/multilingual-architecture.md)의 레지스트리·경로 생성·언어 검증·SEO 책임 분리 참고, 기본 언어 접두사 생략 정책은 적용하지 않음
 
 ## 1. 구조와 책임

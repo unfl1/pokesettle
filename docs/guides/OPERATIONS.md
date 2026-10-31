@@ -81,12 +81,14 @@ python3 bootstrap_github_oidc.py --repository unfl1/pokesettle --subject-prefix 
 
 ## 배포 동작과 복구
 
-- PR의 `Verify / verify`: 공개 파일·Ruff·배포 Python·셸 정적 검사만 수행, 전체 회귀 검사는 PR 단계에서 실행하지 않음
+- PR의 `Verify / verify`: 공개 파일·정적 검사, PostgreSQL + pgvector 백엔드 회귀·이미지 smoke, 프론트 Docker 빌드·전체 E2E, 모니터링 통합 검사를 필수 실행, skipped·실패·취소는 집계 실패로 처리
+- PR에서는 이미지 검증까지 수행하고 배포용 이미지 export·업로드·릴리스 패키징은 생략, main·수동 실행은 검증된 이미지 아티팩트로 기존 릴리스 흐름 유지
 - `main` 병합 후 `Deploy production`: 같은 커밋의 백엔드 회귀·프론트 Docker/E2E·모니터링 통합 검증을 병렬로 1회 수행, 모두 통과한 이미지로 릴리스 생성 후 배포
 - 프론트엔드는 Docker 안에서 빌드·타입 검사 후 해당 이미지로 E2E 수행, 별도 호스트 Next.js 빌드 생략
 - `Verify` 수동 실행: 선택한 브랜치의 전체 검증·릴리스 패키징만 수행, 서버 배포 미수행
 - 캐시: 잠금 파일 기준 pip·uv·pnpm 저장소와 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치는 `--frozen` 유지, 테스트 결과 자체는 캐시하지 않음
 - E2E 브라우저: Ubuntu 러너에 기본 설치된 Chrome을 `CHROME_PATH`로 사용, 브라우저·시스템 라이브러리 중복 설치 생략, 실제 사용 버전은 Actions 로그에 출력
+- E2E 실패 자료: trace·스크린샷·JUnit 및 Docker 서버·합성 API 로그를 `frontend-failure-{run_id}-{run_attempt}` 아티팩트로 7일 보관, 테스트 자동 재시도 없이 최초 실패 기록 유지
 - 릴리스: 같은 실행의 SHA별 이미지 아티팩트만 결합, 이미지 재빌드 없음, gzip 레벨 1로 압축 시간 절감, 운영 SSH·OIDC 권한은 기존 배포 job에만 부여
 
 - 전달 대상: Docker 이미지와 명시한 Compose·모니터링 설정만 포함한 압축 번들
@@ -266,6 +268,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 Next Link 이동으로 공통 Provider·초안 유지
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: 메뉴·홈 카드·브랜드의 사전 조회 및 클릭 대기 표시 적용, 도감·메타는 RSC 이동에서 로딩 안내와 스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
+- metadata: `htmlLimitedBots: /.*/`로 제목·canonical·Open Graph를 먼저 확정, 본문 스트리밍·메뉴 사전 조회 유지
 - 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
 - `PUBLIC_DATA_CACHE_SECONDS=0`: 공개 SSR 캐시 비활성화 옵션, 상태를 변경하는 E2E fixture의 검사 간 격리에 사용, 운영 기본값은 60초
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리

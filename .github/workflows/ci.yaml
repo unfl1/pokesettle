@@ -35,10 +35,8 @@ jobs:
           python -m compileall -q deployment
           bash -n deployment/deploy_backend.sh deployment/bootstrap_server.sh deployment/verify_observability.sh
 
-  # Full regressions run once, on the exact main revision before deployment.
-  # PRs get source checks only; manual Verify runs exercise the complete pipeline.
+  # Run the same regressions before merge and on the exact deployment revision.
   backend:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
@@ -100,8 +98,10 @@ jobs:
       - name: Verify packaged application and calculator
         run: docker run --rm --network none --entrypoint python "poketact-backend:$GITHUB_SHA" -m backend.scripts.smoke_image
       - name: Export tested backend image
+        if: github.event_name != 'pull_request'
         run: docker save "poketact-backend:$GITHUB_SHA" | gzip -1 > "$RUNNER_TEMP/backend-image.tar.gz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
         with:
           name: backend-image-${{ github.sha }}
           path: ${{ runner.temp }}/backend-image.tar.gz
@@ -110,7 +110,6 @@ jobs:
           if-no-files-found: error
 
   frontend:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -158,9 +157,25 @@ jobs:
             sleep 1
           done
           pnpm --dir frontend test:e2e
+      - name: Collect frontend failure diagnostics
+        if: failure()
+        run: |
+          mkdir -p frontend/test-results
+          docker logs poketact-frontend-test > frontend/test-results/server.log 2>&1 || true
+          cp "$RUNNER_TEMP/ssr-fixture.log" frontend/test-results/fixture.log 2>/dev/null || true
+      - name: Upload frontend failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/test-results/
+          retention-days: 7
+          if-no-files-found: warn
       - name: Export tested frontend image
+        if: github.event_name != 'pull_request'
         run: docker save "poketact-frontend:$GITHUB_SHA" | gzip -1 > "$RUNNER_TEMP/frontend-image.tar.gz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
         with:
           name: frontend-image-${{ github.sha }}
           path: ${{ runner.temp }}/frontend-image.tar.gz
@@ -172,7 +187,6 @@ jobs:
         run: docker rm -f poketact-frontend-test || true
 
   monitoring:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -195,14 +209,11 @@ jobs:
       - name: Require every applicable check to pass
         env:
           RESULTS: ${{ toJSON(needs) }}
-          PR_CHECK: ${{ github.event_name == 'pull_request' }}
         run: |
           python - <<'PY'
           import json, os
           results = {name: job['result'] for name, job in json.loads(os.environ['RESULTS']).items()}
           expected = {'source': 'success', 'backend': 'success', 'frontend': 'success', 'monitoring': 'success'}
-          if os.environ['PR_CHECK'] == 'true':
-              expected.update(backend='skipped', frontend='skipped', monitoring='skipped')
           if results != expected:
               raise SystemExit('A required verification did not succeed')
           PY

@@ -4,6 +4,9 @@ const apiOrigin = process.env.API_ORIGIN ?? 'http://127.0.0.1:8000';
 const config: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  // Resolve inexpensive metadata before streaming page content to avoid stale
+  // head entries overlapping with the next route during prefetched navigation.
+  htmlLimitedBots: /.*/,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'raw.githubusercontent.com', pathname: '/PokeAPI/sprites/**' }],
     minimumCacheTTL: 86400,

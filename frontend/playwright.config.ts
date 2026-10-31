@@ -7,6 +7,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 30000,
+  reporter: [['line'], ['junit', { outputFile: 'test-results/junit.xml' }]],
   use: {
     baseURL,
     browserName: 'chromium',
@@ -15,8 +16,8 @@ export default defineConfig({
         process.env.CHROME_PATH ??
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     },
-    screenshot: 'off',
-    trace: 'off',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
   },
   webServer: process.env.PLAYWRIGHT_EXTERNAL_SERVER === '1' ? undefined : [{ command: 'node e2e/fixture-api.mjs', env: { FIXTURE_API_PORT: fixturePort }, url: `http://127.0.0.1:${fixturePort}/health`, reuseExistingServer: false }, {
     command: 'cp -R public .next/standalone/ && cp -R .next/static .next/standalone/.next/ && node .next/standalone/server.js',
