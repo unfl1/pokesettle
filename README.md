@@ -44,7 +44,7 @@ pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend dev
 ```
 
-[로컬 화면](http://127.0.0.1:5173/) | [API 문서](http://127.0.0.1:8000/docs)
+[로컬 화면](http://127.0.0.1:3000/) | [API 문서](http://127.0.0.1:8000/docs)
 
 - 최초 색인 시 임베딩 모델 다운로드 필요, AI 답변 생성 시 설정한 공급자 요금 적용
 - 모델별 일일 예산과 배포 설정은 [운영 지침](docs/guides/OPERATIONS.md) 참고

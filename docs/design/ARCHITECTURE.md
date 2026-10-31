@@ -14,10 +14,10 @@
 
 - 프런트엔드: Next.js 16.4.3 App Router, `src/app/[lang]/layout.tsx`·`[lang]/(root)` 기능별 `page.tsx` 서버 컴포넌트 적용
 - 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
-- 화면 레이아웃: 홈과 기능 페이지를 `[lang]/(root)`에 함께 배치, `WorkspaceShell`에서 경로에 따라 홈의 공통 chrome만 제외, 기능별 서버 페이지 유지, 홈 문서 이동 시 초안만 일회성 탭 저장소로 전달
+- 화면 레이아웃: 홈과 기능 페이지를 `[lang]/(root)`에 함께 배치, `WorkspaceShell`에서 경로에 따라 홈의 공통 chrome만 제외, 홈·메뉴·브랜드의 클라이언트 이동으로 공통 Provider와 초안 유지
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
-- 통계: `@next/third-parties/google`의 `GoogleAnalytics`, 런타임 `GA_ID` 설정 시 활성화, CloudFront SSR 응답 캐시 비활성화
+- 통계: `RuntimeAnalytics`가 `/analytics/config`의 no-store 응답으로 런타임 `GA_ID` 조회 후 `GoogleAnalytics` 활성화, 공통 레이아웃의 요청 시 렌더링 의존성 제거
 - 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 모든 언어 `/{lang}/{feature}` 접두사, 기본 언어 `ko`, `zh`는 간체(`zh-Hans`) 제공
 - 라우팅: Next.js `proxy.ts`에서 기존 기능 주소를 `/ko/...`로 308 연결, 미지원 언어·알 수 없는 경로는 404 유지, 언어 전환 시 기능·쿼리·해시 유지
 - 번역: `next/root-params` 기반 서버 사전 로딩, `I18nProvider`에서 현재 언어 사전만 클라이언트에 전달, 원문·API 데이터·챗봇 생성 응답은 자동 번역하지 않고 제공 언어 안내 표시
@@ -274,7 +274,9 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 경계: 본문은 Server Component, 검색·기술 필터·이미지 실패 처리만 Client Component, 전체 도감 URL 인덱스의 클라이언트 전송 제외
 - URL 인덱스: `data/pokemon_names.json` → 프론트 빌드 시 `scripts/generate-pokemon-routes.mjs` → `src/generated/pokemon-routes.json`, ID 집합·빈 slug·경로 중복 검증
 - 리다이렉트·없는 ID: 스트리밍 이전 proxy에서 308·404 확정, 상세 canonical·hreflang·OG URL·사이트맵은 동일 인덱스 사용
-- 캐시: 공개 조회는 `no-store`, React `cache`로 렌더 요청 내 중복 조회 축소, 메타는 기존 백엔드 신선도 정책 및 클라이언트 staleTime 유지
+- 캐시: 도감 초기 목록·ID 상세·메타의 공개 GET만 Next.js 데이터 캐시로 60초 재검증, React `cache`로 렌더 요청 내 중복 조회 축소, 개인 세션 쿠키 전달 제외, 메타의 기존 백엔드 신선도 정책 및 클라이언트 staleTime 유지
+- 메타 SSR 신선도: 데이터 캐시 재검증 실패 시에도 `collectedAt` 기준 6시간 이후 임시 자료 표시, 24시간 이후 초기 데이터 제외 및 클라이언트 재조회
 - 실행 환경: Compose `API_ORIGIN=http://api:8000`, 서버 조회에 개인 세션 쿠키 전달 제외, 빌드 시 운영 API 접속 불필요
 - 상태 유지: 채팅·팀 Provider 유지, 공개 화면의 세션·상태·대화 조회 비활성화, 조건 검색 활성화 시 필요한 세션·상태만 조회
-- 공통 로딩 경계 제거: JavaScript 미사용 상태에서도 공개 본문을 바로 확인하도록 페이지 본문 flush 이전 데이터 조회 완료
+- 로딩: 도감·메타의 `RouteBoundary`에서 RSC 메뉴 이동에만 Suspense 로딩 안내 제공, 문서 직접 접속은 JavaScript 없이도 완성된 공개 본문 제공
+- 메뉴: `NavigationLink`의 명시적 사전 조회와 클릭 대기 표시 적용, 홈·챗봇·포BTI·시나리오는 정적 생성, 공개 데이터 화면만 요청 시 렌더링

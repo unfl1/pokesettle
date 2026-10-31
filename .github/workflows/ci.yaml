@@ -151,9 +151,9 @@ jobs:
           PLAYWRIGHT_EXTERNAL_SERVER: '1'
         run: |
           FIXTURE_API_HOST=0.0.0.0 node frontend/e2e/fixture-api.mjs > "$RUNNER_TEMP/ssr-fixture.log" 2>&1 &
-          docker run -d --name poketact-frontend-test --add-host host.docker.internal:host-gateway -p 127.0.0.1:5173:5173 -e PORT=5173 -e API_ORIGIN=http://host.docker.internal:5198 "poketact-frontend:$GITHUB_SHA"
+          docker run -d --name poketact-frontend-test --add-host host.docker.internal:host-gateway -p 127.0.0.1:3000:3000 -e PORT=3000 -e PUBLIC_DATA_CACHE_SECONDS=0 -e API_ORIGIN=http://host.docker.internal:5198 "poketact-frontend:$GITHUB_SHA"
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:5173/ > /dev/null; then break; fi
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then break; fi
             if [ "$attempt" = 30 ]; then echo 'Frontend test server did not become ready' >&2; exit 1; fi
             sleep 1
           done

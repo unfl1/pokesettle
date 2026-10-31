@@ -6,6 +6,9 @@ const byId = new Map(routes.map(item => [item.pokemonId, item]));
 let ready = false;
 let images = false;
 let failedIds = [];
+let delayMs = 0;
+let metaAgeHours = 0;
+const calls = {};
 const summary = id => ({ ...byId.get(id), pokemonId: id, speciesId: Number(id.split(':')[1]), nameKo: byId.get(id)?.names.ko ?? null, nameEn: byId.get(id)?.names.en ?? id, types: id === 'pokemon:1' ? ['grass','poison'] : ['electric'], scope: 'generic', championsEligibilityStatus: 'unknown' });
 function detail(id) {
   const pokemon = summary(id);
@@ -15,9 +18,16 @@ function detail(id) {
 const server = http.createServer(async (req,res) => {
   const url = new URL(req.url, 'http://fixture');
   const send = (data,status=200) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({data})); };
+  if (url.pathname === '/__fixture' && req.method === 'GET') return send({ calls });
   if (url.pathname === '/__fixture' && req.method === 'POST') {
     let body=''; for await (const chunk of req) body+=chunk;
-    const config=JSON.parse(body);ready=!!config.ready;images=!!config.images;failedIds=config.failedIds??[];return send({ready});
+    const config=JSON.parse(body);ready=!!config.ready;images=!!config.images;failedIds=config.failedIds??[];delayMs=config.delayMs??0;metaAgeHours=config.metaAgeHours??0;
+    for (const key of Object.keys(calls)) delete calls[key];
+    return send({ready});
+  }
+  if (url.pathname.startsWith('/api/')) {
+    calls[req.url] = (calls[req.url] ?? 0) + 1;
+    if (delayMs) await new Promise(resolve => setTimeout(resolve, delayMs));
   }
   if (url.pathname === '/api/status') return send({ready:true,metadataCount:1351,missing:[]});
   if (url.pathname === '/api/session') return send({active:true});
@@ -29,7 +39,7 @@ const server = http.createServer(async (req,res) => {
     if (failedIds.includes(id)) return send(null,503);
     return byId.has(id) ? send(detail(id)) : send(null,404);
   }
-  if (url.pathname === '/api/meta/singles' && ready) return send({items:[{...summary('pokemon:25'),rank:1,images:null,groups:[{category:'move',items:[{name:'Thunderbolt',nameKo:'10만볼트',names:{ko:'10만볼트',en:'Thunderbolt',ja:'１０まんボルト',zh:'十万伏特'},rank:1,percentage:50}]}]}],season:'SSR fixture',dataDate:'2026-10-29',collectedAt:'2026-10-29T00:00:00Z',providerGeneratedAt:null,stale:false,sourceUrl:'https://example.com/source',termsUrl:'https://example.com/terms',attribution:'Synthetic SSR fixture',nameSources:[],nameLicenceUrl:null});
+  if (url.pathname === '/api/meta/singles' && ready) return send({items:[{...summary('pokemon:25'),rank:1,images:null,groups:[{category:'move',items:[{name:'Thunderbolt',nameKo:'10만볼트',names:{ko:'10만볼트',en:'Thunderbolt',ja:'１０まんボルト',zh:'十万伏特'},rank:1,percentage:50}]}]}],season:'SSR fixture',dataDate:'2026-10-29',collectedAt:new Date(Date.now()-metaAgeHours*60*60*1000).toISOString(),providerGeneratedAt:null,stale:false,sourceUrl:'https://example.com/source',termsUrl:'https://example.com/terms',attribution:'Synthetic SSR fixture',nameSources:[],nameLicenceUrl:null});
   return send(null,503);
 });
 server.listen(Number(process.env.FIXTURE_API_PORT ?? 5198), process.env.FIXTURE_API_HOST ?? '127.0.0.1', () => console.log('Synthetic SSR fixture API ready'));
