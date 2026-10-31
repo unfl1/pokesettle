@@ -281,7 +281,7 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
           </div>
         </div>
       </section>
-      <div className="min-w-0">{children}</div>
+      <div className="pokedex-detail">{children}</div>
     </div>
   </>);
 }

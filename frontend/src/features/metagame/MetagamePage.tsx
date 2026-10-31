@@ -41,7 +41,7 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
   const data = query.data;
   const pokemon = data?.items.find(item => item.nameEn === selected) ?? data?.items[0];
   return (
-    <section aria-label={translate("싱글 배틀 메타")} className="space-y-5">
+    <section aria-label={translate("싱글 배틀 메타")} className="metagame-page">
       <div className="rounded-xl border border-line bg-surface p-5 text-[14px] leading-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <strong>{translate("Champions 랭크 싱글 · 사용 순위 TOP 30")}</strong>
@@ -49,13 +49,7 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
             {query.isFetching ? translate("확인 중…") : translate("다시 확인")}
           </button>
         </div>
-        <p className="text-muted">{translate("사용 순위는 승률을 뜻하지 않아요. 아래 채용률은 해당 포켓몬의 기술·도구·특성·성격별 통계이며, 하나의 완성된 세트가 아니에요.")}</p>
-        {data && <div className="mt-2 text-[14px] text-muted">
-          <p>{translate("시즌")} {data.season}  {translate("· 데이터 기준일")} {data.dataDate}  {translate("· 레귤레이션 미확인")}</p>
-          <p>{translate("서버 조회:")} {new Date(data.collectedAt).toLocaleString(localeRegistry[locale].htmlLang, { timeZone: 'Asia/Seoul' })}  {translate("· 비공식 제공 자료")}</p>
-          <a className="text-accent underline" href={data.sourceUrl} target="_blank" rel="noreferrer">{data.attribution}</a>
-          {' · '}<a className="underline" href={data.termsUrl} target="_blank" rel="noreferrer">{translate("이용 조건")}</a>
-        </div>}
+
       </div>
       {data?.stale && <p className="notice" role="status">{translate("최신 자료에 연결하지 못해 임시 보관한 데이터를 표시하고 있어요. 기준일을 확인해 주세요.")}</p>}
       {query.isPending && <div role="status" className="rounded-xl border border-line bg-surface p-6 text-muted">
@@ -87,7 +81,6 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
             </div>
             {pokemon.pokemonId && <Link prefetch={false} className="text-[14px] text-accent" href={pokemonPath({ pokemonId: pokemon.pokemonId, nameKo: pokemon.nameKo, nameEn: pokemon.nameEn, names: pokemon.names, slugs: pokemon.slugs }, locale)}>{translate("도감 보기 →")}</Link>}
           </div>
-          <p className="mb-5 text-[14px] leading-6 text-muted">{translate("수집된 한국어 이름이 없는 항목은 원문으로 표시해요. 현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.")}</p>
           <div className="grid grid-cols-2 gap-5 max-phone:grid-cols-1">
             {pokemon.groups.map(group => <section key={group.category} className="min-w-0">
               <h3 className="mb-2 font-semibold text-[14px]">{translate(labels[group.category] ?? group.category)} <span className="font-normal text-[14px] text-muted">{translate("채용률")}</span></h3>
@@ -99,12 +92,29 @@ export default function MetagamePage({ initialData, initialDataUpdatedAt }: { in
               </ul>}
             </section>)}
           </div>
-          <div className="mt-5 border-t border-line pt-3 text-[14px] leading-6 text-muted">
-            {data.nameSources?.length > 0 && <p>{translate("도구·성격 한국어 이름: PokéAPI · 수집일")} {data.nameSources[0].collectedAt.slice(0, 10)} · <a className="underline" href={data.nameLicenceUrl ?? undefined} target="_blank" rel="noreferrer">{translate("이용 조건")}</a></p>}
-            {pokemon.images && <p>{translate("이미지:")} <a className="underline" href={pokemon.images.sourceUrl} target="_blank" rel="noreferrer">PokéAPI sprites</a> · {pokemon.images.rightsNotice}</p>}
-          </div>
+
         </section>
       </div>}
+      <aside className="page-data-notes" aria-label={translate('출처 및 이용 안내')}>
+        <ul className="page-data-explanations">
+          <li>{translate("사용 순위는 승률을 뜻하지 않아요.")}</li>
+          <li>{translate("채용률은 기술·도구·특성·성격별 통계이며, 하나의 완성된 세트가 아니에요.")}</li>
+          <li>{translate("수집된 한국어 이름이 없는 항목은 원문으로 표시해요.")}</li>
+          <li>{translate("현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.")}</li>
+        </ul>
+        {data && <>
+          <div className="page-data-row">
+            <p>{translate("시즌")} {data.season} {translate("· 데이터 기준일")} {data.dataDate} {translate("· 레귤레이션 미확인")}</p>
+            <p>{translate("서버 조회:")} {new Date(data.collectedAt).toLocaleString(localeRegistry[locale].htmlLang, { timeZone: 'Asia/Seoul' })} {translate("· 비공식 제공 자료")}</p>
+          </div>
+          <div className="page-data-row">
+            <a href={data.sourceUrl} target="_blank" rel="noreferrer">{data.attribution}</a>
+            <a href={data.termsUrl} target="_blank" rel="noreferrer">{translate("이용 조건")}</a>
+            {data.nameSources?.length > 0 && <p>{translate("도구·성격 한국어 이름: PokéAPI · 수집일")} {data.nameSources[0].collectedAt.slice(0, 10)} · <a href={data.nameLicenceUrl ?? undefined} target="_blank" rel="noreferrer">{translate("이용 조건")}</a></p>}
+            {pokemon?.images && <p>{translate("이미지:")} <a href={pokemon.images.sourceUrl} target="_blank" rel="noreferrer">PokéAPI sprites</a> · {pokemon.images.rightsNotice}</p>}
+          </div>
+        </>}
+      </aside>
     </section>
   );
 }
