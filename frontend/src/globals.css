@@ -265,7 +265,8 @@ html:has([data-testid="chat-page"]) { overflow: hidden; }
 /* PoBTI uses the shared blue brand palette. */
 .home-menu-purple { --home-tone: #8456bc; --home-fill: #f3edfc; }
 .app-shell:has(.pobti-page) { background: #fff; }
-.pobti-page { max-width: 720px; margin: 28px auto 0; }
+.workspace-main:has(> .pobti-page) { display: flex; flex-direction: column; justify-content: center; padding-block: 32px; }
+.pobti-page { width: min(100%, 720px); margin: 0 auto; }
 .pobti-topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: #64748b; font-size: 12px; }
 .pobti-topline > span:first-child { display: flex; align-items: center; gap: 6px; color: var(--color-accent); font-weight: 700; letter-spacing: 1px; }
 .pobti-card { padding: 40px; border: 1px solid var(--color-line); border-radius: 24px; background: #fff; text-align: center; box-shadow: 0 16px 48px #07164d10; }
@@ -322,3 +323,27 @@ html:has([data-testid="chat-page"]) { overflow: hidden; }
 .pobti-portrait { display: flex; justify-content: center; margin: 0 auto 24px; }
 .pobti-image-source { margin-top: 20px; font-size: 11px; line-height: 1.7; color: #64748b; }
 .pobti-image-source a { text-decoration: underline; }
+
+/* Keep reference notes after the working area, grouped across the available width. */
+.workspace-main:has(.pokedex-layout), .workspace-main:has(.metagame-page) { display: flex; flex-direction: column; }
+.pokedex-layout { flex: 1; grid-template-rows: auto 1fr; }
+.pokedex-detail { display: contents; }
+.pokedex-detail > section { min-width: 0; }
+.pokedex-data-notes { grid-column: 1 / -1; align-self: end; }
+.metagame-page { display: flex; flex: 1; flex-direction: column; gap: 20px; }
+.page-data-notes { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--color-line); color: var(--color-muted); font-size: 12px; line-height: 1.8; min-width: 0; }
+.metagame-page > .page-data-notes { margin-top: auto; }
+.page-data-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; min-width: 0; }
+.page-data-row + .page-data-row { margin-top: 10px; }
+.page-data-row > * { min-width: 0; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.page-data-notes a { color: var(--color-muted); text-decoration: underline; text-underline-offset: 3px; }
+.page-data-notes a > svg { display: inline-block; vertical-align: middle; }
+.page-data-details { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.page-data-details summary { cursor: pointer; }
+.page-data-details details[open] > :not(summary) { margin-top: 6px; }
+.page-data-explanations { display: grid; gap: 6px; margin: 0; padding-left: 16px; list-style: disc; }
+.page-data-explanations > li { min-width: 0; overflow-wrap: anywhere; }
+.page-data-explanations + .page-data-row { margin-top: 12px; }
+.workspace-main > .source-language-note:last-child { margin: 16px 0 0; font-size: 12px; }
+@media (max-width: 780px) { .pokedex-layout { grid-template-rows: auto auto 1fr; } }
+@media (max-width: 540px) { .workspace-main:has(> .pobti-page) { padding-block: 24px; } .page-data-row { gap: 6px 14px; } }

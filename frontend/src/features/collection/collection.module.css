@@ -1,0 +1,68 @@
+.collection { position: fixed; z-index: 25; bottom: max(82px, calc(env(safe-area-inset-bottom) + 22px)); left: 50%; transform: translateX(-50%); display: grid; place-items: center; grid-template: minmax(0, 1fr) / minmax(0, 1fr); width: 80px; height: 80px; transition: bottom 450ms ease-out, transform 450ms ease-out, width 450ms ease-out, height 450ms ease-out; }
+.collection.capturing { z-index: 91; bottom: 50%; transform: translate(-50%, 50%); width: clamp(180px, 42vw, 240px); height: clamp(180px, 42vw, 240px); }
+.captureBackdrop { position: fixed; inset: 0; z-index: 90; background: #050c1894; pointer-events: none; animation: backdropIn 300ms ease-out both; }
+.captureBackdrop.backdropLeaving { animation: backdropOut 750ms ease-in-out both; }
+@keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdropOut { from { opacity: 1; } to { opacity: 0; } }
+.collection .dockBall { animation: encounterAppear 1800ms ease-out both; }
+.capturing .dockBall { width: 100%; height: 100%; opacity: 1; animation: none; }
+@keyframes encounterAppear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.dockBall { display: grid; place-items: center; position: relative; width: 80px; height: 80px; padding: 0; border: none; border-radius: 50%; background: transparent; box-shadow: none; cursor: pointer; }
+.dockBall:disabled { cursor: default; }
+.dockBall:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+.dockBall:not(:disabled):hover .ball { transform: rotate(-10deg); }
+.dockBall .ball { width: 68px; height: 68px; transition: width 450ms ease-out, height 450ms ease-out; }
+.capturing .dockBall .ball { width: 90%; height: 90%; }
+.dexButton:focus-visible, .close:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 5px; }
+.ball { display: block; overflow: visible; transform-origin: 50% 90%; }
+.shaking { animation: captureWobble 900ms 600ms 3 both; }
+.shaking .ballLight { animation: captureLight 900ms 600ms 3, captureLock 300ms 3300ms forwards; }
+/* Each shake settles fully before the next one; the lock follows the third pause. */
+@keyframes captureWobble {
+  0%, 52%, 100% { transform: translateX(0) rotate(0); }
+  12% { transform: translateX(-7px) rotate(-22deg); }
+  28% { transform: translateX(6px) rotate(18deg); }
+  41% { transform: translateX(-2px) rotate(-7deg); }
+}
+@keyframes captureLight { 0%, 55%, 100% { fill: #fff; } 12%, 40% { fill: #ffc272; filter: drop-shadow(0 0 4px #ffc272); } }
+@keyframes captureLock { to { fill: #72d9ac; filter: drop-shadow(0 0 4px #72d9ac80); } }
+.dexButton { position: relative; display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border: 0; border-radius: 9px; background: var(--color-surface); color: var(--color-accent-strong); cursor: pointer; }
+.dexButton:hover { background: #f1f6ff; }
+.dexArtwork { width: 32px; height: 32px; object-fit: contain; }
+.count { position: absolute; right: -3px; top: -4px; min-width: 14px; padding: 1px 3px; border-radius: 8px; color: var(--color-accent-strong); background: #e6efff; font-size: 9px; font-weight: 700; line-height: 1.3; }
+.landed { animation: dexReceive 500ms ease-out; }
+.flyer { position: fixed; z-index: 100; width: 234px; height: 234px; pointer-events: none; animation: flyToDex 750ms cubic-bezier(.55, .02, .78, .5) both; }
+.flyer img, .flyer > span { width: 234px; height: 234px; }
+@keyframes flyToDex { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 25% { opacity: 1; transform: translate(0, -22px) scale(1.06); } 90% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--flight-x), var(--flight-y)) scale(.08); } }
+@keyframes dexReceive { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.3) rotate(-12deg); box-shadow: 0 0 0 8px #0057ff15; } }
+.reveal { position: relative; animation: reveal 400ms ease-out both; }
+.portrait { display: grid; place-items: center; width: 234px; height: 234px; pointer-events: none; }
+.portrait img, .portrait > span { width: 234px; height: 234px; }
+@keyframes reveal { from { opacity: 0; transform: translateY(8px) scale(.92); } to { opacity: 1; transform: none; } }
+.storageWarning { color: #a14526; font-size: 12px; margin: 10px 0 0; }
+.dialog { width: min(720px, calc(100% - 24px)); max-height: 85dvh; margin: auto; padding: 28px; border: 1px solid var(--color-line); border-radius: 24px; color: var(--color-ink); background: var(--color-surface); box-shadow: 0 24px 100px #07164d30; overscroll-behavior: contain; }
+.dialog::backdrop { background: #07164d66; backdrop-filter: blur(5px); }
+.dialogHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; text-align: left; }
+.dialogHeader h2 { margin: 4px 0 22px; font-size: 23px; letter-spacing: -.6px; }
+.eyebrow { color: var(--color-muted); font-size: 10px; letter-spacing: 2px; font-weight: 600; }
+.close { display: grid; place-items: center; flex-shrink: 0; align-self: flex-start; width: 36px; height: 36px; border: 1px solid var(--color-line); border-radius: 50%; background: var(--color-surface); cursor: pointer; }
+.progressLabel { display: flex; justify-content: space-between; font-size: 12px; }
+.progressLabel strong { color: var(--color-accent-strong); }
+.progress { display: block; width: 100%; height: 6px; border: none; border-radius: 10px; margin: 10px 0 14px; overflow: hidden; background: #e9eef8; }
+.progress::-webkit-progress-bar { background: #e9eef8; }
+.progress::-webkit-progress-value { background: var(--color-accent); border-radius: 10px; }
+.progress::-moz-progress-bar { background: var(--color-accent); }
+.storageNote { text-align: left; color: var(--color-muted); font-size: 11px; line-height: 1.7; margin: 2px 0; }
+.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 22px 0 0; list-style: none; }
+.entry { min-width: 0; display: grid; justify-items: center; padding: 10px 5px 12px; border: 1px solid #edf0f5; border-radius: 12px; background: #f9fafc; }
+.owned { border-color: #cbdcff; background: #f4f8ff; }
+.number { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 3px; font-size: 9px; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.owned .number { color: var(--color-accent-strong); }
+.sprite { display: grid; place-items: center; height: 80px; }
+.sprite img, .sprite > span { max-width: 100%; }
+.unknown { font-size: 32px; font-weight: 300; color: #c5ccd8; }
+.name { font-size: 11px; overflow-wrap: anywhere; }
+.entry:not(.owned) .name { color: var(--color-muted); }
+.finished { margin: 16px 0; font-size: 13px; color: var(--color-accent-strong); }
+@media (max-width: 600px) { .dialog { padding: 20px 14px; } .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .dialogHeader h2 { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { .shaking, .shaking .ballLight, .reveal, .landed, .flyer, .collection .dockBall, .captureBackdrop, .captureBackdrop.backdropLeaving { animation: none; } .dockBall:not(:disabled):hover .ball { transform: none; } }

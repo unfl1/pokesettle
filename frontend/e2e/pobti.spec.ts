@@ -46,7 +46,7 @@ test('navigation, changing a previous answer, result, reload, and retake work of
   await expect(page).toHaveURL('/ko/pobti?type=INFP');
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '결과 링크 복사' }).click();
-  await expect(page.getByRole('status')).toHaveText('결과 링크를 복사했어요!');
+  await expect(page.getByRole('region', { name: '포BTI', exact: true }).getByRole('status')).toHaveText('결과 링크를 복사했어요!');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('/ko/pobti?type=INFP');
   await page.reload();
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
@@ -62,6 +62,12 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
     await page.getByRole('link', { name: new RegExp(title) }).click();
     await expect(page).toHaveURL(`/${locale}/pobti`);
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 1920, height: 1200 });
+    const largeCard = await page.locator('.pobti-card').boundingBox();
+    const workingArea = await page.locator('main').boundingBox();
+    expect(largeCard!.y).toBeGreaterThan(180);
+    expect(Math.abs(largeCard!.y + largeCard!.height / 2 - (workingArea!.y + workingArea!.height / 2))).toBeLessThan(80);
+    if (locale === 'ko') await page.screenshot({ path: '/tmp/pobti-large-centered.png', fullPage: true });
     await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://www.pokesettle.com/${locale}/pobti`);
     await page.goto(`/${locale}/pobti?type=ESTJ`);
     await expect(page.getByRole('heading', { name: pokemon, exact: true })).toBeVisible();

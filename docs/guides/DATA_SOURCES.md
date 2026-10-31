@@ -230,3 +230,23 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 자산: `frontend/public/logo.png`, 파생 아이콘 `frontend/src/app/icon.png`, `favicon.ico`, `apple-icon.png`
 - 적용: 공통 헤더·브라우저 아이콘·공유 메타데이터, 주색 `#0057ff`·보조색 `#36c5f0`·네이비 `#07164d`
 - 이용 범위: 사용자 요청에 따른 프로젝트 브랜딩 적용, 별도 외부 재배포 라이선스 미확인임
+
+### 관동 수집 도감 (2026-10-31)
+
+- 범위: 기존 이름 스냅샷의 기본 Pokémon 리소스 ID 1–151만 사용함. 별도 폼·Champions 출전 적격성과 무관한 방문 수집 기능임
+- 이름: 2026-10-29 수집한 다국어 이름과 `frontend/src/generated/pokemon-routes.json` 재사용함
+- 이미지: 기존 [PokéAPI sprites](https://github.com/PokeAPI/sprites) 공식 일러스트·기본 스프라이트 URL 재사용, 연결 기준은 `data/pokemon.json`의 2026-10-21 메타데이터임. 새 원본 이미지 수집·Git 추가 없음
+- 권리: 기존 [권리 표기](https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt)와 홈·공통 하단의 Pokémon 권리 안내 유지함. 이미지 이용 범위에 대한 추가 허가로 해석하지 않음
+- 몬스터볼 표시·포획 흔들림·도감 이동: SVG·CSS로 구현한 장식과 애니메이션, 게임 원본 그래픽·음원 사용 없음
+
+
+### 관동 수집 도감 버튼 이미지 (2026-10-31)
+
+- 자산: `frontend/public/images/collection/kanto-pokedex-emblem.png`, 1,254×1,254px RGBA, 알파 범위 0–255
+- 참고 이미지: 사용자가 지정한 [1세대 도감 그림](https://static.wikia.nocookie.net/pokemon/images/3/34/1%EC%84%B8%EB%8C%80_%EB%8F%84%EA%B0%90.png/revision/latest?cb=20141004064302&path-prefix=ko)의 왼쪽 닫힌 도감, 확인일 2026-10-31 KST
+- 편집: 브라우저에서 확인한 참고 이미지로 내장 imagegen의 왼쪽 도감 분리·배경 투명 처리 후, 사용자 요청에 따라 빈 표지 중앙에 밝은 몬스터볼 문양을 추가함. 원본 PNG의 무손실 픽셀 크롭과 구분되는 AI 편집본임
+- SHA-256: `6b71716e653c30077bf94e1b4c8c2b13f8c20073f584c71f3a4310b5eab3bc99`
+- 표시: Next Image의 32px 영역에 비율 유지하여 표시함. 픽셀 확대 보간 스타일 제거함
+- 권리: Pokémon 관련 그림의 권리는 원권리자에게 귀속, 사용자 링크 제공·AI 편집을 별도 이미지 이용 허가로 해석하지 않음. 원본의 자유 이용 라이선스 미확인임
+- 적용: 언어 선택 왼쪽 수집 도감 버튼, 수집 수·접근성 이름·포켓몬 도착 위치 유지함
+- 교체: 앞서 사용한 RG 원화·FireRed/LeafGreen 도트 스프라이트는 현재 앱 표시와 public 자산에서 제외함

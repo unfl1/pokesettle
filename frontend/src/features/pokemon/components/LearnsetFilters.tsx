@@ -6,7 +6,7 @@ import { useTypeLabels } from '../typeLabels';
 import { TypeBadge, typeColors } from './TypeBadge';
 import { lightTextTypes } from '../typeColors';
 import type { PokemonDetail } from '../types';
-export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDetail, 'learnset' | 'learnsetSources' | 'learnsetLicenceUrl'> }) {
+export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDetail, 'learnset'> }) {
   const { locale, t: translate } = useI18n();
   const typeLabels = useTypeLabels();
   const [learnMethod, setLearnMethod] = useState('all');
@@ -15,8 +15,6 @@ export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDeta
           <div className="mt-4 mb-4 text-[14px]" data-testid="pokemon-learnset">
             <h3 className="font-medium mb-2">{translate("배울 수 있는 기술")}</h3>
             {pokemon.learnset ? <>
-              <p className="text-[14px] text-muted mb-3">
-                 {translate("기준 버전:")} {pokemon.learnset.versionGroup}  {translate("· Champions 습득 여부 미확인")} </p>
               <label className="flex items-center gap-2 mb-3 text-[14px] text-muted">{translate("타입별 보기")} <select aria-label={translate("기술 타입 필터")} value={learnType} onChange={e => setLearnType(e.target.value)} className="rounded-md border border-line bg-canvas px-3 py-2 text-ink">
                   <option value="all">{translate("전체 타입")}</option>
                   {[...new Set(pokemon.learnset.moves.map(m => m.type ?? 'unknown'))].map(type => <option key={type} value={type}>{typeLabels[type] ?? (type === 'unknown' ? translate("타입 미확인") : type)}</option>)}
@@ -49,12 +47,6 @@ export default function LearnsetFilters({ pokemon }: { pokemon: Pick<PokemonDeta
                   </section>;
                 })}
               </div>
-              <details className="mt-2 text-[14px] text-muted">
-                <summary className="cursor-pointer">{translate("기술 데이터 출처·수집일")}</summary>
-                <p>{translate("수집 자료 중 가장 최근 버전 그룹 기준 · 일반 도감 자료")}</p>
-                {pokemon.learnsetSources?.map(source => <p key={source.url}><a className="text-link underline" href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()}</a> · {source.collectedAt.slice(0, 10)}</p>)}
-                {pokemon.learnsetLicenceUrl && <a className="text-link underline" href={pokemon.learnsetLicenceUrl} target="_blank" rel="noreferrer">{translate("PokéAPI 이용 조건")}</a>}
-              </details>
             </> : <p className="text-muted">{translate("이 포켓몬의 버전별 기술 습득 자료가 아직 등록되지 않았습니다.")}</p>}
           </div>
   );

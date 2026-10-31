@@ -27,6 +27,12 @@ test('JavaScript 없이 상세 본문·스탯·출처와 실제 목록 링크 �
   await expect(page.getByRole('heading', { name: '종족값' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'PokéAPI 메타데이터 원문' })).toHaveAttribute('href', 'https://pokeapi.co/api/v2/pokemon/10094/');
   await expect(page.getByRole('link', { name: '이상해씨 선택' })).toHaveAttribute('href', /-1$/);
+  const notes = page.getByRole('complementary', { name: '출처 및 이용 안내' });
+  await expect(notes).toContainText('Champions 적격성 미확인');
+  const profileBox = await page.getByRole('region', { name: '선택한 포켓몬 정보' }).boundingBox();
+  const notesBox = await notes.boundingBox();
+  expect(notesBox!.y).toBeGreaterThanOrEqual(profileBox!.y + profileBox!.height);
+  expect(notesBox!.width).toBeGreaterThan(profileBox!.width);
   await page.screenshot({ path: '/tmp/pokesettle-pokedex-ssr-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 320, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

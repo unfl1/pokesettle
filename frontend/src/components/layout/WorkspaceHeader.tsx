@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 
 import LanguageSwitcher from './LanguageSwitcher';
 import { localizedPath, withoutLocale } from '../../i18n/config';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -17,7 +17,7 @@ const navigation = [
   { id: 'pobti', path: '/pobti', label: '포BTI', icon: Sparkles },
   { id: 'scenario', path: '/scenario', label: '6:6 시나리오', icon: Swords },
 ] as const;
-export default function WorkspaceHeader() {
+export default function WorkspaceHeader({ collection }: { collection?: ReactNode }) {
   const { locale, t: translate } = useI18n();
   const pathname = withoutLocale(usePathname());
   const params = useSearchParams();
@@ -43,6 +43,7 @@ export default function WorkspaceHeader() {
             ))}
           </nav>
           <div className="header-actions">
+            {collection}
             <LanguageSwitcher />
             <button className="help-button" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
               <CircleHelp size={19} />
