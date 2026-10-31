@@ -7,6 +7,18 @@ const ball = (page: Page) => page.getByRole('button', { name: '몬스터볼 열�
 const portrait = (page: Page) => page.locator('[class*="portrait"]');
 const readCaught = (page: Page) => page.evaluate(key => JSON.parse(localStorage.getItem(key) ?? '[]') as number[], collectionKey);
 
+async function fixedViewport(page: Page) {
+  return page.evaluate(() => {
+    // A stable root gutter may be reserved even when clientWidth includes it.
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none';
+    document.body.append(probe);
+    const { x, y, width, height } = probe.getBoundingClientRect();
+    probe.remove();
+    return { x, y, width, height };
+  });
+}
+
 async function revealBall(page: Page) {
   await expect(dex(page)).toBeEnabled();
   await page.keyboard.press('Shift');
@@ -62,7 +74,8 @@ test('사용 전에는 숨기고 사용 중 무작위 대기 후 중앙에 서�
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     const box = await ball(page).boundingBox();
-    expect(box!.x + box!.width / 2).toBeCloseTo(width / 2, 0);
+    const viewport = await fixedViewport(page);
+    expect(box!.x + box!.width / 2).toBeCloseTo(viewport.x + viewport.width / 2, 0);
     expect(await ball(page).evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
     expect(await ball(page).getAttribute('title')).toBeNull();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -123,9 +136,9 @@ test('포획·상단 이동 후 10분 제한, 새로고침 유지 및 같은 화
   expect(await ball(page).locator('svg').evaluate(el => getComputedStyle(el).animationIterationCount)).toBe('3');
   await page.screenshot({ path: '/tmp/pokesettle-centered-capture.png', animations: 'disabled' });
   const centered = await ball(page).boundingBox();
-  const viewport = page.viewportSize()!;
-  expect(centered!.x + centered!.width / 2).toBeCloseTo(viewport.width / 2, 0);
-  expect(centered!.y + centered!.height / 2).toBeCloseTo(viewport.height / 2, 0);
+  const viewport = await fixedViewport(page);
+  expect(centered!.x + centered!.width / 2).toBeCloseTo(viewport.x + viewport.width / 2, 0);
+  expect(centered!.y + centered!.height / 2).toBeCloseTo(viewport.y + viewport.height / 2, 0);
   expect(centered!.width).toBeGreaterThan(150);
   await page.clock.runFor(3850);
   await expect(page.getByRole('status')).toContainText('넌 내 거야!');
