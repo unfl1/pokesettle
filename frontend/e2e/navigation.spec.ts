@@ -7,14 +7,16 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(async ({ request }) => { await request.post(fixture, { data: { ready: false } }); });
 
-test('홈·상단 메뉴·브랜드 이동은 문서를 다시 요청하지 않음', async ({ page }) => {
+test('홈과 기능 메뉴는 문서 재요청 없이 전환', async ({ page }) => {
   await page.goto('/ko');
   const documents: string[] = [];
   page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url()); });
   await page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link', { name: /포BTI/ }).click();
   await expect(page.getByRole('button', { name: '내 포켓몬 찾기' })).toBeVisible();
+  expect(documents).toEqual([]);
   await page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '6:6 시나리오' }).click();
   await expect(page).toHaveURL('/ko/scenario');
+  expect(documents).toEqual([]);
   await page.getByRole('link', { name: 'PokeSettle 홈', exact: true }).click();
   await expect(page.getByRole('navigation', { name: '시작할 메뉴 선택' })).toBeVisible();
   expect(documents).toEqual([]);
@@ -70,4 +72,25 @@ test('SSR 메타 캐시의 6시간 임시 표시와 24시간 만료 유지', asy
   await request.post(fixture, { data: { ready: true, metaAgeHours: 25 } });
   const expired = await request.get('/ko/meta');
   expect(await expired.text()).not.toContain('Synthetic SSR fixture');
+});
+
+test('문서 이동 초안 복원은 초기 링크 DOM과 질문을 유지', async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem('poketact-navigation-draft', JSON.stringify({
+      savedAt: Date.now(), draft: '복원한 질문', team: {
+        own: [], opponent: [], name: '복원한 팀', selectedId: '', notice: '', tab: 'team',
+        ownActive: 0, opponentActive: 0, attackTypes: [], megaUsed: 'unknown', megaTargetId: '', switchBlocked: 'unknown',
+      },
+    }));
+  });
+  let release!: () => void;
+  const scriptsReady = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/_next/static/**/*.js', async route => { await scriptsReady; await route.continue(); });
+  await page.goto('/ko', { waitUntil: 'commit' });
+  const link = await page.getByRole('link', { name: /챗봇/ }).elementHandle();
+  release();
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('poketact-navigation-draft'))).toBeNull();
+  expect(await link!.evaluate(node => node.isConnected)).toBe(true);
+  await page.getByRole('link', { name: /챗봇/ }).click();
+  await expect(page.getByLabel('포켓몬 질문')).toHaveValue('복원한 질문');
 });

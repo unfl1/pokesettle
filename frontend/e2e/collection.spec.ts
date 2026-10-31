@@ -261,20 +261,44 @@ test('다른 탭에도 10분 제한 적용, 만료 후 중복 없이 추가 수�
 });
 
 test('동시에 두 탭에서 눌러도 한 마리만 수집', async ({ page, context }) => {
+  const pausedAt = new Date(Date.now() + 60_000);
+  await page.clock.pauseAt(pausedAt);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/ko/pobti');
   const other = await context.newPage();
   await other.clock.install();
+  await other.clock.pauseAt(pausedAt);
   await other.emulateMedia({ reducedMotion: 'reduce' });
   await other.goto('/ko/pobti');
   await revealBall(page);
   await revealBall(other);
-  await Promise.all([ball(page).click(), ball(other).click()]);
+  // Queue both capture handlers before either 150ms timer can complete and
+  // remove the other tab's ball through its storage event.
+  await Promise.all([expect(ball(page)).toBeEnabled(), expect(ball(other)).toBeEnabled()]);
+  await Promise.all([ball(page).dispatchEvent('click'), ball(other).dispatchEvent('click')]);
+  await Promise.all([expect(ball(page)).toBeDisabled(), expect(ball(other)).toBeDisabled()]);
   await Promise.all([page.clock.runFor(250), other.clock.runFor(250)]);
   await expect(dex(page)).toHaveText('1');
   await expect(dex(other)).toHaveText('1');
   expect(await readCaught(page)).toHaveLength(1);
   await other.close();
+});
+
+test('느린 하이드레이션 직후 첫 입력도 등장 대기를 시작함', async ({ page }) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  try {
+    await page.goto('/ko/pobti');
+    await expect(dex(page)).toBeEnabled();
+    await page.keyboard.press('Shift');
+    await page.clock.runFor(7000);
+    await expect(ball(page)).toHaveCount(0);
+    await page.clock.runFor(8100);
+    await expect(ball(page)).toBeVisible();
+  } finally {
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    await cdp.detach();
+  }
 });
 
 test('흔들리는 도중 홈으로 나가면 포획 타이머 정리', async ({ page }) => {

@@ -39,7 +39,7 @@ export default async function Home() {
         </header>
         <nav className="home-menus" aria-label={translate("시작할 메뉴 선택")}>
           {menus.map(({ href, title, description, action, color, icon: Icon }) => (
-            <NavigationLink key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
+            <NavigationLink prefetch={false} key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
               <svg className="home-menu-tail" viewBox="0 0 32 40" aria-hidden="true" focusable="false">
                 <path d="M32 2C20 10 9 25 2 37C13 35 22 30 32 29" />
                 <path className="home-menu-tail-seam" d="M32 2V29" />

@@ -1,5 +1,5 @@
 import { useI18n } from '../../../i18n/I18nProvider';
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { TeamMember } from '../types';
 
 export interface TeamDraftState {
@@ -33,11 +33,19 @@ export function useTeamDraft(initial?: TeamDraftState) {
     [switchBlocked, setSwitchBlocked] = useState(initial?.switchBlocked ?? 'unknown');
   const activeId = own[Math.min(ownActive, Math.max(0, own.length - 1))]?.pokemonId;
   const previousActiveId = useRef(activeId);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (previousActiveId.current !== activeId) setMegaTargetId('');
     previousActiveId.current = activeId;
   }, [activeId]);
-  return { own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
+  function restore(saved: TeamDraftState) {
+    previousActiveId.current = saved.own[Math.min(saved.ownActive, Math.max(0, saved.own.length - 1))]?.pokemonId;
+    setOwn(saved.own); setOpponent(saved.opponent); setName(saved.name);
+    setSelectedId(saved.selectedId); setNotice(saved.notice); setTab(saved.tab);
+    setOwnActive(saved.ownActive); setOpponentActive(saved.opponentActive);
+    setAttackTypes(saved.attackTypes); setMegaUsed(saved.megaUsed);
+    setMegaTargetId(saved.megaTargetId); setSwitchBlocked(saved.switchBlocked);
+  }
+  return { restore, own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
     notice, setNotice, tab, setTab, ownActive, setOwnActive, opponentActive, setOpponentActive,
     attackTypes, setAttackTypes, megaUsed, setMegaUsed, megaTargetId, setMegaTargetId,
     switchBlocked, setSwitchBlocked };

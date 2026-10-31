@@ -31,7 +31,7 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <NavigationLink href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
+          <NavigationLink prefetch={false} href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
             <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo" priority />
             PokeSettle<span className="brand-tag">BETA</span>
           </NavigationLink>

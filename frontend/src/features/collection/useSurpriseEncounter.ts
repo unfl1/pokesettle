@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 // Count visible time after the first real interaction, rather than page-load time.
 export function useSurpriseEncounter(enabled: boolean) {
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  // Attach activation listeners in the commit that enables the encounter,
+  // before an enabled control can receive the visitor's first interaction.
+  useLayoutEffect(() => {
     if (!enabled) { setVisible(false); return; }
     let remaining = 8_000 + Math.random() * 7_000;
     let timer: ReturnType<typeof setTimeout> | null = null;
