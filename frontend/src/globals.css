@@ -324,12 +324,12 @@ html:has([data-testid="chat-page"]) { overflow: hidden; }
 .pobti-image-source { margin-top: 20px; font-size: 11px; line-height: 1.7; color: #64748b; }
 .pobti-image-source a { text-decoration: underline; }
 
-/* Keep reference notes after the working area, grouped across the available width. */
+/* Keep Pokédex notes in the detail column, clear of the sticky browser. */
 .workspace-main:has(.pokedex-layout), .workspace-main:has(.metagame-page) { display: flex; flex-direction: column; }
 .pokedex-layout { flex: 1; grid-template-rows: auto 1fr; }
 .pokedex-detail { display: contents; }
 .pokedex-detail > section { min-width: 0; }
-.pokedex-data-notes { grid-column: 1 / -1; align-self: end; }
+.pokedex-data-notes { grid-column: 2; align-self: end; }
 .metagame-page { display: flex; flex: 1; flex-direction: column; gap: 20px; }
 .page-data-notes { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--color-line); color: var(--color-muted); font-size: 12px; line-height: 1.8; min-width: 0; }
 .metagame-page > .page-data-notes { margin-top: auto; }
@@ -345,5 +345,8 @@ html:has([data-testid="chat-page"]) { overflow: hidden; }
 .page-data-explanations > li { min-width: 0; overflow-wrap: anywhere; }
 .page-data-explanations + .page-data-row { margin-top: 12px; }
 .workspace-main > .source-language-note:last-child { margin: 16px 0 0; font-size: 12px; }
-@media (max-width: 780px) { .pokedex-layout { grid-template-rows: auto auto 1fr; } }
+@media (max-width: 780px) {
+  .pokedex-layout { grid-template-rows: auto auto 1fr; }
+  .pokedex-data-notes { grid-column: 1; }
+}
 @media (max-width: 540px) { .workspace-main:has(> .pobti-page) { padding-block: 24px; } .page-data-row { gap: 6px 14px; } }

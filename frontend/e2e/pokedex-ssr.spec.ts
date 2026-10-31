@@ -32,10 +32,20 @@ test('JavaScript 없이 상세 본문·스탯·출처와 실제 목록 링크 �
   const profileBox = await page.getByRole('region', { name: '선택한 포켓몬 정보' }).boundingBox();
   const notesBox = await notes.boundingBox();
   expect(notesBox!.y).toBeGreaterThanOrEqual(profileBox!.y + profileBox!.height);
-  expect(notesBox!.width).toBeGreaterThan(profileBox!.width);
+  expect(notesBox!.x).toBeCloseTo(profileBox!.x, 0);
+  expect(notesBox!.width).toBeCloseTo(profileBox!.width, 0);
+  // The sticky browser must stay left of the notes even near the page bottom.
+  await notes.scrollIntoViewIfNeeded();
+  const browserBox = await page.getByRole('region', { name: '포켓몬 탐색' }).boundingBox();
+  const scrolledNotesBox = await notes.boundingBox();
+  expect(scrolledNotesBox!.x).toBeGreaterThanOrEqual(browserBox!.x + browserBox!.width);
   await page.screenshot({ path: '/tmp/pokesettle-pokedex-ssr-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 320, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const mobileProfileBox = await page.getByRole('region', { name: '선택한 포켓몬 정보' }).boundingBox();
+  const mobileNotesBox = await notes.boundingBox();
+  expect(mobileNotesBox!.x).toBeCloseTo(mobileProfileBox!.x, 0);
+  expect(mobileNotesBox!.width).toBeCloseTo(mobileProfileBox!.width, 0);
   await page.screenshot({ path: '/tmp/pokesettle-pokedex-ssr-mobile.png', fullPage: true });
   await context.close();
 });
