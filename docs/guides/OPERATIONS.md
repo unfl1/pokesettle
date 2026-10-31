@@ -265,10 +265,9 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - SEO 원본 도메인: 기본 `https://www.pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
-- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 Next Link 이동으로 공통 Provider·초안 유지
+- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈 ↔ 작업 화면은 문서 이동으로 canonical·Open Graph 수명 분리, 기능 메뉴는 Next Link 이동으로 Provider·초안 유지
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
-- 내부 링크: 메뉴·홈 카드·브랜드의 사전 조회 및 클릭 대기 표시 적용, 도감·메타는 RSC 이동에서 로딩 안내와 스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
-- metadata: `htmlLimitedBots: /.*/`로 제목·canonical·Open Graph를 먼저 확정, 본문 스트리밍·메뉴 사전 조회 유지
+- 내부 링크: 기능 메뉴의 사전 조회·클릭 대기 표시 유지, 홈 카드·브랜드는 일반 링크로 문서 이동, 도감·메타는 RSC 이동에서 로딩 안내·스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
 - 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
 - `PUBLIC_DATA_CACHE_SECONDS=0`: 공개 SSR 캐시 비활성화 옵션, 상태를 변경하는 E2E fixture의 검사 간 격리에 사용, 운영 기본값은 60초
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
