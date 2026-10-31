@@ -7,19 +7,19 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(async ({ request }) => { await request.post(fixture, { data: { ready: false } }); });
 
-test('홈 경계는 문서 이동, 기능 메뉴는 클라이언트 이동으로 전환', async ({ page }) => {
+test('홈과 기능 메뉴는 문서 재요청 없이 전환', async ({ page }) => {
   await page.goto('/ko');
   const documents: string[] = [];
   page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url()); });
   await page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link', { name: /포BTI/ }).click();
   await expect(page.getByRole('button', { name: '내 포켓몬 찾기' })).toBeVisible();
-  expect(documents.map(url => new URL(url).pathname)).toEqual(['/ko/pobti']);
+  expect(documents).toEqual([]);
   await page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '6:6 시나리오' }).click();
   await expect(page).toHaveURL('/ko/scenario');
-  expect(documents.map(url => new URL(url).pathname)).toEqual(['/ko/pobti']);
+  expect(documents).toEqual([]);
   await page.getByRole('link', { name: 'PokeSettle 홈', exact: true }).click();
   await expect(page.getByRole('navigation', { name: '시작할 메뉴 선택' })).toBeVisible();
-  expect(documents.map(url => new URL(url).pathname)).toEqual(['/ko/pobti', '/ko']);
+  expect(documents).toEqual([]);
 });
 
 test('느린 공개 조회 중에도 로딩 안내와 메뉴를 표시하고 다른 메뉴로 이동 가능', async ({ page, request }) => {

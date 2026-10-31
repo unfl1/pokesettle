@@ -31,10 +31,10 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
   return <>
       <header className="site-header">
         <div className="header-inner">
-          <a href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
+          <NavigationLink prefetch={false} href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
             <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo" priority />
             PokeSettle<span className="brand-tag">BETA</span>
-          </a>
+          </NavigationLink>
           <nav className="primary-nav" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
               <NavigationLink key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>

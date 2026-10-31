@@ -1,6 +1,7 @@
 import { localizedPath } from '../../../i18n/config';
 import { Suspense } from 'react';
 import LanguageSwitcher from '../../../components/layout/LanguageSwitcher';
+import NavigationLink from '../../../components/layout/NavigationLink';
 import { pageMetadata } from '../../../i18n/metadata';
 
 import { getI18n } from '../../../i18n/server';
@@ -38,7 +39,7 @@ export default async function Home() {
         </header>
         <nav className="home-menus" aria-label={translate("시작할 메뉴 선택")}>
           {menus.map(({ href, title, description, action, color, icon: Icon }) => (
-            <a key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
+            <NavigationLink prefetch={false} key={href} href={localizedPath(locale, href)} className={`home-menu home-menu-${color}`}>
               <svg className="home-menu-tail" viewBox="0 0 32 40" aria-hidden="true" focusable="false">
                 <path d="M32 2C20 10 9 25 2 37C13 35 22 30 32 29" />
                 <path className="home-menu-tail-seam" d="M32 2V29" />
@@ -46,7 +47,7 @@ export default async function Home() {
               <span className="home-menu-icon" aria-hidden="true"><Icon size={23} strokeWidth={1.8} /></span>
               <span className="home-menu-copy"><h2>{translate(title)}</h2><span>{translate(description)}</span></span>
               <span className="home-menu-action" aria-hidden="true"><span>{translate(action)}</span><ArrowRight size={17} /></span>
-            </a>
+            </NavigationLink>
           ))}
         </nav>
       </div>
