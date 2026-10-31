@@ -63,6 +63,7 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
     await expect(page).toHaveURL(`/${locale}/pobti`);
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
     await page.setViewportSize({ width: 1920, height: 1200 });
+    await expect(page.locator('.pobti-card')).toBeVisible();
     const largeCard = await page.locator('.pobti-card').boundingBox();
     const workingArea = await page.locator('main').boundingBox();
     expect(largeCard!.y).toBeGreaterThan(180);
