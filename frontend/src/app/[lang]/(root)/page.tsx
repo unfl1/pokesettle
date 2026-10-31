@@ -1,6 +1,5 @@
 import { localizedPath } from '../../../i18n/config';
 import { Suspense } from 'react';
-import { connection } from 'next/server';
 import LanguageSwitcher from '../../../components/layout/LanguageSwitcher';
 import NavigationLink from '../../../components/layout/NavigationLink';
 import { pageMetadata } from '../../../i18n/metadata';
@@ -19,9 +18,6 @@ const menus = [
 ] as const;
 
 export default async function Home() {
-  // Keep the home metadata on the same request-time rendering path as the
-  // dynamic Pokédex when navigating between the two routes.
-  await connection();
   const { locale, t: translate } = await getI18n();
   const homeTitle = translate('배틀 준비는 PokeSettle에서');
   return <div className="home-shell">
