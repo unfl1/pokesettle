@@ -46,7 +46,7 @@ test('navigation, changing a previous answer, result, reload, and retake work of
   await expect(page).toHaveURL('/ko/pobti?type=INFP');
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '결과 링크 복사' }).click();
-  await expect(page.getByRole('status')).toHaveText('결과 링크를 복사했어요!');
+  await expect(page.getByRole('region', { name: '포BTI', exact: true }).getByRole('status')).toHaveText('결과 링크를 복사했어요!');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('/ko/pobti?type=INFP');
   await page.reload();
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
