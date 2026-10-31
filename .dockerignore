@@ -55,6 +55,9 @@ backend/tests/
 frontend/*
 !frontend/package.json
 !frontend/pnpm-lock.yaml
+!frontend/pnpm-workspace.yaml
+!frontend/patches/
+!frontend/patches/**
 !frontend/next.config.ts
 !frontend/postcss.config.mjs
 !frontend/tsconfig.json

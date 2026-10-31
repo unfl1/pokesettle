@@ -117,8 +117,10 @@ test('root layout reserves the gutter when document overflow changes', async ({ 
 });
 
 test('metadata remains in head across navigation on a slower browser', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  // 4x passed on fast Macs while CI failed; 20x reproduces the hydration race locally.
   const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
   try {
     for (const language of languages) {
       const response = await request.get(`/${language.code}/pokedex`, {
@@ -127,6 +129,8 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
       const head = (await response.text()).split('</head>')[0];
       expect(head).toContain(`rel="canonical" href="https://www.pokesettle.com/${language.code}/pokedex"`);
       await page.goto(`/${language.code}`);
+      const documents: string[] = [];
+      page.on('request', req => { if (req.isNavigationRequest() && req.frame() === page.mainFrame()) documents.push(req.url()); });
       await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
       const canonical = page.locator('head link[rel="canonical"]');
       await expect(async () => {
@@ -141,6 +145,7 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
         expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}/pokedex`]);
       }).toPass({ timeout: 5000 });
       await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.pokesettle.com/${language.code}/pokedex`);
+      expect(documents).toEqual([]);
     }
   } finally {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });

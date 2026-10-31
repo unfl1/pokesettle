@@ -1,0 +1,58 @@
+diff --git a/dist/esm/lib/metadata/metadata.js b/dist/esm/lib/metadata/metadata.js
+index 8983eb96f6977fc60a14df171a10a320fff9f2cb..18b7bddac931170800690f8d73b403d9259b485b 100644
+--- a/dist/esm/lib/metadata/metadata.js
++++ b/dist/esm/lib/metadata/metadata.js
+@@ -50,20 +50,14 @@ export function createMetadataComponents({ tree, pathname, parsedQuery, metadata
+         return serveStreamingMetadata ? null : getSelectedMetadata().then(()=>null);
+     }
+     function MetadataWrapper() {
+-        // Keep the same component structure in streaming and blocking renders.
+-        // The blocker only holds the shell open when metadata must not stream.
+-        // React requires top-level suspenseful metadata to be nested under a host
+-        // element. Otherwise it becomes part of the document preamble and blocks
+-        // shell flushing instead of streaming. Metadata tags are hoisted out, so
+-        // this hidden wrapper remains empty.
++        // PokeSettle: resolve metadata with the document instead of hydrating it
++        // in a separate Suspense boundary. Navigation before that boundary hydrates
++        // leaves the previous page's hoisted tags in head. Body streaming is unchanged.
+         return /*#__PURE__*/ _jsxs(MetadataBoundary, {
+             children: [
+                 /*#__PURE__*/ _jsx("div", {
+                     hidden: true,
+-                    children: /*#__PURE__*/ _jsx(Suspense, {
+-                        name: "Next.Metadata",
+-                        children: /*#__PURE__*/ _jsx(Metadata, {})
+-                    })
++                    children: /*#__PURE__*/ _jsx(Metadata, {})
+                 }),
+                 /*#__PURE__*/ _jsx(MetadataBlocker, {})
+             ]
+diff --git a/dist/lib/metadata/metadata.js b/dist/lib/metadata/metadata.js
+index cde6fa042b68bcb1ce91d294595261913566b706..28689cead2ab4ad839e9efac4433ec0aebd6c1ad 100644
+--- a/dist/lib/metadata/metadata.js
++++ b/dist/lib/metadata/metadata.js
+@@ -95,20 +95,14 @@ function createMetadataComponents({ tree, pathname, parsedQuery, metadataContext
+         return serveStreamingMetadata ? null : getSelectedMetadata().then(()=>null);
+     }
+     function MetadataWrapper() {
+-        // Keep the same component structure in streaming and blocking renders.
+-        // The blocker only holds the shell open when metadata must not stream.
+-        // React requires top-level suspenseful metadata to be nested under a host
+-        // element. Otherwise it becomes part of the document preamble and blocks
+-        // shell flushing instead of streaming. Metadata tags are hoisted out, so
+-        // this hidden wrapper remains empty.
++        // PokeSettle: resolve metadata with the document instead of hydrating it
++        // in a separate Suspense boundary. Navigation before that boundary hydrates
++        // leaves the previous page's hoisted tags in head. Body streaming is unchanged.
+         return /*#__PURE__*/ (0, _jsxruntime.jsxs)(_boundarycomponents.MetadataBoundary, {
+             children: [
+                 /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                     hidden: true,
+-                    children: /*#__PURE__*/ (0, _jsxruntime.jsx)(_react.Suspense, {
+-                        name: "Next.Metadata",
+-                        children: /*#__PURE__*/ (0, _jsxruntime.jsx)(Metadata, {})
+-                    })
++                    children: /*#__PURE__*/ (0, _jsxruntime.jsx)(Metadata, {})
+                 }),
+                 /*#__PURE__*/ (0, _jsxruntime.jsx)(MetadataBlocker, {})
+             ]
