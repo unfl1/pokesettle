@@ -39,6 +39,7 @@ class MetagameService:
 
     def __init__(self):
         self.lock = threading.Lock()
+        self.refresh_lock = threading.Lock()
         self.cached = None
         self.cached_at = 0.0
         self.retry_at = 0.0
@@ -107,62 +108,80 @@ class MetagameService:
             "regulation_id": None,
         }
 
+    def _refresh(self):
+        # The caller owns refresh_lock; network I/O never holds the cache lock.
+        try:
+            with self.lock:
+                current = time.monotonic()
+                if current < self.retry_at or (self.cached and current - self.cached_at < self.ttl):
+                    return
+            try:
+                result = self._load()
+            except (requests.RequestException, ValueError, KeyError, TypeError, IndexError, AttributeError):
+                with self.lock:
+                    self.retry_at = time.monotonic() + self.retry_delay
+            else:
+                with self.lock:
+                    self.cached = result
+                    self.cached_at = time.monotonic()
+                    self.retry_at = 0
+        finally:
+            self.refresh_lock.release()
+
     def singles(self, catalog, limit=30):
         with self.lock:
-            current = time.monotonic()
-            age = current - self.cached_at
-            stale = False
-            if not self.cached or age >= self.ttl:
-                if current >= self.retry_at:
-                    try:
-                        result = self._load()
-                    except (requests.RequestException, ValueError, KeyError, TypeError, IndexError, AttributeError):
-                        self.retry_at = time.monotonic() + self.retry_delay
-                    else:
-                        self.cached = result
-                        self.cached_at = time.monotonic()
-                        self.retry_at = 0
+            age = time.monotonic() - self.cached_at
+            data = self.cached if age < self.max_age else None
+        if data is not None:
+            stale = age >= self.ttl
+            if stale and self.refresh_lock.acquire(blocking=False):
+                threading.Thread(target=self._refresh, daemon=True, name="metagame-refresh").start()
+        else:
+            # Cold/expired callers share one refresh; never serve data older than 24h.
+            self.refresh_lock.acquire()
+            self._refresh()
+            with self.lock:
                 age = time.monotonic() - self.cached_at
                 if not self.cached or age >= self.max_age:
                     self.cached = None
                     raise ServiceError("META_UNAVAILABLE", "메타 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.", 503, True)
+                data = self.cached
                 stale = age >= self.ttl
-            data = self.cached
-            # Exact normalized form names only; never collapse to a base species.
-            names = {name_key(p.name_en): p for p in catalog.items.values()}
-            translations = {
-                "move": {name_key(m["name"]): m.get("name_ko") for m in catalog.details.get("move_details", [])},
-                "ability": {name_key(k): v for k, v in catalog.details.get("ability_names", {}).items()},
-                **{
-                    category: {name_key(k): v for k, v in catalog.battle_names.get(category, {}).items()}
-                    for category in ("held_item", "stat_alignment")
-                },
-            }
-            localized = {
-                category: {name_key(key): value for key, value in entries.items()}
-                for category, entries in catalog.details.get("localization", {}).items()
-                if category in CATEGORIES
-            }
-            items = []
-            for row in data["items"][:limit]:
-                pokemon = names.get(name_key(row["name_en"]))
-                groups = []
-                for category, entries in row["sets"].items():
-                    groups.append({"category": category, "items": [
-                        {**entry, "name_ko": translations.get(category, {}).get(name_key(entry["name"])),
-                         "names": localized.get(category, {}).get(name_key(entry["name"]), {})}
-                        for entry in entries
-                    ]})
-                items.append({
-                    "name_en": row["name_en"], "name_ko": pokemon.name_ko if pokemon else None,
-                    "pokemon_id": pokemon.pokemon_id if pokemon else None,
-                    "names": pokemon.names if pokemon else {},
-                    "slugs": pokemon.slugs if pokemon else {},
-                    "images": pokemon.images.model_dump(mode="json") if pokemon and pokemon.images else None,
-                    "rank": row["rank"], "groups": groups,
-                })
-            return {
-                **data, "items": items, "stale": stale, "limit": limit,
-                "name_sources": catalog.battle_names.get("sources", []),
-                "name_licence_url": catalog.battle_names.get("licence_url"),
-            }
+        # Exact normalized form names only; never collapse to a base species.
+        names = {name_key(p.name_en): p for p in catalog.items.values()}
+        translations = {
+            "move": {name_key(m["name"]): m.get("name_ko") for m in catalog.details.get("move_details", [])},
+            "ability": {name_key(k): v for k, v in catalog.details.get("ability_names", {}).items()},
+            **{
+                category: {name_key(k): v for k, v in catalog.battle_names.get(category, {}).items()}
+                for category in ("held_item", "stat_alignment")
+            },
+        }
+        localized = {
+            category: {name_key(key): value for key, value in entries.items()}
+            for category, entries in catalog.details.get("localization", {}).items()
+            if category in CATEGORIES
+        }
+        items = []
+        for row in data["items"][:limit]:
+            pokemon = names.get(name_key(row["name_en"]))
+            groups = []
+            for category, entries in row["sets"].items():
+                groups.append({"category": category, "items": [
+                    {**entry, "name_ko": translations.get(category, {}).get(name_key(entry["name"])),
+                     "names": localized.get(category, {}).get(name_key(entry["name"]), {})}
+                    for entry in entries
+                ]})
+            items.append({
+                "name_en": row["name_en"], "name_ko": pokemon.name_ko if pokemon else None,
+                "pokemon_id": pokemon.pokemon_id if pokemon else None,
+                "names": pokemon.names if pokemon else {},
+                "slugs": pokemon.slugs if pokemon else {},
+                "images": pokemon.images.model_dump(mode="json") if pokemon and pokemon.images else None,
+                "rank": row["rank"], "groups": groups,
+            })
+        return {
+            **data, "items": items, "stale": stale, "limit": limit,
+            "name_sources": catalog.battle_names.get("sources", []),
+            "name_licence_url": catalog.battle_names.get("licence_url"),
+        }

@@ -93,6 +93,8 @@ def test_failed_refresh_serves_bounded_stale_then_expires(meta):
 
     meta.service._fetch = failure
     stale = meta.service.singles(meta.catalog)
+    with meta.service.refresh_lock:
+        pass  # Wait for the failed background refresh before checking its cooldown.
     assert stale["stale"] is True
     assert stale["collected_at"] == original["collected_at"]
     meta.service.singles(meta.catalog)
@@ -161,3 +163,34 @@ def test_meta_returns_localized_reference_names_without_replacing_provider_ident
     entry = next(p for p in result["items"] if p["pokemon_id"] == "one")["groups"][0]["items"][0]
     assert entry["name"] == "Test Move"
     assert entry["names"]["ja"] == "テスト技"
+
+
+def test_stale_cache_returns_while_one_refresh_is_blocked(meta):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+
+    original = meta.service.singles(meta.catalog)
+    meta.service.cached_at -= meta.service.ttl + 1
+    started, release = Event(), Event()
+    load = meta.service._load
+
+    def slow_load():
+        started.set()
+        assert release.wait(5)
+        return load()
+
+    meta.service._load = slow_load
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        try:
+            first = executor.submit(meta.service.singles, meta.catalog).result(timeout=1)
+            assert started.wait(1)
+            second = executor.submit(meta.service.singles, meta.catalog).result(timeout=1)
+            assert first["stale"] and second["stale"]
+            assert second["collected_at"] == original["collected_at"]
+            assert len(meta.calls) == 2
+        finally:
+            release.set()
+    with meta.service.refresh_lock:
+        pass
+    assert len(meta.calls) == 4
+    assert meta.service.singles(meta.catalog)["stale"] is False
