@@ -117,7 +117,7 @@ test('root layout reserves the gutter when document overflow changes', async ({ 
 });
 
 test('metadata remains in head across navigation on a slower browser', async ({ page, request }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   // 4x passed on fast Macs while CI failed; 20x reproduces the hydration race locally.
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
@@ -132,15 +132,19 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
       const documents: string[] = [];
       page.on('request', req => { if (req.isNavigationRequest() && req.frame() === page.mainFrame()) documents.push(req.url()); });
       await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
+      // CPU throttling also slows the route transition; check metadata after it commits.
+      await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
       const canonical = page.locator('head link[rel="canonical"]');
       await expect(async () => {
         expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}/pokedex`]);
       }).toPass({ timeout: 5000 });
       await page.getByRole('link', { name: /PokeSettle/ }).click();
+      await expect(page).toHaveURL(`/${language.code}`, { timeout: 30_000 });
       await expect(async () => {
         expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}`]);
       }).toPass({ timeout: 5000 });
       await page.goBack();
+      await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
       await expect(async () => {
         expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}/pokedex`]);
       }).toPass({ timeout: 5000 });
