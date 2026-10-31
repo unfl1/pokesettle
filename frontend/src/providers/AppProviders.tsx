@@ -6,7 +6,7 @@ import { withoutLocale } from '../i18n/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useTeamDraft } from '../features/team/hooks/useTeamDraft';
 import { useWorkspace } from '../features/chat/hooks/useWorkspace';
-import { saveNavigationDraft, takeNavigationDraft, type NavigationDraft } from '../lib/navigationDraft';
+import { saveNavigationDraft, takeNavigationDraft } from '../lib/navigationDraft';
 
 type Workspace = ReturnType<typeof useWorkspace> & { enableDiscovery: (enabled?: boolean) => void };
 const WorkspaceContext = createContext<Workspace | null>(null);
@@ -16,14 +16,24 @@ export function useTeamDraftContext() {
   if (!draft) throw new Error("WorkspaceProvider is required");
   return draft;
 }
-function WorkspaceProvider({ children, initial }: { children: ReactNode; initial: NavigationDraft | null }) {
+function WorkspaceProvider({ children }: { children: ReactNode }) {
   const path = withoutLocale(usePathname());
   const [discoveryEnabled, setDiscoveryEnabled] = useState(false);
   useEffect(() => { if (!path.startsWith('/pokedex')) setDiscoveryEnabled(false); }, [path]);
   const chatEnabled = path === '/chat';
   const sessionEnabled = chatEnabled || path === '/scenario' || (path.startsWith('/pokedex') && discoveryEnabled);
-  const workspace = useWorkspace(initial?.draft, chatEnabled, sessionEnabled);
-  const teamDraft = useTeamDraft(initial?.team);
+  const workspace = useWorkspace('', chatEnabled, sessionEnabled);
+  const teamDraft = useTeamDraft();
+  const restored = useRef(false);
+  useLayoutEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    const initial = takeNavigationDraft();
+    if (!initial) return;
+    // Restore state in place: remounting this provider replaces links during a click.
+    workspace.setDraft(initial.draft);
+    teamDraft.restore(initial.team);
+  }, [workspace, teamDraft]);
   useLayoutEffect(() => {
     const save = () => {
       const { own, opponent, name, selectedId, notice, tab, ownActive, opponentActive,
@@ -44,16 +54,8 @@ export function useWorkspaceContext() {
   return workspace;
 }
 export function AppProviders({ children }: { children: ReactNode }) {
-  const [initial, setInitial] = useState<NavigationDraft | null>(null);
-  const restored = useRef(false);
-  // Restore before a visible link can navigate away with the empty initial state.
-  useLayoutEffect(() => {
-    if (restored.current) return;
-    restored.current = true;
-    setInitial(takeNavigationDraft());
-  }, []);
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
   }));
-  return <QueryClientProvider client={queryClient}><WorkspaceProvider key={initial ? 'restored' : 'fresh'} initial={initial}>{children}</WorkspaceProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><WorkspaceProvider>{children}</WorkspaceProvider></QueryClientProvider>;
 }

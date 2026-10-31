@@ -24,6 +24,7 @@
 - SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 언어별 sitemap 20개 URL·robots 제공
 - SEO 전환: 홈 카드·브랜드의 사전 조회 제한, 기능 메뉴의 사전 조회·본문 Suspense 스트리밍 유지, 경로 이동 시 canonical·Open Graph 검사
 - metadata 하이드레이션: Next.js 16.4.3의 독립 `Next.Metadata` Suspense 경계를 pnpm 패치로 제거하여 초기 연결 전 경로 이동 시 이전 canonical·Open Graph 잔존 방지, 메타데이터 선확정과 본문 Suspense 스트리밍 분리
+- 초안 복원: 공통 Provider 재마운트 없이 질문·팀 상태만 갱신, 초기 링크 DOM을 유지하여 하이드레이션 중 클릭 유실 방지
 - 패치 관리: `frontend/pnpm-workspace.yaml`·`patches/next@16.4.3.patch`·lockfile 및 Docker 설치 입력에 함께 반영, Next.js 갱신 시 CPU 20배 지연·다국어 왕복 E2E 통과 여부를 확인한 뒤 패치 제거 검토
 - 참고: [review-in-korea 언어 구조](https://github.com/jihyukboin/review-in-korea/blob/main/docs/language/multilingual-architecture.md)의 레지스트리·경로 생성·언어 검증·SEO 책임 분리 참고, 기본 언어 접두사 생략 정책은 적용하지 않음
 
