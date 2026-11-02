@@ -35,27 +35,16 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name __ROOT_DOMAIN__;
+    server_name __ROOT_DOMAIN__ www.__ROOT_DOMAIN__;
     server_tokens off;
     location ^~ /.well-known/acme-challenge/ { root /var/www/letsencrypt; }
-    location / { return 308 https://www.__ROOT_DOMAIN__$request_uri; }
+    location / { return 308 https://__ROOT_DOMAIN__$request_uri; }
 }
 
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name __ROOT_DOMAIN__;
-    ssl_certificate __CERTIFICATE_PATH__/fullchain.pem;
-    ssl_certificate_key __CERTIFICATE_PATH__/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    server_tokens off;
-    return 308 https://www.__ROOT_DOMAIN__$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    server_name api.__ROOT_DOMAIN__;
+    server_name api.__ROOT_DOMAIN__ __ROOT_DOMAIN__ www.__ROOT_DOMAIN__;
     ssl_certificate __CERTIFICATE_PATH__/fullchain.pem;
     ssl_certificate_key __CERTIFICATE_PATH__/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -64,6 +53,9 @@ server {
     limit_req_status 429;
     # Sets $valid_origin_token from X-PokeTact-Origin; never commit its value.
     include /etc/nginx/poketact-private/origin-token.conf;
+    # CloudFront forwards the viewer Host while retaining the private origin token.
+    if ($host = www.__ROOT_DOMAIN__) { return 308 https://__ROOT_DOMAIN__$request_uri; }
+    location ^~ /.well-known/acme-challenge/ { root /var/www/letsencrypt; }
     location /api/ {
         if ($valid_origin_token = 0) { return 403; }
         limit_req zone=api_reads burst=30 nodelay;

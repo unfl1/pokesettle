@@ -168,7 +168,7 @@ def test_aws_bootstrap_grants_only_frontend_publish_permissions(tmp_path, monkey
     assert actions == {"cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"}
     output = tmp_path / "github-production-secrets.json"
     assert output.stat().st_mode & 0o777 == 0o600
-    assert json.loads(output.read_text())["PRODUCTION_URL"] == "https://www.example.com"
+    assert json.loads(output.read_text())["PRODUCTION_URL"] == "https://example.com"
     other_name = "pokesettle" if repository.endswith("/poketact") else "poketact"
     for invalid in ("repo:*/*", "repo:other@111/poketact@222", "repo:unfl1@111/other@222",
                     f"repo:unfl1@111/{other_name}@222", prefix + ":environment:other"):
@@ -237,7 +237,7 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
 
         def list_origin_request_policies(self, **kwargs):
             return {"OriginRequestPolicyList": {"Items": [{"OriginRequestPolicy": {
-                "Id": "viewer-headers", "OriginRequestPolicyConfig": {"Name": "Managed-AllViewerExceptHostHeader"},
+                "Id": "viewer-headers", "OriginRequestPolicyConfig": {"Name": "Managed-AllViewer"},
             }}]}}
 
         def get_distribution_config(self, **kwargs):
@@ -262,7 +262,9 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
 
     acm = SimpleNamespace(
         request_certificate=lambda **kwargs: {"CertificateArn": "certificate"},
-        describe_certificate=lambda **kwargs: {"Certificate": {"Status": "ISSUED"}},
+        describe_certificate=lambda **kwargs: {"Certificate": {
+            "Status": "ISSUED", "SubjectAlternativeNames": ["example.com", "www.example.com"],
+        }},
     )
     cf = CloudFront()
     monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=lambda name, **kwargs: cf if name == "cloudfront" else acm))
@@ -279,6 +281,7 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
         state.write_text(json.dumps({"domain": "example.com", "distribution_id": "distribution", "certificate_arn": "certificate"}))
         module.connect(state, token)
         assert calls["invalidation"]["InvalidationBatch"]["Paths"]["Items"] == ["/*"]
+        assert calls["config"]["Aliases"] == {"Quantity": 2, "Items": ["example.com", "www.example.com"]}
     config = calls["config"]
     default = config["DefaultCacheBehavior"]
     assert config["DefaultRootObject"] == ""

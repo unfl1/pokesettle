@@ -45,12 +45,12 @@ for (const language of languages) {
     await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
     await expect(page).toHaveURL(`/${language.code}/pokedex`);
     await expect(page.getByRole('heading', { name: language.pokedex, exact: true })).toBeVisible();
-    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://www.pokesettle.com/${language.code}/pokedex`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com/${language.code}/pokedex`);
     for (const alternate of languages) {
-      await expect(page.locator(`head link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://www.pokesettle.com/${alternate.code}/pokedex`);
+      await expect(page.locator(`head link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://pokesettle.com/${alternate.code}/pokedex`);
     }
-    await expect(page.locator('head link[hreflang="x-default"]')).toHaveAttribute('href', 'https://www.pokesettle.com/ko/pokedex');
-    await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.pokesettle.com/${language.code}/pokedex`);
+    await expect(page.locator('head link[hreflang="x-default"]')).toHaveAttribute('href', 'https://pokesettle.com/ko/pokedex');
+    await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com/${language.code}/pokedex`);
     await page.goto(`/${language.code}/chat`);
     await expect(page.getByRole('heading', { name: language.chat, exact: true })).toBeVisible();
     for (const width of [1440, 390, 320]) {
@@ -88,12 +88,12 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
   const xml = await sitemap.text();
   expect(xml.match(/<loc>/g)).toHaveLength(5430);
   for (const language of languages) {
-    expect(xml).toContain(`<loc>https://www.pokesettle.com/${language.code}/scenario</loc>`);
+    expect(xml).toContain(`<loc>https://pokesettle.com/${language.code}/scenario</loc>`);
     expect(xml).toContain(`hreflang="${language.html}"`);
   }
   const robots = await request.get('/robots.txt');
   expect(await robots.text()).toContain('Disallow: /api/');
-  expect(await robots.text()).toContain('Sitemap: https://www.pokesettle.com/sitemap.xml');
+  expect(await robots.text()).toContain('Sitemap: https://pokesettle.com/sitemap.xml');
 });
 
 test('root layout reserves the gutter when document overflow changes', async ({ page }) => {
@@ -127,7 +127,7 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
         headers: { 'User-Agent': 'Mozilla/5.0 Chrome/142.0.0.0 Safari/537.36' },
       });
       const head = (await response.text()).split('</head>')[0];
-      expect(head).toContain(`rel="canonical" href="https://www.pokesettle.com/${language.code}/pokedex"`);
+      expect(head).toContain(`rel="canonical" href="https://pokesettle.com/${language.code}/pokedex"`);
       await page.goto(`/${language.code}`);
       const documents: string[] = [];
       page.on('request', req => { if (req.isNavigationRequest() && req.frame() === page.mainFrame()) documents.push(req.url()); });
@@ -136,19 +136,19 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
       await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
       const canonical = page.locator('head link[rel="canonical"]');
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}/pokedex`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}/pokedex`]);
       }).toPass({ timeout: 5000 });
       await page.getByRole('link', { name: /PokeSettle/ }).click();
       await expect(page).toHaveURL(`/${language.code}`, { timeout: 30_000 });
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}`]);
       }).toPass({ timeout: 5000 });
       await page.goBack();
       await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://www.pokesettle.com/${language.code}/pokedex`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}/pokedex`]);
       }).toPass({ timeout: 5000 });
-      await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://www.pokesettle.com/${language.code}/pokedex`);
+      await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com/${language.code}/pokedex`);
       expect(documents).toEqual([]);
     }
   } finally {

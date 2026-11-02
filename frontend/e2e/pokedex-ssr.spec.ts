@@ -53,7 +53,7 @@ test('JavaScript 없이 상세 본문·스탯·출처와 실제 목록 링크 �
 test('상세 metadata와 언어 전환은 동일 ID의 현지화 URL 유지', async ({ page }) => {
   await page.goto(ko + '?check=1#main-content');
   await expect(page).toHaveTitle('피카츄 (오리지널캡) | 도감 | PokeSettle');
-  await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://www.pokesettle.com' + ko);
+  await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://pokesettle.com' + ko);
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
   await expect(page).toHaveURL('/en/pokedex/pikachu-original-cap-10094?check=1#main-content');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Original Cap Pikachu');
@@ -95,8 +95,8 @@ test('favicon은 16·32·48px 실제 ICO이며 상세 sitemap URL 중복 없음'
   const xml = await (await request.get('/sitemap.xml')).text();
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]);
   expect(urls).toHaveLength(5430);
-  expect(urls).toContain('https://www.pokesettle.com/terms');
-  expect(urls).toContain('https://www.pokesettle.com/privacy');
+  expect(urls).toContain('https://pokesettle.com/terms');
+  expect(urls).toContain('https://pokesettle.com/privacy');
   expect(new Set(urls).size).toBe(urls.length);
   expect(xml.length).toBeLessThan(50 * 1024 * 1024);
 });

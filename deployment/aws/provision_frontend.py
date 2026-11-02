@@ -26,7 +26,7 @@ def provision(domain, token_path, state_path):
                         if x["CachePolicy"]["CachePolicyConfig"]["Name"] == "Managed-CachingDisabled")
         request_id = next(x["OriginRequestPolicy"]["Id"] for x in
                           cf.list_origin_request_policies(Type="managed")["OriginRequestPolicyList"]["Items"]
-                          if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewerExceptHostHeader")
+                          if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewer")
         distribution = cf.create_distribution(DistributionConfig={
             "CallerReference": f"poketact-{domain}-{time.time_ns()}",
             "Comment": f"PokeSettle Next.js {domain}", "Enabled": True,
@@ -54,7 +54,7 @@ def provision(domain, token_path, state_path):
         state_path.chmod(0o600)
     if not state.get("certificate_arn"):
         state["certificate_arn"] = acm.request_certificate(
-            DomainName=f"www.{domain}", ValidationMethod="DNS",
+            DomainName=domain, SubjectAlternativeNames=[f"www.{domain}"], ValidationMethod="DNS",
             IdempotencyToken="poketactfrontend", Options={"CertificateTransparencyLoggingPreference": "ENABLED"},
         )["CertificateArn"]
     state_path.write_text(json.dumps(state, indent=2))

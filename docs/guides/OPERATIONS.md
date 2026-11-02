@@ -264,7 +264,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상 및 런타임 서버 조회 주소, Compose는 `http://api:8000`
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
-- SEO 원본 도메인: 기본 `https://www.pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
+- SEO 원본 도메인: 기본 `https://pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
 - 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈과 기능 메뉴의 Next Link 이동으로 Provider·초안 유지
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: 기능 메뉴의 사전 조회·클릭 대기 표시 유지, 홈 카드·브랜드는 사전 조회 없이 클라이언트 이동, 도감·메타는 RSC 이동에서 로딩 안내·스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
@@ -276,23 +276,25 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 
 ### 서비스 이름과 운영 도메인
 
-- 서비스 이름: `PokeSettle`, 대표 주소: `https://www.pokesettle.com`
-- 대표 주소 정책: LETO DNS·기존 인증서 유지, 루트 HTTP·HTTPS는 Nginx에서 동일 경로·쿼리의 www HTTPS로 308 이동
+- 서비스 이름: `PokeSettle`, 대표 주소: `https://pokesettle.com`
+- 대표 주소 정책: LETO DNS 유지, 루트 도메인은 `CNAME Flatten`으로 기존 CloudFront 배포 연결, www는 동일 경로·쿼리의 non-www HTTPS로 308 이동
+- 원본 요청 정책: 기본·API 동작에 `Managed-AllViewer` 적용, viewer Host를 Nginx에 전달하여 www 리다이렉트 처리함. 비공개 원본 검증 헤더·HTTPS·API 캐시 비활성화 유지함
+- 비용 범위: Route 53·CloudFront Functions·Lambda@Edge 추가 없이 기존 DNS·CloudFront·Lightsail 재사용함. 기존 서비스의 트래픽·사용량 요금은 별도임
 - CloudFront HTTP 정책: 기본·`/api`·`/api/*` 모두 `redirect-to-https`, GET·HEAD는 301, HTTP/1.1 이상 쓰기 요청은 메서드·본문을 유지하는 307 이동
 - 배포 검사: 예상 경로·본문 외 최종 호스트도 비교, 대표 주소에서 다른 호스트로 이동하면 실패 처리
 - 도메인 등록·DNS: LETO, 기존 CloudFront 배포·Lightsail 서버 재사용
 
 | 호스트 | DNS | 동작 |
 | --- | --- | --- |
-| `www.pokesettle.com` | CloudFront 배포 주소 CNAME | Next.js·FastAPI 서비스 |
-| `pokesettle.com` | Lightsail 고정 IP A | HTTPS `www.pokesettle.com`으로 308 이동 |
+| `www.pokesettle.com` | CloudFront 배포 주소 CNAME | HTTPS `pokesettle.com`으로 308 이동 |
+| `pokesettle.com` | 같은 CloudFront 배포 주소 CNAME Flatten | Next.js·FastAPI 서비스 |
 | `api.pokesettle.com` | Lightsail 고정 IP A | CloudFront 인증 헤더를 확인하는 HTTPS 원본 |
 | ACM 검증 호스트 | ACM 지정 CNAME | CloudFront 인증서 발급·자동 갱신 |
 
-- CloudFront 인증서: `us-east-1` ACM의 `www.pokesettle.com`, 서버 인증서: Certbot의 `pokesettle.com`·`api.pokesettle.com`
+- CloudFront 인증서: `us-east-1` ACM의 `pokesettle.com`·`www.pokesettle.com` 포함 인증서, 서버 인증서: Certbot의 `pokesettle.com`·`api.pokesettle.com`
 - 이전 치코리타 도메인: 최종 CloudFront 별칭·Nginx 호스트·CORS·DNS 연결에서 제거, 새 서비스로 이동 처리 없음
 - 전환 순서: 새 DNS·인증서 → Nginx 새 원본 준비 → 앱 배포·CORS 변경 → CloudFront 새 별칭·원본 전환 → 공개 검사 → 이전 도메인 연결 정리
-- GitHub production 환경의 `PRODUCTION_URL`도 `https://www.pokesettle.com`으로 변경 필요
+- GitHub production 환경의 `PRODUCTION_URL`은 non-www 메타데이터를 포함한 앱 배포 시 `https://pokesettle.com`으로 설정 필요
 - 기존 저장 데이터 호환성: Compose 프로젝트·DB·볼륨·서버 경로·메트릭·문서 ID·세션 키·비공개 원본 헤더의 `poketact` 식별자 유지
 - GitHub 저장소 `unfl1/poketact` 및 로컬 디렉터리 유지, 공개 서비스 이름과 별도 관리
 - 원본 수신기 교체 시 새 이름과 이전 이름의 준비 상태를 모두 인식하여 이전 이미지 롤백 허용
@@ -326,7 +328,7 @@ pnpm --dir frontend test:e2e
 python3 deployment/aws/provision_frontend.py --domain example.com --origin-token-file /private/path/origin-token
 ```
 
-- 생성 결과의 CloudFront 주소를 `www` CNAME으로 등록, ACM 검증 CNAME을 DNS에 등록
+- 생성 결과의 CloudFront 주소를 `www` CNAME과 루트 `@` CNAME Flatten으로 등록, 두 도메인의 ACM 검증 CNAME을 DNS에 등록
 - `~/poketact-deployment.json`은 동일 배포 리소스 식별자 보관용, 다른 계정·도메인 재사용 금지
 - ACM 상태 `ISSUED` 확인 후 아래 연결 명령 실행, 기존 배포도 동일 명령으로 Next.js 원본 연결
 

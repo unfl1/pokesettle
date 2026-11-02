@@ -69,7 +69,7 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
     expect(largeCard!.y).toBeGreaterThan(180);
     expect(Math.abs(largeCard!.y + largeCard!.height / 2 - (workingArea!.y + workingArea!.height / 2))).toBeLessThan(80);
     if (locale === 'ko') await page.screenshot({ path: '/tmp/pobti-large-centered.png', fullPage: true });
-    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://www.pokesettle.com/${locale}/pobti`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com/${locale}/pobti`);
     await page.goto(`/${locale}/pobti?type=ESTJ`);
     await expect(page.getByRole('heading', { name: pokemon, exact: true })).toBeVisible();
     for (const width of [1440, 1024, 800, 600, 390, 320]) {
