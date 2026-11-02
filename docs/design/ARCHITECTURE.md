@@ -20,7 +20,7 @@
 - 통계: `RuntimeAnalytics`가 `/analytics/config`의 no-store 응답으로 런타임 `GA_ID` 조회 후 `GoogleAnalytics` 활성화, 공통 레이아웃의 요청 시 렌더링 의존성 제거
 - 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 모든 언어 `/{lang}/{feature}` 접두사, 기본 언어 `ko`, `zh`는 간체(`zh-Hans`) 제공
 - 라우팅: Next.js `proxy.ts`에서 기존 기능 주소를 `/ko/...`로 308 연결, 미지원 언어·알 수 없는 경로는 404 유지, 언어 전환 시 기능·쿼리·해시 유지
-- Legal: `src/app/(legal)`의 별도 루트 레이아웃으로 `/terms`·`/privacy` 한국어 공통 문서 제공, `/about`은 기존 [개인 포트폴리오](https://unfl1.github.io/portfolio/)로 307 리다이렉트함. `[lang]` 및 세션 Provider와 분리하고 홈·기능 푸터에서 일반 링크로 연결함. 루트 레이아웃 간 이동은 전체 문서 요청이며, 번역 경로·언어 대체 메타데이터는 생성하지 않음
+- Legal: `src/app/(legal)`의 별도 루트 레이아웃으로 `/terms`·`/privacy` 한국어 공통 문서 제공함. `[lang]` 및 세션 Provider와 분리하고 홈·기능 푸터에서 일반 링크로 연결함. 루트 레이아웃 간 이동은 전체 문서 요청이며, 번역 경로·언어 대체 메타데이터는 생성하지 않음
 - 번역: `next/root-params` 기반 서버 사전 로딩, `I18nProvider`에서 현재 언어 사전만 클라이언트에 전달, 원문·API 데이터·챗봇 생성 응답은 자동 번역하지 않고 제공 언어 안내 표시
 - SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 언어별 sitemap 20개 URL·robots 제공
 - SEO 전환: 홈 카드·브랜드의 사전 조회 제한, 기능 메뉴의 사전 조회·본문 Suspense 스트리밍 유지, 경로 이동 시 canonical·Open Graph 검사

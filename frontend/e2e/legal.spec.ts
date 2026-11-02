@@ -19,8 +19,8 @@ test('root legal documents render independently of locale routing', async ({ pag
     }
   }
   const about = await request.get('/about', { maxRedirects: 0 });
-  expect(about.status()).toBe(307);
-  expect(about.headers().location).toBe('https://unfl1.github.io/portfolio/');
+  expect(about.status()).toBe(404);
+  await expect(page.locator('a[href="/about"]')).toHaveCount(0);
   const xml = await (await request.get('/sitemap.xml')).text();
   expect(xml).toContain('<loc>https://www.pokesettle.com/terms</loc>');
   expect(xml).toContain('<loc>https://www.pokesettle.com/privacy</loc>');
