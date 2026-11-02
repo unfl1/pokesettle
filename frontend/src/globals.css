@@ -5,13 +5,14 @@
 .legal-shell { min-height: 100dvh; display: flex; flex-direction: column; }
 .legal-shell > main { flex: 1; }
 .legal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1120px, 100%); margin: 0 auto; padding: 24px; border-bottom: 1px solid #e1e4e8; }
-.legal-header > a:first-child { font-size: 21px; font-weight: 800; color: #0057ff; }
-.legal-header span { margin-left: 14px; font-size: 12px; font-weight: 500; color: #64748b; }
+.legal-header-brand { display: flex; align-items: center; gap: 14px; }
+.legal-header-note { font-size: 12px; font-weight: 500; color: var(--color-muted); }
 .legal-header > a:last-child { font-size: 13px; }
 .legal-document { max-width: 1080px; margin: 0 auto; padding: 64px 24px 80px; }
 .legal-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .14em; color: #0057ff; }
-.legal-intro h1 { margin: 12px 0 20px; font-size: clamp(28px, 5vw, 40px); font-weight: 800; letter-spacing: -.04em; }
+.legal-intro h1 { margin: 12px 0 20px; font-size: 30px; font-weight: 750; letter-spacing: -1.1px; line-height: 1.4; }
 .legal-intro > p { line-height: 1.8; }
+.legal-intro > p:not(.legal-eyebrow):not(.legal-date) { font-size: 14px; }
 .legal-intro > p:not(.legal-eyebrow) { color: #64748b; }
 .legal-intro .legal-date { display: inline-block; margin-top: 24px; padding: 7px 14px; border-radius: 24px; background: #e6efff; color: #0041cc; font-size: 13px; }
 .legal-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 56px; margin-top: 52px; }
@@ -33,7 +34,7 @@
 .legal-footer { padding: 24px; border-top: 1px solid #e1e4e8; text-align: center; font-size: 12px; color: #64748b; line-height: 1.8; }
 @media (max-width: 760px) {
   .legal-header { padding: 20px; }
-  .legal-header span { display: none; }
+  .legal-header-note { display: none; }
   .legal-document { padding: 40px 20px 56px; }
   .legal-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 32px; }
   .legal-grid aside nav { position: static; padding: 20px; background: #f5f6f8; border-radius: 16px; }
@@ -171,12 +172,12 @@
   .workspace-main { padding: 0 20px 32px; }
   .pokedex-layout { grid-template-columns: 1fr; }
   .pokedex-layout > section { position: static; }
-  .page-intro h1, .page-intro h2 { font-size: 26px; }
+  .page-intro h1, .page-intro h2, .legal-intro h1 { font-size: 26px; }
 }
 @media (max-width: 540px) {
   .workspace-main { padding: 0 14px 28px; }
   .page-intro { margin-top: 16px; padding: 20px 16px; }
-  .page-intro h1, .page-intro h2 { font-size: 24px; letter-spacing: -.9px; }
+  .page-intro h1, .page-intro h2, .legal-intro h1 { font-size: 24px; letter-spacing: -.9px; }
   .page-intro p { font-size: 14px; }
   .notice { padding: 12px; font-size: 14px; gap: 9px; }
 }

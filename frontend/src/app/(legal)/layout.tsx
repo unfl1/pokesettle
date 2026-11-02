@@ -14,7 +14,10 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
     <body>
       <div className="legal-shell">
         <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
-        <header className="legal-header"><a href="/ko" aria-label="PokeSettle 홈">PokeSettle<span>서비스 안내</span></a><a href="/ko">홈으로</a></header>
+        <header className="legal-header">
+          <div className="legal-header-brand"><a href="/ko" className="brand" aria-label="PokeSettle 홈">PokeSettle</a><span className="legal-header-note">서비스 안내</span></div>
+          <a href="/ko">홈으로</a>
+        </header>
         <main id="main-content" tabIndex={-1}>{children}</main>
         <footer className="legal-footer">
           <LegalLinks />
