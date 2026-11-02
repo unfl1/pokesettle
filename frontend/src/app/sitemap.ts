@@ -9,5 +9,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: new URL(localizedPath(locale, path), siteUrl).href,
     alternates: { languages: languageAlternates(path) },
   })));
-  return [...pages, ...routeEntries.flatMap(entry => locales.map(locale => ({ url: new URL(pokemonPath(entry, locale), siteUrl).href, alternates: { languages: pokemonAlternates(entry) } })))];
+  const legalPages = ['/terms', '/privacy'].map(path => ({ url: new URL(path, siteUrl).href }));
+  return [...pages, ...legalPages, ...routeEntries.flatMap(entry => locales.map(locale => ({ url: new URL(pokemonPath(entry, locale), siteUrl).href, alternates: { languages: pokemonAlternates(entry) } })))];
 }

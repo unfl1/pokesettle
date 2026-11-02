@@ -94,7 +94,9 @@ test('favicon은 16·32·48px 실제 ICO이며 상세 sitemap URL 중복 없음'
   expect([...bytes.subarray(0, 6)]).toEqual([0, 0, 1, 0, 3, 0]);
   const xml = await (await request.get('/sitemap.xml')).text();
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]);
-  expect(urls).toHaveLength(5428);
+  expect(urls).toHaveLength(5430);
+  expect(urls).toContain('https://www.pokesettle.com/terms');
+  expect(urls).toContain('https://www.pokesettle.com/privacy');
   expect(new Set(urls).size).toBe(urls.length);
   expect(xml.length).toBeLessThan(50 * 1024 * 1024);
 });

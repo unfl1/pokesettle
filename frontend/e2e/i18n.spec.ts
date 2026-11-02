@@ -86,7 +86,7 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
-  expect(xml.match(/<loc>/g)).toHaveLength(5428);
+  expect(xml.match(/<loc>/g)).toHaveLength(5430);
   for (const language of languages) {
     expect(xml).toContain(`<loc>https://www.pokesettle.com/${language.code}/scenario</loc>`);
     expect(xml).toContain(`hreflang="${language.html}"`);
