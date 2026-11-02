@@ -9,11 +9,9 @@
 .legal-header-note { font-size: 12px; font-weight: 500; color: var(--color-muted); }
 .legal-header > a:last-child { font-size: 13px; }
 .legal-document { max-width: 1080px; margin: 0 auto; padding: 64px 24px 80px; }
-.legal-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .14em; color: #0057ff; }
 .legal-intro h1 { margin: 12px 0 20px; font-size: 30px; font-weight: 750; letter-spacing: -1.1px; line-height: 1.4; }
-.legal-intro > p { line-height: 1.8; }
-.legal-intro > p:not(.legal-eyebrow):not(.legal-date) { font-size: 14px; }
-.legal-intro > p:not(.legal-eyebrow) { color: #64748b; }
+.legal-intro > p { line-height: 1.8; color: #64748b; }
+.legal-intro > p:not(.legal-date) { font-size: 14px; }
 .legal-intro .legal-date { display: inline-block; margin-top: 24px; padding: 7px 14px; border-radius: 24px; background: #e6efff; color: #0041cc; font-size: 13px; }
 .legal-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 56px; margin-top: 52px; }
 .legal-grid aside nav { position: sticky; top: 32px; }
