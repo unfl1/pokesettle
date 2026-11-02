@@ -19,9 +19,12 @@ def connect(state_path, token_path):
     )["Certificate"]
     if certificate["Status"] != "ISSUED":
         raise RuntimeError(f"Certificate is {certificate['Status']}; retry after DNS validation")
+    names = set(certificate.get("SubjectAlternativeNames", []))
+    if not {domain, f"www.{domain}"}.issubset(names):
+        raise ValueError("CloudFront certificate must cover both apex and www before connecting")
     current = cf.get_distribution_config(Id=state["distribution_id"])
     config = current["DistributionConfig"]
-    config["Aliases"] = {"Quantity": 1, "Items": [f"www.{domain}"]}
+    config["Aliases"] = {"Quantity": 2, "Items": [domain, f"www.{domain}"]}
     config["ViewerCertificate"] = {
         "ACMCertificateArn": state["certificate_arn"], "SSLSupportMethod": "sni-only",
         "MinimumProtocolVersion": "TLSv1.2_2021",
@@ -44,7 +47,7 @@ def connect(state_path, token_path):
     cache_id = next(x["CachePolicy"]["Id"] for x in cache_policies
                     if x["CachePolicy"]["CachePolicyConfig"]["Name"] == "Managed-CachingDisabled")
     request_id = next(x["OriginRequestPolicy"]["Id"] for x in request_policies
-                      if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewerExceptHostHeader")
+                      if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewer")
     behaviors = []
     for pattern in ("/api", "/api/*"):
         behaviors.append({
@@ -74,7 +77,7 @@ def connect(state_path, token_path):
     cf.create_invalidation(DistributionId=state["distribution_id"], InvalidationBatch={
         "Paths": {"Quantity": 1, "Items": ["/*"]}, "CallerReference": result["ETag"],
     })
-    print(json.dumps({"domain": f"www.{domain}", "status": result["Distribution"]["Status"],
+    print(json.dumps({"domain": domain, "status": result["Distribution"]["Status"],
                       "api_connected": bool(token_path)}))
 
 

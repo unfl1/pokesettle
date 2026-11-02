@@ -66,7 +66,7 @@ def configure(state_path, repository, subject_prefix, *, migrate_legacy_subject=
     values = {
         "AWS_ROLE_ARN": result["Role"]["Arn"],
         "CLOUDFRONT_DISTRIBUTION_ID": state["distribution_id"],
-        "PRODUCTION_URL": f"https://www.{state['domain']}",
+        "PRODUCTION_URL": f"https://{state['domain']}",
     }
     fd = os.open(output, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as file:

@@ -8,7 +8,7 @@ test('root legal documents render independently of locale routing', async ({ pag
     await page.goto(path);
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
-    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://www.pokesettle.com${path}`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com${path}`);
     await expect(page.locator('head link[rel="alternate"][hreflang]')).toHaveCount(0);
     const contents = page.getByRole('navigation', { name: '목차' });
     await contents.getByRole('link').last().click();
@@ -22,9 +22,9 @@ test('root legal documents render independently of locale routing', async ({ pag
   expect(about.status()).toBe(404);
   await expect(page.locator('a[href="/about"]')).toHaveCount(0);
   const xml = await (await request.get('/sitemap.xml')).text();
-  expect(xml).toContain('<loc>https://www.pokesettle.com/terms</loc>');
-  expect(xml).toContain('<loc>https://www.pokesettle.com/privacy</loc>');
-  expect(xml).not.toContain('<loc>https://www.pokesettle.com/about</loc>');
+  expect(xml).toContain('<loc>https://pokesettle.com/terms</loc>');
+  expect(xml).toContain('<loc>https://pokesettle.com/privacy</loc>');
+  expect(xml).not.toContain('<loc>https://pokesettle.com/about</loc>');
 });
 
 test('all locales link to shared legal URLs and can return to the app', async ({ page, request }) => {

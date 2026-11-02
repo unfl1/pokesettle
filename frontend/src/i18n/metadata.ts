@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { defaultLocale, localeRegistry, locales, localizedPath, type Locale } from './config';
 import { getI18n } from './server';
 
-export const siteUrl = process.env.SITE_URL ?? 'https://www.pokesettle.com';
+export const siteUrl = process.env.SITE_URL ?? 'https://pokesettle.com';
 export function languageAlternates(path: string) {
   return {
     ...Object.fromEntries(locales.map(locale => [localeRegistry[locale].htmlLang, new URL(localizedPath(locale, path), siteUrl).href])),
