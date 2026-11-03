@@ -7,7 +7,7 @@ export default function LanguageSwitcher() {
   const { locale, t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
-  return <label className="language-switcher">
+  return <label className="language-switcher [&_select]:max-w-30 [&_select]:py-1.5 [&_select]:px-2 [&_select]:border [&_select]:border-line [&_select]:rounded-[6px] [&_select]:bg-surface [&_select]:text-ink  [&_select]:text-[13px] screen-780:[&_select]:max-w-25">
     <span className="sr-only">{t('언어')}</span>
     <select value={locale} onChange={event => {
       const nextLocale = event.target.value;

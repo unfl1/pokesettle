@@ -16,7 +16,7 @@ export default async function MetagamePage({ data, selected }: { data: SinglesMe
   const { locale, t: translate } = await getI18n();
   const pokemon = data?.items.find(item => item.nameEn === selected) ?? data?.items[0];
   return (
-    <section aria-label={translate("싱글 배틀 메타")} className="metagame-page">
+    <section aria-label={translate("싱글 배틀 메타")} className="metagame-page flex flex-1 flex-col gap-5 [&_>_.page-data-notes]:mt-auto">
       <div className="rounded-xl border border-line bg-surface p-5 text-[14px] leading-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <strong>{translate("Champions 랭크 싱글 · 사용 순위 TOP 30")}</strong>
@@ -24,8 +24,8 @@ export default async function MetagamePage({ data, selected }: { data: SinglesMe
         </div>
 
       </div>
-      {data?.stale && <p className="notice" role="status">{translate("최신 자료에 연결하지 못해 임시 보관한 데이터를 표시하고 있어요. 기준일을 확인해 주세요.")}</p>}
-      {!data && <div className="notice" role="alert"><p>{translate('싱글 메타를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')}</p><RefreshButton label={translate('다시 시도')} pendingLabel={translate('확인 중…')} /></div>}
+      {data?.stale && <p className="notice flex items-center gap-3 py-3.75 px-4.5 mb-5 bg-warning-soft [border:1px_solid_var(--color-warning-line)] rounded-[10px] text-[14px] text-warning leading-[1.8] [&_button]:ml-auto [&_button]:whitespace-nowrap [&_button]:font-semibold screen-540:p-3 screen-540:text-[14px] screen-540:gap-[9px]" role="status">{translate("최신 자료에 연결하지 못해 임시 보관한 데이터를 표시하고 있어요. 기준일을 확인해 주세요.")}</p>}
+      {!data && <div className="notice flex items-center gap-3 py-3.75 px-4.5 mb-5 bg-warning-soft [border:1px_solid_var(--color-warning-line)] rounded-[10px] text-[14px] text-warning leading-[1.8] [&_button]:ml-auto [&_button]:whitespace-nowrap [&_button]:font-semibold screen-540:p-3 screen-540:text-[14px] screen-540:gap-[9px]" role="alert"><p>{translate('싱글 메타를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')}</p><RefreshButton label={translate('다시 시도')} pendingLabel={translate('확인 중…')} /></div>}
       {data && !data.items.length && <p role="status">{translate("표시할 싱글 순위 데이터가 없어요.")}</p>}
       {pokemon && data && <div className="grid grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] gap-5 max-tablet:grid-cols-1">
         <section className="rounded-xl border border-line bg-surface p-3" aria-label={translate("싱글 사용 순위")}>
@@ -61,19 +61,19 @@ export default async function MetagamePage({ data, selected }: { data: SinglesMe
 
         </section>
       </div>}
-      <aside className="page-data-notes" aria-label={translate('출처 및 이용 안내')}>
-        <ul className="page-data-explanations">
+      <aside className="page-data-notes mt-7 pt-4 border-t border-line text-muted text-[12px] leading-[1.8] min-w-0 [&_a]:text-muted [&_a]:underline [&_a]:underline-offset-[3px] [&_a_>_svg]:inline-block [&_a_>_svg]:align-middle" aria-label={translate('출처 및 이용 안내')}>
+        <ul className="page-data-explanations grid gap-1.5 m-0 pl-4 list-disc [&_>_li]:min-w-0 [&_>_li]:wrap-anywhere [&_+_.page-data-row]:mt-3">
           <li>{translate("사용 순위는 승률을 뜻하지 않아요.")}</li>
           <li>{translate("채용률은 기술·도구·특성·성격별 통계이며, 하나의 완성된 세트가 아니에요.")}</li>
           <li>{translate("수집된 한국어 이름이 없는 항목은 원문으로 표시해요.")}</li>
           <li>{translate("현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.")}</li>
         </ul>
         {data && <>
-          <div className="page-data-row">
+          <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">
             <p>{translate("시즌")} {data.season} {translate("· 데이터 기준일")} {data.dataDate} {translate("· 레귤레이션 미확인")}</p>
             <p>{translate("서버 조회:")} {new Date(data.collectedAt).toLocaleString(localeRegistry[locale].htmlLang, { timeZone: 'Asia/Seoul' })} {translate("· 비공식 제공 자료")}</p>
           </div>
-          <div className="page-data-row">
+          <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">
             <a href={data.sourceUrl} target="_blank" rel="noreferrer">{data.attribution}</a>
             <a href={data.termsUrl} target="_blank" rel="noreferrer">{translate("이용 조건")}</a>
             {data.nameSources?.length > 0 && <p>{translate("도구·성격 한국어 이름: PokéAPI · 수집일")} {data.nameSources[0].collectedAt.slice(0, 10)} · <a href={data.nameLicenceUrl ?? undefined} target="_blank" rel="noreferrer">{translate("이용 조건")}</a></p>}

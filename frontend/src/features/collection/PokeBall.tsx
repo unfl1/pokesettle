@@ -1,9 +1,8 @@
 import { useId } from 'react';
-import styles from './collection.module.css';
 
 export default function PokeBall({ shaking }: { shaking: boolean }) {
   const id = useId();
-  return <svg viewBox="0 0 96 96" className={`${styles.ball} ${shaking ? styles.shaking : ''}`} aria-hidden="true">
+  return <svg viewBox="0 0 96 96" className={`collection-ball block overflow-visible [transform-origin:50%_90%] ${shaking ? "collection-shaking animate-effect-capture-wobble [&_.collection-ballLight]:animate-effect-capture-light [@media(prefers-reduced-motion:_reduce)]:animate-none [@media(prefers-reduced-motion:_reduce)]:[&_.collection-ballLight]:animate-none" : ''}`} aria-hidden="true">
     <defs>
       <linearGradient id={`${id}-red`} x1="0" y1="0" x2=".8" y2="1">
         <stop stopColor="#ff5b5b" /><stop offset=".5" stopColor="#ed232d" /><stop offset="1" stopColor="#ad0b1b" />
@@ -26,6 +25,6 @@ export default function PokeBall({ shaking }: { shaking: boolean }) {
     <circle cx="48" cy="48" r="43" fill="none" stroke="#181b23" strokeWidth="3.5" />
     <circle cx="48" cy="50" r="14" fill="#181b23" />
     <circle cx="48" cy="50" r="10" fill={`url(#${id}-white)`} />
-    <circle className={styles.ballLight} cx="48" cy="50" r="6.5" fill="#fff" stroke="#bbc1c9" strokeWidth="1.5" />
+    <circle className="collection-ballLight" cx="48" cy="50" r="6.5" fill="#fff" stroke="#bbc1c9" strokeWidth="1.5" />
   </svg>;
 }

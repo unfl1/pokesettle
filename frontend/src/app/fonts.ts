@@ -1,6 +1,6 @@
 import localFont from 'next/font/local';
 
-// Common glyphs use next/font; official unicode-range CSS loads other glyphs on demand.
+// Common glyphs use next/font; the Tailwind font plugin loads other glyphs on demand.
 export const pretendard = localFont({
   src: '../../public/fonts/pretendard/PretendardVariable.subset.91.woff2',
   variable: '--font-pretendard',

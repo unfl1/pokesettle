@@ -300,6 +300,16 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 원본 수신기 교체 시 새 이름과 이전 이름의 준비 상태를 모두 인식하여 이전 이미지 롤백 허용
 - 도메인 변경 전 브라우저 쿠키·sessionStorage는 새 도메인으로 자동 이전되지 않음, 기존 DB 데이터는 유지하되 새 주소에서는 새 세션 시작
 
+### 프론트 스타일 구성
+
+- 화면 레이아웃·반응형·상태 스타일: JSX의 Tailwind CSS 유틸리티 사용, 수집 기능 CSS 모듈 제거
+- `frontend/src/globals.css`: Tailwind 진입점·디자인 토큰·반응형 변형·애니메이션 테마·플러그인 지시문만 유지
+- `frontend/src/styles/document.ts`: 공통 기본값·포커스·동작 축소를 루트 Tailwind 유틸리티로 관리, `:where()`로 개별 컴포넌트 유틸리티 우선권 유지
+- `frontend/tailwind-fonts.mjs`·`frontend/src/styles/pretendard-subsets.json`: 91개 Pretendard 보조 서브셋의 폰트 등록을 Tailwind 플러그인으로 생성, unicode-range·라이선스 주석 보존, 기존 폰트 CSS 파일 제거
+- 타입 색상: `frontend/src/features/pokemon/typeColors.ts`의 정적 Tailwind 클래스 매핑 사용
+- JSX 인라인 스타일 제거: 제목 표시 지연은 정적 Tailwind 클래스 목록, 종족값 막대 비율은 SVG 수치 속성, 포획 이동은 Web Animations API 사용
+- 제목 번역이 길어지는 경우 `src/styles/titleDelays.ts` 지연 클래스 확장, 목록을 초과하는 글자는 마지막 지연값 적용
+
 ### 로컬 실행과 빌드
 
 ```bash

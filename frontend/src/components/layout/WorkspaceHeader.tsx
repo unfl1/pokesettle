@@ -29,31 +29,31 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
   const w = useWorkspaceContext();
   const ready = Boolean(w.status.data?.ready);
   return <>
-      <header className="site-header">
-        <div className="header-inner">
-          <NavigationLink prefetch={false} href={localizedPath(locale)} className="brand" aria-label={translate("PokeSettle 홈")}>
-            <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo" priority />
-            PokeSettle<span className="brand-tag">BETA</span>
+      <header className="site-header bg-white border-b border-line sticky top-0 z-20">
+        <div className="header-inner min-h-14 [padding:0_16px] flex items-center gap-6 screen-900:gap-4 screen-780:min-h-auto screen-780:flex-wrap screen-780:gap-0 screen-header:flex-wrap screen-header:gap-0">
+          <NavigationLink prefetch={false} href={localizedPath(locale)} className="brand flex items-center gap-[9px] text-[23px] font-extrabold tracking-[-1px] no-underline text-ink screen-780:h-10.5 screen-780:text-[21px] screen-header:h-12" aria-label={translate("PokeSettle 홈")}>
+            <Image src="/logo.png" alt="" width={36} height={36} className="brand-logo block w-9 h-9 shrink-0 object-contain" priority />
+            PokeSettle<span className="brand-tag py-0.5 px-1 bg-highlight text-highlight-ink text-[10px] tracking-[.5px] font-semibold rounded-[4px]">BETA</span>
           </NavigationLink>
-          <nav className="primary-nav" aria-label={translate("주 메뉴")}>
+          <nav className="primary-nav flex items-stretch gap-2 [align-self:stretch] m-0 [&_a]:flex [&_a]:items-center [&_a]:justify-center [&_a]:gap-2 [&_a]:[padding:0_15px] [&_a]:text-[#6b7280] [&_a]:text-[14px] [&_a]:font-semibold [&_a]:no-underline [&_a]:[border-bottom:3px_solid_transparent] [&_a]:[border-top:3px_solid_transparent] [&_a]:whitespace-nowrap [&_a:hover]:text-accent [&_a:hover]:bg-accent-hover [&_a[aria-current=page]]:[border-bottom-color:var(--color-accent)] [&_a[aria-current=page]]:text-accent [&_a[aria-current=page]]:bg-accent-hover screen-900:gap-1 screen-780:[order:3] screen-780:w-full screen-780:min-w-0 screen-780:overflow-x-auto screen-780:gap-1 screen-780:h-12 screen-780:[&_a]:flex-1 screen-780:[&_a]:[padding:0_6px] screen-780:[&_a]:text-[14px] screen-780:[&_a]:gap-1.5  screen-360:[&_a_svg]:hidden screen-header:[order:3] screen-header:w-full screen-header:h-12 screen-header:[&_a]:flex-1 screen-header:[&_a]:px-2 screen-header:[&_a]:gap-[5px] screen-540:overflow-x-auto screen-540:gap-0 screen-540:[&_a]:[flex:1_0_auto] screen-540:[&_a]:px-2 screen-540:[&_a]:text-[12px] screen-540:[&_a_svg]:hidden" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
               <NavigationLink key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>
                 <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
               </NavigationLink>
             ))}
           </nav>
-          <div className="header-actions">
+          <div className="header-actions flex items-center ml-auto screen-780:gap-1">
             {collection}
             <LanguageSwitcher />
-            <button className="help-button" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
+            <button className="help-button grid place-items-center p-2 rounded-[8px] text-[#64748b] hover:bg-accent-hover hover:text-accent" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
               <CircleHelp size={19} />
             </button>
           </div>
         </div>
       </header>
-<div className="workspace-main workspace-notices">
+<div className="workspace-main [width:min(100%,_1224px)] [padding:0_32px_56px] [margin:0_auto] flex-1 screen-780:[padding:0_20px_32px] screen-540:[padding:0_14px_28px] [&:empty]:hidden [&:has(>_[data-testid='chat-page'])]:[width:min(100%,_1400px)] [&:has(>_[data-testid='chat-page'])]:py-6 [&:has(>_[data-testid='chat-page'])]:px-8 [&:has(>_[data-testid='chat-page'])]:min-h-0 [&:has(>_[data-testid='chat-page'])]:flex [&:has(>_[data-testid='chat-page'])]:overflow-hidden [&:has(>_[data-testid='chat-page'])]:flex-col screen-780:[&:has(>_[data-testid='chat-page'])]:py-3 screen-780:[&:has(>_[data-testid='chat-page'])]:px-3.5 [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:shrink-0 [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:m-0 [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:py-1.5 [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:px-4 [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:border-b [&:has(>_[data-testid='chat-page'])_>_.source-language-note]:border-line [&:has(>_.pobti-page)]:flex [&:has(>_.pobti-page)]:flex-col [&:has(>_.pobti-page)]:justify-center [&:has(>_.pobti-page)]:py-8 [&:has(.pokedex-layout)]:flex [&:has(.pokedex-layout)]:flex-col [&:has(.metagame-page)]:flex [&:has(.metagame-page)]:flex-col [&_>_.source-language-note:last-child]:[margin:16px_0_0] [&_>_.source-language-note:last-child]:text-[12px] screen-540:[&:has(>_.pobti-page)]:py-6 workspace-notices [&.workspace-notices]:[flex:none] [&.workspace-notices]:pb-0 [&.workspace-notices]:pt-5">
         {showHelp && (
-          <section className="notice help-notice" aria-label={translate("이용 안내")}>
+          <section className="notice flex items-center gap-3 py-3.75 px-4.5 mb-5 bg-warning-soft [border:1px_solid_var(--color-warning-line)] rounded-[10px] text-[14px] text-warning leading-[1.8] [&_button]:ml-auto [&_button]:whitespace-nowrap [&_button]:font-semibold screen-540:p-3 screen-540:text-[14px] screen-540:gap-[9px] help-notice [&.help-notice]:items-start [&.help-notice]:bg-accent-hover [&.help-notice]:border-accent-soft [&.help-notice]:text-accent [&.help-notice]:[&_h2]:font-bold [&.help-notice]:[&_h2]:mb-[3px]" aria-label={translate("이용 안내")}>
             <ShieldCheck size={20} />
             <div>
               <h2>{translate("출처를 확인하며 읽어 주세요.")}</h2>
@@ -63,13 +63,13 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
           </section>
         )}
         {((view === 'chat' || view === 'scenario') && (w.status.error || w.session.error)) && (
-          <div className="notice" role="alert">
+          <div className="notice flex items-center gap-3 py-3.75 px-4.5 mb-5 bg-warning-soft [border:1px_solid_var(--color-warning-line)] rounded-[10px] text-[14px] text-warning leading-[1.8] [&_button]:ml-auto [&_button]:whitespace-nowrap [&_button]:font-semibold screen-540:p-3 screen-540:text-[14px] screen-540:gap-[9px]" role="alert">
             <CircleHelp size={18} /><span>{w.status.error?.message ?? w.session.error?.message}</span>
             <button onClick={w.refresh}>{translate("다시 연결")}</button>
           </div>
         )}
         {w.status.data && !ready && pathname === '/chat' && (
-          <div className="notice" role="alert">
+          <div className="notice flex items-center gap-3 py-3.75 px-4.5 mb-5 bg-warning-soft [border:1px_solid_var(--color-warning-line)] rounded-[10px] text-[14px] text-warning leading-[1.8] [&_button]:ml-auto [&_button]:whitespace-nowrap [&_button]:font-semibold screen-540:p-3 screen-540:text-[14px] screen-540:gap-[9px]" role="alert">
             <CircleHelp size={18} />
             <div>
               <strong>{w.status.data.missing.includes('INDEX_NOT_READY') ? translate("도감 색인이 준비되지 않았어요.") : translate("답변 모델 연결 설정이 필요해요.")}</strong>
