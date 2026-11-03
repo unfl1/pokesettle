@@ -11,15 +11,19 @@
     "test:e2e": "playwright test",
     "test:public-cache": "node scripts/verify-public-cache.mjs",
     "prebuild": "node scripts/generate-pokemon-routes.mjs",
-    "pretypecheck": "node scripts/generate-pokemon-routes.mjs"
+    "pretypecheck": "node scripts/generate-pokemon-routes.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.0",
     "lucide-react": "^0.563.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "16.4.3",
-    "@next/third-parties": "16.4.3"
+    "next": "16.4.4",
+    "@next/third-parties": "16.4.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
@@ -27,8 +31,10 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "~5.9.0",
-    "@tailwindcss/postcss": "^4.0.0"
+    "typescript": "7.0.2",
+    "@tailwindcss/postcss": "^4.0.0",
+    "prettier": "3.9.10",
+    "oxlint": "1.90.0"
   },
   "packageManager": "pnpm@11.25.0"
 }

@@ -1,0 +1,12 @@
+node_modules/
+.next/
+dist/
+test-results/
+playwright-report/
+pnpm-lock.yaml
+patches/
+public/
+src/assets/
+next-env.d.ts
+src/generated/
+AGENTS.md

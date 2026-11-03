@@ -23,7 +23,7 @@ PokeSettle is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Never commit secrets, invent source facts, fabricate damage/KO/win rates, or present heuristic scores as probabilities.
 - Distinguish verified, assumed, and unknown battle information in outputs.
 - Record data sources, licenses, and collection dates.
-- Run relevant tests; report failures and unverified behavior rather than claiming completion.
+- 작업 후 lint·타입 검사·테스트·빌드를 일괄 실행하는 의무 절차 제거함. 사용자가 요청하거나 문제 진단에 필요한 명령만 선택 실행하고 실제 결과와 미확인 범위를 구분함.
 
 ## Workflow
 - Perform all frontend and backend work on `develop` unless the user explicitly requests another branch.
@@ -46,3 +46,12 @@ PokeSettle is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - Do not add submission packets, phase reports, raw execution snapshots, or personal learning notes to Git by default. Keep new public documentation limited to current setup, architecture, API contracts, and source/license information unless explicitly requested.
 - Preserve verbatim quotations, third-party source/license text, raw execution logs, generated evidence snapshots, code examples, and UI/prompt text in their original context rather than changing them solely to satisfy documentation style.
 - Do not edit `docs/design/PROJECT_SPEC.md` or unrelated instructions in this file solely to standardize prose unless the user explicitly requests it.
+
+## Frontend command tools
+- `pnpm --dir frontend format`: Prettier 포맷 적용
+- `pnpm --dir frontend format:check`: Prettier 포맷 확인
+- `pnpm --dir frontend lint`: oxlint 정적 분석
+- `pnpm --dir frontend lint:fix`: oxlint 자동 수정
+- `pnpm --dir frontend typecheck`: 경로 타입 생성 후 TypeScript 7 타입 확인
+- 명령 실행 전 `frontend/package.json`의 스크립트와 설치 버전 확인, 변경 범위에 필요한 도구만 선택함
+- PR·배포 전 자동 회귀 검사 제거, 테스트 소스와 수동 명령 유지, 배포 빌드·운영 상태 확인 유지

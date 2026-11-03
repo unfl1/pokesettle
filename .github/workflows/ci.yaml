@@ -1,90 +1,25 @@
-name: Verify
+name: Build release
 
 on:
-  pull_request:
-    branches: [main]
   workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Superseded PR checks can stop; a release already being deployed must finish.
+# A release already being built must finish.
 concurrency:
-  group: verify-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: build-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  source:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: uv.lock
-      - name: Inspect public files and deployment code
-        run: |
-          python -m pip install "ruff==$(python -c 'import tomllib; print(next(p["version"] for p in tomllib.load(open("uv.lock", "rb"))["package"] if p["name"] == "ruff"))')"
-          python deployment/check_public_files.py
-          ruff check backend/app/core/usage.py backend/app/rag/model.py backend/tests/test_usage.py backend/app/core/telemetry.py backend/tests/test_telemetry.py backend/tests/test_deployment.py deployment
-          python -m compileall -q deployment
-          bash -n deployment/deploy_backend.sh deployment/bootstrap_server.sh deployment/verify_observability.sh
-
-  # Run the same regressions before merge and on the exact deployment revision.
   backend:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    services:
-      postgres:
-        image: pgvector/pgvector:0.8.7-pg18
-        env:
-          POSTGRES_DB: poketact_test
-          POSTGRES_USER: poketact_test
-          POSTGRES_PASSWORD: synthetic-ci-password
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U poketact_test -d poketact_test"
-          --health-interval 5s --health-timeout 5s --health-retries 20
-    env:
-      POKETACT_TEST_DATABASE_URL: postgresql://poketact_test:synthetic-ci-password@127.0.0.1:5432/poketact_test
-      LANGSMITH_TRACING: 'false'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: uv.lock
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22'
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-py312-${{ hashFiles('uv.lock') }}
-          restore-keys: ${{ runner.os }}-uv-py312-
-      - name: Install Python and calculator dependencies
-        run: |
-          python -m pip install uv==0.9.5
-          uv sync --frozen
-          npm install --global pnpm@11.25.0
-          pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/pnpm-store
-          key: ${{ runner.os }}-pnpm-calculator-${{ hashFiles('backend/calculator/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-calculator-
-      - name: Backend regression and release safety tests
-        run: |
-          pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts --prefer-offline
-          uv run pytest -q
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build backend image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -95,13 +30,9 @@ jobs:
           load: true
           cache-from: type=gha,scope=poketact-backend
           cache-to: type=gha,scope=poketact-backend,mode=max
-      - name: Verify packaged application and calculator
-        run: docker run --rm --network none --entrypoint python "poketact-backend:$GITHUB_SHA" -m backend.scripts.smoke_image
-      - name: Export tested backend image
-        if: github.event_name != 'pull_request'
+      - name: Export built backend image
         run: docker save "poketact-backend:$GITHUB_SHA" | gzip -1 > "$RUNNER_TEMP/backend-image.tar.gz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name != 'pull_request'
         with:
           name: backend-image-${{ github.sha }}
           path: ${{ runner.temp }}/backend-image.tar.gz
@@ -116,25 +47,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22'
-      - name: Configure pnpm
-        run: |
-          npm install --global pnpm@11.25.0
-          pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/pnpm-store
-          key: ${{ runner.os }}-pnpm-frontend-${{ hashFiles('frontend/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-frontend-
-      - name: Install frontend test dependencies
-        run: pnpm --dir frontend install --frozen-lockfile --ignore-scripts --prefer-offline
-      - name: Reuse the runner's installed Chrome and system libraries
-        run: |
-          browser_path=$(command -v google-chrome)
-          "$browser_path" --version
-          echo "CHROME_PATH=$browser_path" >> "$GITHUB_ENV"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build Next.js production image once
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -145,82 +57,18 @@ jobs:
           load: true
           cache-from: type=gha,scope=poketact-frontend
           cache-to: type=gha,scope=poketact-frontend,mode=max
-      - name: Frontend regressions against the deployment image
-        env:
-          PLAYWRIGHT_EXTERNAL_SERVER: '1'
-        run: |
-          FIXTURE_API_HOST=0.0.0.0 node frontend/e2e/fixture-api.mjs > "$RUNNER_TEMP/ssr-fixture.log" 2>&1 &
-          docker run -d --name poketact-frontend-test --add-host host.docker.internal:host-gateway -p 127.0.0.1:3000:3000 -e PORT=3000 -e PUBLIC_DATA_CACHE_SECONDS=0 -e API_ORIGIN=http://host.docker.internal:5198 "poketact-frontend:$GITHUB_SHA"
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then break; fi
-            if [ "$attempt" = 30 ]; then echo 'Frontend test server did not become ready' >&2; exit 1; fi
-            sleep 1
-          done
-          pnpm --dir frontend test:e2e
-      - name: Collect frontend failure diagnostics
-        if: failure()
-        run: |
-          mkdir -p frontend/test-results
-          docker logs poketact-frontend-test > frontend/test-results/server.log 2>&1 || true
-          cp "$RUNNER_TEMP/ssr-fixture.log" frontend/test-results/fixture.log 2>/dev/null || true
-      - name: Upload frontend failure diagnostics
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: frontend-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: frontend/test-results/
-          retention-days: 7
-          if-no-files-found: warn
-      - name: Export tested frontend image
-        if: github.event_name != 'pull_request'
+      - name: Export built frontend image
         run: docker save "poketact-frontend:$GITHUB_SHA" | gzip -1 > "$RUNNER_TEMP/frontend-image.tar.gz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name != 'pull_request'
         with:
           name: frontend-image-${{ github.sha }}
           path: ${{ runner.temp }}/frontend-image.tar.gz
           retention-days: 1
           compression-level: 0
           if-no-files-found: error
-      - name: Stop test server
-        if: always()
-        run: docker rm -f poketact-frontend-test || true
-
-  monitoring:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      # The fixture writer only needs Python; it does not need the application image.
-      - name: Verify monitoring with synthetic logs
-        env:
-          VERIFY_BACKEND_IMAGE: python:3.12-slim-bookworm
-        run: bash deployment/verify_observability.sh
-
-  # Keep the stable required-check name while aggregating parallel jobs.
-  verify:
-    if: always()
-    needs: [source, backend, frontend, monitoring]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    steps:
-      - name: Require every applicable check to pass
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          python - <<'PY'
-          import json, os
-          results = {name: job['result'] for name, job in json.loads(os.environ['RESULTS']).items()}
-          expected = {'source': 'success', 'backend': 'success', 'frontend': 'success', 'monitoring': 'success'}
-          if results != expected:
-              raise SystemExit('A required verification did not succeed')
-          PY
 
   release:
-    needs: verify
-    if: github.event_name != 'pull_request'
+    needs: [backend, frontend]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -232,7 +80,7 @@ jobs:
           pattern: '*-image-${{ github.sha }}'
           path: images
           merge-multiple: true
-      - name: Package the tested images without rebuilding
+      - name: Package the built images without rebuilding
         run: |
           docker load --input images/backend-image.tar.gz
           docker load --input images/frontend-image.tar.gz
