@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { featurePaths } from './src/i18n/config';
 
 const apiOrigin = process.env.API_ORIGIN ?? 'http://127.0.0.1:8000';
 const config: NextConfig = {
@@ -13,7 +14,13 @@ const config: NextConfig = {
     minimumCacheTTL: 86400,
   },
   async rewrites() {
-    return [{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }];
+    return {
+      beforeFiles: [
+        ...featurePaths.map(path => ({ source: path || '/', destination: `/en${path}` })),
+        { source: '/pokedex/:slugId', destination: '/en/pokedex/:slugId' },
+      ],
+      afterFiles: [{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }],
+    };
   },
 };
 export default config;

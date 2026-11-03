@@ -18,16 +18,16 @@
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
 - 통계: `RuntimeAnalytics`가 `/analytics/config`의 no-store 응답으로 런타임 `GA_ID` 조회 후 `GoogleAnalytics` 활성화, 공통 레이아웃의 요청 시 렌더링 의존성 제거
-- 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 모든 언어 `/{lang}/{feature}` 접두사, 기본 언어 `ko`, `zh`는 간체(`zh-Hans`) 제공
+- 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 기본 언어 `en`은 무접두사 공개 URL, 나머지 언어는 `/{lang}/{feature}` 접두사, `zh`는 간체(`zh-Hans`) 제공
 - 라우팅: Next.js `proxy.ts`에서 기존 기능 주소를 `/ko/...`로 308 연결, 미지원 언어·알 수 없는 경로는 404 유지, 언어 전환 시 기능·쿼리·해시 유지
 - Legal: `src/app/(legal)`의 별도 루트 레이아웃으로 `/terms`·`/privacy` 한국어 공통 문서 제공함. `[lang]` 및 세션 Provider와 분리하고 홈·기능 푸터에서 일반 링크로 연결함. 루트 레이아웃 간 이동은 전체 문서 요청이며, 번역 경로·언어 대체 메타데이터는 생성하지 않음
 - 번역: `next/root-params` 기반 서버 사전 로딩, `I18nProvider`에서 현재 언어 사전만 클라이언트에 전달, 원문·API 데이터·챗봇 생성 응답은 자동 번역하지 않고 제공 언어 안내 표시
-- SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 언어별 sitemap 20개 URL·robots 제공
+- SEO: 페이지별 `generateMetadata`에서 제목·설명·canonical·hreflang·Open Graph 생성, 기능 페이지·생성된 도감 카탈로그·단일 한국어 법적 문서 기반 Sitemap 및 robots 제공
 - SEO 전환: 홈 카드·브랜드의 사전 조회 제한, 기능 메뉴의 사전 조회·본문 Suspense 스트리밍 유지, 경로 이동 시 canonical·Open Graph 검사
 - metadata 하이드레이션: Next.js 16.4.3의 독립 `Next.Metadata` Suspense 경계를 pnpm 패치로 제거하여 초기 연결 전 경로 이동 시 이전 canonical·Open Graph 잔존 방지, 메타데이터 선확정과 본문 Suspense 스트리밍 분리
 - 초안 복원: 공통 Provider 재마운트 없이 질문·팀 상태만 갱신, 초기 링크 DOM을 유지하여 하이드레이션 중 클릭 유실 방지
 - 패치 관리: `frontend/pnpm-workspace.yaml`·`patches/next@16.4.3.patch`·lockfile 및 Docker 설치 입력에 함께 반영, Next.js 갱신 시 CPU 20배 지연·다국어 왕복 E2E 통과 여부를 확인한 뒤 패치 제거 검토
-- 참고: [review-in-korea 언어 구조](https://github.com/jihyukboin/review-in-korea/blob/main/docs/language/multilingual-architecture.md)의 레지스트리·경로 생성·언어 검증·SEO 책임 분리 참고, 기본 언어 접두사 생략 정책은 적용하지 않음
+- 참고: [review-in-korea 언어 구조](https://github.com/jihyukboin/review-in-korea/blob/main/docs/language/multilingual-architecture.md)의 레지스트리·경로 생성·언어 검증·SEO 책임 분리 참고, 영어 기본 언어 접두사 생략 정책 적용
 
 ## 1. 구조와 책임
 
@@ -287,3 +287,15 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 - 상태 유지: 채팅·팀 Provider 유지, 공개 화면의 세션·상태·대화 조회 비활성화, 조건 검색 활성화 시 필요한 세션·상태만 조회
 - 로딩: 도감·메타의 `RouteBoundary`에서 RSC 메뉴 이동에만 Suspense 로딩 안내 제공, 문서 직접 접속은 JavaScript 없이도 완성된 공개 본문 제공
 - 메뉴: `NavigationLink`의 명시적 사전 조회와 클릭 대기 표시 적용, 홈·챗봇·포BTI·시나리오는 정적 생성, 공개 데이터 화면만 요청 시 렌더링
+
+### 공개 URL 및 Sitemap 정책
+
+- 영어 공개 경로 `/`, `/chat`, `/pokedex`, `/meta`, `/scenario`, `/pobti`를 Next.js 설정에서 내부 `/en` 라우트로 rewrite, 기존 `[lang]` 및 root params 재사용
+- 기존 `/en` 공개 요청은 무접두사 주소로 308 이동, 상세 페이지는 ID 검증과 현지 slug 보정 후 최종 주소로 직접 이동
+- `localizedPath()`와 `pokemonPath()`를 내부 링크·canonical·hreflang·Sitemap에서 공유, 영어 `x-default`와 언어별 자기 참조 canonical 유지
+- `zh` 공개 경로와 `zh-Hans` hreflang 구분, 도감의 locale별 slug 및 ID 접미사 유지
+- 기능 페이지는 실제 제공 중인 `featurePaths`와 locale 레지스트리, 도감은 배포 카탈로그에서 생성한 `pokemon-routes.json` 기준으로 수록
+- 각 언어 페이지는 동일한 reciprocal alternate mapping 사용, `/terms`·`/privacy`는 한국어 단일 URL로 유지
+- 새 번역은 실제 본문·이름·slug와 공개 라우트 제공을 확인한 뒤 수록, fallback 이름만으로 번역 URL 생성 금지
+- 비공개·noindex·404·redirect·query alias는 Sitemap 제외, 실제 변경 시각이 없는 콘텐츠는 `lastModified` 생략
+- 도감 snapshot과 백엔드 카탈로그를 동일 배포로 유지, CDN의 이전 루트 redirect 캐시 갱신 필요

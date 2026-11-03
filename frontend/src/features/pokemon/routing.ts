@@ -1,4 +1,4 @@
-import type { Locale } from '../../i18n/config';
+import { localizedPath, type Locale } from '../../i18n/config';
 
 type RoutePokemon = {
   pokemonId: string;
@@ -21,7 +21,7 @@ export function pokemonSegment(pokemon: RoutePokemon, locale: Locale) {
   return `${slug}-${match[1]}`;
 }
 export function pokemonPath(pokemon: RoutePokemon, locale: Locale) {
-  return `/${locale}/pokedex/${encodeURIComponent(pokemonSegment(pokemon, locale))}`;
+  return localizedPath(locale, `/pokedex/${encodeURIComponent(pokemonSegment(pokemon, locale))}`);
 }
 export function idFromSegment(segment: string) {
   const match = /^.+-([1-9]\d*)$/.exec(segment.normalize('NFC'));

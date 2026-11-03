@@ -5,14 +5,14 @@ import { getI18n } from './server';
 export const siteUrl = process.env.SITE_URL ?? 'https://pokesettle.com';
 export function languageAlternates(path: string) {
   return {
-    ...Object.fromEntries(locales.map(locale => [localeRegistry[locale].htmlLang, new URL(localizedPath(locale, path), siteUrl).href])),
-    'x-default': new URL(localizedPath(defaultLocale, path), siteUrl).href,
+    ...Object.fromEntries(locales.map(locale => [localeRegistry[locale].htmlLang, new URL(localizedPath(locale, path), siteUrl).href.replace(/\/$/, '')])),
+    'x-default': new URL(localizedPath(defaultLocale, path), siteUrl).href.replace(/\/$/, ''),
   };
 }
 export async function pageMetadata(path: string, titleKey: string, descriptionKey: string): Promise<Metadata> {
   const { locale, t } = await getI18n();
   const title = t(titleKey), description = t(descriptionKey);
-  const url = localizedPath(locale, path);
+  const url = new URL(localizedPath(locale, path), siteUrl).href.replace(/\/$/, '');
   return {
     title: { absolute: `${title} | PokeSettle` }, description,
     alternates: { canonical: url, languages: languageAlternates(path) },
