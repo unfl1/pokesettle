@@ -229,6 +229,11 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 answer_status="abstained", claims=[], assumptions=[], unknowns=["검색된 근거 없음"]
             )
         else:
+            aliases = {
+                item["evidence_id"]: f"E{index}"
+                for index, item in enumerate(state["evidence"], 1)
+            }
+            original_ids = {alias: eid for eid, alias in aliases.items()}
             battle_context = state.get("battle_context")
             calculation_id = "battle-calculation:" + digest(battle_context)
             if any(
@@ -238,7 +243,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
             ):
                 # The complete calculation is already present in evidence. Refer to
                 # it once rather than serializing the same current inputs twice.
-                battle_context = {"evidence_id": calculation_id}
+                battle_context = {"evidence_id": aliases[calculation_id]}
             payload = {
                 "question": state["question"],
                 "battle_context_from_user_inputs_and_type_tool": battle_context,
@@ -247,14 +252,14 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 # Attribution and storage metadata stay server-side for citation rendering.
                 # Keep complete text and applicability fields; never truncate source claims.
                 "evidence": [
-                    {key: item[key] for key in (
-                        "evidence_id", "document_id", "text", "title", "source_type", "pokemon_id",
+                    {**{key: item[key] for key in (
+                        "document_id", "text", "title", "source_type", "pokemon_id",
                         "game", "battle_format", "regulation_id", "verification_status", "collected_at",
-                    ) if key in item}
+                    ) if key in item}, "evidence_id": aliases[item["evidence_id"]]}
                     for item in state["evidence"]
                 ],
                 "allowed_versions_by_evidence": {
-                    item["evidence_id"]: sorted(
+                    aliases[item["evidence_id"]]: sorted(
                         set(re.findall(r"Description \([^,\n]+, ([a-z0-9-]+)\):", item["text"]))
                     )
                     for item in state["evidence"]
@@ -264,7 +269,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
             schema = Generation
             if calculated:
                 prompt, schema = BATTLE_EXPLANATION_PROMPT, BattleExplanation
-                payload["supplemental_evidence_ids"] = sorted(supplemental_ids)
+                payload["supplemental_evidence_ids"] = sorted(aliases[eid] for eid in supplemental_ids)
             cache_key = None
             if state.get("cache_guide") and not context and not state.get("history"):
                 settings = getattr(model, "settings", vector_store.settings)
@@ -288,6 +293,17 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 output = model.invoke("generate", prompt, payload, schema)
                 raw_output = output
                 stage("validating_citations")
+                # Model-local aliases never escape into stored answers or citations.
+                # Unknown IDs must fail even if they happen to equal a storage ID.
+                if any(eid not in original_ids for claim in output.claims for eid in claim.evidence_ids):
+                    payload["validation_feedback"] = "답변에 유효하지 않은 근거가 있습니다."
+                    payload["previous_invalid_output"] = raw_output.model_dump()
+                    if attempt == 0:
+                        stage("generating")
+                    continue
+                output = output.model_copy(deep=True)
+                for claim in output.claims:
+                    claim.evidence_ids = [original_ids[eid] for eid in claim.evidence_ids]
                 if calculated:
                     extra = [
                         claim for claim in output.claims

@@ -1,3 +1,4 @@
+import re
 import threading
 
 import numpy as np
@@ -46,6 +47,7 @@ class VectorStore:
                     metadatas=[
                         {
                             "pokemon_id": p.pokemon_id,
+                            "species_id": p.species_id,
                             "title": f"{p.name_ko or p.name_en} 메타데이터",
                             "source_type": "metadata",
                             "document_id": f"{p.pokemon_id}:metadata",
@@ -157,10 +159,26 @@ class VectorStore:
                     where={"pokemon_id": pokemon_id},
                     include_embeddings=use_mmr,
                 )
+                # Old indexes have the species ID only in their metadata text.
+                # Forms share species prose, but must retain their own stats metadata.
+                species_id = found["metadatas"][0].get("species_id")
+                if species_id is None:
+                    match = re.search(r"Species: (\d+);", found["documents"][0])
+                    species_id = int(match[1]) if match else None
+                indices = list(range(len(result["ids"][0])))
+                if species_id is not None:
+                    own_document = f"pokeapi:pokemon-species:{species_id}"
+                    # Keep similarity order within each lane. Incidental species
+                    # collected in past conversations must not crowd out this subject.
+                    indices.sort(key=lambda i: (
+                        result["metadatas"][0][i]["document_id"].startswith("pokeapi:pokemon-species:")
+                        and result["metadatas"][0][i]["document_id"] != own_document
+                    ))
                 candidates, candidate_embeddings, seen = [], [], set()
-                for index, (eid, text, meta) in enumerate(
-                    zip(result["ids"][0], result["documents"][0], result["metadatas"][0])
-                ):
+                for index in indices:
+                    eid = result["ids"][0][index]
+                    text = result["documents"][0][index]
+                    meta = result["metadatas"][0][index]
                     manifest = self.store.get("manifest", f"{pokemon_id}:{meta['document_id']}")
                     if not manifest or eid not in manifest["ids"]:
                         continue

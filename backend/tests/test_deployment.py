@@ -127,6 +127,45 @@ def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_pa
     assert "--no-deps" in calls[-1][0]
 
 
+@pytest.mark.parametrize("cleanup_failure", [None, "poketact-backend", "poketact-frontend"])
+def test_healthy_release_cleans_both_image_repositories_and_preserves_rollback(tmp_path, monkeypatch, cleanup_failure):
+    active, previous_tag, stale = "a" * 40, "b" * 40, "c" * 40
+    previous_dir = tmp_path / (previous_tag + "-previous")
+    previous_dir.mkdir()
+    release = tmp_path / (active + "-new")
+    release.mkdir()
+    (release / "image.tar").write_bytes(b"image")
+    (tmp_path / "current.json").write_text(json.dumps({
+        "directory": str(previous_dir), "image_tag": previous_tag,
+        "monitoring": True, "frontend": True,
+    }))
+    monkeypatch.setattr(receiver, "ROOT", tmp_path)
+    monkeypatch.setattr(receiver, "run", lambda *a, **k: None)
+    monkeypatch.setattr(receiver, "compose", lambda *a, **k: None)
+    monkeypatch.setattr(receiver, "ready", lambda: None)
+    monkeypatch.setattr(receiver.os, "chown", lambda *a: None)
+    removed, listed = [], []
+
+    def docker(args, **kwargs):
+        if args[:3] == ["docker", "volume", "inspect"]:
+            return SimpleNamespace(stdout=str(tmp_path), returncode=0)
+        if args[:3] == ["docker", "image", "ls"]:
+            repository = args[-1]
+            listed.append(repository)
+            return SimpleNamespace(stdout="\n".join([active, previous_tag, stale, "local", "<none>"]),
+                                   returncode=int(repository == cleanup_failure))
+        assert args[:3] == ["docker", "image", "rm"]
+        removed.append(args[-1])
+        return SimpleNamespace(returncode=1)  # In-use stale images cannot fail a healthy release.
+
+    monkeypatch.setattr(receiver.subprocess, "run", docker)
+    receiver.deploy(release, active)
+    assert listed == ["poketact-backend", "poketact-frontend"]
+    assert set(removed) == {f"{repo}:{stale}" for repo in listed if repo != cleanup_failure}
+    assert previous_dir.is_dir()
+    assert json.loads((tmp_path / "current.json").read_text())["image_tag"] == active
+
+
 @pytest.mark.parametrize("command", ["bash", "deploy main", "deploy " + "a" * 40 + "; id", "deploy " + "../a" * 40])
 def test_forced_command_rejects_shell_and_non_sha_arguments(command):
     with pytest.raises(ValueError):

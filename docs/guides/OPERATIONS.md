@@ -8,15 +8,15 @@
 
 | 시점·대상 | 처리 |
 |---|---|
-| `main` 대상 PR | 실제 PostgreSQL + pgvector 회귀·프론트 빌드·백엔드 이미지 빌드·모니터링 설정 검사 |
-| `main` push·병합 | 동일 검증 → API·Next.js 이미지 전달 → 서버 준비 상태 확인 → CloudFront 캐시 무효화 → 공개 경로 확인 |
+| `main` 대상 PR | 자동 회귀 검사 없음, 필요한 수동 명령만 선택 실행 |
+| `main` push·병합 | API·Next.js 이미지 빌드·전달 → 서버 준비 상태 확인 → CloudFront 캐시 무효화 → 공개 경로 확인 |
 | API 운영 기록 | 경로 템플릿·상태 코드·처리 시간·서버 생성 요청 ID만 JSON 기록 |
 | 모델 운영 기록 | 용도별 시도 횟수·성공/실패·처리 시간 기록, 내부 SDK 재시도는 별도 분리 불가 |
 | Grafana | API·모델·서버 지표·로그·현재 경보 조회 |
 
 - Jenkins·컨테이너 레지스트리 없이 GitHub 실행기에서 이미지 빌드, SSH로 압축 결과물 전송
-- `.github/workflows/ci.yaml`: 검증 및 배포 결과물 생성
-- `.github/workflows/deploy.yaml`: `main` 검증 통과 이후 `production` 환경에서만 배포
+- `.github/workflows/ci.yaml`: `Build release`, 이미지 빌드 및 배포 결과물 생성
+- `.github/workflows/deploy.yaml`: `main` 이미지 빌드 통과 이후 `production` 환경에서만 배포
 - 배포 동시 실행 차단, 실행 중 배포를 새 커밋으로 취소하지 않음
 - 애플리케이션 API 키·DB 비밀번호는 서버에 유지, GitHub Actions에 전달 불필요
 
@@ -33,6 +33,13 @@ sudo bash deployment/bootstrap_server.sh dedicated-deploy-key.pub
 ```
 
 - 설치 결과: root 소유 `/usr/local/lib/poketact/receive-release.py`, 비공개 `/etc/poketact/observability.env`
+- 수신기 코드 변경은 이미지 배포 번들에 자동 반영되지 않음. 검토한 서버 체크아웃에서 아래 명령으로 설치본 별도 갱신 필요
+
+```bash
+sudo install -o root -g root -m 755 deployment/receive_release.py /usr/local/lib/poketact/receive-release.py
+```
+
+- 수신기 갱신 후 backend·frontend 이미지 모두 현재·직전 SHA 보존, 이전 SHA 이미지 정리함. 이미지 정리 실패는 정상 배포를 실패 처리하지 않음
 - 전용 공개키는 `deploy <40자리 커밋 SHA>` 강제 명령만 허용, 포트 포워딩·PTY·일반 셸 차단
 - 일반 관리용 SSH 키는 별도 유지
 - `.env.observability`에 해당하는 실제 Grafana 비밀번호는 서버에서 무작위 생성, Git 제외
@@ -81,14 +88,11 @@ python3 bootstrap_github_oidc.py --repository unfl1/pokesettle --subject-prefix 
 
 ## 배포 동작과 복구
 
-- PR의 `Verify / verify`: 공개 파일·정적 검사, PostgreSQL + pgvector 백엔드 회귀·이미지 smoke, 프론트 Docker 빌드·전체 E2E, 모니터링 통합 검사를 필수 실행, skipped·실패·취소는 집계 실패로 처리
-- PR에서는 이미지 검증까지 수행하고 배포용 이미지 export·업로드·릴리스 패키징은 생략, main·수동 실행은 검증된 이미지 아티팩트로 기존 릴리스 흐름 유지
-- `main` 병합 후 `Deploy production`: 같은 커밋의 백엔드 회귀·프론트 Docker/E2E·모니터링 통합 검증을 병렬로 1회 수행, 모두 통과한 이미지로 릴리스 생성 후 배포
-- 프론트엔드는 Docker 안에서 빌드·타입 검사 후 해당 이미지로 E2E 수행, 별도 호스트 Next.js 빌드 생략
-- `Verify` 수동 실행: 선택한 브랜치의 전체 검증·릴리스 패키징만 수행, 서버 배포 미수행
-- 캐시: 잠금 파일 기준 pip·uv·pnpm 저장소와 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치는 `--frozen` 유지, 테스트 결과 자체는 캐시하지 않음
-- E2E 브라우저: Ubuntu 러너에 기본 설치된 Chrome을 `CHROME_PATH`로 사용, 브라우저·시스템 라이브러리 중복 설치 생략, 실제 사용 버전은 Actions 로그에 출력
-- E2E 실패 자료: trace·스크린샷·JUnit 및 Docker 서버·합성 API 로그를 `frontend-failure-{run_id}-{run_attempt}` 아티팩트로 7일 보관, 테스트 자동 재시도 없이 최초 실패 기록 유지
+- PR 자동 lint·타입 검사·회귀·E2E 없음. 테스트 소스와 수동 실행 명령 유지, 변경 범위에 필요한 검사만 선택 실행함
+- `main` 병합 후 `Deploy production`: 같은 커밋의 API·Next.js 이미지를 병렬 빌드하고 두 이미지로 릴리스 생성 후 배포함
+- 프론트엔드는 Docker 안에서 Next.js 프로덕션 빌드 수행함
+- `Build release` 수동 실행: 선택한 브랜치의 이미지 빌드·릴리스 패키징 수행, 서버 배포 미수행
+- 캐시: 백엔드/프론트별 BuildKit GHA 레이어 재사용, 의존성 설치의 잠금 파일 고정 유지함
 - 릴리스: 같은 실행의 SHA별 이미지 아티팩트만 결합, 이미지 재빌드 없음, gzip 레벨 1로 압축 시간 절감, 운영 SSH·OIDC 권한은 기존 배포 job에만 부여
 
 - 전달 대상: Docker 이미지와 명시한 Compose·모니터링 설정만 포함한 압축 번들
