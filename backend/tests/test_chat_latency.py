@@ -8,6 +8,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.rag.graph import build_graph
 from backend.app.schemas import BattleExplanation, ChatRequest, Generation
+from backend.app.services.chat_scope import ChatScope
 from backend.tests.conftest import document
 
 
@@ -27,6 +28,8 @@ def test_only_evaluated_battles_reuse_prepared_index_without_external_collection
 
     def invoke(purpose, prompt, payload, schema):
         invoked.append(purpose)
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
         if purpose == 'battle_state':
             return BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911')
         return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
@@ -90,6 +93,8 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
             payload = json.loads(messages[1].content)
             sent.append((self.schema, payload))
             assert input_reservation(messages[0].content, payload, self.schema.model_json_schema()) <= settings.model_max_input_tokens
+            if self.schema is ChatScope:
+                return {'parsed': ChatScope(in_scope=True), 'raw': None, 'parsing_error': None}
             if self.schema is BattleUpdate:
                 return {'parsed': BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911'), 'raw': None, 'parsing_error': None}
             return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
@@ -207,12 +212,12 @@ def test_registered_strategy_collection_uses_only_answer_model_and_preserves_sou
     setup.service.source = source
     request = ChatRequest(pokemon_id='pokemon:1', question='운영 전략 추천', client_request_id=uuid4())
     result = setup.service.chat(request, setup.store.new_session())
-    assert [purpose for purpose, payload in setup.model.calls] == ['generate']
+    assert [purpose for purpose, payload in setup.model.calls] == ['chat_scope', 'generate']
     assert setup.vectors.docs.get(where={'pokemon_id': 'pokemon:1'})['ids']
     assert result['citations'] and result['citations'][0]['source_url']
 
     # Complete source text and applicability reach the model; citation metadata stays on the server.
-    payload = setup.model.calls[0][1]
+    payload = next(payload for purpose, payload in setup.model.calls if purpose == 'generate')
     assert any(item['source_type'] == 'curated' and item['verification_status'] == 'assumed' for item in payload['evidence'])
     original = build_graph(setup.vectors, setup.model).invoke({
         'pokemon_id': 'pokemon:1', 'question': request.question,
@@ -306,6 +311,8 @@ def test_reexplanation_reuses_state_but_changes_and_topic_switches_use_extractio
     calls = []
 
     def invoke(purpose, prompt, payload, schema):
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
         calls.append(purpose)
         assert purpose == 'battle_state', 'no supplemental evidence should mean no generation'
         if '40%' in payload['question']:

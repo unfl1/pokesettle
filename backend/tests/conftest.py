@@ -14,6 +14,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import Settings
 from backend.app.rag.vector_store import VectorStore
 from backend.app.schemas import Candidate, DiscoveryPlan, Document, Generation, QueryPlan, Selection
+from backend.app.services.chat_scope import ChatScope
 from backend.app.services.knowledge import KnowledgeService
 from backend.app.storage import Store
 
@@ -80,6 +81,8 @@ class FakeModel:
         self.calls.append((purpose, payload))
         if self.fail:
             raise RuntimeError("SECRET_TEST_TOKEN full prompt raw provider exception")
+        if purpose == "chat_scope":
+            return ChatScope(in_scope=True)
         if purpose == "discovery":
             return self.discovery_plan
         if purpose == "queries":

@@ -6,6 +6,7 @@ from backend.app.battle.conversation import BattleUpdate, evaluate_state, merge_
 from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.schemas import ChatRequest
+from backend.app.services.chat_scope import ChatScope
 
 
 def test_followup_state_merges_and_type_change_does_not_grant_moves():
@@ -101,6 +102,8 @@ def test_real_pipeline_persists_user_state_and_supplies_citable_calculation(setu
     payloads = []
 
     def invoke(purpose, system, payload, schema):
+        if purpose == "chat_scope":
+            return ChatScope(in_scope=True)
         if purpose == "battle_state":
             update = next(updates)
             from backend.app.battle.conversation import InputEvidence
@@ -472,7 +475,7 @@ def test_unknown_new_opponent_is_saved_without_searching_old_opponent(setup, mon
     monkeypatch.setattr(
         setup.model,
         "invoke",
-        lambda *args: BattleUpdate(relevant=True, own_id="pokemon:908", opponent_id="pokemon:130"),
+        lambda purpose, *args: ChatScope(in_scope=True) if purpose == "chat_scope" else BattleUpdate(relevant=True, own_id="pokemon:908", opponent_id="pokemon:130"),
     )
     monkeypatch.setattr(
         setup.service,

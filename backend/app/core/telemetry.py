@@ -13,7 +13,7 @@ from starlette.requests import Request
 from backend.app.core.exception_handlers import internal_error
 
 METHODS = {"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
-PURPOSES = {"generate", "discovery", "queries", "selection", "battle_state"}
+PURPOSES = {"generate", "discovery", "queries", "selection", "battle_state", "chat_scope"}
 
 
 class Telemetry:

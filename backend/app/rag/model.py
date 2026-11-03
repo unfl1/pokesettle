@@ -72,7 +72,7 @@ class StructuredModel:
                 model = ChatOpenAI(
                     model=model_name,
                     reasoning_effort=("medium" if purpose == "battle_state" else "none") if luna else None,
-                    temperature=0 if purpose in {"discovery", "generate"} and not luna else None,
+                    temperature=0 if purpose in {"discovery", "generate", "chat_scope"} and not luna else None,
                     api_key=self.settings.api_key,
                     base_url=self.settings.base_url,
                     timeout=self.settings.llm_timeout,

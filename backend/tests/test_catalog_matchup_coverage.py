@@ -12,6 +12,7 @@ from backend.app.battle.conversation import (
 )
 from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
+from backend.app.services.chat_scope import ChatScope
 from backend.app.services.topics import mentioned_pokemon
 
 
@@ -88,6 +89,8 @@ def test_chat_pipeline_crosses_all_generations_and_overrides_stale_model_opponen
     current = {}
 
     def invoke(purpose, prompt, payload, schema):
+        if purpose == "chat_scope":
+            return ChatScope(in_scope=True)
         if purpose == "battle_state":
             # Simulate a model retaining the previous opponent despite an explicit new name.
             return BattleUpdate(relevant=True, own_id=current["own"], opponent_id=current["stale"])
