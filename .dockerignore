@@ -60,6 +60,7 @@ frontend/*
 !frontend/patches/**
 !frontend/next.config.ts
 !frontend/postcss.config.mjs
+!frontend/tailwind-fonts.mjs
 !frontend/tsconfig.json
 !frontend/scripts/
 !frontend/scripts/**
