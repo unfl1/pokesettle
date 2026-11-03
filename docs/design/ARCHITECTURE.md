@@ -14,7 +14,7 @@
 
 - 프런트엔드: Next.js 16.4.3 App Router, `src/app/[lang]/layout.tsx`·`[lang]/(root)` 기능별 `page.tsx` 서버 컴포넌트 적용
 - 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
-- 화면 레이아웃: 홈과 기능 페이지를 `[lang]/(root)`에 함께 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈과 기능 메뉴의 클라이언트 이동으로 Provider·초안 유지
+- 화면 레이아웃: 홈은 `[lang]/(home)`, 기능 페이지는 `[lang]/(root)`에 배치함. 공통 `[lang]/layout.tsx`의 Provider·초안을 유지하고 기능 페이지의 `WorkspaceShell`·푸터·언어 안내를 서버에서 렌더링함
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
 - 통계: `RuntimeAnalytics`가 `/analytics/config`의 no-store 응답으로 런타임 `GA_ID` 조회 후 `GoogleAnalytics` 활성화, 공통 레이아웃의 요청 시 렌더링 의존성 제거
@@ -276,11 +276,13 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 
 - 도감 목록·상세: Next.js 서버에서 내부 FastAPI 조회 후 최초 HTML에 이름·타입·종족값·설명·출처·목록 링크 포함
 - RAG 입력: 화면 표시용 names·slugs를 검색어 추출 프롬프트에서 제외, UI 현지화로 모델 입력 증가 방지
-- 경계: 본문은 Server Component, 검색·기술 필터·이미지 실패 처리만 Client Component, 전체 도감 URL 인덱스의 클라이언트 전송 제외
+- 경계: 도감 프로필·기술 카드와 메타 순위·상세·출처·날짜는 Server Component, 검색·기술 필터·메타 선택 폼·새로 조회·이미지 실패 처리만 Client Component로 구성함. 기술 필터에는 서버가 렌더링한 카드와 필터 정보만 전달함. 전체 도감 URL 인덱스의 클라이언트 전송 제외함
 - URL 인덱스: `data/pokemon_names.json` → 프론트 빌드 시 `scripts/generate-pokemon-routes.mjs` → `src/generated/pokemon-routes.json`, ID 집합·빈 slug·경로 중복 검증
 - 리다이렉트·없는 ID: 스트리밍 이전 proxy에서 308·404 확정, 상세 canonical·hreflang·OG URL·사이트맵은 동일 인덱스 사용
-- 캐시: 도감 초기 목록·ID 상세·메타의 공개 GET만 Next.js 데이터 캐시로 60초 재검증, React `cache`로 렌더 요청 내 중복 조회 축소, 개인 세션 쿠키 전달 제외, 메타의 기존 백엔드 신선도 정책 및 클라이언트 staleTime 유지
-- 메타 SSR 신선도: 데이터 캐시 재검증 실패 시에도 `collectedAt` 기준 6시간 이후 임시 자료 표시, 24시간 이후 초기 데이터 제외 및 클라이언트 재조회
+- 캐시: 도감 초기 목록·ID 상세·메타의 공개 GET만 Next.js 데이터 캐시로 60초 재검증, React `cache`로 렌더 요청 내 중복 조회 축소, 개인 세션 쿠키 전달 제외, 메타의 기존 백엔드 신선도 정책 유지
+- 메타 SSR 신선도: 데이터 캐시 재검증 실패 시에도 `collectedAt` 기준 6시간 이후 임시 자료 표시, 24시간 이후 본문에서 제외하고 서버 재조회 버튼 제공함. 클라이언트의 중복 메타 GET 제거함
+- 메타 선택: `?pokemon=<nameEn>`으로 선택 상태 유지, 서버가 선택한 상세 렌더링, 폼의 클라이언트 이동·뒤로/앞으로 가기 및 JavaScript 없는 GET 제출 지원함
+- 하이드레이션: 메타 날짜를 서버에서만 포맷하고 헤더·언어 선택의 `useSearchParams` 의존성 제거함. 브라우저 저장소는 기존 effect 복원 유지, 공통 UI를 숨기는 초기 마운트 검사·경고 억제 미사용임
 - 실행 환경: Compose `API_ORIGIN=http://api:8000`, 서버 조회에 개인 세션 쿠키 전달 제외, 빌드 시 운영 API 접속 불필요
 - 상태 유지: 채팅·팀 Provider 유지, 공개 화면의 세션·상태·대화 조회 비활성화, 조건 검색 활성화 시 필요한 세션·상태만 조회
 - 로딩: 도감·메타의 `RouteBoundary`에서 RSC 메뉴 이동에만 Suspense 로딩 안내 제공, 문서 직접 접속은 JavaScript 없이도 완성된 공개 본문 제공

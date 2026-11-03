@@ -1,3 +1,7 @@
+'use client';
+import { useRouter } from 'next/navigation';
+import { localizedPath } from '../../../i18n/config';
+import { useWorkspaceContext } from '../../../providers/AppProviders';
 import { pokemonName } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useTeamDraftContext } from "../../../providers/AppProviders";
@@ -91,13 +95,14 @@ function AnalysisState({
   );
 }
 
-export default function TeamWorkspace({
-  onAsk,
-  sessionReady,
-}: {
-  onAsk: (question: string) => void;
-  sessionReady: boolean;
-}) {
+export default function TeamWorkspace() {
+  const workspace = useWorkspaceContext();
+  const router = useRouter();
+  const sessionReady = workspace.session.isSuccess;
+  const onAsk = (question: string) => {
+    if (question) workspace.setDraft(question);
+    router.push(localizedPath(locale, '/chat'));
+  };
   const typeLabels = useTypeLabels();
   const { locale, t: translate } = useI18n();
   const cache = useQueryClient();

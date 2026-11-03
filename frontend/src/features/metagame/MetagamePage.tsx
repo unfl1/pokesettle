@@ -1,77 +1,43 @@
-"use client";
-import { useI18n } from '../../i18n/I18nProvider';
-
-import { pokemonPath, pokemonName, referenceName } from '../pokemon/routing';
-import { localeRegistry } from '../../i18n/config';
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import 'server-only';
+import MetagameSelection from './MetagameSelection';
 import Link from 'next/link';
-import { request } from '../../lib/apiClient';
+import { getI18n } from '../../i18n/server';
+import { localeRegistry, localizedPath } from '../../i18n/config';
+import { pokemonPath, pokemonName, referenceName } from '../pokemon/routing';
 import PokemonImage from '../pokemon/components/PokemonImage';
-import type { PokemonImages, PokemonSummary } from '../pokemon/types';
+import RefreshButton from '../../components/layout/RefreshButton';
+import type { SinglesMeta } from './types';
 
-type Entry = { names?: PokemonSummary['names']; name: string; nameKo: string | null; rank: number; percentage: number | null };
-type MetaPokemon = {
-  nameEn: string; nameKo: string | null; pokemonId: string | null; rank: number;
-  images: PokemonImages | null; names?: PokemonSummary['names']; slugs?: PokemonSummary['slugs'];
-  groups: { category: string; items: Entry[] }[];
-};
-export type SinglesMeta = {
-  items: MetaPokemon[]; season: string; dataDate: string;
-  collectedAt: string; providerGeneratedAt: string | null; stale: boolean;
-  sourceUrl: string; termsUrl: string; attribution: string;
-  nameSources: { url: string; collectedAt: string; contentHash: string }[];
-  nameLicenceUrl: string | null;
-};
 const labels: Record<string, string> = {
   move: '기술', held_item: '도구', ability: '특성', stat_alignment: '성격',
 };
 
-export default function MetagamePage({ initialData, initialDataUpdatedAt }: { initialData?: SinglesMeta; initialDataUpdatedAt?: number } = {}) {
-  const { locale, t: translate } = useI18n();
-  const [selected, setSelected] = useState<string | null>(null);
-  const query = useQuery({
-    queryKey: ['meta', 'singles'],
-    initialData,
-    initialDataUpdatedAt,
-    queryFn: () => request<SinglesMeta>('/meta/singles'),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
-  const data = query.data;
+export default async function MetagamePage({ data, selected }: { data: SinglesMeta | null; selected?: string }) {
+  const { locale, t: translate } = await getI18n();
   const pokemon = data?.items.find(item => item.nameEn === selected) ?? data?.items[0];
   return (
     <section aria-label={translate("싱글 배틀 메타")} className="metagame-page">
       <div className="rounded-xl border border-line bg-surface p-5 text-[14px] leading-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <strong>{translate("Champions 랭크 싱글 · 사용 순위 TOP 30")}</strong>
-          <button className="text-accent" disabled={query.isFetching} onClick={() => void query.refetch()}>
-            {query.isFetching ? translate("확인 중…") : translate("다시 확인")}
-          </button>
+          <RefreshButton label={translate('다시 확인')} pendingLabel={translate('확인 중…')} />
         </div>
 
       </div>
       {data?.stale && <p className="notice" role="status">{translate("최신 자료에 연결하지 못해 임시 보관한 데이터를 표시하고 있어요. 기준일을 확인해 주세요.")}</p>}
-      {query.isPending && <div role="status" className="rounded-xl border border-line bg-surface p-6 text-muted">
-        <p>{translate("싱글 메타를 불러오고 있어요.")}</p>
-        <p className="mt-2 text-[14px]">{translate("최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.")}</p>
-        <div aria-hidden="true" className="mt-5 grid gap-3">
-          {[0, 1, 2, 3, 4].map(row => <div key={row} className="h-12 rounded-lg bg-canvas motion-safe:animate-pulse" />)}
-        </div>
-      </div>}
-      {query.error && <div className="notice" role="alert"><p>{query.error.message}</p><button onClick={() => void query.refetch()}>{translate("다시 시도")}</button></div>}
+      {!data && <div className="notice" role="alert"><p>{translate('싱글 메타를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')}</p><RefreshButton label={translate('다시 시도')} pendingLabel={translate('확인 중…')} /></div>}
       {data && !data.items.length && <p role="status">{translate("표시할 싱글 순위 데이터가 없어요.")}</p>}
       {pokemon && data && <div className="grid grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] gap-5 max-tablet:grid-cols-1">
         <section className="rounded-xl border border-line bg-surface p-3" aria-label={translate("싱글 사용 순위")}>
-          <ol className="max-h-[640px] overflow-auto">
+          <MetagameSelection action={localizedPath(locale, '/meta')}><ol className="max-h-[640px] overflow-auto">
             {data.items.map(item => <li key={item.nameEn}>
-              <button aria-pressed={pokemon.nameEn === item.nameEn} onClick={() => setSelected(item.nameEn)} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-pressed:bg-accent/8 aria-pressed:text-accent">
+              <button aria-pressed={pokemon.nameEn === item.nameEn} type="submit" name="pokemon" value={item.nameEn} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-pressed:bg-accent/8 aria-pressed:text-accent">
                 <span className="w-8 shrink-0 text-[14px] tabular-nums">{translate('순위 {rank}', { rank: item.rank })}</span>
                 <PokemonImage pokemon={item} size="small" />
                 <span className="min-w-0 break-words text-[14px]">{pokemonName({ ...item, pokemonId: item.pokemonId ?? item.nameEn }, locale)}<small className="block text-[14px] text-muted">{item.nameEn}</small></span>
               </button>
             </li>)}
-          </ol>
+          </ol></MetagameSelection>
         </section>
         <section className="min-w-0 rounded-xl border border-line bg-surface p-5" aria-label={translate("주요 세팅")}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

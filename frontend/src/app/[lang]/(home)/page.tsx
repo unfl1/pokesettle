@@ -1,5 +1,4 @@
 import { localizedPath } from '../../../i18n/config';
-import { Suspense } from 'react';
 import LanguageSwitcher from '../../../components/layout/LanguageSwitcher';
 import LegalLinks from '../../../components/legal/LegalLinks';
 import NavigationLink from '../../../components/layout/NavigationLink';
@@ -22,7 +21,7 @@ export default async function Home() {
   const { locale, t: translate } = await getI18n();
   const homeTitle = translate('배틀 준비는 PokeSettle에서');
   return <div className="home-shell">
-    <div className="home-language"><Suspense><LanguageSwitcher /></Suspense></div>
+    <div className="home-language"><LanguageSwitcher /></div>
     <main id="main-content" tabIndex={-1} className="home-page">
       <div className="home-trainer home-trainer-left" aria-hidden="true">
         <Image src="/images/trainers/original-male-partner-v2.png" width={900} height={1748} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
