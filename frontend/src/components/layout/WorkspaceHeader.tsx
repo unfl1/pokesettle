@@ -6,7 +6,7 @@ import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState, type ReactNode } from 'react';
 import NavigationLink from './NavigationLink';
 import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { BookOpen, CircleHelp, MessageSquare, ShieldCheck, Sparkles, Swords, TrendingUp, X } from 'lucide-react';
 import { useWorkspaceContext } from '../../providers/AppProviders';
 
@@ -20,10 +20,10 @@ const navigation = [
 export default function WorkspaceHeader({ collection }: { collection?: ReactNode }) {
   const { locale, t: translate } = useI18n();
   const pathname = withoutLocale(usePathname());
-  const params = useSearchParams();
-  const search = params.size ? `?${params.toString()}` : '';
   const [pokedexLocation, setPokedexLocation] = useState('/pokedex');
-  useEffect(() => { if (pathname.split('/')[1] === 'pokedex') setPokedexLocation(`${pathname}${search}`); }, [pathname, search]);
+  useEffect(() => {
+    if (pathname.split('/')[1] === 'pokedex') setPokedexLocation(`${pathname}${window.location.search}`);
+  }, [pathname]);
   const view = pathname.split('/')[1];
   const [showHelp, setShowHelp] = useState(false);
   const w = useWorkspaceContext();

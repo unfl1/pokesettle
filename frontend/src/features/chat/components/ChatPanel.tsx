@@ -1,3 +1,4 @@
+'use client';
 import { useI18n } from '../../../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -14,9 +15,8 @@ import {
   Send,
 } from 'lucide-react';
 import { ChatMessage } from './Reference';
-import type { useWorkspace } from '../hooks/useWorkspace';
+import { useWorkspaceContext } from '../../../providers/AppProviders';
 
-type Workspace = ReturnType<typeof useWorkspace>;
 const stages: Record<string, string> = {
   validating: '질문을 확인하고 있어요',
   catalog_lookup: '도감 기본 정보를 확인하고 있어요',
@@ -33,7 +33,8 @@ const stages: Record<string, string> = {
   done: '완료',
 };
 
-export default function ChatPanel({ workspace: w }: { workspace: Workspace }) {
+export default function ChatPanel() {
+  const w = useWorkspaceContext();
   const { t: translate } = useI18n();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ conversationId: string; title: string } | null>(null);

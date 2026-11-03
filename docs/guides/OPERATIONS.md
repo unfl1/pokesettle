@@ -265,7 +265,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - SEO 원본 도메인: 기본 `https://pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
-- 화면 경계: 홈·작업 화면을 `[lang]/(root)`에 배치, `WorkspaceShell`에서 홈 chrome 제외, 홈과 기능 메뉴의 Next Link 이동으로 Provider·초안 유지
+- 화면 경계: 홈은 `[lang]/(home)`, 기능 화면은 `[lang]/(root)`에 배치함. 기능 화면의 `WorkspaceShell`·푸터·언어 안내는 서버에서 렌더링하고 공통 `[lang]/layout.tsx`의 Provider로 Next Link 이동 중 초안 유지함
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: 기능 메뉴의 사전 조회·클릭 대기 표시 유지, 홈 카드·브랜드는 사전 조회 없이 클라이언트 이동, 도감·메타는 RSC 이동에서 로딩 안내·스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
 - 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
@@ -456,6 +456,8 @@ uv run --frozen python -m backend.scripts.index_data
 - 프론트 빌드 전 이름 스냅샷과 도감 ID의 일치 검증 및 URL 인덱스 생성, Docker 빌드 입력에 `data/pokemon.json`·`data/pokemon_names.json` 포함
 - 정적 사이트맵: 기능 URL 20개 + 상세 URL 5,404개, 빌드 시 API·모델 호출 없음
 - 서버 SSR: API 연결 실패를 없는 포켓몬으로 처리하지 않음, 일반 도감은 메모리 카탈로그, 메타는 기존 서버 캐시의 기준일·stale 상태 사용
+- 메타 조회·선택: 순위·세팅·출처·날짜를 서버 HTML로 제공함. `?pokemon=<nameEn>` 선택과 서버 재조회 사용, 브라우저의 중복 `/api/meta/singles` 조회 제거함. 공개 SSR 캐시 기본 60초 정책 유지함
+- 하이드레이션 검사: `e2e/ssr-boundaries.spec.ts`에서 JavaScript 없는 메타 선택·공통 헤더, 4개 언어의 지연 스크립트·날짜 포맷 차이·저장소 기록에서 DOM 보존과 오류 부재 검증함
 - 프론트 E2E: `e2e/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
 - 공개 캐시 검사: `pnpm --dir frontend build` 후 `pnpm --dir frontend test:public-cache`, 기본 캐시 활성 상태에서 원본 호출 수·실패 응답 복구·런타임 GA 설정 검증
 - 공개 smoke: 홈·챗봇·정적 자산·API 준비 상태와 피카츄 상세의 실제 HTML 본문·canonical 확인

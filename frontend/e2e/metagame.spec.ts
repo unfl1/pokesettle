@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 const meta = {
-  season: 'M2', dataDate: '2026-10-24', collectedAt: '2026-10-25T00:00:00Z',
+  season: 'M2', dataDate: '2026-10-24', collectedAt: new Date().toISOString(),
   providerGeneratedAt: null, stale: false,
   sourceUrl: 'https://championsbattledata.com', termsUrl: 'https://championsbattledata.com/api-rules/',
   attribution: 'Battle data provided by Pokémon Champions Battle Data',
-  nameSources: [{ url: 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/item_names.csv', collectedAt: '2026-10-25T00:00:00Z', contentHash: 'synthetic' }],
+  nameSources: [{ url: 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/item_names.csv', collectedAt: new Date().toISOString(), contentHash: 'synthetic' }],
   nameLicenceUrl: 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md',
   items: [
     { nameEn: 'Synthetic One', nameKo: '합성 포켓몬', pokemonId: 'pokemon:25', rank: 1,
@@ -20,6 +20,10 @@ const meta = {
       groups: [{ category: 'ability', items: [{ name: 'Synthetic Ability', nameKo: null, rank: 1, percentage: null }] }] },
   ],
 };
+
+const fixture = `http://127.0.0.1:${process.env.FIXTURE_API_PORT ?? '5198'}/__fixture`;
+test.beforeEach(async ({ request }) => { await request.post(fixture, { data: { ready: true, metaData: meta } }); });
+test.afterEach(async ({ request }) => { await request.post(fixture, { data: { ready: false } }); });
 
 test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ page }) => {
   await page.route('**/_next/image?**', route => route.fulfill({
@@ -57,6 +61,7 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await page.screenshot({ path: '/tmp/poketact-meta-localized.png', fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: /Synthetic Form/ }).click();
+  await expect(page).toHaveURL(/pokemon=Synthetic(?:\+|%20)Form/);
   await expect(page.getByText('Synthetic Ability')).toBeVisible();
   await expect(page.getByText('미제공', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: '도감 보기' })).toHaveCount(0);
@@ -64,43 +69,30 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '/tmp/poketact-meta-mobile.png', fullPage: true });
+  await page.goBack();
+  await expect(page.getByText('합성 기술')).toBeVisible();
+  await page.goForward();
+  await expect(page.getByText('Synthetic Ability')).toBeVisible();
 });
 
-test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page }) => {
+test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page, request }) => {
   await page.route('**/_next/image?**', route => route.abort());
-  let failed = true;
-  await page.route('**/api/**', route => {
-    const path = new URL(route.request().url()).pathname;
-    if (path === '/api/meta/singles') {
-      if (failed) return route.fulfill({ status: 503, json: { error: { code: 'META_UNAVAILABLE', message: '합성 외부 장애', retryable: true } } });
-      return route.fulfill({ json: { data: { ...meta, stale: true } } });
-    }
-    return route.fulfill({ json: { data: path === '/api/status' ? { ready: true } : { active: true, items: [] } } });
-  });
+  await request.post(fixture, { data: { ready: false } });
   await page.goto('/meta');
-  await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText('합성 외부 장애');
-  failed = false;
+  await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText('싱글 메타를 불러오지 못했어요.');
+  await request.post(fixture, { data: { ready: true, metaData: { ...meta, stale: true } } });
   await page.getByRole('button', { name: '다시 시도', exact: true }).click();
   await expect(page.getByText(/임시 보관한 데이터를/)).toBeVisible();
   await expect(page.getByText('합성 기술')).toBeVisible();
   await expect(page.getByRole('img', { name: '합성 포켓몬 이미지 없음' })).toBeVisible();
 });
 
-
-test('메타 응답을 기다리는 동안 외부 조회 안내와 로딩 영역 표시', async ({ page }) => {
-  let release!: () => void;
-  const waiting = new Promise<void>(resolve => { release = resolve; });
-  await page.route('**/api/**', async route => {
-    const path = new URL(route.request().url()).pathname;
-    if (path === '/api/meta/singles') {
-      await waiting;
-      await route.fulfill({ json: { data: meta } });
-    } else await route.fulfill({ json: { data: { active: true, ready: true, items: [] } } });
-  });
-  await page.goto('/ko/meta');
+test('메타 응답을 기다리는 동안 외부 조회 안내와 로딩 영역 표시', async ({ page, request }) => {
+  await page.goto('/ko/pobti');
+  await request.post(fixture, { data: { ready: true, metaData: meta, delayMs: 1500 } });
+  await page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '메타 순위' }).click();
   await expect(page.getByText('최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.')).toBeVisible();
   await expect(page.getByRole('region', { name: '싱글 사용 순위' })).toHaveCount(0);
-  release();
   await expect(page.getByText('합성 기술')).toBeVisible();
   await expect(page.getByText('최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.')).toHaveCount(0);
 });

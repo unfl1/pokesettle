@@ -1,7 +1,7 @@
 import type { Locale } from '../../../i18n/config';
 import { createTranslator, type Dictionary } from '../../../i18n/translate';
 import { pokemonName, referenceName } from '../routing';
-import LearnsetFilters from './LearnsetFilters';
+import Learnset from './Learnset';
 import { typeLabels } from '../typeNames';
 import { typeColors, lightTextTypes } from '../typeColors';
 import PokemonDataNotes from './PokemonDataNotes';
@@ -86,7 +86,7 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
               ),
             )}
           </div>
-          <LearnsetFilters pokemon={{ learnset: pokemon.learnset }} />
+          <Learnset pokemon={{ learnset: pokemon.learnset }} locale={locale} dictionary={dictionary} />
         </div>
       </div>
     </section>

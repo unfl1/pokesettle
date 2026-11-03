@@ -1,8 +1,9 @@
 import { pageMetadata } from '../../../../i18n/metadata';
-import ChatWorkspace from '../../../../features/chat/components/ChatWorkspace';
+import ChatPanel from '../../../../features/chat/components/ChatPanel';
+import SourceLanguageNote from '../../../../components/layout/SourceLanguageNote';
 
 export default function Page() {
-  return <ChatWorkspace />;
+  return <><SourceLanguageNote /><div data-testid="chat-page"><ChatPanel /></div></>;
 }
 
 export async function generateMetadata() {
