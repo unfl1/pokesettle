@@ -46,6 +46,7 @@ async def http_error(request, error):
             "requestId": request.state.request_id,
         },
         status_code=error.status_code,
+        headers=error.headers,
     )
 
 

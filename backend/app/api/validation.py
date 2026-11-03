@@ -3,13 +3,6 @@ import json
 from backend.app.core.errors import ServiceError
 
 
-def session(request, store):
-    session_id = request.cookies.get("pokecoach_session")
-    if not store.session_valid(session_id):
-        raise ServiceError("SESSION_REQUIRED", "세션을 먼저 생성하세요.", 401)
-    return session_id
-
-
 def regulations(settings):
     return [
         json.loads(p.read_text())

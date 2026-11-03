@@ -1,6 +1,9 @@
+from http import HTTPStatus
+
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
 from pydantic.alias_generators import to_camel
+
+from backend.app.api.schemas import ErrorResponse
 
 
 def wire(value):
@@ -12,9 +15,14 @@ def wire(value):
     return value
 
 
-def ok(request, data, status=200, headers=None, warnings=None):
-    return JSONResponse(
-        {"data": wire(data), "requestId": request.state.request_id, "warnings": warnings or []},
-        status_code=status,
-        headers=headers,
-    )
+def ok(request, data, *, warnings=None):
+    """Return ordinary data so FastAPI validates and serializes the declared response model."""
+    return {"data": wire(data), "requestId": request.state.request_id, "warnings": warnings or []}
+
+
+def error_responses(*statuses: int):
+    """Document the same safe error envelope used by handlers and middleware."""
+    return {
+        status: {"model": ErrorResponse, "description": HTTPStatus(status).phrase}
+        for status in statuses
+    }

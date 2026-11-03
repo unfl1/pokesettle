@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from backend.app.api.responses import error_responses
 from backend.app.api.routers import (
     battle,
     conversations,
@@ -10,6 +11,6 @@ from backend.app.api.routers import (
     teams,
 )
 
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter(prefix="/api", responses=error_responses(403, 405, 422, 500))
 for route_module in (system, pokemon, conversations, knowledge, teams, battle, metagame):
     api_router.include_router(route_module.router)

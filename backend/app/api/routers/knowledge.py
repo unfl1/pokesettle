@@ -1,38 +1,57 @@
-from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Request, Response
 
-from backend.app.api.dependencies import ServiceDep, SettingsDep, StoreDep
+from backend.app.api import schemas
+from backend.app.api.dependencies import ServiceDep, SessionDep, SettingsDep, StoreDep
 from backend.app.api.jobs import submit
-from backend.app.api.responses import ok
-from backend.app.api.validation import session
+from backend.app.api.responses import error_responses, ok
 from backend.app.schemas import ChatRequest, CollectRequest
 
-router = APIRouter()
+router = APIRouter(tags=["knowledge"], responses=error_responses(401, 404, 409, 429, 503))
 
 
-@router.post("/documents/collect")
+@router.post(
+    "/documents/collect",
+    status_code=202,
+    response_model=schemas.Envelope[schemas.JobAccepted],
+    response_model_exclude_unset=True,
+)
 def collect(
     request: Request,
+    response: Response,
     background: BackgroundTasks,
     body: CollectRequest,
     *,
     settings: SettingsDep,
+    session_id: SessionDep,
     service: ServiceDep,
 ):
-    return submit(request, background, body, "collect", service, settings)
+    return submit(request, response, background, body, "collect", service, settings, session_id)
 
 
-@router.post("/chat")
+@router.post(
+    "/chat",
+    status_code=202,
+    response_model=schemas.Envelope[schemas.JobAccepted],
+    response_model_exclude_unset=True,
+)
 def chat(
     request: Request,
+    response: Response,
     background: BackgroundTasks,
     body: ChatRequest,
     *,
     settings: SettingsDep,
+    session_id: SessionDep,
     service: ServiceDep,
 ):
-    return submit(request, background, body, "chat", service, settings)
+    return submit(request, response, background, body, "chat", service, settings, session_id)
 
 
-@router.get("/jobs/{job_id}")
-def job(request: Request, job_id: str, *, store: StoreDep):
-    return ok(request, store.job(job_id, session(request, store)))
+@router.get(
+    "/jobs/{job_id}",
+    status_code=200,
+    response_model=schemas.Envelope[schemas.JobData],
+    response_model_exclude_unset=True,
+)
+def job(request: Request, job_id: str, *, store: StoreDep, session_id: SessionDep):
+    return ok(request, store.job(job_id, session_id))
