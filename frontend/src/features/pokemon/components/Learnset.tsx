@@ -3,7 +3,7 @@ import type { Locale } from '../../../i18n/config';
 import { createTranslator, type Dictionary } from '../../../i18n/translate';
 import { referenceName } from '../routing';
 import { typeLabels } from '../typeNames';
-import { typeColors, lightTextTypes } from '../typeColors';
+import { typeColorClasses, typeBorderClasses } from '../typeColors';
 import type { PokemonDetail } from '../types';
 import LearnsetFilters, { type LearnsetGroup } from './LearnsetFilters';
 
@@ -16,10 +16,10 @@ export default function Learnset({ pokemon, locale, dictionary }: { pokemon: Pic
   const groups: LearnsetGroup[] = types.flatMap(type => {
     const moves = learnset.moves.filter(move => (move.type ?? 'unknown') === type);
     if (!moves.length) return [];
-    const color = typeColors[type] ?? '#8492a3';
+    const borderClass = typeBorderClasses[type] ?? 'border-l-[#8492a3]';
     const label = t(typeLabels[type] ?? (type === 'unknown' ? '타입 미확인' : type));
-    return [{ type, label, color,
-      badge: <span className="inline-flex items-center px-2 py-1 text-[14px] font-semibold leading-[1.3] rounded-[4px] whitespace-nowrap" style={{ backgroundColor: color, color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}>{label}</span>,
+    return [{ type, label, borderClass,
+      badge: <span className={`inline-flex items-center px-2 py-1 text-[14px] font-semibold leading-[1.3] rounded-[4px] whitespace-nowrap ${typeColorClasses(type)}`} >{label}</span>,
       moves: [...new Set(moves.map(move => move.name))].map(name => {
         const entries = moves.filter(move => move.name === name);
         const move = entries[0];
@@ -28,7 +28,7 @@ export default function Learnset({ pokemon, locale, dictionary }: { pokemon: Pic
           content: <>
             <div className="flex items-center justify-between gap-2"><strong className="text-[14px] font-medium text-ink">{referenceName(move, locale)}</strong><span className={`shrink-0 rounded px-1.5 py-0.5 text-[14px] font-medium ${{ physical: 'bg-orange-400/15 text-orange-700', special: 'bg-sky-400/15 text-sky-700', status: 'bg-violet-400/15 text-violet-700' }[move.category ?? ''] ?? 'text-slate-600'}`}>{{ physical: t('물리'), special: t('특수'), status: t('변화') }[move.category ?? ''] ?? t('분류 미확인')}</span></div>
             <div className="mt-2 flex items-center gap-2 whitespace-nowrap text-[14px]">
-              <p className="inline-flex items-center gap-1 rounded px-2 py-1" style={{ backgroundColor: color, color: lightTextTypes.has(type) ? '#ffffff' : '#111923' }}><span>{t('위력')}</span> <strong className="font-semibold tabular-nums">{move.power ?? '—'}</strong></p>
+              <p className={`inline-flex items-center gap-1 rounded px-2 py-1 ${typeColorClasses(type)}`} ><span>{t('위력')}</span> <strong className="font-semibold tabular-nums">{move.power ?? '—'}</strong></p>
               <p className="inline-flex items-center gap-1 rounded bg-line px-2 py-1 text-muted"><span>{t('명중')}</span> <strong className="font-semibold tabular-nums">{move.accuracy != null ? `${move.accuracy}%` : '—'}</strong></p>
             </div>
           </>,

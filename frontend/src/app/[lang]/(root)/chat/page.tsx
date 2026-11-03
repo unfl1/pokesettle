@@ -3,7 +3,7 @@ import ChatPanel from '../../../../features/chat/components/ChatPanel';
 import SourceLanguageNote from '../../../../components/layout/SourceLanguageNote';
 
 export default function Page() {
-  return <><SourceLanguageNote /><div data-testid="chat-page"><ChatPanel /></div></>;
+  return <><SourceLanguageNote /><div data-testid="chat-page" className="flex min-h-0 min-w-0 flex-1"><ChatPanel /></div></>;
 }
 
 export async function generateMetadata() {

@@ -1,0 +1,20 @@
+// Zero-specificity defaults let each component's Tailwind utilities take precedence.
+export const documentClasses = [
+  'font-sans text-ink bg-surface text-[16px] [scrollbar-gutter:stable]',
+  'not-supports-[scrollbar-gutter:stable]:overflow-y-scroll',
+  '[&:has([data-testid=chat-page])]:overflow-hidden',
+  'selection:bg-accent-soft',
+  '[:where(&_button)]:cursor-pointer [:where(&_button)]:border-0 [:where(&_button)]:bg-transparent [:where(&_button)]:text-inherit',
+  '[:where(&_button:disabled)]:cursor-default [:where(&_button:disabled)]:opacity-40',
+  '[:where(&_:is(button,a,input,textarea,select))]:[-webkit-tap-highlight-color:transparent]',
+  '[:where(&_:is(button,a,input,textarea,select):focus-visible)]:outline-2',
+  '[:where(&_:is(button,a,input,textarea,select):focus-visible)]:outline-solid',
+  '[:where(&_:is(button,a,input,textarea,select):focus-visible)]:outline-accent',
+  '[:where(&_:is(button,a,input,textarea,select):focus-visible)]:outline-offset-4',
+  '[:where(&_summary:focus-visible)]:outline-2 [:where(&_summary:focus-visible)]:outline-solid [:where(&_summary:focus-visible)]:outline-accent [:where(&_summary:focus-visible)]:outline-offset-4',
+  '[:where(&_svg)]:shrink-0 [:where(&_small)]:text-[14px]',
+  '[:where(&_:is(button,a,input,textarea,select))]:transition-colors [:where(&_:is(button,a,input,textarea,select))]:duration-160 [:where(&_:is(button,a,input,textarea,select))]:ease-[ease]',
+  'motion-reduce:[&_*]:scroll-auto! motion-reduce:[&_*]:transition-none!',
+  'motion-reduce:[&_*::before]:scroll-auto! motion-reduce:[&_*::before]:transition-none!',
+  'motion-reduce:[&_*::after]:scroll-auto! motion-reduce:[&_*::after]:transition-none!',
+].join(' ');

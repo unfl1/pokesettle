@@ -7,7 +7,7 @@ import { siteUrl } from '../../i18n/metadata';
 import RuntimeAnalytics from '../../components/layout/RuntimeAnalytics';
 import { pretendard } from '../fonts';
 import { AppProviders } from '../../providers/AppProviders';
-import '../pretendard-subsets.css';
+import { documentClasses } from '../../styles/document';
 import '../../globals.css';
 
 export const viewport: Viewport = { themeColor: '#0057ff' };
@@ -20,8 +20,8 @@ export default async function RootLayout({ children, params }: LayoutProps<'/[la
   if (!isLocale(lang)) notFound();
   const dictionary = await getDictionary(lang);
   return (
-    <html lang={localeRegistry[lang].htmlLang} style={{ scrollbarGutter: 'stable' }} className={`${pretendard.variable} font-sans text-ink bg-surface`}>
-      <body>
+    <html lang={localeRegistry[lang].htmlLang} className={`${pretendard.variable} ${documentClasses}`}>
+      <body className="m-0 min-w-80">
         <I18nProvider locale={lang} dictionary={dictionary}><AppProviders>{children}</AppProviders></I18nProvider>
         <RuntimeAnalytics />
       </body>

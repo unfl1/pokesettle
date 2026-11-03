@@ -3,7 +3,7 @@ import { createTranslator, type Dictionary } from '../../../i18n/translate';
 import { pokemonName, referenceName } from '../routing';
 import Learnset from './Learnset';
 import { typeLabels } from '../typeNames';
-import { typeColors, lightTextTypes } from '../typeColors';
+import { typeColorClasses } from '../typeColors';
 import PokemonDataNotes from './PokemonDataNotes';
 import PokemonImage from './PokemonImage';
 import type { PokemonDetail, StatName } from '../types';
@@ -42,7 +42,7 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
           </div>
           <div className="gap-[5px] flex">
             {pokemon.types.map((t) => (
-              <span key={t} className="inline-flex items-center px-2 py-1 text-[14px] font-semibold rounded-[4px]" style={{ backgroundColor: typeColors[t] ?? '#8492a3', color: lightTextTypes.has(t) ? '#fff' : '#111923' }}>{translate(typeLabels[t] ?? t)}</span>
+              <span key={t} className={`inline-flex items-center px-2 py-1 text-[14px] font-semibold rounded-[4px] ${typeColorClasses(t)}`} >{translate(typeLabels[t] ?? t)}</span>
             ))}
           </div>
         </div>
@@ -78,8 +78,8 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
                   key={key}
                 >
                   <span>{translate(statLabels[key])}</span>
-                  <div className="h-1 bg-canvas rounded-[4px] flex-1 [&_i]:block [&_i]:bg-link/55 [&_i]:h-full [&_i]:rounded-[4px]">
-                    <i style={{ width: `${(value / maximum) * 100}%` }} />
+                  <div className="h-1 bg-canvas rounded-[4px] flex-1">
+                    <svg className="block h-full w-full overflow-hidden rounded-[4px] fill-link/55" viewBox={`0 0 ${maximum || 1} 1`} preserveAspectRatio="none" aria-hidden="true"><rect width={value} height="1" /></svg>
                   </div>
                   <strong>{value}</strong>
                 </div>

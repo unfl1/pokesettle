@@ -8,7 +8,7 @@ const labels = {
 } as const;
 
 export default function LegalLinks({ locale = 'ko' }: { locale?: Locale }) {
-  return <nav className="legal-links" aria-label={{ ko: '서비스 정책', en: 'Service policies', ja: 'サービスポリシー', zh: '服务政策' }[locale]}>
+  return <nav className="legal-links flex flex-wrap justify-center [gap:6px_18px] [padding:6px_0] text-[12px] [&_a:hover]:underline [&_a:hover]:underline-offset-[3px]" aria-label={{ ko: '서비스 정책', en: 'Service policies', ja: 'サービスポリシー', zh: '服务政策' }[locale]}>
     {['/terms', '/privacy'].map((href, index) => <a key={href} href={href}>{labels[locale][index]}</a>)}
   </nav>;
 }

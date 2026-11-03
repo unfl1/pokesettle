@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { useI18n } from '../../../i18n/I18nProvider';
 
 export type LearnsetGroup = {
-  type: string; label: string; color: string; badge: ReactNode;
+  type: string; label: string; borderClass: string; badge: ReactNode;
   moves: { name: string; content: ReactNode; methods: { method: string; label: string }[] }[];
 };
 
@@ -28,7 +28,7 @@ export default function LearnsetFilters({ groups, methods }: { groups: LearnsetG
         return <section key={group.type} aria-label={t('{type} 타입 기술', { type: group.label })}>
           <div className="flex items-center gap-2 mb-2">{group.badge}<span className="text-[14px] text-muted">{t('{count}개', { count: moves.length })}</span></div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-2">
-            {moves.map(move => <div key={move.name} className="rounded-lg border border-line border-l-[3px] bg-canvas px-3 py-2.5" style={{ borderLeftColor: group.color }}>
+            {moves.map(move => <div key={move.name} className={`rounded-lg border border-line border-l-[3px] bg-canvas px-3 py-2.5 ${group.borderClass}`}>
               {move.content}
               <p className="text-[14px] text-muted mt-1">{move.methods.filter(entry => learnMethod === 'all' || entry.method === learnMethod).map(entry => entry.label).join(' · ')}</p>
             </div>)}
