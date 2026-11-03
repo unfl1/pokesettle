@@ -31,6 +31,8 @@ test('메타 본문·출처·선택과 공통 헤더는 JavaScript 없이 동작
 
 for (const locale of ['ko', 'en', 'ja', 'zh']) {
   test(`${locale}: 날짜 형식·저장소·지연 스크립트 차이에도 초기 DOM 유지`, async ({ page }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     const errors: string[] = [], metaRequests: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error' && /hydration|hydrated|server rendered|#418|#425/i.test(message.text())) errors.push(message.text()); });
@@ -49,6 +51,9 @@ for (const locale of ['ko', 'en', 'ja', 'zh']) {
     const heading = await page.getByRole('region').filter({ has: page.locator('h2') }).first().locator('h2').elementHandle();
     const originalText = await heading!.textContent();
     release();
+    // Releasing requests does not attach React's event handlers immediately.
+    // The seeded count appears only after the header's collection effect runs.
+    await expect(page.locator('.site-header button').filter({ hasText: /^2$/ })).toBeVisible();
     await page.locator('.help-button').click();
     await expect(page.locator('.help-notice')).toBeVisible();
     expect(await footer!.evaluate(node => node.isConnected)).toBe(true);
@@ -57,5 +62,6 @@ for (const locale of ['ko', 'en', 'ja', 'zh']) {
     await expect(page.locator('.metagame-page')).not.toContainText('BROWSER_DATE_FORMAT_DIFFERS');
     expect(metaRequests).toEqual([]);
     expect(errors).toEqual([]);
+    await cdp.detach();
   });
 }
