@@ -306,9 +306,11 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend dev
 pnpm --dir frontend run build
-pnpm --dir frontend run typecheck
-pnpm --dir frontend test:e2e
 ```
+
+- 작업 후 자동 검사 및 PR·배포 전 회귀 검사 제거, 배포 이미지 빌드·운영 상태 확인 유지
+- 선택 명령: `pnpm --dir frontend format`, `format:check`, `lint`, `lint:fix`, `typecheck`
+- Prettier 3.9.10·oxlint 1.90.0·TypeScript 7.0.2 사용, 기존 테스트 소스·수동 실행 명령 유지
 
 ### Codex Next.js DevTools MCP
 

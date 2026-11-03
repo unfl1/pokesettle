@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
+  build:
     uses: ./.github/workflows/ci.yaml
   deploy:
-    needs: verify
+    needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
