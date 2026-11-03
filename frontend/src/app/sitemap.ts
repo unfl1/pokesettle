@@ -6,7 +6,7 @@ import { languageAlternates, siteUrl } from '../i18n/metadata';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = featurePaths.flatMap(path => locales.map(locale => ({
-    url: new URL(localizedPath(locale, path), siteUrl).href,
+    url: new URL(localizedPath(locale, path), siteUrl).href.replace(/\/$/, ''),
     alternates: { languages: languageAlternates(path) },
   })));
   const legalPages = ['/terms', '/privacy'].map(path => ({ url: new URL(path, siteUrl).href }));
