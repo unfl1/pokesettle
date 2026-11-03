@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Cookie, Depends, Request
 
 from backend.app.catalog import Catalog
 from backend.app.core.config import Settings
+from backend.app.core.errors import ServiceError
 from backend.app.rag.vector_store import VectorStore
 from backend.app.services.knowledge import KnowledgeService
 from backend.app.storage import Store
@@ -36,3 +37,15 @@ def get_vectors(service: ServiceDep) -> VectorStore:
 StoreDep = Annotated[Store, Depends(get_store)]
 CatalogDep = Annotated[Catalog, Depends(get_catalog)]
 VectorDep = Annotated[VectorStore, Depends(get_vectors)]
+
+
+def get_session(
+    store: StoreDep,
+    session_id: Annotated[str | None, Cookie(alias="pokecoach_session")] = None,
+) -> str:
+    if not store.session_valid(session_id):
+        raise ServiceError("SESSION_REQUIRED", "세션을 먼저 생성하세요.", 401)
+    return session_id
+
+
+SessionDep = Annotated[str, Depends(get_session)]

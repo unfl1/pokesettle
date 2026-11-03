@@ -1,6 +1,6 @@
 # API 계약 설계
 
-작성일: 2026-10-21. Phase 0 계약 초안. 실행 가능한 서버·Pydantic 모델·OpenAPI 파일은 아직 작성하지 않음. 예시 ID와 문장은 형식 설명용이며 실제 수집·분석 결과가 아님.
+최초 작성일: 2026-10-21, 실행 계약 보완일: 2026-11-03. 초기 설계 예시와 현재 구현 설명을 함께 보존함. 예시 ID와 문장은 형식 설명용이며 실제 수집·분석 결과가 아님
 
 
 현재 API 확인: [실행 중 Swagger UI](http://127.0.0.1:8000/docs)·[라우터 정의](../../backend/app/api/routers/) 참조, 아래 설계 예시와 실제 구현이 다르면 실행 중 API 계약 우선
@@ -17,6 +17,18 @@
 - 개인용 로컬 배포를 기본으로 함. 서버가 임의 세션을 발급하고 HttpOnly, SameSite=Lax 쿠키로 소유권을 확인함. 세션별 대화·작업·팀 접근을 검사함. 개발 origin allowlist와 변경 요청의 Origin 검사 적용. 외부 공개 인증·계정 체계는 범위 밖임.
 - 작업 요청에는 `clientRequestId`(UUID)를 받음. 같은 세션·종류·ID·본문이면 같은 작업을 반환하고, 같은 ID에 다른 본문이면 409. 실패 작업의 의도적 재시도는 새 ID를 사용함.
 - `regulationId`는 외부 설정 참조임. 생략 시 일반 지식 범위이며 '현재 합법'으로 판정하지 않음. 모르는 ID는 422, 확인되지 않은 규칙에 의존하는 분석은 보류함.
+
+### 현재 HTTP 응답 계약
+
+- 모델: [`backend/app/api/schemas.py`](../../backend/app/api/schemas.py)의 `Envelope[T]`·기능별 데이터 모델·`ErrorResponse` 사용함
+- 성공 응답: 일반 Python 데이터를 반환하고 FastAPI `response_model`로 검증·직렬화함. 선언 모델과 다른 응답은 안전한 `500 INTERNAL_ERROR`로 처리함
+- 호환성: 기존 camelCase·`data/requestId/warnings`·null·빈 목록 유지, 선택 필드의 불필요한 기본값 추가 방지를 위해 `response_model_exclude_unset=True` 적용함
+- 상태 코드: 팀·대화 생성 `201`, 수집·채팅·가이드 접수 `202`, 팀·대화 삭제 `204`, 나머지 성공 `200`을 실행과 OpenAPI에 동일하게 선언함
+- 헤더: 작업 접수 `Location`, 메타 조회 `Cache-Control: no-store`, 세션 생성 HttpOnly·SameSite 쿠키 유지, `405`의 `Allow` 헤더 보존함
+- 오류 문서: 기본 FastAPI 검증 오류 대신 실제 공통 오류 봉투를 OpenAPI에 선언함. 기능별 오류와 비동기 작업의 `error` 필드 구분 필요함
+- 세션: `SessionDep`가 `pokecoach_session` 쿠키의 유효성을 검사함. 팀·대화·작업 소유권 검사는 저장소에서 별도 수행함
+- 가변 데이터: 규칙·출처 스냅샷, 저장 메시지의 답변 객체, 작업 결과·캐시는 JSON 객체로 유지함. 기능별 RAG 결과의 모든 내부 필드를 고정 스키마로 선언한 상태는 아님
+- 경로: 기존 자원 중심 CRUD와 분석·수집 작업 경로 유지, OpenAPI 태그로 기능별 그룹 제공함
 
 ## 2. 공통 결과 모델
 

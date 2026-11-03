@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 
+from backend.app.api import schemas
 from backend.app.api.dependencies import CatalogDep, SettingsDep, StoreDep, VectorDep
 from backend.app.api.responses import ok
 from backend.app.api.validation import regulations
 
-router = APIRouter()
+router = APIRouter(tags=["system"])
 
 
-@router.get("/status")
+@router.get(
+    "/status",
+    status_code=200,
+    response_model=schemas.Envelope[schemas.StatusData],
+    response_model_exclude_unset=True,
+)
 def status(request: Request, *, settings: SettingsDep, catalog: CatalogDep, vectors: VectorDep):
     missing = []
     if not settings.model_configured:
@@ -31,11 +37,15 @@ def status(request: Request, *, settings: SettingsDep, catalog: CatalogDep, vect
     )
 
 
-@router.post("/session")
-def create_session(request: Request, *, store: StoreDep):
+@router.post(
+    "/session",
+    status_code=200,
+    response_model=schemas.Envelope[schemas.SessionData],
+    response_model_exclude_unset=True,
+)
+def create_session(request: Request, response: Response, *, store: StoreDep):
     current = request.cookies.get("pokecoach_session")
     session_id = current if store.session_valid(current) else store.new_session()
-    response = ok(request, {"active": True})
     response.set_cookie(
         "pokecoach_session",
         session_id,
@@ -44,9 +54,14 @@ def create_session(request: Request, *, store: StoreDep):
         secure=request.url.scheme == "https",
         max_age=604800,
     )
-    return response
+    return ok(request, {"active": True})
 
 
-@router.get("/regulations")
+@router.get(
+    "/regulations",
+    status_code=200,
+    response_model=schemas.Envelope[schemas.RegulationsData],
+    response_model_exclude_unset=True,
+)
 def regulation_list(request: Request, *, settings: SettingsDep):
     return ok(request, {"items": regulations(settings)})
