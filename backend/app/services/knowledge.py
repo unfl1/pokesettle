@@ -19,6 +19,7 @@ from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
 from backend.app.services.catalog_answers import answer_catalog, catalog_question
+from backend.app.services.chat_scope import check_chat_scope, scope_refusal
 from backend.app.services.topics import mentioned_pokemon
 from backend.app.storage import digest
 
@@ -195,6 +196,30 @@ class KnowledgeService:
         conversation_id = self.store.conversation(
             session_id, request.pokemon_id, request.regulation_id, request.conversation_id
         )
+        direct = (
+            catalog_question(self.catalog, focus, request.question)
+            if feature is None and focus
+            else None
+        )
+        history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
+        # Exact catalog requests and server-authored guides have a bounded task.
+        # All other requests must pass before mutating topic/battle state or RAG work.
+        if feature != "pokemon_guide" and not direct:
+            stage("checking_scope")
+            if not check_chat_scope(
+                self.model, request.question, history, self.catalog.get(focus) if focus else None
+            ):
+                result = scope_refusal()
+                stage("saving")
+                user_id, assistant_id = self.store.save_exchange(
+                    conversation_id, request.question, result
+                )
+                return {
+                    **result,
+                    "conversation_id": conversation_id,
+                    "user_message_id": user_id,
+                    "assistant_message_id": assistant_id,
+                }
         if focus is None:
             result = {
                 "answer_status": "partial",
@@ -215,11 +240,6 @@ class KnowledgeService:
         request = request.model_copy(update={"pokemon_id": focus})
         self.catalog.get(focus)
         self.store.put("chat_topic", conversation_id, focus)
-        direct = (
-            catalog_question(self.catalog, request.pokemon_id, request.question)
-            if feature is None
-            else None
-        )
         if direct:
             stage("catalog_lookup")
             result = answer_catalog(*direct, regulation_id=request.regulation_id)
@@ -233,7 +253,6 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
-        history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
         previous_answer = history[-1].get("content") if history and history[-1].get("role") == "assistant" else None
         previous_battle = self.store.get("battle_state", conversation_id) or {}
         battle_state, battle_context = previous_battle, None

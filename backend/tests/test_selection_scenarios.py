@@ -8,6 +8,7 @@ from backend.app.battle.models import TeamAnalysis, TeamMember
 from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.schemas import ChatRequest, Generation
+from backend.app.services.chat_scope import ChatScope
 
 OWN = ["pokemon:25", "pokemon:3", "pokemon:6", "pokemon:9", "pokemon:445", "pokemon:468"]
 ENEMY = ["pokemon:149", "pokemon:130", "pokemon:911", "pokemon:908", "pokemon:473", "pokemon:212"]
@@ -89,6 +90,8 @@ def test_chat_selection_keeps_all_twelve_ids_and_persists_rosters(setup, monkeyp
     question = "내 팀은 피카츄 이상해꽃 리자몽 거북왕 한카리아스 토게키스, 상대 팀은 망나뇽 갸라도스 라우드본 마스카나 맘모꾸리 핫삼이야. 3마리 선출과 선봉 추천해줘"
 
     def invoke(purpose, prompt, payload, schema):
+        if purpose == "chat_scope":
+            return ChatScope(in_scope=True)
         if purpose == "battle_state":
             seen.append(payload)
             return BattleUpdate(
