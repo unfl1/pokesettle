@@ -266,7 +266,8 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - S3 정적 ZIP 업로드·SPA `index.html` 재작성 제거, Next.js App Router 경로·RSC 응답·이미지 최적화 서버 사용
 - CI에서 백엔드·프런트엔드 이미지를 함께 빌드·패키징하고 Compose로 기동
 - `API_ORIGIN`: Next.js 빌드 시 FastAPI rewrite 대상 및 런타임 서버 조회 주소, Compose는 `http://api:8000`
-- 언어 경로: `/ko`, `/en`, `/ja`, `/zh`, 기능 주소 `/{lang}/chat`·`pokedex`·`meta`·`scenario`, 기존 무접두사 주소는 한국어로 308 연결
+- 언어 경로: 영어 `/`, 한국어 `/ko`, 일본어 `/ja`, 중국어 `/zh`, 영어 기능 주소 `/chat`·`/pokedex`·`/meta`·`/scenario`·`/pobti`, 나머지 언어는 접두사 유지, 기존 `/en`·`/en/...`은 쿼리를 보존해 영어 정규 주소로 308 연결
+- 사이트맵: `/sitemap.xml` 색인에서 `/sitemap-ko.xml`·`/sitemap-en.xml`·`/sitemap-ja.xml`·`/sitemap-zh.xml` 참조, Search Console에 색인 제출 가능, 각 번역 URL에 전체 언어 대체 링크와 영어 `x-default` 포함
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - SEO 원본 도메인: 기본 `https://pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
 - 화면 경계: 홈은 `[lang]/(home)`, 기능 화면은 `[lang]/(root)`에 배치함. 기능 화면의 `WorkspaceShell`·푸터·언어 안내는 서버에서 렌더링하고 공통 `[lang]/layout.tsx`의 Provider로 Next Link 이동 중 초안 유지함

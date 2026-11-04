@@ -7,6 +7,10 @@ const languages = [
   { code: 'zh', html: 'zh-Hans', home: '用 PokeSettle 准备对战', pokedex: '图鉴', select: '语言', chat: '策略助手' },
 ];
 
+function languagePath(code: string, path = '') {
+  return code === 'en' ? path || '/' : `/${code}${path}`;
+}
+
 const browserErrors = new WeakMap<Page, string[]>();
 
 test.beforeEach(async ({ page }) => {
@@ -35,23 +39,23 @@ for (const language of languages) {
   test(`${language.code}: localized SSR, metadata, navigation, and chat`, async ({ page, request }) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
-    const response = await request.get(`/${language.code}`);
+    const response = await request.get(languagePath(language.code));
     expect(response.status()).toBe(200);
     expect(await response.text()).toContain(language.home);
-    await page.goto(`/${language.code}`);
+    await page.goto(languagePath(language.code));
     await expect(page.locator('html')).toHaveAttribute('lang', language.html);
     await expect(page.getByRole('heading', { name: language.home })).toBeVisible();
     await expect(page.getByRole('combobox', { name: language.select })).toHaveValue(language.code);
     await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
-    await expect(page).toHaveURL(`/${language.code}/pokedex`);
+    await expect(page).toHaveURL(languagePath(language.code, '/pokedex'));
     await expect(page.getByRole('heading', { name: language.pokedex, exact: true })).toBeVisible();
-    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com/${language.code}/pokedex`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com${languagePath(language.code, '/pokedex')}`);
     for (const alternate of languages) {
-      await expect(page.locator(`head link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://pokesettle.com/${alternate.code}/pokedex`);
+      await expect(page.locator(`head link[rel="alternate"][hreflang="${alternate.html}"]`)).toHaveAttribute('href', `https://pokesettle.com${languagePath(alternate.code, '/pokedex')}`);
     }
-    await expect(page.locator('head link[hreflang="x-default"]')).toHaveAttribute('href', 'https://pokesettle.com/ko/pokedex');
-    await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com/${language.code}/pokedex`);
-    await page.goto(`/${language.code}/chat`);
+    await expect(page.locator('head link[hreflang="x-default"]')).toHaveAttribute('href', 'https://pokesettle.com/pokedex');
+    await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com${languagePath(language.code, '/pokedex')}`);
+    await page.goto(languagePath(language.code, '/chat'));
     await expect(page.getByRole('heading', { name: language.chat, exact: true })).toBeVisible();
     for (const width of [1440, 390, 320]) {
       await page.setViewportSize({ width, height: 844 });
@@ -64,18 +68,26 @@ for (const language of languages) {
 test('language switch retains the feature, query, and fragment', async ({ page }) => {
   await page.goto('/ko/pokedex?pokemon=pokemon%3A1#main-content');
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
-  await expect(page).toHaveURL('/en/pokedex/bulbasaur-1#main-content');
+  await expect(page).toHaveURL('/pokedex/bulbasaur-1#main-content');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('ja');
   await expect(page).toHaveURL('/ja/pokedex/フシギダネ-1#main-content');
   await expect(page.getByRole('link', { name: '図鑑', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
 test('legacy URLs redirect once; unsupported locales and unknown paths return 404', async ({ request }) => {
-  for (const path of ['/', '/chat', '/pokedex?pokemon=pokemon%3A25', '/meta', '/scenario', '/pobti']) {
+  for (const path of ['/en', '/en/chat', '/en/pokedex?pokemon=pokemon%3A25', '/en/meta', '/en/scenario', '/en/pobti']) {
     const response = await request.get(path, { maxRedirects: 0 });
     expect(response.status()).toBe(308);
     const destination = new URL(response.headers().location, response.url());
-    expect(destination.pathname + destination.search).toBe(`/ko${path === '/' ? '' : path}`);
+    expect(destination.pathname + destination.search).toBe(path === '/en' ? '/' : path === '/en/pokedex?pokemon=pokemon%3A25' ? '/pokedex/pikachu-25' : path.slice(3));
+  }
+  const renamed = await request.get('/en/pokedex/old-name-25?tag=a&tag=b&empty=', { maxRedirects: 0 });
+  expect(renamed.status()).toBe(308);
+  const renamedUrl = new URL(renamed.headers().location, renamed.url());
+  expect(renamedUrl.pathname + renamedUrl.search).toBe('/pokedex/pikachu-25?tag=a&tag=b&empty=');
+  expect((await request.get(renamedUrl.pathname + renamedUrl.search, { maxRedirects: 0 })).status()).toBe(200);
+  for (const path of ['/', '/chat', '/pokedex', '/meta', '/scenario', '/pobti']) {
+    expect((await request.get(path, { maxRedirects: 0 })).status()).toBe(200);
   }
   for (const path of ['/fr', '/fr/chat', '/ko/missing', '/constructor/chat', '/api-not-a-route']) {
     expect((await request.get(path)).status()).toBe(404);
@@ -86,10 +98,20 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
-  expect(xml.match(/<loc>/g)).toHaveLength(5430);
+  expect(xml).toContain('<sitemapindex');
+  expect(xml.match(/<loc>/g)).toHaveLength(4);
   for (const language of languages) {
-    expect(xml).toContain(`<loc>https://pokesettle.com/${language.code}/scenario</loc>`);
-    expect(xml).toContain(`hreflang="${language.html}"`);
+    expect(xml).toContain(`<loc>https://pokesettle.com/sitemap-${language.code}.xml</loc>`);
+    const response = await request.get(`/sitemap-${language.code}.xml`);
+    expect(response.status()).toBe(200);
+    const localizedXml = await response.text();
+    expect(localizedXml).toContain(`<loc>https://pokesettle.com${languagePath(language.code, '/scenario')}</loc>`);
+    expect(localizedXml.match(/<loc>/g)).toHaveLength(language.code === 'ko' ? 1359 : 1357);
+    for (const alternate of languages) {
+      expect(localizedXml).toContain(`hreflang="${alternate.html}"`);
+    }
+    expect(localizedXml).toContain('hreflang="x-default" href="https://pokesettle.com/scenario"');
+    expect(localizedXml).not.toContain('https://pokesettle.com/en');
   }
   const robots = await request.get('/robots.txt');
   expect(await robots.text()).toContain('Disallow: /api/');
@@ -97,7 +119,7 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
 });
 
 test('root layout reserves the gutter when document overflow changes', async ({ page }) => {
-  await page.goto('/en/pokedex');
+  await page.goto('/pokedex');
   await expect(page.locator('html')).toHaveCSS('scrollbar-gutter', 'stable');
   const widths = await page.evaluate(() => {
     const root = document.documentElement;
@@ -123,32 +145,32 @@ test('metadata remains in head across navigation on a slower browser', async ({ 
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
   try {
     for (const language of languages) {
-      const response = await request.get(`/${language.code}/pokedex`, {
+      const response = await request.get(languagePath(language.code, '/pokedex'), {
         headers: { 'User-Agent': 'Mozilla/5.0 Chrome/142.0.0.0 Safari/537.36' },
       });
       const head = (await response.text()).split('</head>')[0];
-      expect(head).toContain(`rel="canonical" href="https://pokesettle.com/${language.code}/pokedex"`);
-      await page.goto(`/${language.code}`);
+      expect(head).toContain(`rel="canonical" href="https://pokesettle.com${languagePath(language.code, '/pokedex')}"`);
+      await page.goto(languagePath(language.code));
       const documents: string[] = [];
       page.on('request', req => { if (req.isNavigationRequest() && req.frame() === page.mainFrame()) documents.push(req.url()); });
       await page.getByRole('link', { name: new RegExp(language.pokedex) }).click();
       // CPU throttling also slows the route transition; check metadata after it commits.
-      await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
+      await expect(page).toHaveURL(languagePath(language.code, '/pokedex'), { timeout: 30_000 });
       const canonical = page.locator('head link[rel="canonical"]');
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}/pokedex`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com${languagePath(language.code, '/pokedex')}`]);
       }).toPass({ timeout: 5000 });
       await page.getByRole('link', { name: /PokeSettle/ }).click();
-      await expect(page).toHaveURL(`/${language.code}`, { timeout: 30_000 });
+      await expect(page).toHaveURL(languagePath(language.code), { timeout: 30_000 });
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com${language.code === 'en' ? '' : languagePath(language.code)}`]);
       }).toPass({ timeout: 5000 });
       await page.goBack();
-      await expect(page).toHaveURL(`/${language.code}/pokedex`, { timeout: 30_000 });
+      await expect(page).toHaveURL(languagePath(language.code, '/pokedex'), { timeout: 30_000 });
       await expect(async () => {
-        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com/${language.code}/pokedex`]);
+        expect(await canonical.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual([`https://pokesettle.com${languagePath(language.code, '/pokedex')}`]);
       }).toPass({ timeout: 5000 });
-      await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com/${language.code}/pokedex`);
+      await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://pokesettle.com${languagePath(language.code, '/pokedex')}`);
       expect(documents).toEqual([]);
     }
   } finally {
