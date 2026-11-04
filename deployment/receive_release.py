@@ -135,12 +135,17 @@ def deploy(release, sha):
     for old in ROOT.iterdir():
         if old.is_dir() and not old.is_symlink() and re.fullmatch(r"[a-f0-9]{40}-.+", old.name) and str(old) not in keep:
             shutil.rmtree(old)
-    result = subprocess.run(["docker", "image", "ls", "--format", "{{.Tag}}", "poketact-backend"],
-                            check=True, capture_output=True, text=True)
-    for tag in result.stdout.splitlines():
-        if re.fullmatch(r"[a-f0-9]{40}", tag) and tag not in {sha, previous["image_tag"]}:
-            subprocess.run(["docker", "image", "rm", "poketact-backend:" + tag],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for repository in ("poketact-backend", "poketact-frontend"):
+        # Cleanup is best-effort: a healthy, published release must not be marked
+        # failed just because Docker cannot list or remove an unused image.
+        result = subprocess.run(["docker", "image", "ls", "--format", "{{.Tag}}", repository],
+                                capture_output=True, text=True)
+        if result.returncode:
+            continue
+        for tag in result.stdout.splitlines():
+            if re.fullmatch(r"[a-f0-9]{40}", tag) and tag not in {sha, previous["image_tag"]}:
+                subprocess.run(["docker", "image", "rm", repository + ":" + tag],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print("Backend and monitoring release healthy")
 
 

@@ -6,13 +6,14 @@ export const localeRegistry = {
 } as const;
 export type Locale = keyof typeof localeRegistry;
 export const locales = Object.keys(localeRegistry) as Locale[];
-export const defaultLocale: Locale = 'ko';
+export const defaultLocale: Locale = 'en';
 export const featurePaths = ['', '/chat', '/pokedex', '/meta', '/scenario', '/pobti'] as const;
 export function isLocale(value: string): value is Locale {
   return Object.hasOwn(localeRegistry, value);
 }
 export function localizedPath(locale: Locale, path = '') {
-  return `/${locale}${path === '/' ? '' : path}`;
+  const suffix = path === '/' ? '' : path;
+  return locale === defaultLocale ? suffix || '/' : `/${locale}${suffix}`;
 }
 export function withoutLocale(path: string) {
   const segment = path.split('/')[1];

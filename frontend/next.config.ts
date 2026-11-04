@@ -13,7 +13,15 @@ const config: NextConfig = {
     minimumCacheTTL: 86400,
   },
   async rewrites() {
-    return [{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }];
+    return {
+      beforeFiles: [
+        ...['', '/chat', '/pokedex', '/meta', '/scenario', '/pobti'].map(path => ({
+          source: path || '/', destination: `/en${path}`,
+        })),
+        { source: '/pokedex/:slugId', destination: '/en/pokedex/:slugId' },
+      ],
+      afterFiles: [{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }],
+    };
   },
 };
 export default config;

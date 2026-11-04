@@ -55,7 +55,7 @@ test('상세 metadata와 언어 전환은 동일 ID의 현지화 URL 유지', as
   await expect(page).toHaveTitle('피카츄 (오리지널캡) | 도감 | PokeSettle');
   await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://pokesettle.com' + ko);
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
-  await expect(page).toHaveURL('/en/pokedex/pikachu-original-cap-10094?check=1#main-content');
+  await expect(page).toHaveURL('/pokedex/pikachu-original-cap-10094?check=1#main-content');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Original Cap Pikachu');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('ja');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ピカチュウ (オリジナルキャップ)');
@@ -92,7 +92,7 @@ test('favicon은 16·32·48px 실제 ICO이며 상세 sitemap URL 중복 없음'
   expect(favicon.status()).toBe(200);
   const bytes = await favicon.body();
   expect([...bytes.subarray(0, 6)]).toEqual([0, 0, 1, 0, 3, 0]);
-  const xml = await (await request.get('/sitemap.xml')).text();
+  const xml = (await Promise.all(['ko', 'en', 'ja', 'zh'].map(async locale => (await request.get(`/sitemap-${locale}.xml`)).text()))).join('');
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]);
   expect(urls).toHaveLength(5430);
   expect(urls).toContain('https://pokesettle.com/terms');

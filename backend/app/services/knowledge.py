@@ -36,7 +36,7 @@ class KnowledgeService:
         with self.collection_lock:
             started = time.monotonic()
             stage("extracting_queries")
-            plan_key = digest([self.source.name, pokemon_id, question, regulation_id, PROMPT_VERSION, "resource-routing-v1"])
+            plan_key = digest([self.source.name, pokemon_id, question, regulation_id, PROMPT_VERSION, "resource-routing-v2"])
             plan_data = self.store.get("query_plan", plan_key)
             if plan_data:
                 plan = QueryPlan.model_validate(plan_data)
@@ -47,7 +47,10 @@ class KnowledgeService:
                     "queries",
                     QUERY_PROMPT,
                     {
-                        "pokemon": pokemon.model_dump(exclude={"names", "slugs"}),
+                        "pokemon": pokemon.model_dump(exclude={
+                            "names", "slugs", "images", "field_provenance",
+                            "source_url", "collected_at",
+                        }),
                         "question": question,
                         "regulation_id": regulation_id,
                     },

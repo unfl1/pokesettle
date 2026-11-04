@@ -222,7 +222,7 @@ def test_registered_strategy_collection_uses_only_answer_model_and_preserves_sou
     original = build_graph(setup.vectors, setup.model).invoke({
         'pokemon_id': 'pokemon:1', 'question': request.question,
     })['evidence']
-    by_id = {item['evidence_id']: item for item in original}
+    by_id = {f'E{index}': item for index, item in enumerate(original, 1)}
     for item in payload['evidence']:
         full = by_id[item['evidence_id']]
         assert item['text'] == full['text']

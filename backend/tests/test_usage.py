@@ -310,6 +310,40 @@ def test_jobs_idempotency_and_discovery_share_limits(setup):
         )
 
 
+@pytest.mark.parametrize("clarification", [False, True])
+def test_cached_discovery_does_not_consume_chat_quota_or_acquire_lease(setup, clarification):
+    from backend.app.schemas import DiscoveryPlan
+
+    settings = replace(setup.settings, usage_requests_per_minute=1, usage_global_concurrency=1)
+    if not clarification:
+        setup.model.discovery_plan = DiscoveryPlan(
+            filters=[{"field": "name", "operator": "contains", "value": "test"}],
+            requires_clarification=False,
+            unresolved_conditions=[],
+            explanation="테스트 이름 검색",
+        )
+    with TestClient(create_app(settings, service=setup.service)) as client:
+        client.post("/api/session")
+        body = {"query": "테스트 조건", "limit": 1}
+        first = client.post("/api/pokemon/search", json=body)
+        assert first.status_code == 200
+        guard = client.app.state.usage
+        # Cached reads must work even when another paid job holds all slots.
+        lease = guard.begin(["other-session", "other-ip"])
+        try:
+            for offset in (1, 2, 3):
+                response = client.post("/api/pokemon/search", json={**body, "offset": offset})
+                assert response.status_code == 200
+                assert response.json()["data"]["status"] == first.json()["data"]["status"]
+            blocked = client.post("/api/pokemon/search", json={"query": "새 조건"})
+            assert blocked.status_code == 429
+            assert len([c for c in setup.model.calls if c[0] == "discovery"]) == 1
+        finally:
+            guard.finish(lease)
+        with setup.store.connect() as db:
+            assert db.execute("SELECT count(*) AS n FROM usage_leases").fetchone()["n"] == 0
+
+
 @pytest.mark.parametrize(
     "setting",
     [

@@ -21,7 +21,7 @@ test('root legal documents render independently of locale routing', async ({ pag
   const about = await request.get('/about', { maxRedirects: 0 });
   expect(about.status()).toBe(404);
   await expect(page.locator('a[href="/about"]')).toHaveCount(0);
-  const xml = await (await request.get('/sitemap.xml')).text();
+  const xml = await (await request.get('/sitemap-ko.xml')).text();
   expect(xml).toContain('<loc>https://pokesettle.com/terms</loc>');
   expect(xml).toContain('<loc>https://pokesettle.com/privacy</loc>');
   expect(xml).not.toContain('<loc>https://pokesettle.com/about</loc>');
