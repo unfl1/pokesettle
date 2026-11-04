@@ -119,7 +119,7 @@ def test_api_more_than_100_and_form_metadata(setup):
         assert client.get("/api/status").json()["data"]["speciesCount"] == 205
 
 
-def test_discovery_pagination_reuses_plan_and_refreshes_when_catalog_changes(setup):
+def test_discovery_reuses_interpretation_but_filters_current_catalog(setup):
     setup.model.discovery_plan = DiscoveryPlan(
         filters=[{"field": "types", "operator": "eq", "value": "test-type"}],
         requires_clarification=False,
@@ -133,7 +133,18 @@ def test_discovery_pagination_reuses_plan_and_refreshes_when_catalog_changes(set
     assert len([c for c in setup.model.calls if c[0] == "discovery"]) == 1
     setup.catalog.items["pokemon:101"] = Pokemon.model_validate(record(101))
     assert discover(setup.service, query)["total"] == 101
-    assert len([c for c in setup.model.calls if c[0] == "discovery"]) == 2
+    assert len([c for c in setup.model.calls if c[0] == "discovery"]) == 1
+
+
+def test_discovery_clarification_reuses_plan_and_trims_query(setup):
+    query = DiscoveryRequest(query="  빠른 포켓몬  ")
+    first = discover(setup.service, query)
+    second = discover(setup.service, query.model_copy(update={"query": "빠른 포켓몬"}))
+    assert first == second
+    assert first["status"] == "needs_clarification"
+    calls = [c for c in setup.model.calls if c[0] == "discovery"]
+    assert len(calls) == 1
+    assert calls[0][1]["query"] == "빠른 포켓몬"
 
 
 def test_localized_routes_keep_verified_form_names_and_original_fallbacks():

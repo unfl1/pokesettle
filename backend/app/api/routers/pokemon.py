@@ -120,13 +120,17 @@ def discovery(
         raise ServiceError("UNKNOWN_REGULATION", "등록되지 않은 규칙입니다.", 422)
     ensure_ready(service, settings)
     guard = request.app.state.usage
-    lease = guard.begin(request_subjects(request, session_id, settings))
-    with guard.scope(lease):
-        return ok(
-            request,
-            discover(service, body),
-            warnings=["일반 도감 속성으로 검증한 결과이며 Champions 적격성을 뜻하지 않습니다."],
-        )
+    return ok(
+        request,
+        discover(
+            service,
+            body,
+            model_scope=lambda: guard.scope(
+                guard.begin(request_subjects(request, session_id, settings))
+            ),
+        ),
+        warnings=["일반 도감 속성으로 검증한 결과이며 Champions 적격성을 뜻하지 않습니다."],
+    )
 
 
 @router.post(

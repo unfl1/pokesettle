@@ -49,7 +49,8 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
     queryFn: ({ pageParam }) => pokemonApi.discover(submittedCondition!, pageParam),
     initialPageParam: 0,
     enabled:
-      submittedCondition !== null && sessionReady && ready,
+      mode === 'conditions' && submittedCondition !== null && sessionReady && ready,
+    staleTime: Infinity,
     getNextPageParam: (last) => {
       const next = (last.offset ?? 0) + last.items.length;
       return next < last.total && last.items.length ? next : undefined;
