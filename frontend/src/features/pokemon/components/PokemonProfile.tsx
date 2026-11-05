@@ -2,6 +2,7 @@ import type { Locale } from '../../../i18n/config';
 import { createTranslator, type Dictionary } from '../../../i18n/translate';
 import { pokemonName, referenceName } from '../routing';
 import Learnset from './Learnset';
+import TypeDefense from './TypeDefense';
 import { typeLabels } from '../typeNames';
 import { typeColorClasses } from '../typeColors';
 import PokemonDataNotes from './PokemonDataNotes';
@@ -15,6 +16,10 @@ const statLabels: Record<StatName, string> = {
   spAttack: '특수공격',
   spDefense: '특수방어',
   speed: '스피드',
+};
+const statColors: Record<StatName, string> = {
+  hp: 'fill-rose-500', attack: 'fill-orange-500', defense: 'fill-amber-500',
+  spAttack: 'fill-blue-500', spDefense: 'fill-emerald-500', speed: 'fill-pink-500',
 };
 export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }: { pokemon: PokemonDetail; locale: Locale; dictionary: Dictionary; headingLevel?: 1 | 2 }) {
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
@@ -67,24 +72,27 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
               <p lang={description ? descriptionLanguage : 'ko'}>{description?.text ?? pokemon.description}</p>
             </div>
           )}
-          <div className="flex justify-between items-center mb-4 [&_h3]:text-[14px] [&_h3]:font-medium [&>span]:text-[14px] [&>span]:text-muted">
-            <h3>{translate("종족값")}</h3>
-          </div>
-          <div className="grid grid-cols-[1fr_1fr] gap-y-2.5 gap-x-7.5 max-phone:grid-cols-[1fr]">
-            {(Object.entries(pokemon.baseStats) as [StatName, number][]).map(
-              ([key, value]) => (
-                <div
-                  className="gap-2.5 flex items-center text-[14px] [&>span]:w-[47px] [&>span]:text-muted [&_strong]:w-[25px] [&_strong]:text-right [&_strong]:text-[14px] [&_strong]:font-medium"
-                  key={key}
-                >
-                  <span>{translate(statLabels[key])}</span>
-                  <div className="h-1 bg-canvas rounded-[4px] flex-1">
-                    <svg className="block h-full w-full overflow-hidden rounded-[4px] fill-link/55" viewBox={`0 0 ${maximum || 1} 1`} preserveAspectRatio="none" aria-hidden="true"><rect width={value} height="1" /></svg>
-                  </div>
-                  <strong>{value}</strong>
+          <div className="@container mt-5 mb-6 border-t border-line pt-5">
+            <div className="grid grid-cols-1 gap-6 @min-[640px]:grid-cols-2">
+              <section aria-label={translate('종족값')} className="min-w-0" data-testid="base-stats">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-[16px] font-bold text-ink">{translate('종족값')}</h3>
+                  <p className="flex items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-[12px] text-muted">{translate('합계')}<strong className="text-[18px] font-bold tabular-nums text-ink">{Object.values(pokemon.baseStats).reduce((sum, value) => sum + value, 0)}</strong></p>
                 </div>
-              ),
-            )}
+                <p className="mb-4 text-[12px] leading-relaxed text-muted">{translate('실전 능력치가 아닌 종족값입니다.')}</p>
+                <dl className="space-y-3">
+                  {(Object.entries(statLabels) as [StatName, string][]).map(([key, label]) => {
+                    const value = pokemon.baseStats[key];
+                    return <div key={key} className="grid grid-cols-[64px_32px_minmax(0,1fr)] items-center gap-2.5 text-[14px]">
+                      <dt className="text-muted">{translate(label)}</dt>
+                      <dd className="m-0 text-right font-semibold tabular-nums text-ink">{value}</dd>
+                      <dd className="m-0 h-2 overflow-hidden rounded-full bg-canvas" aria-hidden="true"><svg className={`block h-full w-full ${statColors[key]}`} viewBox={`0 0 ${maximum || 1} 1`} preserveAspectRatio="none"><rect width={value} height="1" rx="0.5" /></svg></dd>
+                    </div>;
+                  })}
+                </dl>
+              </section>
+              <TypeDefense defense={pokemon.typeDefense} dictionary={dictionary} />
+            </div>
           </div>
           <Learnset pokemon={{ learnset: pokemon.learnset }} locale={locale} dictionary={dictionary} />
         </div>

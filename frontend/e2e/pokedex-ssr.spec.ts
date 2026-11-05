@@ -131,3 +131,67 @@ test('챗봇 기술 링크의 타입 필터를 적용하고 없는 타입은 다
   await expect(page.getByTestId('pokemon-learnset')).toContainText('이 타입의 등록된 기술이 없어요. 다른 포켓몬을 선택해 보세요.');
   await expect(page.getByTestId('pokemon-learnset')).not.toContainText('10만볼트');
 });
+
+
+test('종족값 합계와 배율별 방어 상성을 나란히 표시하고 모바일에서 세로 배치함', async ({ page }) => {
+  await page.goto('/ko/pokedex?pokemon=pokemon%3A1');
+  const stats = page.getByTestId('base-stats');
+  const defense = page.getByTestId('type-defense');
+  await expect(stats).toContainText('합계320');
+  await expect(stats.locator('dl > div')).toHaveCount(6);
+  await expect(defense.locator('[data-multiplier="2"] dd')).toContainText('불꽃');
+  await expect(defense.locator('[data-multiplier="2"] dd')).toContainText('비행');
+  await expect(defense.locator('[data-multiplier="2"] dd')).toContainText('에스퍼');
+  await expect(defense.locator('[data-multiplier="2"]')).toHaveCount(1);
+  await expect(defense.locator('[data-multiplier="0.25"] dd')).toHaveText('풀');
+  await expect(defense.locator('[data-multiplier="1"]')).toHaveCount(0);
+  await expect(defense).toContainText('특성·도구·기술·필드 효과를 제외한 일반 타입 기준');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const wideStats = await stats.boundingBox();
+  const wideDefense = await defense.boundingBox();
+  expect(wideDefense!.x).toBeGreaterThan(wideStats!.x);
+  expect(wideDefense!.y).toBeCloseTo(wideStats!.y, 0);
+  await page.screenshot({ path: '/tmp/pokesettle-stats-defense-desktop.png', fullPage: true });
+  for (const width of [1024, 780, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  const narrowStats = await stats.boundingBox();
+  const narrowDefense = await defense.boundingBox();
+  expect(narrowDefense!.y).toBeGreaterThanOrEqual(narrowStats!.y + narrowStats!.height);
+  await page.screenshot({ path: '/tmp/pokesettle-stats-defense-mobile.png', fullPage: true });
+});
+
+
+test('기술 카드를 비교 목록으로 표시하고 이름·타입·습득 방식 검색을 함께 적용함', async ({ page }) => {
+  await page.goto('/ko/pokedex?pokemon=pokemon%3A25');
+  const learnset = page.getByTestId('pokemon-learnset');
+  const table = learnset.getByRole('table', { name: '기술 목록' });
+  await expect(table.locator('tbody tr[data-move-row]')).toHaveCount(2);
+  await expect(table.getByRole('columnheader', { name: '위력', exact: true })).toBeVisible();
+  await expect(table.getByRole('columnheader', { name: 'PP', exact: true })).toBeVisible();
+  await expect(table.locator('tbody').filter({ hasText: '울음소리' })).toContainText('대상 공격 -1');
+  await expect(table.locator('tbody').filter({ hasText: '10만볼트' }).getByText('마비 10%', { exact: true }).first()).toBeVisible();
+  await expect(table.getByText('마비 상태로 만들 때가 있다.', { exact: true }).first()).not.toBeVisible();
+  await table.locator('tbody').filter({ hasText: '10만볼트' }).getByText('마비 10%', { exact: true }).first().click();
+  await expect(table.getByText('마비 상태로 만들 때가 있다.', { exact: true }).first()).toBeVisible();
+  await expect(table.locator('tbody tr[data-move-row]').filter({ hasText: '10만볼트' }).getByRole('cell', { name: '15', exact: true })).toBeVisible();
+  await expect(table.locator('tbody tr[data-move-row]').filter({ hasText: '10만볼트' })).toContainText('90');
+  await page.getByRole('combobox', { name: '기술 습득 방법 필터' }).selectOption('train');
+  await expect(table.locator('tbody tr[data-move-row]')).toHaveCount(1);
+  await expect(table.locator('tbody')).toContainText('10만볼트');
+  await page.getByRole('textbox', { name: '기술 이름 검색' }).fill('울음');
+  await expect(learnset.getByRole('status')).toHaveText('조건에 맞는 기술이 없어요.');
+  await page.getByRole('combobox', { name: '기술 습득 방법 필터' }).selectOption('all');
+  await expect(table.locator('tbody tr[data-move-row]')).toHaveCount(1);
+  await expect(table.locator('tbody')).toContainText('울음소리');
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    if (width < 640) {
+      const pp = await table.getByRole('columnheader', { name: 'PP', exact: true }).boundingBox();
+      const bounds = await table.boundingBox();
+      expect(Math.abs(pp!.x + pp!.width - bounds!.x - bounds!.width)).toBeLessThanOrEqual(2);
+    }
+  }
+});

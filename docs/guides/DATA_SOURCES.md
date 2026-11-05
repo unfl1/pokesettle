@@ -216,6 +216,17 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 갱신: `python -m backend.scripts.prepare_catalog_details --localization-only`, 기존 수치·습득 기술·한국어 호환 필드 유지함
 - 권리 범위: 기존 PokéAPI 라이선스와 원권리자 권리 안내 유지, 번역 데이터 추가를 Champions 적격성·효과 검증이나 이미지 이용 허가로 해석하지 않음
 
+### 기술 PP·효과 표시 자료 (2026-11-05)
+
+- 출처: [PokéAPI CSV](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv)의 `moves`, `stats`, `move_targets`, `move_meta`, `move_meta_categories`, `move_meta_ailments`, `move_meta_stat_changes`, `move_flavor_text`, `move_effect_prose`, `version_groups`, `languages`
+- 수집: 2026-11-05 갱신, 테이블별 URL·수집일·content hash를 `catalog_details.sources`, 기존 라이선스를 `licence_url`에 보존함. 같은 URL의 다른 원본 해시도 보존함
+- 범위: 기술 937개 중 기본 PP 919개·구조화 능력치 변화 142개·효과 설명 830개 보유함. 누락 값은 생성하지 않으며, 일반 피해만 있는 `effect_id=1` 기술은 부가 효과 없음으로 처리함
+- 효과 설명은 언어별 최신 원본 버전 그룹과 원문 보존, 영어 short effect는 현지어·영어 flavor text가 없는 경우의 원문 대체 자료로 사용함. 언어마다 기준 버전이 다를 수 있음
+- 능력치 변화 대상은 공격 대상과 구분함. `damage-raise`는 자신, `damage-lower`는 대상의 변화로 처리하고, 다른 유형의 수신자를 명확히 판단할 수 없으면 수치 요약 대신 수집된 설명만 표시함
+- 핵심 요약은 `move_meta`의 확률·회복·반동·연속 횟수와 `moves.priority`를 사용함. 방어·벽·설치물·교체 등의 고유 태그는 수집한 effect ID별 영어 short_effect 확인 후 제한적으로 매핑함. 기술 설명문에서 임의로 수치나 확률을 생성하지 않음
+- 자료는 원본 게임의 일반 참고 정보이며 현재 Champions 전용 효과·PP 검증으로 해석하지 않음. 기존 습득 목록·타입·위력·명중·번역 이름은 유지함
+- 갱신: `python -m backend.scripts.prepare_catalog_details --move-effects-only`, 모델·임베딩 호출 없이 PP·효과만 보강함
+
 ### 포BTI 결과 이미지 (2026-10-29)
 
 - 출처: 기존 도감과 같은 [PokéAPI sprites](https://github.com/PokeAPI/sprites), [권리 표기](https://github.com/PokeAPI/sprites/blob/master/LICENCE.txt) 재사용함

@@ -92,6 +92,9 @@ Phase 1·2 경로와 Phase 3의 일반 타입 시나리오 경로 구현. Champi
 
 - `PokemonSummary`: `pokemonId`, `nameKo`, `nameEn`, `types`, `championsEligibilityStatus`, `verificationStatus`, `scope`.
 - `PokemonDetail`은 `baseStats`, `abilities`, `availableMoves`, `megaForms`, `description`, `eligibleRegulations`, `fieldProvenance`, `sources`를 추가함.
+- `PokemonDetail.typeDefense`: `{scope:generic,version,multipliers:[{type,multiplier}],sources:[...]}` 또는 null 반환함. 기존 `BattleEngine`의 타입표로 18개 공격 타입에 대한 방어 배율을 계산하며 특성·도구·기술·필드 효과는 제외함. 타입표 부재·미지원 방어 타입은 null로 표시, 포켓몬 상세 조회는 유지함. 출처·수집일·라이선스 메타데이터 함께 반환함
+- `LearnsetMove` 표시 필드: `pp`, `statChanges:[{stat,change}]`, `statTarget:user|target|null`, `statChance`, `effectTexts:{locale:{text,versionGroup}}` 추가함. 기본 PP·능력치 변화 단계·출처의 부가 효과 확률 및 원문 기준 버전 반환함. 자료 없는 값은 null·빈 배열·빈 사전으로 반환, 현재 Champions 전용 계산 근거로 사용하지 않음. `statChance=0` 원본 표기는 UI에서 0% 발동 확률로 변환하지 않음
+- `LearnsetMove.effectMeta`: 상태이상·확률·풀죽음·회복·흡수/반동·급소율 단계·연속 공격 횟수·우선도·검증한 효과 태그를 반환함. UI는 구조화 메타데이터를 핵심 요약으로 조합하고 원문은 펼쳐보기에서만 표시함. 지원하지 않는 효과는 추측 요약 대신 `기타 효과`로 원문 연결함
 - 세부 타입·null 규칙은 ARCHITECTURE의 데이터 계약과 일치함.
 
 `GET /api/regulations`: ID·게임·포맷·UTC 적용 기간·규칙별 검증 상태·source IDs·확인일. 명단 미확인이면 `eligibleEntries:null`이며 빈 목록으로 전체 부적격을 암시하지 않음. 현재 날짜에 해당하는 규칙과 검증 여부를 별개 필드로 반환함.
