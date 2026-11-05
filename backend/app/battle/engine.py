@@ -32,6 +32,19 @@ class BattleEngine:
     def multiplier(self, attack, defenses):
         return prod(self.chart[attack][t] for t in defenses)
 
+    def defense_profile(self, defenses):
+        if not defenses or any(t not in self.chart for t in defenses):
+            return None
+        return {
+            "scope": "generic",
+            "version": self.data["version"],
+            "multipliers": [
+                {"type": attack, "multiplier": self.multiplier(attack, defenses)}
+                for attack in self.chart
+            ],
+            "sources": self.data["sources"],
+        }
+
     def attack_types(self, member, pokemon):
         if member.moves:
             return list(dict.fromkeys(m.type for m in member.moves if m.category != "status"))

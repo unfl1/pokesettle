@@ -16,6 +16,7 @@
 - 클라이언트 경계: `WorkspaceHeader`·검색/대화/팀 편집 화면, 공통 Provider에서 대화·팀 초안 유지, 숨김 SPA 화면 분기 제거
 - 화면 레이아웃: 홈은 `[lang]/(home)`, 기능 페이지는 `[lang]/(root)`에 배치함. 공통 `[lang]/layout.tsx`의 Provider·초안을 유지하고 기능 페이지의 `WorkspaceShell`·푸터·언어 안내를 서버에서 렌더링함
 - HTTP: Next.js `/api/*` rewrite → FastAPI, 세션 쿠키·RAG·배틀 계산은 기존 백엔드 담당
+- 도감 능력치·상성: 서버가 기존 `BattleEngine` 타입표로 기본 방어 배율과 출처를 상세 API에 추가함. `PokemonProfile`은 종족값 합계·6개 색상 막대와 `TypeDefense`의 ×4·×2·½·¼·×0 그룹을 컨테이너 너비에 따라 가로·세로 배치함. 일반 타입 기준과 특성·도구·기술·필드 효과 제외 안내 유지, 기술은 이름·타입·분류·위력·명중을 정렬한 비교 목록으로 제공하며 이름·타입·습득 방식 필터와 공통 습득 방법 안내 지원함
 - 정적 자산: `next/image` 원격 이미지 최적화, `next/font/local` 공통 글리프 + Pretendard 공식 Unicode 범위 동적 서브셋 자체 호스팅
 - 통계: `RuntimeAnalytics`가 `/analytics/config`의 no-store 응답으로 런타임 `GA_ID` 조회 후 `GoogleAnalytics` 활성화, 공통 레이아웃의 요청 시 렌더링 의존성 제거
 - 다국어: `src/i18n/config.ts`의 `ko`·`en`·`ja`·`zh` 레지스트리, 기본 언어 `en`은 무접두사, 나머지 언어는 `/{lang}/{feature}` 접두사, `zh`는 간체(`zh-Hans`) 제공

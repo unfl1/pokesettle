@@ -2,7 +2,7 @@
 
 from typing import Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ConfigDict, JsonValue
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from pydantic.alias_generators import to_camel
 
 from backend.app.battle.damage import DamageInput
@@ -106,7 +106,37 @@ class Description(ResponseModel):
     version: str
 
 
+class MoveStatChange(ResponseModel):
+    stat: str
+    change: int
+
+
+class MoveEffectText(ResponseModel):
+    text: str
+    version_group: str
+
+
+class MoveEffectMeta(ResponseModel):
+    category: str | None = None
+    ailment: str | None = None
+    ailment_chance: int | None = None
+    flinch_chance: int | None = None
+    healing: int | None = None
+    drain: int | None = None
+    crit_rate: int | None = None
+    min_hits: int | None = None
+    max_hits: int | None = None
+    priority: int | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
 class LearnsetMove(ResponseModel):
+    pp: int | None = None
+    stat_changes: list[MoveStatChange] | None = None
+    stat_target: Literal["user", "target"] | None = None
+    stat_chance: int | None = None
+    effect_texts: dict[str, MoveEffectText] | None = None
+    effect_meta: MoveEffectMeta | None = None
     name: str
     method: str
     level: int
@@ -123,7 +153,20 @@ class Learnset(ResponseModel):
     moves: list[LearnsetMove]
 
 
+class TypeMultiplier(ResponseModel):
+    type: str
+    multiplier: float
+
+
+class TypeDefense(ResponseModel):
+    scope: Literal["generic"]
+    version: str
+    multipliers: list[TypeMultiplier]
+    sources: list[JsonObject]
+
+
 class PokemonDetail(Pokemon):
+    type_defense: TypeDefense | None = None
     name_sources: list[JsonObject]
     name_licence_url: str | None
     ability_details: list[AbilityDetail]

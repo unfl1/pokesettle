@@ -13,6 +13,7 @@ from backend.app.api.validation import (
     ensure_ready,
     regulations,
 )
+from backend.app.battle.engine import BattleEngine
 from backend.app.core.errors import ServiceError
 from backend.app.core.usage import request_subjects
 from backend.app.schemas import (
@@ -95,8 +96,13 @@ def pokemon_list(
     response_model=schemas.Envelope[schemas.PokemonDetail],
     response_model_exclude_unset=True,
 )
-def detail(request: Request, pokemon_id: str, *, catalog: CatalogDep):
-    return ok(request, catalog.profile(pokemon_id))
+def detail(request: Request, pokemon_id: str, *, catalog: CatalogDep, settings: SettingsDep):
+    profile = catalog.profile(pokemon_id)
+    profile["type_defense"] = (
+        BattleEngine(catalog, settings.data_dir).defense_profile(profile["types"])
+        if (settings.data_dir / "type_chart.json").exists() else None
+    )
+    return ok(request, profile)
 
 
 @router.post(

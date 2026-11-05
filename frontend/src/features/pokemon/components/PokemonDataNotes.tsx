@@ -29,13 +29,18 @@ export default function PokemonDataNotes({ pokemon, locale, dictionary, descript
       </details>}
       {!!pokemon.localizationSources?.length && <details>
         <summary>{t('번역 이름·설명 출처')}</summary>
-        <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">{pokemon.localizationSources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()} · {source.collectedAt.slice(0, 10)}</a>)}</div>
+        <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">{pokemon.localizationSources.map(source => <a key={`${source.url}-${source.contentHash}`} href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()} · {source.collectedAt.slice(0, 10)}</a>)}</div>
         {pokemon.localizationLicenceUrl && <a href={pokemon.localizationLicenceUrl} target="_blank" rel="noreferrer">{t('PokéAPI 이용 조건')}</a>}
+      </details>}
+      {!!pokemon.typeDefense?.sources.length && <details>
+        <summary>{t('타입 상성 출처·수집일')}</summary>
+        <div className="flex flex-wrap gap-x-5 gap-y-1">{pokemon.typeDefense.sources.map(source => <a key={source.sourceUrl} href={source.sourceUrl} target="_blank" rel="noreferrer">{source.sourceUrl.split('/').pop()} · {source.collectedAt.slice(0, 10)}</a>)}</div>
+        {pokemon.typeDefense.sources[0]?.licenceUrl && <a href={pokemon.typeDefense.sources[0].licenceUrl} target="_blank" rel="noreferrer">{t('PokéAPI 이용 조건')}</a>}
       </details>}
       {pokemon.learnset && <details>
         <summary>{t('기술 데이터 출처·수집일')}</summary>
         <p>{t('수집 자료 중 가장 최근 버전 그룹 기준 · 일반 도감 자료')}</p>
-        <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">{pokemon.learnsetSources?.map(source => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()} · {source.collectedAt.slice(0, 10)}</a>)}</div>
+        <div className="page-data-row flex flex-wrap [align-items:baseline] [gap:6px_22px] min-w-0 [&_+_.page-data-row]:mt-2.5 [&_>_*]:min-w-0 [&_>_*]:max-w-full [&_>_*]:m-0 [&_>_*]:wrap-anywhere screen-540:[gap:6px_14px]">{pokemon.learnsetSources?.map(source => <a key={`${source.url}-${source.contentHash}`} href={source.url} target="_blank" rel="noreferrer">{source.url.split('/').pop()} · {source.collectedAt.slice(0, 10)}</a>)}</div>
         {pokemon.learnsetLicenceUrl && <a href={pokemon.learnsetLicenceUrl} target="_blank" rel="noreferrer">{t('PokéAPI 이용 조건')}</a>}
       </details>}
     </div>

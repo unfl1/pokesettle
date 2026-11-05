@@ -78,7 +78,7 @@ class Catalog:
                         "name_en": self.move_details.get(move["name"], {}).get("name"),
                         **{
                             key: self.move_details.get(move["name"], {}).get(key)
-                            for key in ("type", "category", "power", "accuracy", "names")
+                            for key in ("type", "category", "power", "accuracy", "names", "pp", "stat_changes", "stat_target", "stat_chance", "effect_texts", "effect_meta")
                         },
                     }
                     for move in detail["moves"]
@@ -87,7 +87,10 @@ class Catalog:
             if detail
             else None
         )
-        result["learnset_sources"] = (self.details.get("sources", []) + self.localization.get("sources", [])) if detail else []
+        result["learnset_sources"] = list({
+            (source["url"], source.get("content_hash")): source
+            for source in self.details.get("sources", []) + self.localization.get("sources", [])
+        }.values()) if detail else []
         result["learnset_licence_url"] = self.details.get("licence_url") if detail else None
         return result
 
