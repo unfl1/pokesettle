@@ -7,7 +7,7 @@ import { idFromSegment, pokemonName, pokemonPath } from '../routing';
 import type { Page } from '../../../types/api';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowRight, ChevronRight, CircleHelp, LoaderCircle, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { pokemonApi } from '../api';
@@ -20,6 +20,7 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
   const workspace = useWorkspaceContext();
   const ready = Boolean(workspace.status.data?.ready);
   const sessionReady = workspace.session.isSuccess;
+  const moveType = useSearchParams().get('moveType');
   const routeId = idFromSegment(decodeURIComponent(usePathname().split('/').at(-1) ?? ''));
   const pokemonId = routeId ?? 'pokemon:25';
   const Heading = routeId ? 'h2' : 'h1';
@@ -240,7 +241,7 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
                 <Link prefetch={false}
                   className="px-2.5 py-[13px] border border-[transparent] gap-[7px] flex items-center w-full text-left rounded-[7px] mb-[3px] min-h-16 max-phone:px-[5px] max-phone:py-2.5 max-phone:gap-[5px] [&:hover:not([data-selected=true])]:bg-canvas data-[selected=true]:border-accent/28 data-[selected=true]:bg-accent/4 [&>svg]:text-muted [&>svg]:w-[11px] max-phone:[&>svg]:hidden [&[data-selected=true]>svg]:text-accent group"
                   key={p.pokemonId}
-                  href={pokemonPath(p, locale)}
+                  href={`${pokemonPath(p, locale)}${moveType ? `?moveType=${encodeURIComponent(moveType)}#pokemon-learnset` : ''}`}
                   aria-label={translate('{name} 선택', { name: pokemonName(p, locale) })}
                   aria-current={p.pokemonId === pokemonId ? 'page' : undefined}
                   data-selected={p.pokemonId === pokemonId}

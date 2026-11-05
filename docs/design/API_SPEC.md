@@ -149,6 +149,11 @@ conversationId가 null이면 새 대화 생성. 기존 ID는 소유 세션·regu
 - 정확한 실제 이름은 우선 유지, `파어리`·`니드리너` 등의 복수 후보 입력은 자동 확정 제외, 특수문자·폼 표기의 임의 추가 제외
 - 대화 주제·기본 도감 직접 응답·전투 후보·명시한 상대 이름에 동일 규칙 적용, 원래 질문과 입력 근거 인용은 보존, 추가 모델 호출 없음
 
+- 기본 도감 안내: `피카츄는 무슨 포켓몬이야?`·`피카츄는 뭐야?`·`불꽃기술은 뭐가 있어?` 등의 엄격한 조회 요청은 모델·문서 수집 없이 `feature:catalog_navigation`으로 안내함
+- 도감 링크 계약: `catalogNavigation:{pokemon:{pokemonId,nameKo,nameEn,names,slugs}|null,moveType:string|null,section:profile|moves}` 반환함. 프론트에서 현재 언어의 상세 주소 또는 `/pokedex`로 연결하고 기술 조회는 `moveType` 필터와 `#pokemon-learnset` 적용함
+- 도감 필드 직접 응답에도 `catalogNavigation` 제공함. 도감 직접 조회·안내는 모델 설정과 AI 횟수·동시 실행 제한 없이 처리하되 세션·작업 소유권 검사는 유지함
+- 포켓몬 미지정 기술 질문은 포켓몬 선택 후 습득 기술을 확인하도록 안내함. 전역 기술 목록·현행 게임 습득 가능성을 생성하거나 보증하지 않음. 혼합된 외부 요청·전략 질문은 기존 범위 판별·RAG 유지함
+
 완료된 chat job의 result는 `{conversationId,userMessageId,assistantMessageId,...GroundedResult}`임. 근거 부족 예시:
 
 ```json

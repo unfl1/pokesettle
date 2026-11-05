@@ -10,7 +10,7 @@ import LearnsetFilters, { type LearnsetGroup } from './LearnsetFilters';
 export default function Learnset({ pokemon, locale, dictionary }: { pokemon: Pick<PokemonDetail, 'learnset'>; locale: Locale; dictionary: Dictionary }) {
   const t = createTranslator(dictionary);
   const learnset = pokemon.learnset;
-  if (!learnset) return <div className="mt-4 mb-4 text-[14px]" data-testid="pokemon-learnset"><h3 className="font-medium mb-2">{t('배울 수 있는 기술')}</h3><p className="text-muted">{t('이 포켓몬의 버전별 기술 습득 자료가 아직 등록되지 않았습니다.')}</p></div>;
+  if (!learnset) return <div id="pokemon-learnset" className="scroll-mt-28 mt-4 mb-4 text-[14px]" data-testid="pokemon-learnset"><h3 className="font-medium mb-2">{t('배울 수 있는 기술')}</h3><p className="text-muted">{t('이 포켓몬의 버전별 기술 습득 자료가 아직 등록되지 않았습니다.')}</p></div>;
   const methodLabels: Record<string, string> = { 'level-up': t('레벨업'), machine: t('기술머신·비전머신'), egg: t('알 기술'), tutor: t('기술 가르침'), train: t('트레이닝') };
   const types = [...Object.keys(typeLabels), 'unknown', ...new Set(learnset.moves.map(move => move.type).filter((type): type is string => !!type && !(type in typeLabels)))];
   const groups: LearnsetGroup[] = types.flatMap(type => {

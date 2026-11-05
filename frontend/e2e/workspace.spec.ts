@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false, coach = false, selection = false) {
+async function fixture(page: Page, missing: string[] = [], abstain = false, wiki = false, curated = false, coach = false, selection = false, catalogNavigation = false) {
   const pokemon = [
     {
       pokemonId: 'pokemon:25',
@@ -193,7 +193,8 @@ async function fixture(page: Page, missing: string[] = [], abstain = false, wiki
         ],
         assumptions: [],
         unknowns: curated ? [{ field: 'team', reason: '현재 HP와 네 기술을 알려주세요.' }] : [],
-        feature: j.kind,
+        ...(catalogNavigation ? { catalogNavigation: { pokemon: { pokemonId: 'pokemon:25', nameKo: '피카츄', nameEn: 'pikachu' }, moveType: 'electric', section: 'moves' } } : {}),
+        feature: catalogNavigation ? 'catalog_navigation' : j.kind,
         conversationId: j.conversationId,
         ...(selection ? {battleContext: {scope: 'generic_team_selection', state: {}, recommendation: 'recommend_three', selection: {candidateCount: 20, scoreKind: 'heuristic_not_probability'}}} : coach ? { battleContext: {
           ownName: '이상해꽃', opponentName: '리자몽', scope: 'generic_type_scenario',
@@ -898,4 +899,17 @@ test('모바일 채팅방 삭제 확인창과 빈 대화 전환', async ({ page 
   await expect(page.locator('[data-testid="answer-body"]')).toHaveCount(0);
   await page.getByLabel('포켓몬 질문').fill('삭제 후 새 질문');
   await expect(page.getByRole('button', { name: '질문 보내기' })).toBeEnabled();
+});
+
+
+test('도감 안내 답변은 현재 언어의 상세 도감과 기술 필터로 연결함', async ({ page }) => {
+  await fixture(page, [], false, false, false, false, false, true);
+  await page.goto('/ko/chat');
+  await page.getByLabel('포켓몬 질문').fill('피카츄 전기 기술 목록 알려줘');
+  await page.getByRole('button', { name: '질문 보내기' }).click();
+  const link = page.getByRole('link', { name: '도감에서 확인하기' });
+  await expect(link).toHaveAttribute('href', '/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25?moveType=electric#pokemon-learnset');
+  await expect(page.getByTestId('answer-state')).toHaveText('도감 안내');
+  await page.reload();
+  await expect(link).toBeVisible();
 });

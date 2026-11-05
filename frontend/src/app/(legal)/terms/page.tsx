@@ -1,22 +1,5 @@
-import type { Metadata } from 'next';
-import LegalDocument, { type LegalSection } from '../../../components/legal/LegalDocument';
+import Document from '../../../components/legal/TermsDocument';
+import { legalMetadata } from '../../../components/legal/metadata';
 
-export const metadata: Metadata = {
-  title: '이용약관 | PokeSettle',
-  description: 'PokeSettle의 이용 조건, AI 답변의 한계, 콘텐츠 권리와 문의 방법을 안내합니다.',
-  alternates: { canonical: '/terms' },
-};
-
-const sections: LegalSection[] = [
-  { id: 'purpose', title: '1. 목적과 적용 범위', content: <p>본 약관은 강현준(이하 “운영자”)이 운영하는 PokeSettle(이하 “서비스”)의 이용 조건과 운영자 및 이용자의 권리와 의무를 정합니다. 서비스는 영리 목적 없이 운영하는 비공식 Pokémon 팬 프로젝트이며, Pokémon 공식 서비스가 아닙니다.</p> },
-  { id: 'service', title: '2. 서비스 제공과 변경', content: <><p>서비스는 Pokémon 도감, 랭크 배틀 사용률 자료, AI 전략 질의응답, 팀 및 시나리오 비교, 성향 테스트 등을 제공합니다. 회원가입 없이 이용하며, 일부 기능은 브라우저의 임시 세션으로 이용 기록을 구분합니다.</p><p>운영자는 점검, 장애, 보안 대응 또는 외부 데이터 제공 상황에 따라 기능을 변경하거나 중단할 수 있습니다. 중요한 변경과 종료는 서비스 내에 안내하며, 긴급한 장애나 보안 조치는 사후 안내할 수 있습니다.</p></> },
-  { id: 'ai', title: '3. AI 답변과 자료의 한계', content: <><p>AI 답변에는 오류나 누락이 있을 수 있으며, 최신 규칙과 실제 게임 상황을 모두 반영하지 못할 수 있습니다. 이용자는 표시된 출처, 기준일, 가정과 미확인 사항을 확인하고 공식 규칙과 비교하여 판단해야 합니다.</p><p>사용률은 승률을 의미하지 않으며, 추천과 점수는 승리나 특정 결과를 보장하지 않습니다. 대회 및 랭크 배틀에서 외부 도구를 사용할 때에는 해당 게임과 대회의 이용 규칙을 따라야 합니다.</p></> },
-  { id: 'conduct', title: '4. 이용자의 준수 사항', content: <><p>이용자는 관련 법령과 타인의 권리를 준수해야 하며 다음 행위를 해서는 안 됩니다.</p><ul><li>타인의 개인정보, 비밀번호, 인증 정보 등 민감한 정보를 입력하거나 도용하는 행위</li><li>보안 취약점을 악용하거나 접근 권한을 우회하는 행위</li><li>과도한 자동 요청, 스팸 등으로 서비스 운영을 방해하는 행위</li><li>불법 콘텐츠를 전송하거나 타인의 저작권을 침해하는 행위</li></ul><p>운영자는 위반 행위에 대해 필요한 범위에서 요청 차단, 이용 제한 또는 콘텐츠 삭제 조치를 할 수 있습니다.</p></> },
-  { id: 'rights', title: '5. 콘텐츠와 지식재산권', content: <><p>이용자가 입력한 콘텐츠의 권리는 해당 이용자에게 있습니다. 운영자는 답변 생성, 대화 저장 등 요청한 기능을 제공하는 데 필요한 범위에서 이를 처리합니다. 개인정보 처리에 관한 사항은 개인정보처리방침에서 안내합니다.</p><p>Pokémon 및 관련 캐릭터, 이미지, 명칭과 외부 자료의 권리는 각 권리자에게 있습니다. 서비스 이용이 외부 자료의 재배포나 상업적 사용 권한을 부여하지 않으며, 각 출처의 라이선스와 이용 조건을 확인해야 합니다.</p></> },
-  { id: 'liability', title: '6. 책임과 분쟁', content: <p>서비스의 정보는 배틀 준비를 위한 참고 자료입니다. 운영자는 서비스의 오류와 장애를 줄이기 위해 노력하며, 책임의 범위는 관련 법령에 따릅니다. 본 약관은 운영자의 고의 또는 중대한 과실에 따른 책임이나 법령상 이용자의 권리를 제한하지 않습니다. 분쟁은 대한민국 법령에 따라 협의하여 해결하며, 해결되지 않는 경우 관할은 관련 법령에 따릅니다.</p> },
-  { id: 'contact', title: '7. 약관 변경과 문의', content: <><p>약관을 변경할 경우 변경 내용과 시행일을 서비스 내에 안내합니다. 서비스 이용과 권리 침해 신고는 <a href="https://github.com/unfl1/pokesettle/issues">GitHub 문의</a>로 접수할 수 있습니다. 공개 게시물에는 개인정보나 세션 식별자를 작성하지 마세요.</p></> },
-];
-
-export default function TermsPage() {
-  return <LegalDocument title="이용약관" summary="PokeSettle 이용에 필요한 기본 원칙과 서비스의 제공 범위를 안내합니다." sections={sections} related={{ href: '/privacy', label: '개인정보처리방침 보기' }} />;
-}
+export function generateMetadata() { return legalMetadata('en', 'terms'); }
+export default function Page() { return <Document locale="en" />; }

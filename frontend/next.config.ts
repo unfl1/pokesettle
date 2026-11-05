@@ -19,6 +19,7 @@ const config: NextConfig = {
           source: path || '/', destination: `/en${path}`,
         })),
         { source: '/pokedex/:slugId', destination: '/en/pokedex/:slugId' },
+        { source: '/pobti/:type', destination: '/en/pobti/:type' },
       ],
       afterFiles: [{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }],
     };
