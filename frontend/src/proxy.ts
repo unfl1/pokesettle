@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(destination, 308);
     }
   }
-  const knownPath = featurePaths.some(feature => (feature || '/') === path) || /^\/pokedex\/[^/]+$/.test(path) || !!pobtiResult;
+  const knownPath = ['/terms', '/privacy'].includes(path) || featurePaths.some(feature => (feature || '/') === path) || /^\/pokedex\/[^/]+$/.test(path) || !!pobtiResult;
   if (prefixed || knownPath) {
     const segments = path.split('/');
     const legacy = path === '/pokedex' && request.nextUrl.searchParams.has('pokemon');

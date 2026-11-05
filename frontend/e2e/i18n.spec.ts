@@ -106,7 +106,7 @@ test('sitemap includes language variants and robots excludes API', async ({ requ
     expect(response.status()).toBe(200);
     const localizedXml = await response.text();
     expect(localizedXml).toContain(`<loc>https://pokesettle.com${languagePath(language.code, '/scenario')}</loc>`);
-    expect(localizedXml.match(/<loc>/g)).toHaveLength(language.code === 'ko' ? 1375 : 1373);
+    expect(localizedXml.match(/<loc>/g)).toHaveLength(1375);
     for (const alternate of languages) {
       expect(localizedXml).toContain(`hreflang="${alternate.html}"`);
     }
