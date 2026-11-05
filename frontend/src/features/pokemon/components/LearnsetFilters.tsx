@@ -1,5 +1,7 @@
 'use client';
 
+import { typeLabels } from '../typeNames';
+import { useSearchParams } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { useI18n } from '../../../i18n/I18nProvider';
 
@@ -11,16 +13,21 @@ export type LearnsetGroup = {
 export default function LearnsetFilters({ groups, methods }: { groups: LearnsetGroup[]; methods: [string, string][] }) {
   const { t } = useI18n();
   const [learnMethod, setLearnMethod] = useState('all');
-  const [learnType, setLearnType] = useState('all');
-  return <div className="mt-4 mb-4 text-[14px]" data-testid="pokemon-learnset">
+  const params = useSearchParams();
+  const [chosenType, setLearnType] = useState<string | null>(null);
+  const requestedType = params.get('moveType');
+  const learnType = chosenType ?? (requestedType && Object.hasOwn(typeLabels, requestedType) ? requestedType : 'all');
+  return <div id="pokemon-learnset" className="scroll-mt-28 mt-4 mb-4 text-[14px]" data-testid="pokemon-learnset">
     <h3 className="font-medium mb-2">{t('배울 수 있는 기술')}</h3>
     <label className="flex items-center gap-2 mb-3 text-[14px] text-muted">{t('타입별 보기')} <select aria-label={t('기술 타입 필터')} value={learnType} onChange={event => setLearnType(event.target.value)} className="rounded-md border border-line bg-canvas px-3 py-2 text-ink">
       <option value="all">{t('전체 타입')}</option>
+      {requestedType && Object.hasOwn(typeLabels, requestedType) && !groups.some(group => group.type === requestedType) && <option value={requestedType}>{t(typeLabels[requestedType])}</option>}
       {groups.map(group => <option key={group.type} value={group.type}>{group.label}</option>)}
     </select></label>
     <div className="flex flex-wrap gap-2 mb-3" aria-label={t('기술 습득 방법 필터')}>
       {[["all", t('전체')], ...methods].map(([method, label]) => <button key={method} type="button" aria-pressed={learnMethod === method} onClick={() => setLearnMethod(method)} className={`rounded-md border px-3 py-2 text-[14px] ${learnMethod === method ? 'border-line bg-canvas text-ink' : 'border-line text-muted'}`}>{label}</button>)}
     </div>
+    {learnType !== 'all' && !groups.some(group => group.type === learnType) && <p className="text-muted" role="status">{t('이 타입의 등록된 기술이 없어요. 다른 포켓몬을 선택해 보세요.')}</p>}
     <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
       {groups.map(group => {
         const moves = group.moves.filter(move => learnMethod === 'all' || move.methods.some(entry => entry.method === learnMethod));

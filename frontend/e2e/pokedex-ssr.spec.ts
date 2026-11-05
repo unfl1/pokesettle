@@ -94,7 +94,7 @@ test('favicon은 16·32·48px 실제 ICO이며 상세 sitemap URL 중복 없음'
   expect([...bytes.subarray(0, 6)]).toEqual([0, 0, 1, 0, 3, 0]);
   const xml = (await Promise.all(['ko', 'en', 'ja', 'zh'].map(async locale => (await request.get(`/sitemap-${locale}.xml`)).text()))).join('');
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]);
-  expect(urls).toHaveLength(5430);
+  expect(urls).toHaveLength(5494);
   expect(urls).toContain('https://pokesettle.com/terms');
   expect(urls).toContain('https://pokesettle.com/privacy');
   expect(new Set(urls).size).toBe(urls.length);
@@ -119,4 +119,15 @@ test('도감과 메타의 데이터 이름·설명이 선택 언어를 따름', 
     await expect(page.getByText(row.move,{exact:true})).toBeVisible();
     await expect(page.locator('main')).not.toContainText('피카츄');
   }
+});
+
+
+test('챗봇 기술 링크의 타입 필터를 적용하고 없는 타입은 다른 기술로 대체하지 않음', async ({ page }) => {
+  await page.goto('/ko/pokedex/pikachu-25?moveType=electric#pokemon-learnset');
+  await expect(page.getByRole('combobox', { name: '기술 타입 필터' })).toHaveValue('electric');
+  await expect(page.getByTestId('pokemon-learnset')).toContainText('10만볼트');
+  await page.goto('/ko/pokedex/pikachu-25?moveType=fire#pokemon-learnset');
+  await expect(page.getByRole('combobox', { name: '기술 타입 필터' })).toHaveValue('fire');
+  await expect(page.getByTestId('pokemon-learnset')).toContainText('이 타입의 등록된 기술이 없어요. 다른 포켓몬을 선택해 보세요.');
+  await expect(page.getByTestId('pokemon-learnset')).not.toContainText('10만볼트');
 });

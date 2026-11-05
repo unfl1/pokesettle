@@ -1,3 +1,4 @@
+import { isPobtiType } from './features/pobti/model';
 import { NextRequest, NextResponse } from 'next/server';
 import routes from './generated/pokemon-routes.json';
 import { idFromSegment, pokemonPath, pokemonSegment } from './features/pokemon/routing';
@@ -10,7 +11,19 @@ export function proxy(request: NextRequest) {
   const prefixed = isLocale(prefix);
   const locale = prefixed ? prefix : defaultLocale;
   const path = withoutLocale(pathname);
-  const knownPath = featurePaths.some(feature => (feature || '/') === path) || /^\/pokedex\/[^/]+$/.test(path);
+  const pobtiResult = /^\/pobti\/([^/]+)$/.exec(path);
+  const legacyType = path === '/pobti' ? request.nextUrl.searchParams.get('type') : null;
+  const type = (pobtiResult?.[1] ?? legacyType)?.toUpperCase();
+  if (type && isPobtiType(type)) {
+    const canonical = localizedPath(locale, `/pobti/${type.toLowerCase()}`);
+    if (pathname !== canonical || request.nextUrl.searchParams.has('type')) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = canonical;
+      destination.searchParams.delete('type');
+      return NextResponse.redirect(destination, 308);
+    }
+  }
+  const knownPath = featurePaths.some(feature => (feature || '/') === path) || /^\/pokedex\/[^/]+$/.test(path) || !!pobtiResult;
   if (prefixed || knownPath) {
     const segments = path.split('/');
     const legacy = path === '/pokedex' && request.nextUrl.searchParams.has('pokemon');

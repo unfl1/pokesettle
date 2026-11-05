@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Copy, RotateCcw, Sparkles } from 'lucide-react';
 import { useI18n } from '../../i18n/I18nProvider';
 import PokemonImage from '../pokemon/components/PokemonImage';
+import { localizedPath, withoutLocale } from '../../i18n/config';
 import { axes, calculateType, isPobtiType, profiles, questions } from './model';
 
 export default function PobtiPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
-  const params = useSearchParams();
-  const sharedType = params.get('type');
+  const pathname = usePathname();
+  const sharedType = withoutLocale(pathname).split('/')[2]?.toUpperCase() ?? null;
   const result = isPobtiType(sharedType) ? sharedType : null;
   const [started, setStarted] = useState(false);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -24,10 +25,7 @@ export default function PobtiPage() {
   }, [step, started, result]);
 
   function navigateResult(type: string | null) {
-    const url = new URL(window.location.href);
-    if (type) url.searchParams.set('type', type);
-    else url.searchParams.delete('type');
-    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+    router.replace(localizedPath(locale, `/pobti${type ? `/${type.toLowerCase()}` : ''}`), { scroll: false });
   }
   function start() {
     interactionStarted.current = true;

@@ -18,7 +18,12 @@ from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
-from backend.app.services.catalog_answers import answer_catalog, catalog_question
+from backend.app.services.catalog_answers import (
+    answer_catalog,
+    catalog_navigation,
+    catalog_question,
+    navigation_result,
+)
 from backend.app.services.chat_scope import check_chat_scope, scope_refusal
 from backend.app.services.topics import mentioned_pokemon
 from backend.app.storage import digest
@@ -204,6 +209,24 @@ class KnowledgeService:
             if feature is None and focus
             else None
         )
+        navigation = (
+            catalog_navigation(self.catalog, focus, request.question)
+            if feature is None and not direct else None
+        )
+        if navigation:
+            target = navigation["catalog_navigation"]["pokemon"]
+            if target:
+                self.store.put("chat_topic", conversation_id, target["pokemon_id"])
+            stage("saving")
+            user_id, assistant_id = self.store.save_exchange(
+                conversation_id, request.question, navigation
+            )
+            return {
+                **navigation,
+                "conversation_id": conversation_id,
+                "user_message_id": user_id,
+                "assistant_message_id": assistant_id,
+            }
         history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
         # Exact catalog requests and server-authored guides have a bounded task.
         # All other requests must pass before mutating topic/battle state or RAG work.
@@ -246,6 +269,9 @@ class KnowledgeService:
         if direct:
             stage("catalog_lookup")
             result = answer_catalog(*direct, regulation_id=request.regulation_id)
+            result["catalog_navigation"] = navigation_result(
+                direct[0], moves="moves" in direct[1]
+            )["catalog_navigation"]
             stage("saving")
             user_id, assistant_id = self.store.save_exchange(
                 conversation_id, request.question, result

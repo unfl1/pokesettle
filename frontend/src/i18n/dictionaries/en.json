@@ -616,5 +616,8 @@
   "채용률은 기술·도구·특성·성격별 통계이며, 하나의 완성된 세트가 아니에요.": "Adoption rates are separate statistics for moves, items, abilities, and natures; they do not form a single complete set.",
   "수집된 한국어 이름이 없는 항목은 원문으로 표시해요.": "Entries without a collected Korean name are shown in the original language.",
   "현재 출전 가능 여부와 세팅의 실전 성능은 별도 확인이 필요해요.": "Current eligibility and the effectiveness of a set in battle require separate verification.",
-  "싱글 메타를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.": "Could not load the singles metagame. Please try again shortly."
+  "싱글 메타를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.": "Could not load the singles metagame. Please try again shortly.",
+  "도감에서 확인하기": "View in the Pokédex",
+  "도감 안내": "Pokédex guide",
+  "이 타입의 등록된 기술이 없어요. 다른 포켓몬을 선택해 보세요.": "No moves of this type are registered here. Try selecting another Pokémon."
 }

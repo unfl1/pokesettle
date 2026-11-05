@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { localizedPath } from '../../../i18n/config';
+import { pokemonPath } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
 import {
   ArrowUpRight,
@@ -105,7 +108,10 @@ export function EvidenceCard({
 }
 
 export function Answer({ result, id }: { result: GroundedResult; id: string }) {
-  const { t: translate } = useI18n();
+  const { locale, t: translate } = useI18n();
+  const navigation = result.catalogNavigation;
+  const catalogPath = navigation?.pokemon ? pokemonPath(navigation.pokemon, locale) : localizedPath(locale, '/pokedex');
+  const catalogHref = `${catalogPath}${navigation?.moveType ? `?moveType=${encodeURIComponent(navigation.moveType)}` : ''}${navigation?.section === 'moves' ? '#pokemon-learnset' : ''}`;
   const citedNumbers = [...new Set([...result.answer.matchAll(/\[근거 (\d+)\]/g)]
     .map(match => Number(match[1])))].filter(number => result.citations.some(c => c.number === number));
   const answerText = result.answer.replace(/\s*\[근거 \d+\]/g, '').trim();
@@ -118,13 +124,13 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
         className="gap-[7px] flex items-center text-ink text-[14px] mb-[11px]"
         data-testid="answer-label"
       >
-        {result.feature === 'pokemon_guide' ? (
+        {result.feature === 'pokemon_guide' || navigation ? (
           <BookOpen size={14} />
         ) : (
           <ShieldCheck size={14} />
         )}
         <span>
-          {result.feature === 'pokemon_guide'
+          {navigation && result.feature === 'catalog_navigation' ? translate('도감 안내') : result.feature === 'pokemon_guide'
             ? translate("근거 기반 운용 가이드")
             : result.feature === 'catalog_reference'
               ? translate("도감 바로 답변")
@@ -134,7 +140,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
           className="px-[5px] py-[3px] border border-line ml-auto text-[14px] text-muted rounded-[4px]"
           data-testid="answer-state"
         >
-          {result.answerStatus === 'abstained'
+          {result.feature === 'catalog_navigation' ? translate('도감 안내') : result.answerStatus === 'abstained'
             ? translate("확인되지 않음")
             : result.answerStatus === 'partial'
               ? translate("일부 확인")
@@ -151,6 +157,7 @@ export function Answer({ result, id }: { result: GroundedResult; id: string }) {
           prefix={id}
         />
       </div>
+      {navigation && <Link href={catalogHref} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-line px-4 py-3 text-link hover:bg-accent-soft"><BookOpen size={16} />{translate('도감에서 확인하기')}<ArrowUpRight size={16} /></Link>}
       {result.assumptions.length > 0 && (
         <div className="text-[14px] text-warning mt-[13px] leading-[1.9]">
           <strong>{translate("가정")}</strong>

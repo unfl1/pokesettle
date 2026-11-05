@@ -46,6 +46,84 @@ def catalog_question(catalog, selected_id, question):
     return pokemon, fields
 
 
+def catalog_navigation(catalog, selected_id, question):
+    """Only complete lookup requests bypass the model gate; mixed tasks stay gated."""
+    ids = mentioned_pokemon(catalog, question)
+    if len(ids) > 1:
+        return None
+    pokemon = catalog.get(ids[0] if ids else selected_id) if ids or selected_id else None
+    text = normalize_pokemon_names(catalog, question).casefold().strip()
+    if ids:
+        for name in (pokemon.name_ko, pokemon.name_en):
+            if name:
+                text = text.replace(name.casefold(), "")
+        if re.fullmatch(
+            r"[\s은는이가]*(?:(?:무슨|어떤)\s*포켓몬(?:이야|인가요|이니|인지|이죠)?|뭐(?:야|예요|에요|지)|누구(?:야|예요)|에\s*대해\s*알려\s*줘)[\s?.!]*",
+            text,
+        ):
+            return navigation_result(pokemon)
+    # No invented move list: link to the registered learnset and its type filter.
+    types = {
+        "노말": "normal",
+        "불꽃": "fire",
+        "물": "water",
+        "전기": "electric",
+        "풀": "grass",
+        "얼음": "ice",
+        "격투": "fighting",
+        "독": "poison",
+        "땅": "ground",
+        "비행": "flying",
+        "에스퍼": "psychic",
+        "벌레": "bug",
+        "바위": "rock",
+        "고스트": "ghost",
+        "드래곤": "dragon",
+        "악": "dark",
+        "강철": "steel",
+        "페어리": "fairy",
+    }
+    match = re.fullmatch(
+        r"[\s은는이가의]*(?P<type>"
+        + "|".join(types)
+        + r")?\s*(?:타입\s*)?기술(?:은|는|이|을|의)?\s*(?:뭐가\s*있어(?:요)?|무엇이\s*있나요|목록(?:을)?\s*(?:알려\s*줘(?:요)?|보여\s*줘(?:요)?)?|알려\s*줘(?:요)?)[\s?.!]*",
+        text,
+    )
+    if match:
+        return navigation_result(pokemon, types.get(match["type"]), moves=True)
+    return None
+
+
+def navigation_result(pokemon=None, move_type=None, *, moves=False):
+    if moves and pokemon is None:
+        answer = "기술은 도감에서 포켓몬을 선택한 뒤 ‘배울 수 있는 기술’과 타입별 필터로 확인할 수 있어요. 포켓몬마다 배울 수 있는 기술이 달라요."
+    elif moves:
+        answer = "이 포켓몬의 도감에서 등록된 기술과 타입별 목록을 확인해 보세요."
+    else:
+        answer = "포켓몬의 기본 정보는 도감에서 확인할 수 있어요. 아래 링크에서 타입·특성·종족값과 설명을 살펴보세요."
+    return {
+        "answer_status": "answered",
+        "answer": answer,
+        "citations": [],
+        "facts": [],
+        "assumptions": [],
+        "unknowns": [],
+        "feature": "catalog_navigation",
+        "answer_path": "catalog_navigation",
+        "catalog_navigation": {
+            "pokemon": {
+                key: value
+                for key, value in pokemon.model_dump().items()
+                if key in {"pokemon_id", "name_ko", "name_en", "names", "slugs"}
+            }
+            if pokemon
+            else None,
+            "move_type": move_type,
+            "section": "moves" if moves else "profile",
+        },
+    }
+
+
 def answer_catalog(pokemon, fields, regulation_id=None):
     if "all" in fields:
         fields = {"types", "stats", "abilities", "description"}

@@ -43,11 +43,11 @@ test('navigation, changing a previous answer, result, reload, and retake work of
     await expect(page.locator('.pobti-progress-label')).toContainText(`${index + 1} / 12`);
     await page.locator('.pobti-options button').last().click();
   }
-  await expect(page).toHaveURL('/ko/pobti?type=INFP');
+  await expect(page).toHaveURL('/ko/pobti/infp');
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '결과 링크 복사' }).click();
   await expect(page.getByRole('region', { name: '포BTI', exact: true }).getByRole('status')).toHaveText('결과 링크를 복사했어요!');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('/ko/pobti?type=INFP');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('/ko/pobti/infp');
   await page.reload();
   await expect(page.getByRole('heading', { name: '뮤', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '다시 하기' }).click();
@@ -60,7 +60,7 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
   test(`${locale}: home entry, shared results, metadata, and responsive navigation`, async ({ page }) => {
     await page.goto(`/${locale}`);
     await page.getByRole('link', { name: new RegExp(title) }).click();
-    await expect(page).toHaveURL(`/${locale}/pobti`);
+    await expect(page).toHaveURL(locale === 'en' ? '/pobti' : `/${locale}/pobti`);
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
     await page.setViewportSize({ width: 1920, height: 1200 });
     await expect(page.locator('.pobti-card')).toBeVisible();
@@ -69,8 +69,9 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
     expect(largeCard!.y).toBeGreaterThan(180);
     expect(Math.abs(largeCard!.y + largeCard!.height / 2 - (workingArea!.y + workingArea!.height / 2))).toBeLessThan(80);
     if (locale === 'ko') await page.screenshot({ path: '/tmp/pobti-large-centered.png', fullPage: true });
-    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com/${locale}/pobti`);
-    await page.goto(`/${locale}/pobti?type=ESTJ`);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://pokesettle.com${locale === 'en' ? '' : `/${locale}`}/pobti`);
+    await page.goto(`${locale === 'en' ? '' : `/${locale}`}/pobti/estj`);
+    await expect(page.locator('head link[rel=canonical]')).toHaveAttribute('href', `https://pokesettle.com${locale === 'en' ? '' : `/${locale}`}/pobti/estj`);
     await expect(page.getByRole('heading', { name: pokemon, exact: true })).toBeVisible();
     for (const width of [1440, 1024, 800, 600, 390, 320]) {
       await page.setViewportSize({ width, height: 844 });
@@ -81,14 +82,14 @@ for (const [locale, title, pokemon] of [['ko', '포BTI', '거북왕'], ['en', 'P
 }
 
 test('invalid and prototype-shaped results stay on the start screen', async ({ page }) => {
-  for (const type of ['invalid', 'constructor', '__proto__', 'estj']) {
+  for (const type of ['invalid', 'constructor', '__proto__']) {
     await page.goto(`/ko/pobti?type=${type}`);
     await expect(page.getByRole('button', { name: '내 포켓몬 찾기' })).toBeVisible();
   }
 });
 
 test('INTP shows a loaded Alakazam artwork with the matching name', async ({ page }) => {
-  await page.goto('/ko/pobti?type=INTP');
+  await page.goto('/ko/pobti/intp');
   const image = page.getByRole('img', { name: '후딘 이미지', exact: true });
   await expect(image).toBeVisible();
   await expect(image).toHaveAttribute('src', /official-artwork%2F65\.png/);
@@ -101,11 +102,34 @@ test('artwork failure falls back to a sprite, then an accessible placeholder', a
     const source = new URL(route.request().url()).searchParams.get('url') ?? '';
     return source.includes('/official-artwork/') ? route.abort() : route.fallback();
   });
-  await page.goto('/ko/pobti?type=INTP');
+  await page.goto('/ko/pobti/intp');
   const image = page.getByRole('img', { name: '후딘 이미지', exact: true });
   await expect(image).toHaveAttribute('src', /pokemon%2F65\.png/);
   await expect.poll(() => image.evaluate(node => (node as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
   await page.route('**/_next/image?**', route => route.abort());
-  await page.goto('/ko/pobti?type=INFP');
+  await page.goto('/ko/pobti/infp');
   await expect(page.getByRole('img', { name: '뮤 이미지 없음', exact: true })).toBeVisible();
+});
+
+
+test('legacy links normalize once, all sixteen results render, and invalid paths return 404', async ({ page, request }) => {
+  for (const path of ['/ko/pobti?type=INTP', '/ko/pobti/INTP', '/en/pobti?type=intp']) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    const destination = new URL(response.headers().location, response.url());
+    expect(destination.pathname).toBe(path.startsWith('/en') ? '/pobti/intp' : '/ko/pobti/intp');
+    expect(destination.search).toBe('');
+    expect((await request.get(destination.pathname, { maxRedirects: 0 })).status()).toBe(200);
+  }
+  for (const [type, profile] of Object.entries(profiles)) {
+    await page.goto(`/ko/pobti/${type.toLowerCase()}`);
+    await expect(page.getByRole('heading', { name: profile.pokemon, exact: true })).toBeVisible();
+  }
+  for (const type of ['invalid', 'constructor', '__proto__']) {
+    expect((await request.get(`/ko/pobti/${type}`)).status()).toBe(404);
+  }
+  await page.goto('/ko/pobti/intp');
+  await page.getByRole('combobox', { name: '언어' }).selectOption('en');
+  await expect(page).toHaveURL('/pobti/intp');
+  await expect(page.getByRole('heading', { name: 'Alakazam', exact: true })).toBeVisible();
 });

@@ -19,6 +19,11 @@ export interface GroundedResult {
   citationNotice: string | null;
   assumptions: { text: string }[];
   unknowns: { field: string; reason: string }[];
+  catalogNavigation?: {
+    pokemon: Pick<import('../pokemon/types').PokemonSummary, 'pokemonId' | 'nameKo' | 'nameEn' | 'names' | 'slugs'> | null;
+    moveType: string | null;
+    section: 'profile' | 'moves';
+  };
   feature?: string;
   guideLimitations?: string[];
   conversationId?: string;
