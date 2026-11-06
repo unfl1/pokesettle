@@ -1,4 +1,4 @@
-"""Conservative, model-free routing for explicit catalog-field questions."""
+"""Conservative, model-free routing from catalog questions to Pokédex links."""
 
 import re
 
@@ -9,12 +9,13 @@ from backend.app.schemas import Generation
 from backend.app.services.topics import mentioned_pokemon
 
 FIELDS = {
+    "defense": r"타입\s*상성|방어\s*상성|약점|저항|면역",
     "types": r"타입|속성|types?",
     "stats": r"종족값|기본\s*능력치|base\s*stats?",
     "abilities": r"특성(?:\s*이름)?|abilities|ability",
-    "moves": r"기술\s*목록|배우는\s*기술|배울\s*수\s*있는\s*기술|moves?",
+    "moves": r"기술\s*목록|배우는\s*기술|배울\s*수\s*있는\s*기술|기술|moves?",
     "description": r"도감\s*설명|도감\s*소개|생태|description",
-    "all": r"기본\s*정보|기본\s*특징|도감\s*정보",
+    "all": r"기본\s*정보|기본\s*특징|도감\s*정보|정보",
 }
 
 
@@ -22,12 +23,15 @@ def catalog_question(catalog, selected_id, question):
     ids = mentioned_pokemon(catalog, question)
     if len(ids) > 1:
         return None
+    if not ids and not selected_id:
+        return None
     pokemon = catalog.get(ids[0] if ids else selected_id)
     text = normalize_pokemon_names(catalog, question).casefold()
     text = re.sub(r"(?:이|선택한)\s*포켓몬|출처와\s*함께|근거와\s*함께", "", text)
     for name in (pokemon.name_ko, pokemon.name_en):
         if name:
             text = re.sub(re.escape(name.casefold()), "", text)
+    text = re.sub(r"^\s*에\s*(?:대한|대해(?:서)?)\s*", "", text)
     fields = {key for key, pattern in FIELDS.items() if re.search(pattern, text, re.I)}
     if not fields:
         return None
@@ -48,17 +52,20 @@ def catalog_question(catalog, selected_id, question):
 
 def catalog_navigation(catalog, selected_id, question):
     """Only complete lookup requests bypass the model gate; mixed tasks stay gated."""
+    direct = catalog_question(catalog, selected_id, question)
+    if direct:
+        return navigation_result(direct[0], moves="moves" in direct[1])
     ids = mentioned_pokemon(catalog, question)
     if len(ids) > 1:
         return None
     pokemon = catalog.get(ids[0] if ids else selected_id) if ids or selected_id else None
     text = normalize_pokemon_names(catalog, question).casefold().strip()
-    if ids:
+    if pokemon:
         for name in (pokemon.name_ko, pokemon.name_en):
             if name:
                 text = text.replace(name.casefold(), "")
         if re.fullmatch(
-            r"[\s은는이가]*(?:(?:무슨|어떤)\s*포켓몬(?:이야|인가요|이니|인지|이죠)?|뭐(?:야|예요|에요|지)|누구(?:야|예요)|에\s*대해\s*알려\s*줘)[\s?.!]*",
+            r"[\s은는이가]*(?:(?:무슨|어떤)\s*포켓몬(?:이야|인가요|이니|인지|이죠)?|뭐(?:야|예요|에요|지)|누구(?:야|예요)|(?:에\s*(?:대해(?:서)?|대한)\s*)?(?:알려\s*(?:줘(?:요)?|주세요)|설명해\s*(?:줘(?:요)?|주세요)))[\s?.!]*",
             text,
         ):
             return navigation_result(pokemon)

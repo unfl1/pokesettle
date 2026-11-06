@@ -57,14 +57,15 @@ def test_direct_catalog_without_model_or_vectors_persists_and_api_accepts(setup,
         )
         assert result.status_code == 202
         data = client.get(result.json()["data"]["statusUrl"]).json()["data"]["result"]
-        assert data["answerPath"] == "catalog_direct"
+        assert data["answerPath"] == "catalog_navigation"
         assert data["catalogNavigation"]["pokemon"]["pokemonId"] == "pokemon:25"
-        assert "전기" in data["answer"] and "static" in data["answer"]
+        assert data["citations"] == []
+        assert data["facts"] == []
         history = client.get(f"/api/conversations/{data['conversationId']}/messages").json()[
             "data"
         ]["items"]
         assert len(history) == 2
-        assert history[-1]["content"]["feature"] == "catalog_reference"
+        assert history[-1]["content"]["feature"] == "catalog_navigation"
         rejected = client.post(
             "/api/chat",
             json={
@@ -84,9 +85,45 @@ def test_missing_local_move_data_is_not_invented():
     assert "현재 로컬 도감" in result["answer"]
 
 
+@pytest.mark.parametrize("question,selected_id,pokemon_id,section", [
+    ("리자몽에 대한 정보 알려줘", None, "pokemon:6", "profile"),
+    ("리자몽에 대한 정보를 알려주세요", None, "pokemon:6", "profile"),
+    ("리자몽에 대해서 알려주세요", None, "pokemon:6", "profile"),
+    ("리자몽 타입 상성 알려줘", None, "pokemon:6", "profile"),
+    ("리자몽 종족값 알려줘", None, "pokemon:6", "profile"),
+    ("리자몽 특성 알려줘", None, "pokemon:6", "profile"),
+    ("리자몽 도감 설명 알려줘", None, "pokemon:6", "profile"),
+    ("리자몽 기술 알려줘", None, "pokemon:6", "moves"),
+    ("이 포켓몬의 타입은?", "pokemon:6", "pokemon:6", "profile"),
+    ("종족값 알려줘", "pokemon:6", "pokemon:6", "profile"),
+    ("리자몽 정보 알려줘", "pokemon:25", "pokemon:6", "profile"),
+])
+def test_catalog_lookup_returns_target_navigation(question, selected_id, pokemon_id, section):
+    from backend.app.services.catalog_answers import catalog_navigation
+
+    result = catalog_navigation(Catalog(ROOT / "data/pokemon.json"), selected_id, question)
+    assert result["answer_path"] == "catalog_navigation"
+    assert result["catalog_navigation"]["pokemon"]["pokemon_id"] == pokemon_id
+    assert result["catalog_navigation"]["section"] == section
+    assert result["facts"] == result["citations"] == []
+
+
 @pytest.mark.parametrize("question,pokemon_id,move_type", [
     ("피카츄는 무슨 포켓몬이야?", "pokemon:25", None),
     ("피카츄는 뭐야?", "pokemon:25", None),
+    ("리자몽에 대한 정보 알려줘", "pokemon:6", None),
+    ("리자몽에 대한 정보를 알려주세요", "pokemon:6", None),
+    ("리자몽에 대해 알려줘", "pokemon:6", None),
+    ("리자몽에 대해서 알려주세요", "pokemon:6", None),
+    ("리자몽 설명해줘", "pokemon:6", None),
+    ("리자몽 정보", "pokemon:6", None),
+    ("리자몽 기본 정보 알려줘", "pokemon:6", None),
+    ("리자몽 타입과 특성 알려줘", "pokemon:6", None),
+    ("리자몽 종족값 알려줘", "pokemon:6", None),
+    ("리자몽 약점 알려줘", "pokemon:6", None),
+    ("리자몽 타입 상성 알려줘", "pokemon:6", None),
+    ("리자몽 도감 설명 알려줘", "pokemon:6", None),
+    ("리자몽 기술 알려줘", "pokemon:6", None),
     ("불꽃기술은 뭐가 있어?", None, "fire"),
     ("피카츄 전기 기술 목록 알려줘", "pokemon:25", "electric"),
 ])
@@ -101,6 +138,7 @@ def test_catalog_navigation_without_model_is_saved(setup, monkeypatch, question,
     navigation = result["catalog_navigation"]
     assert (navigation["pokemon"]["pokemon_id"] if navigation["pokemon"] else None) == pokemon_id
     assert navigation["move_type"] == move_type
+    assert navigation["section"] == ("moves" if "기술" in question else "profile")
     if pokemon_id:
         followup = ChatRequest(question="이 포켓몬의 타입은?", conversation_id=result["conversation_id"], client_request_id=uuid4())
         # A named lookup retains the topic for subsequent questions.
@@ -113,6 +151,11 @@ def test_catalog_navigation_without_model_is_saved(setup, monkeypatch, question,
     "불꽃 기술은 뭐가 있어? 그리고 노래 추천해줘",
     "피카츄 불꽃 기술 추천해줘",
     "피카츄와 갸라도스 중 누가 유리해?",
+    "리자몽에 대한 정보 알려줘 그리고 파이썬 코드 작성해줘",
+    "리자몽 기본 정보와 추천 세트 알려줘",
+    "리자몽 약점을 보완할 팀 추천해줘",
+    "리자몽 특성 활용법 알려줘",
+    "리자몽과 피카츄 정보 알려줘",
 ])
 def test_navigation_does_not_bypass_scope_or_strategy(question):
     from backend.app.services.catalog_answers import catalog_navigation
@@ -128,7 +171,7 @@ def test_navigation_api_works_without_model_and_does_not_consume_ai_quota(setup)
         guard = client.app.state.usage
         lease = guard.begin(["occupied-session", "occupied-ip"])
         try:
-            for question in ["피카츄는 뭐야?", "불꽃기술은 뭐가 있어?", "피카츄는 무슨 포켓몬이야?"]:
+            for question in ["피카츄는 뭐야?", "불꽃기술은 뭐가 있어?", "피카츄는 무슨 포켓몬이야?", "리자몽에 대한 정보 알려줘", "리자몽 종족값 알려줘", "리자몽 기술 알려줘"]:
                 response = client.post("/api/chat", json={"question": question, "clientRequestId": str(uuid4())})
                 assert response.status_code == 202
                 job = client.get(response.json()["data"]["statusUrl"]).json()["data"]

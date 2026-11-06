@@ -1,7 +1,7 @@
 from backend.app.api.responses import ok
 from backend.app.api.validation import check_scope, ensure_ready
 from backend.app.core.usage import request_subjects
-from backend.app.services.catalog_answers import catalog_navigation, catalog_question
+from backend.app.services.catalog_answers import catalog_navigation
 from backend.app.services.jobs import run_job
 
 
@@ -9,10 +9,7 @@ def submit(request, response, background, body, kind, service, settings, session
     store = service.store
     check_scope(body, service, settings)
     focus = service.chat_focus(body, session_id) if kind == "chat" else body.pokemon_id
-    model_free = kind == "chat" and (
-        (focus and catalog_question(service.catalog, focus, body.question))
-        or catalog_navigation(service.catalog, focus, body.question)
-    )
+    model_free = kind == "chat" and catalog_navigation(service.catalog, focus, body.question)
     if not model_free and (kind != "chat" or focus):
         ensure_ready(service, settings)
     if kind in {"chat", "guide"} and body.conversation_id:

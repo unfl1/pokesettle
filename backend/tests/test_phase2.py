@@ -264,6 +264,6 @@ def test_chat_without_selected_pokemon_resolves_named_topics_in_same_conversatio
             assert response.status_code == 202
             result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
             assert result["conversationId"] == cid
-            assert result["answerPath"] == "catalog_direct"
-            assert name in result["answer"]
+            assert result["answerPath"] == "catalog_navigation"
+            assert result["catalogNavigation"]["pokemon"]["nameKo"] == name
         assert client.get(f"/api/conversations/{cid}/messages").json()["data"]["total"] == 4
