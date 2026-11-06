@@ -71,8 +71,8 @@ def test_typo_question_without_selected_id_uses_model_free_catalog(setup, catalo
         assert response.status_code == 202
         job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "completed"
-        assert job["result"]["answerPath"] == "catalog_direct"
-        assert expected in job["result"]["answer"]
+        assert job["result"]["answerPath"] == "catalog_navigation"
+        assert job["result"]["catalogNavigation"]["pokemon"]["nameKo"] == expected
     assert not setup.model.calls
 
 
