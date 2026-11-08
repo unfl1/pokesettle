@@ -277,6 +277,8 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
         def list_origin_request_policies(self, **kwargs):
             return {"OriginRequestPolicyList": {"Items": [{"OriginRequestPolicy": {
                 "Id": "viewer-headers", "OriginRequestPolicyConfig": {"Name": "Managed-AllViewer"},
+            }}, {"OriginRequestPolicy": {
+                "Id": "viewer-and-country", "OriginRequestPolicyConfig": {"Name": "Managed-AllViewerAndCloudFrontHeaders-2022-06"},
             }}]}}
 
         def get_distribution_config(self, **kwargs):
@@ -327,7 +329,8 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
     assert default["ViewerProtocolPolicy"] == "redirect-to-https"
     assert all(item["ViewerProtocolPolicy"] == "redirect-to-https" for item in config.get("CacheBehaviors", {}).get("Items", []))
     assert default["CachePolicyId"] == "no-cache"
-    assert default["OriginRequestPolicyId"] == "viewer-headers"
+    assert default["OriginRequestPolicyId"] == "viewer-and-country"
+    assert all(item["OriginRequestPolicyId"] == "viewer-headers" for item in config.get("CacheBehaviors", {}).get("Items", []))
     assert "ForwardedValues" not in default
     assert "DefaultTTL" not in default
     assert config["Origins"]["Quantity"] == 1

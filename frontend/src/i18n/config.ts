@@ -7,6 +7,8 @@ export const localeRegistry = {
 export type Locale = keyof typeof localeRegistry;
 export const locales = Object.keys(localeRegistry) as Locale[];
 export const defaultLocale: Locale = 'en';
+export const localeCookieName = 'pokesettle_locale';
+export const localeCookieMaxAge = 60 * 60 * 24 * 365;
 export const featurePaths = ['', '/chat', '/pokedex', '/meta', '/scenario', '/pobti'] as const;
 export function isLocale(value: string): value is Locale {
   return Object.hasOwn(localeRegistry, value);
