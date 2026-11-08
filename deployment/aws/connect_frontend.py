@@ -48,6 +48,8 @@ def connect(state_path, token_path):
                     if x["CachePolicy"]["CachePolicyConfig"]["Name"] == "Managed-CachingDisabled")
     request_id = next(x["OriginRequestPolicy"]["Id"] for x in request_policies
                       if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewer")
+    page_request_id = next(x["OriginRequestPolicy"]["Id"] for x in request_policies
+                           if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewerAndCloudFrontHeaders-2022-06")
     behaviors = []
     for pattern in ("/api", "/api/*"):
         behaviors.append({
@@ -66,7 +68,7 @@ def connect(state_path, token_path):
     config["CustomErrorResponses"] = {"Quantity": 0}
     default = config["DefaultCacheBehavior"]
     default.update(TargetOriginId="backend-api", ViewerProtocolPolicy="redirect-to-https", CachePolicyId=cache_id,
-                   OriginRequestPolicyId=request_id,
+                   OriginRequestPolicyId=page_request_id,
                    AllowedMethods={"Quantity": 7,
                                    "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
                                    "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}})

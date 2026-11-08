@@ -1,6 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import { isLocale, localeRegistry, locales, localizedPath, withoutLocale } from '../../i18n/config';
+import { isLocale, localeCookieMaxAge, localeCookieName, localeRegistry, locales, localizedPath, withoutLocale } from '../../i18n/config';
 import { useI18n } from '../../i18n/I18nProvider';
 
 export default function LanguageSwitcher() {
@@ -12,6 +12,7 @@ export default function LanguageSwitcher() {
     <select value={locale} onChange={event => {
       const nextLocale = event.target.value;
       if (!isLocale(nextLocale)) return;
+      document.cookie = `${localeCookieName}=${nextLocale}; Path=/; Max-Age=${localeCookieMaxAge}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
       const query = window.location.search;
       const alternate = withoutLocale(pathname).startsWith('/pokedex/')
         ? document.head.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${localeRegistry[nextLocale].htmlLang}"]`)?.href : null;

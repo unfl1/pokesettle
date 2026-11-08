@@ -26,7 +26,7 @@ def provision(domain, token_path, state_path):
                         if x["CachePolicy"]["CachePolicyConfig"]["Name"] == "Managed-CachingDisabled")
         request_id = next(x["OriginRequestPolicy"]["Id"] for x in
                           cf.list_origin_request_policies(Type="managed")["OriginRequestPolicyList"]["Items"]
-                          if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewer")
+                          if x["OriginRequestPolicy"]["OriginRequestPolicyConfig"]["Name"] == "Managed-AllViewerAndCloudFrontHeaders-2022-06")
         distribution = cf.create_distribution(DistributionConfig={
             "CallerReference": f"poketact-{domain}-{time.time_ns()}",
             "Comment": f"PokeSettle Next.js {domain}", "Enabled": True,
