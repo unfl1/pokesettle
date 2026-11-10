@@ -188,11 +188,11 @@ export default function KantoCollection({ pokemon }: { pokemon: Collectible[] })
   const encounterVisible = useSurpriseEncounter(ready && phase === 'ready' && !complete && !coolingDown);
   const showEncounter = phase === 'ready' ? encounterVisible : !landed;
   return <>
-    <button ref={dexButton} type="button" className={`collection-dexButton focus-visible:[outline:3px_solid_var(--color-accent)] focus-visible:[outline-offset:5px] relative grid place-items-center shrink-0 w-8.5 h-8.5 border-0 rounded-[9px] bg-surface text-accent-strong cursor-pointer hover:bg-[#f1f6ff] ${landed ? "collection-landed animate-effect-dex-receive [@media(prefers-reduced-motion:_reduce)]:animate-none" : ''}`}
+    <button ref={dexButton} type="button" className={`collection-dexButton focus-visible:[outline:3px_solid_var(--color-accent)] focus-visible:[outline-offset:5px] relative grid place-items-center shrink-0 w-8.5 h-8.5 border-0 rounded-[9px] bg-surface text-accent-strong cursor-pointer hover:bg-accent-hover ${landed ? "collection-landed animate-effect-dex-receive [@media(prefers-reduced-motion:_reduce)]:animate-none" : ''}`}
       onClick={openDex} disabled={!ready} aria-haspopup="dialog"
       aria-label={t('나의 관동 도감')} title={t('나의 관동 도감')}>
       <Image className="collection-dexArtwork w-8 h-8 object-contain" src={pokedexEmblem} width={32} height={32} sizes="32px" alt="" />
-      <span className="collection-count absolute right-[-3px] top-[-4px] min-w-3.5 py-0.25 px-0.75 rounded-[8px] text-accent-strong bg-[#e6efff] text-[9px] font-bold leading-[1.3]">{caught.length}</span>
+      <span className="collection-count absolute right-[-3px] top-[-4px] min-w-3.5 py-0.25 px-0.75 rounded-[8px] text-accent-strong bg-accent-soft text-[9px] font-bold leading-[1.3]">{caught.length}</span>
     </button>
     {showEncounter && createPortal(<>
       {phase !== 'ready' && !landed && <div
@@ -213,7 +213,7 @@ export default function KantoCollection({ pokemon }: { pokemon: Collectible[] })
         <button type="button" onClick={() => dialog.current?.close()} aria-label={t('수집 도감 닫기')} className="collection-close focus-visible:[outline:3px_solid_var(--color-accent)] focus-visible:[outline-offset:5px] grid place-items-center shrink-0 [align-self:flex-start] w-9 h-9 border border-line rounded-full bg-surface cursor-pointer"><X size={21} /></button>
       </div>
       <div className="collection-progressLabel flex justify-between text-[12px] [&_strong]:text-accent-strong"><span>{t('만난 포켓몬')}</span><strong>{caught.length} / {kantoCount}</strong></div>
-      <progress className="collection-progress block w-full h-1.5 border-0 rounded-[10px] [margin:10px_0_14px] overflow-hidden bg-[#e9eef8] [&::-webkit-progress-bar]:bg-[#e9eef8] [&::-webkit-progress-value]:bg-accent [&::-webkit-progress-value]:rounded-[10px] [&::-moz-progress-bar]:bg-accent" value={caught.length} max={kantoCount} aria-label={t('도감 수집 진행률')} />
+      <progress className="collection-progress block w-full h-1.5 border-0 rounded-[10px] [margin:10px_0_14px] overflow-hidden bg-accent-soft [&::-webkit-progress-bar]:bg-accent-soft [&::-webkit-progress-value]:bg-accent [&::-webkit-progress-value]:rounded-[10px] [&::-moz-progress-bar]:bg-accent" value={caught.length} max={kantoCount} aria-label={t('도감 수집 진행률')} />
       <p className="collection-storageNote text-left text-muted text-[11px] leading-[1.7] [margin:2px_0]">{t('포획은 10분에 한 번 가능해요. 시간이 지나면 사용 중 몬스터볼이 다시 나타나요.')}</p>
       <p className="collection-storageNote text-left text-muted text-[11px] leading-[1.7] [margin:2px_0]">{t('이 브라우저에만 저장돼요. 사이트 데이터를 지우면 수집 기록도 사라져요.')}</p>
       {storageFailed && <p className="collection-storageWarning text-[#a14526] text-[12px] [margin:10px_0_0]" role="alert">{t('수집 기록을 저장할 수 없어요. 브라우저 저장 공간 설정을 확인해 주세요.')}</p>}
@@ -221,7 +221,7 @@ export default function KantoCollection({ pokemon }: { pokemon: Collectible[] })
       <ol className="collection-grid grid grid-cols-[repeat(5,_minmax(0,_1fr))] gap-2 p-0 [margin:22px_0_0] list-none screen-600:grid-cols-[repeat(3,_minmax(0,_1fr))] screen-600:gap-1.5">
         {dexOpen && pokemon.map(entry => {
           const owned = caught.includes(entry.id);
-          return <li key={entry.id} className={`collection-entry min-w-0 grid justify-items-center [padding:10px_5px_12px] [border:1px_solid_#edf0f5] rounded-[12px] bg-[#f9fafc] [&:not(.collection-owned)_.collection-name]:text-muted ${owned ? "collection-owned [&.collection-owned]:border-[#cbdcff] [&.collection-owned]:bg-[#f4f8ff] [&.collection-owned]:[&_.collection-number]:text-accent-strong" : ''}`}>
+          return <li key={entry.id} className={`collection-entry min-w-0 grid justify-items-center [padding:10px_5px_12px] [border:1px_solid_var(--color-line)] rounded-[12px] bg-canvas [&:not(.collection-owned)_.collection-name]:text-muted ${owned ? "collection-owned [&.collection-owned]:border-accent-soft [&.collection-owned]:bg-accent-hover [&.collection-owned]:[&_.collection-number]:text-accent-strong" : ''}`}>
             <span className="collection-number w-full flex items-center justify-between [padding:0_3px] text-[9px] text-muted tabular-nums">No. {String(entry.id).padStart(3, '0')}{owned && <span aria-label={t('수집 완료')}>✓</span>}</span>
             <div className="collection-sprite grid place-items-center h-20 [&_img]:max-w-full [&_>_span]:max-w-full">{owned ? <Portrait pokemon={entry} /> : <span className="collection-unknown text-[32px] font-[300] text-[#c5ccd8]" aria-hidden="true">?</span>}</div>
             <span className="collection-name text-[11px] wrap-anywhere">{owned ? entry.name : t('미발견')}</span>

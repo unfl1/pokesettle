@@ -1,6 +1,7 @@
 "use client";
 import { useI18n } from '../../i18n/I18nProvider';
 
+import ThemeSwitcher from './ThemeSwitcher';
 import LanguageSwitcher from './LanguageSwitcher';
 import { localizedPath, withoutLocale } from '../../i18n/config';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -29,23 +30,24 @@ export default function WorkspaceHeader({ collection }: { collection?: ReactNode
   const w = useWorkspaceContext();
   const ready = Boolean(w.status.data?.ready);
   return <>
-      <header className="site-header bg-white border-b border-line sticky top-0 z-20">
+      <header className="site-header bg-surface border-b border-line sticky top-0 z-20">
         <div className="header-inner min-h-14 [padding:0_16px] flex items-center gap-6 screen-900:gap-4 screen-780:min-h-auto screen-780:flex-wrap screen-780:gap-0 screen-header:flex-wrap screen-header:gap-0">
           <NavigationLink prefetch={false} href={localizedPath(locale)} className="brand flex items-center gap-[9px] text-[23px] font-extrabold tracking-[-1px] no-underline text-ink screen-780:h-10.5 screen-780:text-[21px] screen-header:h-12" aria-label={translate("PokeSettle 홈")}>
             <Image src="/logo.svg" alt="" width={36} height={36} className="brand-logo block w-9 h-9 shrink-0 object-contain" unoptimized />
             PokeSettle<span className="brand-tag py-0.5 px-1 bg-highlight text-highlight-ink text-[10px] tracking-[.5px] font-semibold rounded-[4px]">BETA</span>
           </NavigationLink>
-          <nav className="primary-nav flex items-stretch gap-2 [align-self:stretch] m-0 [&_a]:flex [&_a]:items-center [&_a]:justify-center [&_a]:gap-2 [&_a]:[padding:0_15px] [&_a]:text-[#6b7280] [&_a]:text-[14px] [&_a]:font-semibold [&_a]:no-underline [&_a]:[border-bottom:3px_solid_transparent] [&_a]:[border-top:3px_solid_transparent] [&_a]:whitespace-nowrap [&_a:hover]:text-accent [&_a:hover]:bg-accent-hover [&_a[aria-current=page]]:[border-bottom-color:var(--color-accent)] [&_a[aria-current=page]]:text-accent [&_a[aria-current=page]]:bg-accent-hover screen-900:gap-1 screen-780:[order:3] screen-780:w-full screen-780:min-w-0 screen-780:overflow-x-auto screen-780:gap-1 screen-780:h-12 screen-780:[&_a]:flex-1 screen-780:[&_a]:[padding:0_6px] screen-780:[&_a]:text-[14px] screen-780:[&_a]:gap-1.5  screen-360:[&_a_svg]:hidden screen-header:[order:3] screen-header:w-full screen-header:h-12 screen-header:[&_a]:flex-1 screen-header:[&_a]:px-2 screen-header:[&_a]:gap-[5px] screen-540:overflow-x-auto screen-540:gap-0 screen-540:[&_a]:[flex:1_0_auto] screen-540:[&_a]:px-2 screen-540:[&_a]:text-[12px] screen-540:[&_a_svg]:hidden" aria-label={translate("주 메뉴")}>
+          <nav className="primary-nav flex items-stretch gap-2 [align-self:stretch] m-0 [&_a]:flex [&_a]:items-center [&_a]:justify-center [&_a]:gap-2 [&_a]:[padding:0_15px] [&_a]:text-muted [&_a]:text-[14px] [&_a]:font-semibold [&_a]:no-underline [&_a]:[border-bottom:3px_solid_transparent] [&_a]:[border-top:3px_solid_transparent] [&_a]:whitespace-nowrap [&_a:hover]:text-accent [&_a:hover]:bg-accent-hover [&_a[aria-current=page]]:[border-bottom-color:var(--color-accent)] [&_a[aria-current=page]]:text-accent [&_a[aria-current=page]]:bg-accent-hover screen-900:gap-1 screen-780:[order:3] screen-780:w-full screen-780:min-w-0 screen-780:overflow-x-auto screen-780:gap-1 screen-780:h-12 screen-780:[&_a]:flex-1 screen-780:[&_a]:[padding:0_6px] screen-780:[&_a]:text-[14px] screen-780:[&_a]:gap-1.5  screen-360:[&_a_svg]:hidden screen-header:[order:3] screen-header:w-full screen-header:h-12 screen-header:[&_a]:flex-1 screen-header:[&_a]:px-2 screen-header:[&_a]:gap-[5px] screen-540:overflow-x-auto screen-540:gap-0 screen-540:[&_a]:[flex:1_0_auto] screen-540:[&_a]:px-2 screen-540:[&_a]:text-[12px] screen-540:[&_a_svg]:hidden" aria-label={translate("주 메뉴")}>
             {navigation.map(({ id, path, label, icon: Icon }) => (
               <NavigationLink key={id} href={localizedPath(locale, id === 'pokedex' ? pokedexLocation : path)} aria-current={view === id ? 'page' : undefined}>
                 <Icon size={17} strokeWidth={1.8} /><span>{translate(label)}</span>
               </NavigationLink>
             ))}
           </nav>
-          <div className="header-actions flex items-center ml-auto screen-780:gap-1">
+          <div className="header-actions flex items-center gap-2 ml-auto screen-780:gap-1">
             {collection}
+            <ThemeSwitcher />
             <LanguageSwitcher />
-            <button className="help-button grid place-items-center p-2 rounded-[8px] text-[#64748b] hover:bg-accent-hover hover:text-accent" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
+            <button className="help-button grid place-items-center p-2 rounded-[8px] text-muted hover:bg-accent-hover hover:text-accent" aria-label={translate("이용 안내")} aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}>
               <CircleHelp size={19} />
             </button>
           </div>

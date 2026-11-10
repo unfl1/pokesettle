@@ -72,11 +72,11 @@ export default function ChatPanel() {
           <h2>{translate("채팅 내역")}</h2>
           <button ref={historyClose} className="chat-history-close hidden p-2 rounded-[6px] screen-780:flex" onClick={closeHistory} aria-label={translate("채팅 내역 닫기")}><X size={18} /></button>
         </div>
-        <button className="chat-new flex items-center gap-2.5 p-3 border border-line rounded-[9px] bg-white text-[14px] hover:border-accent" onClick={() => { w.createNew(); closeHistory(); }}
+        <button className="chat-new flex items-center gap-2.5 p-3 border border-line rounded-[9px] bg-surface text-[14px] hover:border-accent" onClick={() => { w.createNew(); closeHistory(); }}
           disabled={w.busy || !w.session.isSuccess}
           title={translate("빈 전투 상태로 새 대화 시작 · 이전 기록은 보관")}>
           <SquarePen size={17} />{translate("새 채팅")} </button>
-        <nav className="chat-history-list flex-1 min-h-0 overflow-y-auto overscroll-contain py-4 px-1 [scrollbar-width:thin] [&_.chat-history-select]:min-w-0 [&_.chat-history-select]:flex-1 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:gap-2.5 [&_button]:py-3 [&_button]:px-2 [&_button]:rounded-[8px] [&_button]:text-left [&_button]:text-[14px] [&_button_span]:overflow-hidden [&_button_span]:[text-overflow:ellipsis] [&_button_span]:whitespace-nowrap [&_button:hover]:bg-[#eee] [&_button[aria-current='page']]:bg-accent-soft [&_button[aria-current='page']]:text-accent [&_button[aria-current='page']]:font-semibold [&_p]:p-2 [&_p]:text-muted [&_p]:text-[12px] [&_p]:leading-[1.7] [&_.chat-history-delete]:[flex:0_0_36px] [&_.chat-history-delete]:w-9 [&_.chat-history-delete]:h-10 [&_.chat-history-delete]:justify-center [&_.chat-history-delete]:p-0 [&_.chat-history-delete]:text-muted [&_.chat-history-delete:hover]:text-accent [&_.chat-history-delete:hover]:bg-accent-soft" aria-label={translate("대화 기록 선택")}>
+        <nav className="chat-history-list flex-1 min-h-0 overflow-y-auto overscroll-contain py-4 px-1 [scrollbar-width:thin] [&_.chat-history-select]:min-w-0 [&_.chat-history-select]:flex-1 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:gap-2.5 [&_button]:py-3 [&_button]:px-2 [&_button]:rounded-[8px] [&_button]:text-left [&_button]:text-[14px] [&_button_span]:overflow-hidden [&_button_span]:[text-overflow:ellipsis] [&_button_span]:whitespace-nowrap [&_button:hover]:bg-line [&_button[aria-current='page']]:bg-accent-soft [&_button[aria-current='page']]:text-accent [&_button[aria-current='page']]:font-semibold [&_p]:p-2 [&_p]:text-muted [&_p]:text-[12px] [&_p]:leading-[1.7] [&_.chat-history-delete]:[flex:0_0_36px] [&_.chat-history-delete]:w-9 [&_.chat-history-delete]:h-10 [&_.chat-history-delete]:justify-center [&_.chat-history-delete]:p-0 [&_.chat-history-delete]:text-muted [&_.chat-history-delete:hover]:text-accent [&_.chat-history-delete:hover]:bg-accent-soft" aria-label={translate("대화 기록 선택")}>
           {w.conversations.isPending && <p role="status">{translate("채팅 내역을 불러오고 있어요.")}</p>}
           {w.conversations.isSuccess && !w.conversations.data.items.length && <p>{translate("아직 저장된 채팅이 없어요.")}</p>}
           {w.conversations.data?.items.map((conversation) => (
@@ -105,7 +105,7 @@ export default function ChatPanel() {
         <h2 id="chat-delete-title">{translate("정말 삭제하겠습니까?")}</h2>
         <p className="chat-delete-title text-muted">{deleteTarget?.title}</p>
         {w.deleteConversation.error && <p role="alert">{w.deleteConversation.error.message}</p>}
-        <div className="chat-delete-actions flex justify-end gap-2 mt-6 [&_button]:min-w-16 [&_button]:py-2.25 [&_button]:px-4 [&_button]:border [&_button]:border-line [&_button]:rounded-[7px] [&_.chat-delete-confirm]:text-white [&_.chat-delete-confirm]:bg-accent [&_.chat-delete-confirm]:border-accent">
+        <div className="chat-delete-actions flex justify-end gap-2 mt-6 [&_button]:min-w-16 [&_button]:py-2.25 [&_button]:px-4 [&_button]:border [&_button]:border-line [&_button]:rounded-[7px] [&_.chat-delete-confirm]:text-on-accent [&_.chat-delete-confirm]:bg-accent [&_.chat-delete-confirm]:border-accent">
           <button autoFocus disabled={w.deleteConversation.isPending} onClick={() => setDeleteTarget(null)}>{translate("아니오")}</button>
           <button className="chat-delete-confirm" disabled={w.busy} onClick={() => {
             if (deleteTarget) w.deleteConversation.mutate(deleteTarget.conversationId, { onSuccess: () => setDeleteTarget(null) });
@@ -260,7 +260,7 @@ export default function ChatPanel() {
             <CircleHelp size={12} />
              {translate("답변에 사용한 출처와 미확인 정보를 함께 안내해요.")} </span>
           <button
-            className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-white shrink-0"
+            className="grid place-items-center w-8 h-8 rounded-[6px] bg-accent text-on-accent shrink-0"
             type="submit"
             aria-label={translate("질문 보내기")}
             disabled={!w.canSend || !w.draft.trim()}

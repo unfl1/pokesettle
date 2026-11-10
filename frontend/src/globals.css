@@ -4,6 +4,7 @@
   /* Keep existing pixel spacing independent of the 14px root font. */
   --spacing: 4px;
   --color-accent: #0057ff;
+  --color-on-accent: #ffffff;
   --color-accent-strong: #0041cc;
   --color-brand-cyan: #36c5f0;
   --color-brand-navy: #07164d;
@@ -158,3 +159,5 @@
 @custom-variant screen-header (@media (781px <= width <= 1080px));
 
 @plugin "../tailwind-fonts.mjs";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

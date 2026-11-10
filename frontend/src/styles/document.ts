@@ -1,5 +1,11 @@
 // Zero-specificity defaults let each component's Tailwind utilities take precedence.
 export const documentClasses = [
+  '[color-scheme:light] dark:[color-scheme:dark]',
+  'dark:[--color-surface:#172033] dark:[--color-canvas:#111827] dark:[--color-workspace:#0d1422]',
+  'dark:[--color-ink:#e6edf7] dark:[--color-muted:#a5b4ca] dark:[--color-line:#35425a]',
+  'dark:[--color-accent:#8ab4ff] dark:[--color-accent-strong:#a8c7ff] dark:[--color-on-accent:#07164d]',
+  'dark:[--color-accent-soft:#263b60] dark:[--color-accent-hover:#202f49]',
+  'dark:[--color-highlight:#66551f] dark:[--color-highlight-ink:#ffe49a]',
   'font-sans text-ink bg-surface text-[16px] [scrollbar-gutter:stable]',
   'not-supports-[scrollbar-gutter:stable]:overflow-y-scroll',
   '[&:has([data-testid=chat-page])]:overflow-hidden',
