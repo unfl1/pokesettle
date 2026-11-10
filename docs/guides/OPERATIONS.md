@@ -281,6 +281,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, `/analytics/config`의 no-store 응답으로 클라이언트에서 조회, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성, 페이지 정적 생성 유지
 - 폰트: Pretendard 1.3.9 자체 호스팅, 공통 글리프 `next/font/local`·나머지 91개 Unicode 서브셋 필요 시 로드
+- 폰트 캐시: `/fonts/pretendard/1.3.9/`에 `public, max-age=31536000, immutable` 적용함. 기존 `/fonts/pretendard/<파일>`은 1.3.9 파일로 내부 연결하여 이전 CSS 호환 유지함. 업그레이드 시 새 버전 디렉터리·캐시 규칙·참조 경로 추가, 기존 버전 파일 덮어쓰기·삭제 금지함
 
 ### 서비스 이름과 운영 도메인
 

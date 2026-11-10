@@ -191,8 +191,8 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 - Pretendard Variable 1.3.9, 수집·확인일 2026-10-26, [공식 저장소](https://github.com/orioncactus/pretendard/tree/v1.3.9)
 - [공식 동적 서브셋 CSS](https://github.com/orioncactus/pretendard/blob/v1.3.9/packages/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css)의 Unicode 범위와 WOFF2 92개 사용
-- 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/LICENSE.txt` 유지
-- 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `pretendard-subsets.css`의 나머지 범위, 바이너리 수정 없음
+- 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/1.3.9/LICENSE.txt` 유지
+- 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `frontend/tailwind-fonts.mjs`·`frontend/src/styles/pretendard-subsets.json`의 나머지 범위, 바이너리 수정 없음
 - 공식 API 근거: [Next Font](https://nextjs.org/docs/app/api-reference/components/font), [Next Image](https://nextjs.org/docs/app/api-reference/components/image), [Google Analytics](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
 
 
