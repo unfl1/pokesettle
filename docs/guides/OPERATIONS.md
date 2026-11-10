@@ -275,6 +275,8 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
 - 내부 링크: 기능 메뉴의 사전 조회·클릭 대기 표시 유지, 홈 카드·브랜드는 사전 조회 없이 클라이언트 이동, 도감·메타는 RSC 이동에서 로딩 안내·스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
 - 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
+- 개인 SSR: 챗봇·시나리오 직접 접속 시 기존 `pokecoach_session`으로 대화 목록·최신 대화 메시지 또는 저장 팀을 서버 조회하고 React Query로 하이드레이션함. 개인 GET은 `no-store`, 페이지 응답은 `private, no-store`, 요청별 QueryClient 사용함
+- 세션 없는 방문·만료·초기 조회 실패는 브라우저의 세션 생성·조회·오류 처리 경로로 복구함. 서버 렌더링에서 세션 생성·쿠키 갱신 없음. 최초 데이터 유지 시간은 상태 15초·대화/메시지/팀 30초, 이후 폴링·변경 무효화 유지함
 - `PUBLIC_DATA_CACHE_SECONDS=0`: 공개 SSR 캐시 비활성화 옵션, 상태를 변경하는 E2E fixture의 검사 간 격리에 사용, 운영 기본값은 60초
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, `/analytics/config`의 no-store 응답으로 클라이언트에서 조회, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성, 페이지 정적 생성 유지

@@ -7,6 +7,7 @@ import { siteUrl } from '../../i18n/metadata';
 import RuntimeAnalytics from '../../components/layout/RuntimeAnalytics';
 import { pretendard } from '../fonts';
 import { AppProviders } from '../../providers/AppProviders';
+import { getWorkspaceState } from '../../lib/workspace.server';
 import { documentClasses } from '../../styles/document';
 import '../../globals.css';
 
@@ -19,10 +20,11 @@ export default async function RootLayout({ children, params }: LayoutProps<'/[la
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dictionary = await getDictionary(lang);
+  const workspaceState = await getWorkspaceState();
   return (
     <html lang={localeRegistry[lang].htmlLang} className={`${pretendard.variable} ${documentClasses}`}>
       <body className="m-0 min-w-80">
-        <I18nProvider locale={lang} dictionary={dictionary}><AppProviders>{children}</AppProviders></I18nProvider>
+        <I18nProvider locale={lang} dictionary={dictionary}><AppProviders state={workspaceState}>{children}</AppProviders></I18nProvider>
         <RuntimeAnalytics />
       </body>
     </html>
