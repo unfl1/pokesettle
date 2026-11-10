@@ -7,6 +7,16 @@ import { defaultLocale, featurePaths, isLocale, localeCookieMaxAge, localeCookie
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Overwrite viewer input: the server uses this only to select initial queries.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pokesettle-path', withoutLocale(pathname));
+  const next = () => {
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    if (['/chat', '/scenario'].includes(withoutLocale(pathname))) {
+      response.headers.set('Cache-Control', 'private, no-store');
+    }
+    return response;
+  };
   // Only the home entry point negotiates language; shared and indexed URLs stay stable.
   if (pathname === '/' && ['GET', 'HEAD'].includes(request.method)) {
     const preference = request.cookies.get(localeCookieName)?.value;
@@ -16,7 +26,7 @@ export function proxy(request: NextRequest) {
     const destination = request.nextUrl.clone();
     destination.pathname = localizedPath(initialLocale);
     const response = initialLocale === defaultLocale
-      ? NextResponse.next()
+      ? next()
       : NextResponse.redirect(destination, 307);
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('Vary', 'CloudFront-Viewer-Country, Cookie');
@@ -60,7 +70,7 @@ export function proxy(request: NextRequest) {
         return NextResponse.redirect(destination, 308);
       }
     }
-    if (!knownPath) return NextResponse.next();
+    if (!knownPath) return next();
     if (prefix === defaultLocale) {
       const destination = request.nextUrl.clone();
       destination.pathname = path;
@@ -75,9 +85,9 @@ export function proxy(request: NextRequest) {
       }
       return response;
     }
-    return NextResponse.next();
+    return next();
   }
-  return NextResponse.next();
+  return next();
 }
 export const config = {
   matcher: ['/((?!api(?:/|$)|_next(?:/|$)|images(?:/|$)|fonts(?:/|$)|.*\\..*).*)'],

@@ -116,6 +116,7 @@ export default function TeamWorkspace() {
   const teams = useQuery({
     queryKey: ['saved-teams'],
     queryFn: battleApi.teams,
+    staleTime: 30000,
     enabled: sessionReady,
   });
   const details = useQueries({

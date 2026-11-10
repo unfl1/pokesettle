@@ -52,11 +52,13 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
     queryKey: ['status'],
     enabled: sessionEnabled,
     queryFn: systemApi.status,
+    staleTime: 15000,
     refetchInterval: sessionEnabled ? 15000 : false,
   });
   const conversations = useQuery({
     queryKey: ['conversations', pokemonId],
     queryFn: () => chatApi.conversations(pokemonId),
+    staleTime: 30000,
     enabled: chatEnabled && session.isSuccess,
   });
   const [choices, setChoices] = useState<Record<string, string | null>>({});
@@ -75,6 +77,7 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
   const messages = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => chatApi.messages(conversationId!),
+    staleTime: 30000,
     enabled: chatEnabled && session.isSuccess && Boolean(conversationId),
   });
   useEffect(() => {

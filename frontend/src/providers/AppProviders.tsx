@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { withoutLocale } from '../i18n/config';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HydrationBoundary, QueryClient, QueryClientProvider, type DehydratedState } from '@tanstack/react-query';
 import { useTeamDraft } from '../features/team/hooks/useTeamDraft';
 import { useWorkspace } from '../features/chat/hooks/useWorkspace';
 import { saveNavigationDraft, takeNavigationDraft } from '../lib/navigationDraft';
@@ -53,9 +53,9 @@ export function useWorkspaceContext() {
   if (!workspace) throw new Error('WorkspaceProvider is required');
   return workspace;
 }
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({ children, state }: { children: ReactNode; state?: DehydratedState }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
   }));
-  return <QueryClientProvider client={queryClient}><WorkspaceProvider>{children}</WorkspaceProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><HydrationBoundary state={state}><WorkspaceProvider>{children}</WorkspaceProvider></HydrationBoundary></QueryClientProvider>;
 }

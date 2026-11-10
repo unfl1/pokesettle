@@ -10,6 +10,7 @@ let failedIds = [];
 let delayMs = 0;
 let metaAgeHours = 0;
 let metaData = null;
+let workspaceSessions = {};
 const calls = {};
 const summary = id => ({ ...byId.get(id), pokemonId: id, speciesId: Number(id.split(':')[1]), nameKo: byId.get(id)?.names.ko ?? null, nameEn: byId.get(id)?.names.en ?? id, types: id === 'pokemon:1' ? ['grass','poison'] : ['electric'], scope: 'generic', championsEligibilityStatus: 'unknown' });
 function detail(id) {
@@ -24,6 +25,7 @@ const server = http.createServer(async (req,res) => {
   if (url.pathname === '/__fixture' && req.method === 'POST') {
     let body=''; for await (const chunk of req) body+=chunk;
     const config=JSON.parse(body);ready=!!config.ready;images=!!config.images;failedIds=config.failedIds??[];delayMs=config.delayMs??0;metaAgeHours=config.metaAgeHours??0;metaData=config.metaData??null;
+    workspaceSessions = config.workspaceSessions ?? {};
     for (const key of Object.keys(calls)) delete calls[key];
     return send({ready});
   }
@@ -33,7 +35,14 @@ const server = http.createServer(async (req,res) => {
   }
   if (url.pathname === '/api/status') return send({ready:true,metadataCount:1351,missing:[]});
   if (url.pathname === '/api/session') return send({active:true});
-  if (url.pathname === '/api/conversations') return send({items:[],total:0});
+  const session = /(?:^|;\s*)pokecoach_session=([^;]+)/.exec(req.headers.cookie ?? '')?.[1];
+  const workspace = workspaceSessions[session];
+  if (url.pathname === '/api/conversations' || url.pathname === '/api/teams' || /^\/api\/conversations\/[^/]+\/messages$/.test(url.pathname)) {
+    if (session && !workspace) return send(null, 401);
+    const items = url.pathname === '/api/teams' ? workspace?.teams ?? [] : url.pathname.endsWith('/messages') ? workspace?.messages ?? [] : workspace?.conversations ?? [];
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    return send({items:items.slice(offset, offset + 100),total:items.length,limit:100,offset});
+  }
   if (url.pathname === '/health') return send({ready:true});
   if (url.pathname === '/api/pokemon') return ready ? send({items:['pokemon:25','pokemon:1'].map(summary),total:2,limit:100,offset:0}) : send(null,503);
   if (url.pathname.startsWith('/api/pokemon/')) {
