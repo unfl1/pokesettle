@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Image from 'next/image';
+import pokedexEmblem from '../../../public/images/collection/kanto-pokedex-emblem.webp';
 import { useI18n } from '../../i18n/I18nProvider';
 import PokemonImage from '../pokemon/components/PokemonImage';
 import { catchCooldownMs, collectionKey, cooldownKey, kantoCount, parseCollection, parseNextCatchAt, pickUncaught } from './storage';
@@ -190,7 +191,7 @@ export default function KantoCollection({ pokemon }: { pokemon: Collectible[] })
     <button ref={dexButton} type="button" className={`collection-dexButton focus-visible:[outline:3px_solid_var(--color-accent)] focus-visible:[outline-offset:5px] relative grid place-items-center shrink-0 w-8.5 h-8.5 border-0 rounded-[9px] bg-surface text-accent-strong cursor-pointer hover:bg-[#f1f6ff] ${landed ? "collection-landed animate-effect-dex-receive [@media(prefers-reduced-motion:_reduce)]:animate-none" : ''}`}
       onClick={openDex} disabled={!ready} aria-haspopup="dialog"
       aria-label={t('나의 관동 도감')} title={t('나의 관동 도감')}>
-      <Image className="collection-dexArtwork w-8 h-8 object-contain" src="/images/collection/kanto-pokedex-emblem.png" width={32} height={32} sizes="32px" alt="" />
+      <Image className="collection-dexArtwork w-8 h-8 object-contain" src={pokedexEmblem} width={32} height={32} sizes="32px" alt="" />
       <span className="collection-count absolute right-[-3px] top-[-4px] min-w-3.5 py-0.25 px-0.75 rounded-[8px] text-accent-strong bg-[#e6efff] text-[9px] font-bold leading-[1.3]">{caught.length}</span>
     </button>
     {showEncounter && createPortal(<>
