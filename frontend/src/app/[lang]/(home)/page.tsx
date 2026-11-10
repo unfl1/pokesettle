@@ -1,4 +1,5 @@
 import { localizedPath } from '../../../i18n/config';
+import ThemeSwitcher from '../../../components/layout/ThemeSwitcher';
 import LanguageSwitcher from '../../../components/layout/LanguageSwitcher';
 import LegalLinks from '../../../components/legal/LegalLinks';
 import NavigationLink from '../../../components/layout/NavigationLink';
@@ -17,7 +18,7 @@ const homeMenuColors: Record<string, string> = {
   "yellow": "home-menu-yellow [&.home-menu-yellow]:[--home-tone:var(--color-highlight-ink)] [&.home-menu-yellow]:[--home-fill:color-mix(in_srgb,_var(--color-highlight)_20%,_var(--color-surface))]",
   "green": "home-menu-green [--tail-direction:-1] [--home-tone:#43ad86]",
   "blue": "home-menu-blue [--tail-direction:-1] [--home-tone:var(--color-accent-strong)]",
-  "purple": "home-menu-purple [&.home-menu-purple]:[--tail-direction:-1] [&.home-menu-purple]:[--home-tone:#8456bc] [&.home-menu-purple]:[--home-fill:#f3edfc]"
+  "purple": "home-menu-purple [&.home-menu-purple]:[--tail-direction:-1] [&.home-menu-purple]:[--home-tone:#8456bc] [&.home-menu-purple]:[--home-fill:color-mix(in_srgb,_#8456bc_9%,_var(--color-surface))]"
 };
 
 const menus = [
@@ -32,7 +33,7 @@ export default async function Home() {
   const { locale, t: translate } = await getI18n();
   const homeTitle = translate('배틀 준비는 PokeSettle에서');
   return <div className="home-shell bg-surface min-h-[100dvh] flex flex-col">
-    <div className="home-language flex justify-end [padding:12px_20px_0]"><LanguageSwitcher /></div>
+    <div className="home-language flex items-center justify-end gap-2 [padding:12px_20px_0]"><ThemeSwitcher /><LanguageSwitcher /></div>
     <main id="main-content" tabIndex={-1} className="home-page [width:min(100%,_1400px)] flex-1 [margin:0_auto] py-12 px-8 grid grid-cols-[minmax(0,_1fr)_minmax(0,_3fr)_minmax(0,_1fr)] items-center justify-center gap-6 screen-900:[width:min(100%,_810px)] screen-900:grid-cols-[repeat(2,_minmax(0,_1fr))] screen-900:[align-content:center] screen-900:[gap:20px_24px] screen-600:py-8 screen-600:px-5">
       <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:[grid-row:1] screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-left [grid-column:1] screen-900:[justify-self:end]" aria-hidden="true">
         <Image src={maleTrainer} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />

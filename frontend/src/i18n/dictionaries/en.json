@@ -689,5 +689,9 @@
   "스피드 역순 행동": "Reverse Speed order",
   "교체 시 바위 피해": "Rock damage on entry",
   "교체 시 스피드 -1": "Speed -1 on entry",
-  "기타 효과": "Other effect"
+  "기타 효과": "Other effect",
+  "화면 모드": "Appearance",
+  "라이트 모드": "Light mode",
+  "다크 모드": "Dark mode",
+  "화면 모드를 저장할 수 없어요. 이번 페이지에서만 적용돼요.": "Your appearance preference could not be saved. It applies only to this page."
 }

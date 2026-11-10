@@ -316,7 +316,7 @@ export default function TeamWorkspace() {
           <p className="mb-4 text-[14px] text-muted">{own.length === 6 && opponent.length === 6 ? translate("준비 완료! 선출 추천을 눌러 조합을 확인하세요.") : translate("선출 추천까지 내 팀 {own}마리, 상대 팀 {opponent}마리를 더 추가하세요.", { own: 6 - own.length, opponent: 6 - opponent.length })}</p>
           <div className="flex flex-wrap gap-2">
             <button
-              className={`${action} bg-accent text-white disabled:opacity-40`}
+              className={`${action} bg-accent text-on-accent disabled:opacity-40`}
               disabled={
                 !valid ||
                 own.length !== 6 ||
