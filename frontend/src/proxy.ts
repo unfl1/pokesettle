@@ -17,19 +17,10 @@ export function proxy(request: NextRequest) {
     }
     return response;
   };
-  // Only the home entry point negotiates language; shared and indexed URLs stay stable.
+  // CloudFront handles home language negotiation before the request reaches Next.js.
   if (pathname === '/' && ['GET', 'HEAD'].includes(request.method)) {
-    const preference = request.cookies.get(localeCookieName)?.value;
-    const initialLocale = preference && isLocale(preference)
-      ? preference
-      : request.headers.get('cloudfront-viewer-country') === 'KR' ? 'ko' : defaultLocale;
-    const destination = request.nextUrl.clone();
-    destination.pathname = localizedPath(initialLocale);
-    const response = initialLocale === defaultLocale
-      ? next()
-      : NextResponse.redirect(destination, 307);
+    const response = next();
     response.headers.set('Cache-Control', 'private, no-store');
-    response.headers.set('Vary', 'CloudFront-Viewer-Country, Cookie');
     return response;
   }
   const prefix = pathname.split('/')[1];

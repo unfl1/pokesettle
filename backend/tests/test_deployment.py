@@ -312,6 +312,7 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
     module_name = f"deployment.aws.{operation}_frontend"
     sys.modules.pop(module_name, None)
     module = importlib.import_module(module_name)
+    monkeypatch.setattr(module, "publish_locale_function", lambda cf: "arn:locale-function")
     state = tmp_path / "state.json"
     token = tmp_path / "token"
     token.write_text("a" * 64)
@@ -335,6 +336,28 @@ def test_next_cloudfront_preserves_rsc_headers_and_removes_spa_cache(tmp_path, m
     assert "DefaultTTL" not in default
     assert config["Origins"]["Quantity"] == 1
     assert config["Origins"]["Items"][0]["CustomOriginConfig"]["OriginProtocolPolicy"] == "https-only"
-    assert default.get("FunctionAssociations", {}).get("Quantity", 0) == 0
+    assert default["FunctionAssociations"] == {"Quantity": 1, "Items": [{
+        "EventType": "viewer-request", "FunctionARN": "arn:locale-function",
+    }]}
+    assert all(item.get("FunctionAssociations", {}).get("Quantity", 0) == 0
+               for item in config.get("CacheBehaviors", {}).get("Items", []))
     assert config.get("CustomErrorResponses", {}).get("Quantity", 0) == 0
     assert all(item["PathPattern"].startswith("/api") for item in config.get("CacheBehaviors", {}).get("Items", []))
+
+
+def test_locale_function_preserves_viewer_response_and_rejects_request_conflicts():
+    from deployment.aws.locale_redirect import associate_locale_function
+
+    response_function = {"EventType": "viewer-response", "FunctionARN": "arn:response"}
+    default = {"FunctionAssociations": {"Quantity": 1, "Items": [response_function]}}
+    associate_locale_function(default, "arn:locale")
+    associate_locale_function(default, "arn:locale")
+    assert default["FunctionAssociations"] == {"Quantity": 2, "Items": [
+        response_function, {"EventType": "viewer-request", "FunctionARN": "arn:locale"},
+    ]}
+    with pytest.raises(ValueError, match="different viewer-request"):
+        associate_locale_function(default, "arn:other")
+    with pytest.raises(ValueError, match="Lambda@Edge"):
+        associate_locale_function({"LambdaFunctionAssociations": {"Quantity": 1, "Items": [
+            {"EventType": "viewer-request", "LambdaFunctionARN": "arn:lambda"},
+        ]}}, "arn:locale")

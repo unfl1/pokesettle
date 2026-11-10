@@ -7,6 +7,11 @@ from pathlib import Path
 
 import boto3
 
+if __package__:
+    from .locale_redirect import associate_locale_function, publish_locale_function
+else:
+    from locale_redirect import associate_locale_function, publish_locale_function
+
 
 def connect(state_path, token_path):
     if not token_path:
@@ -29,7 +34,6 @@ def connect(state_path, token_path):
         "ACMCertificateArn": state["certificate_arn"], "SSLSupportMethod": "sni-only",
         "MinimumProtocolVersion": "TLSv1.2_2021",
     }
-    config["DefaultCacheBehavior"]["FunctionAssociations"] = {"Quantity": 0}
     token = token_path.read_text().strip()
     if not re.fullmatch(r"[a-f0-9]{64}", token):
         raise ValueError("Expected a private 64-character hexadecimal origin token")
@@ -67,6 +71,7 @@ def connect(state_path, token_path):
     config["DefaultRootObject"] = ""
     config["CustomErrorResponses"] = {"Quantity": 0}
     default = config["DefaultCacheBehavior"]
+    associate_locale_function(default, publish_locale_function(cf))
     default.update(TargetOriginId="backend-api", ViewerProtocolPolicy="redirect-to-https", CachePolicyId=cache_id,
                    OriginRequestPolicyId=page_request_id,
                    AllowedMethods={"Quantity": 7,
