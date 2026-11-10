@@ -7,7 +7,7 @@ export default function PokemonDataNotes({ pokemon, locale, dictionary, descript
   pokemon: PokemonDetail; locale: Locale; dictionary: Dictionary; descriptionVersion?: string;
 }) {
   const t = createTranslator(dictionary);
-  return <aside className="page-data-notes mt-7 pt-4 border-t border-line text-muted text-[12px] leading-[1.8] min-w-0 [&_a]:text-muted [&_a]:underline [&_a]:underline-offset-[3px] [&_a_>_svg]:inline-block [&_a_>_svg]:align-middle pokedex-data-notes [grid-column:2] [align-self:end] screen-780:[grid-column:1]" aria-label={t('출처 및 이용 안내')}>
+  return <aside className="page-data-notes mt-7 pt-4 border-t border-line text-muted text-[12px] leading-[1.8] min-w-0 [&_a]:text-muted [&_a]:underline [&_a]:underline-offset-[3px] [&_a_>_svg]:inline-block [&_a_>_svg]:align-middle pokedex-data-notes col-start-2 [align-self:end] max-tablet:col-start-1" aria-label={t('출처 및 이용 안내')}>
     <ul className="page-data-explanations grid gap-1.5 m-0 pl-4 list-disc [&_>_li]:min-w-0 [&_>_li]:wrap-anywhere [&_+_.page-data-row]:mt-3">
       <li>{t('Champions 적격성 미확인')}</li>
       <li>{t('포켓몬 내 최댓값 기준 · 실전 능력치와 다름')}</li>

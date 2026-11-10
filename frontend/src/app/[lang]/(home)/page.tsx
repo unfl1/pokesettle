@@ -34,18 +34,18 @@ export default async function Home() {
   const homeTitle = translate('배틀 준비는 PokeSettle에서');
   return <div className="home-shell bg-surface min-h-[100dvh] flex flex-col">
     <div className="home-language flex items-center justify-end gap-2 [padding:12px_20px_0]"><ThemeSwitcher /><LanguageSwitcher /></div>
-    <main id="main-content" tabIndex={-1} className="home-page [width:min(100%,_1400px)] flex-1 [margin:0_auto] py-12 px-8 grid grid-cols-[minmax(0,_1fr)_minmax(0,_3fr)_minmax(0,_1fr)] items-center justify-center gap-6 screen-900:[width:min(100%,_810px)] screen-900:grid-cols-[repeat(2,_minmax(0,_1fr))] screen-900:[align-content:center] screen-900:[gap:20px_24px] screen-600:py-8 screen-600:px-5">
-      <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:[grid-row:1] screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-left [grid-column:1] screen-900:[justify-self:end]" aria-hidden="true">
+    <main id="main-content" tabIndex={-1} className="home-page [width:min(100%,_1400px)] flex-1 mx-auto py-12 px-8 grid grid-cols-[minmax(0,_1fr)_minmax(0,_3fr)_minmax(0,_1fr)] items-center justify-center gap-6 screen-900:[width:min(100%,_810px)] screen-900:grid-cols-[repeat(2,_minmax(0,_1fr))] screen-900:content-center screen-900:[gap:20px_24px] screen-600:py-8 screen-600:px-5">
+      <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:row-start-1 screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-left col-start-1 screen-900:justify-self-end" aria-hidden="true">
         <Image src={maleTrainer} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
       </div>
-      <div className="home-content w-full max-w-186.5 min-w-0 [margin:0_auto] screen-900:[grid-column:1_/_-1] screen-900:[grid-row:2]">
+      <div className="home-content w-full max-w-186.5 min-w-0 mx-auto screen-900:col-span-full screen-900:row-start-2">
         <header className="home-intro text-center mb-7.5 [&_h1]:mb-0 [&_h1]:text-[32px] [&_h1]:font-[750] [&_h1]:leading-[1.4] [&_h1]:tracking-[-1.4px] [&_h1]:[transform:translateY(-16px)] screen-600:[&_h1]:text-[26px]">
           <h1 aria-label={homeTitle}>
             <span className="home-title-typing inline-block min-h-[1.4em]" aria-hidden="true">
               {Array.from(homeTitle).map((character, index) => (
-                <span key={index} className={`home-title-character inline-block w-0 overflow-hidden align-bottom whitespace-pre invisible animate-effect-home-title-reveal [@media(prefers-reduced-motion:_reduce)]:w-auto [@media(prefers-reduced-motion:_reduce)]:overflow-visible [@media(prefers-reduced-motion:_reduce)]:visible [@media(prefers-reduced-motion:_reduce)]:animate-none ${titleDelays[index] ?? titleDelays[titleDelays.length - 1]}`}>{character}</span>
+                <span key={index} className={`home-title-character inline-block w-0 overflow-hidden align-bottom whitespace-pre invisible animate-effect-home-title-reveal motion-reduce:w-auto motion-reduce:overflow-visible motion-reduce:visible motion-reduce:animate-none ${titleDelays[index] ?? titleDelays[titleDelays.length - 1]}`}>{character}</span>
               ))}
-              <span className="home-title-cursor inline-block ml-[.18em] font-normal animate-effect-home-title-blink [@media(prefers-reduced-motion:_reduce)]:animate-none">|</span>
+              <span className="home-title-cursor inline-block ml-[.18em] font-normal animate-effect-home-title-blink motion-reduce:animate-none">|</span>
             </span>
           </h1>
         </header>
@@ -63,7 +63,7 @@ export default async function Home() {
           ))}
         </nav>
       </div>
-      <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:[grid-row:1] screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-right [grid-column:3] screen-900:[grid-column:2] screen-900:[justify-self:start]" aria-hidden="true">
+      <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:row-start-1 screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-right col-start-3 screen-900:col-start-2 screen-900:justify-self-start" aria-hidden="true">
         <Image src={femaleTrainer} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
       </div>
     </main>

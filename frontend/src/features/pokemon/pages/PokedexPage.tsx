@@ -72,8 +72,8 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
 
 
   return (<>
-    <section className="page-intro [margin:24px_0_20px] p-6 border border-line rounded-[12px] bg-surface [&_h1]:text-[30px] [&_h1]:font-[750] [&_h1]:tracking-[-1.1px] [&_h1]:[margin:0_0_9px] [&_h1]:leading-[1.4] [&_h1]:text-ink [&_h2]:text-[30px] [&_h2]:font-[750] [&_h2]:tracking-[-1.1px] [&_h2]:[margin:0_0_9px] [&_h2]:leading-[1.4] [&_h2]:text-ink [&_p]:text-muted [&_p]:text-[14px] [&_p]:leading-[1.8] screen-780:[&_h1]:text-[26px] screen-780:[&_h2]:text-[26px] screen-540:mt-4 screen-540:py-5 screen-540:px-4 screen-540:[&_h1]:text-[24px] screen-540:[&_h1]:tracking-[-.9px] screen-540:[&_h2]:text-[24px] screen-540:[&_h2]:tracking-[-.9px] screen-540:[&_p]:text-[14px]"><Heading>{translate('도감')}</Heading><p>{translate('포켓몬의 타입·특성·종족값과 기술을 확인하세요.')}</p></section>
-    <div className="pokedex-layout grid grid-cols-[300px_minmax(0,_1fr)] gap-6 [align-items:start] flex-1 grid-rows-[auto_1fr] [&_>_section]:sticky [&_>_section]:top-25 screen-900:grid-cols-[260px_minmax(0,_1fr)] screen-900:gap-4.5 screen-780:grid-cols-[1fr] screen-780:grid-rows-[auto_auto_1fr] screen-780:[&_>_section]:static">
+    <section className="page-intro [margin:24px_0_20px] p-6 border border-line rounded-[12px] bg-surface [&_h1]:text-[30px] [&_h1]:font-[750] [&_h1]:tracking-[-1.1px] [&_h1]:[margin:0_0_9px] [&_h1]:leading-[1.4] [&_h1]:text-ink [&_h2]:text-[30px] [&_h2]:font-[750] [&_h2]:tracking-[-1.1px] [&_h2]:[margin:0_0_9px] [&_h2]:leading-[1.4] [&_h2]:text-ink [&_p]:text-muted [&_p]:text-[14px] [&_p]:leading-[1.8] max-tablet:[&_h1]:text-[26px] max-tablet:[&_h2]:text-[26px] screen-540:mt-4 screen-540:py-5 screen-540:px-4 screen-540:[&_h1]:text-[24px] screen-540:[&_h1]:tracking-[-.9px] screen-540:[&_h2]:text-[24px] screen-540:[&_h2]:tracking-[-.9px] screen-540:[&_p]:text-[14px]"><Heading>{translate('도감')}</Heading><p>{translate('포켓몬의 타입·특성·종족값과 기술을 확인하세요.')}</p></section>
+    <div className="pokedex-layout grid grid-cols-[300px_minmax(0,_1fr)] gap-6 items-start flex-1 grid-rows-[auto_1fr] [&_>_section]:sticky [&_>_section]:top-25 screen-900:grid-cols-[260px_minmax(0,_1fr)] screen-900:gap-4.5 max-tablet:grid-cols-[1fr] max-tablet:grid-rows-[auto_auto_1fr] max-tablet:[&_>_section]:static">
       <section
         className="border border-line rounded-[12px] bg-surface overflow-hidden"
         aria-label={translate("포켓몬 탐색")}
@@ -211,7 +211,7 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
             </span>
           </div>
           <div
-            className="px-2 h-[560px] overflow-auto pt-0 pb-2.5 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] max-tablet:h-70 max-tablet:grid max-tablet:grid-cols-1 max-tablet:[align-content:start] max-tablet:gap-y-0 max-tablet:gap-x-1"
+            className="px-2 h-[560px] overflow-auto pt-0 pb-2.5 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] max-tablet:h-70 max-tablet:grid max-tablet:grid-cols-1 max-tablet:content-start max-tablet:gap-y-0 max-tablet:gap-x-1"
             aria-label={translate("포켓몬 목록")}
             aria-busy={activeList.isFetching}
           >

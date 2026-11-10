@@ -2,7 +2,7 @@ import { useId } from 'react';
 
 export default function PokeBall({ shaking }: { shaking: boolean }) {
   const id = useId();
-  return <svg viewBox="0 0 96 96" className={`collection-ball block overflow-visible [transform-origin:50%_90%] ${shaking ? "collection-shaking animate-effect-capture-wobble [&_.collection-ballLight]:animate-effect-capture-light [@media(prefers-reduced-motion:_reduce)]:animate-none [@media(prefers-reduced-motion:_reduce)]:[&_.collection-ballLight]:animate-none" : ''}`} aria-hidden="true">
+  return <svg viewBox="0 0 96 96" className={`collection-ball block overflow-visible [transform-origin:50%_90%] ${shaking ? "collection-shaking animate-effect-capture-wobble [&_.collection-ballLight]:animate-effect-capture-light motion-reduce:animate-none motion-reduce:[&_.collection-ballLight]:animate-none" : ''}`} aria-hidden="true">
     <defs>
       <linearGradient id={`${id}-red`} x1="0" y1="0" x2=".8" y2="1">
         <stop stopColor="#ff5b5b" /><stop offset=".5" stopColor="#ed232d" /><stop offset="1" stopColor="#ad0b1b" />

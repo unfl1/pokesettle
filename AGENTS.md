@@ -57,6 +57,7 @@ PokeSettle is a RAG-based Pokémon Champions ranked singles strategy assistant.
 - PR·배포 전 자동 회귀 검사 제거, 테스트 소스와 수동 명령 유지, 배포 빌드·운영 상태 확인 유지
 
 ## Frontend styling
+- Before changing frontend styles, read and follow [Frontend styling rules](.agent/rules/frontend-styling.md). This path is relative to the repository root and applies to frontend styling work.
 - 화면 스타일은 JSX의 Tailwind CSS 유틸리티로 작성함. 별도 CSS 모듈과 전역 화면 클래스 규칙 추가 지양함
 - CSS 파일은 Tailwind 진입점·테마·변형·플러그인 지시문으로 제한함. 일반 선택자 규칙·CSS 모듈·JSX 인라인 스타일 추가 지양함
 - 공통 기본값·접근성은 `src/styles/document.ts`의 Tailwind 유틸리티, 폰트 서브셋은 Tailwind 플러그인, 키프레임은 Tailwind 테마로 관리함. 실제 DOM 좌표에 의존하는 포획 이동은 Web Animations API, 종족값 막대는 SVG 수치 속성 사용함
