@@ -191,8 +191,8 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 
 - Pretendard Variable 1.3.9, 수집·확인일 2026-10-26, [공식 저장소](https://github.com/orioncactus/pretendard/tree/v1.3.9)
 - [공식 동적 서브셋 CSS](https://github.com/orioncactus/pretendard/blob/v1.3.9/packages/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css)의 Unicode 범위와 WOFF2 92개 사용
-- 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/LICENSE.txt` 유지
-- 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `pretendard-subsets.css`의 나머지 범위, 바이너리 수정 없음
+- 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/1.3.9/LICENSE.txt` 유지
+- 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `frontend/tailwind-fonts.mjs`·`frontend/src/styles/pretendard-subsets.json`의 나머지 범위, 바이너리 수정 없음
 - 공식 API 근거: [Next Font](https://nextjs.org/docs/app/api-reference/components/font), [Next Image](https://nextjs.org/docs/app/api-reference/components/image), [Google Analytics](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
 
 
@@ -261,3 +261,13 @@ Phase 1 첫 조사에서 100개 항목·자체 문서·허용된 수집 경로�
 - 권리: Pokémon 관련 그림의 권리는 원권리자에게 귀속, 사용자 링크 제공·AI 편집을 별도 이미지 이용 허가로 해석하지 않음. 원본의 자유 이용 라이선스 미확인임
 - 적용: 언어 선택 왼쪽 수집 도감 버튼, 수집 수·접근성 이름·포켓몬 도착 위치 유지함
 - 교체: 앞서 사용한 RG 원화·FireRed/LeafGreen 도트 스프라이트는 현재 앱 표시와 public 자산에서 제외함
+
+
+### 정적 이미지 WebP 변환·헤더 SVG (2026-11-10)
+
+- 원본: 위 홈 트레이너·관동 도감 버튼·사용자 제공 공통 로고의 기존 출처와 권리 조건 유지함. 신규 외부 그림 수집 없음
+- WebP: `sharp 0.35.5`, 품질 85·알파 품질 100·effort 6 적용함. 트레이너 2개·도감 버튼의 원본 해상도와 투명도 유지, 동일 이름의 `.webp`로 교체함
+- 크기: 남자 트레이너 1,112,448 → 173,496바이트, 여자 트레이너 1,298,076 → 224,394바이트, 도감 버튼 878,633 → 85,792바이트
+- 헤더 구조 참고: [imgobot](https://imgobot.com)의 [헤더 SVG](https://imgobot.com/images/brand/imgobot-header-logo.svg), 확인일 2026-11-10 KST. `viewBox`·`path` 기반 벡터와 Next.js Image의 원본 SVG 표시 구조 확인함. 타 사이트 그림·경로 복사 없음, 해당 로고의 재사용 라이선스 미확인임
+- 헤더 자산: 기존 PokeSettle 로고를 VTracer 0.6.15로 경로 추출·색상 단순화한 `frontend/public/logo.svg` 생성함. 임베디드 래스터 없음, 256×256 viewBox, 6,000바이트 미만 벡터, 36px 표시 적용함
+- 제공: WebP는 정적 import로 콘텐츠 해시와 Next.js Image API 사용함. SVG는 `unoptimized`로 직접 제공함. 공유 메타데이터용 `logo.png`와 앱 아이콘 PNG·ICO 유지함

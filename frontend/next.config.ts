@@ -12,9 +12,17 @@ const config: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'raw.githubusercontent.com', pathname: '/PokeAPI/sprites/**' }],
     minimumCacheTTL: 86400,
   },
+  async headers() {
+    return [{
+      source: '/fonts/pretendard/1.3.9/:file',
+      headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+    }];
+  },
   async rewrites() {
     return {
       beforeFiles: [
+        // Keep older CSS font URLs working; this alias stays pinned to 1.3.9.
+        { source: '/fonts/pretendard/:file', destination: '/fonts/pretendard/1.3.9/:file' },
         ...['', '/chat', '/pokedex', '/meta', '/scenario', '/pobti'].map(path => ({
           source: path || '/', destination: `/en${path}`,
         })),

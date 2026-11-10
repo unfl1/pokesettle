@@ -6,6 +6,8 @@ import { pageMetadata } from '../../../i18n/metadata';
 
 import { getI18n } from '../../../i18n/server';
 import Image from 'next/image';
+import maleTrainer from '../../../../public/images/trainers/original-male-partner-v2.webp';
+import femaleTrainer from '../../../../public/images/trainers/original-female-partner-v1.webp';
 import { titleDelays } from '../../../styles/titleDelays';
 import { ArrowRight, BookOpen, MessageSquare, Sparkles, Swords, TrendingUp } from 'lucide-react';
 
@@ -33,7 +35,7 @@ export default async function Home() {
     <div className="home-language flex justify-end [padding:12px_20px_0]"><LanguageSwitcher /></div>
     <main id="main-content" tabIndex={-1} className="home-page [width:min(100%,_1400px)] flex-1 [margin:0_auto] py-12 px-8 grid grid-cols-[minmax(0,_1fr)_minmax(0,_3fr)_minmax(0,_1fr)] items-center justify-center gap-6 screen-900:[width:min(100%,_810px)] screen-900:grid-cols-[repeat(2,_minmax(0,_1fr))] screen-900:[align-content:center] screen-900:[gap:20px_24px] screen-600:py-8 screen-600:px-5">
       <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:[grid-row:1] screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-left [grid-column:1] screen-900:[justify-self:end]" aria-hidden="true">
-        <Image src="/images/trainers/original-male-partner-v2.png" width={900} height={1748} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
+        <Image src={maleTrainer} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
       </div>
       <div className="home-content w-full max-w-186.5 min-w-0 [margin:0_auto] screen-900:[grid-column:1_/_-1] screen-900:[grid-row:2]">
         <header className="home-intro text-center mb-7.5 [&_h1]:mb-0 [&_h1]:text-[32px] [&_h1]:font-[750] [&_h1]:leading-[1.4] [&_h1]:tracking-[-1.4px] [&_h1]:[transform:translateY(-16px)] screen-600:[&_h1]:text-[26px]">
@@ -61,7 +63,7 @@ export default async function Home() {
         </nav>
       </div>
       <div className="home-trainer pointer-events-none select-none [&_img]:block [&_img]:w-full [&_img]:[height:clamp(260px,_34vw,_500px)] [&_img]:object-contain [&_img]:[transform:scale(.75)] screen-900:[grid-row:1] screen-900:[&_img]:w-auto screen-900:[&_img]:h-45 home-trainer-right [grid-column:3] screen-900:[grid-column:2] screen-900:[justify-self:start]" aria-hidden="true">
-        <Image src="/images/trainers/original-female-partner-v1.png" width={900} height={1748} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
+        <Image src={femaleTrainer} sizes="(max-width: 900px) 120px, 340px" alt="" loading="eager" />
       </div>
     </main>
     <footer className="home-legal [padding:0_20px_20px] text-muted text-center text-[11px] leading-[1.8] wrap-anywhere [&_p]:m-0" aria-label={translate("저작권 및 운영 안내")}>

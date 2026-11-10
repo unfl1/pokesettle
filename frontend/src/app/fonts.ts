@@ -2,7 +2,7 @@ import localFont from 'next/font/local';
 
 // Common glyphs use next/font; the Tailwind font plugin loads other glyphs on demand.
 export const pretendard = localFont({
-  src: '../../public/fonts/pretendard/PretendardVariable.subset.91.woff2',
+  src: '../../public/fonts/pretendard/1.3.9/PretendardVariable.subset.91.woff2',
   variable: '--font-pretendard',
   weight: '45 920',
   display: 'swap',
