@@ -287,10 +287,10 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 서비스 이름: `PokeSettle`, 대표 주소: `https://pokesettle.com`
 - 대표 주소 정책: LETO DNS 유지, 루트 도메인은 `CNAME Flatten`으로 기존 CloudFront 배포 연결, www는 동일 경로·쿼리의 non-www HTTPS로 308 이동
 - 원본 요청 정책: 기본 동작에 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, API 동작에 `Managed-AllViewer` 적용함. viewer Host와 기본 동작의 `CloudFront-Viewer-Country`를 전달함. 비공개 원본 검증 헤더·HTTPS·캐시 비활성화 유지함
-- 국가별 초기 언어: 홈 `/`의 GET·HEAD만 저장된 `pokesettle_locale` 언어 선택을 우선함. 선택 기록이 없고 CloudFront 국가 코드가 `KR`이면 `/ko`로 307 이동, 그 외에는 영어 유지함. 브라우저 언어·위치 권한 사용 없음, VPN 이용 시 출구 IP의 국가 기준임
+- 국가별 초기 언어: 홈 `/`의 GET·HEAD만 저장된 `pokesettle_locale` 언어 선택을 우선함. 선택 기록이 없으면 CloudFront Function `pokesettle-home-locale`에서 `KR` → `/ko`, `JP` → `/ja`, `CN` → `/zh`로 307 이동, 그 외·국가 미확인은 영어 `/` 유지함. Next.js에서 국가·쿠키 기반 홈 이동 제거함. 브라우저 언어·위치 권한 사용 없음, VPN 이용 시 출구 IP의 국가 기준임
 - 명시적 언어·기능·도감 상세 URL은 자동 국가 이동 대상에서 제외함. `/en`의 기존 영어 정규 주소 연결 유지함. 수동 언어 선택 쿠키는 최대 1년·SameSite=Lax·운영 HTTPS에서 Secure, 홈 응답은 private/no-store로 방문자 간 초기 언어 공유 방지함
-- 기존 배포 적용: CloudFront 기본 동작의 원본 요청 정책을 위 국가 헤더 지원 정책으로 변경하고 캐시 정책은 `Managed-CachingDisabled` 유지함. `connect_frontend.py` 재적용 시 동일 설정 반영, 앱 이미지 배포만으로 CloudFront 정책은 갱신되지 않음
-- 비용 범위: Route 53·CloudFront Functions·Lambda@Edge 추가 없이 기존 DNS·CloudFront·Lightsail 재사용함. 기존 서비스의 트래픽·사용량 요금은 별도임
+- 기존 배포 적용: `python3 deployment/aws/locale_redirect.py --distribution-id <배포 ID>`로 기본 동작의 viewer-request 함수만 연결함. AWS 인증·boto3 필요, `aws login` 인증 사용 시 `botocore[crt]` 추가 필요함. 원본·API 동작 변경 없음. `connect_frontend.py`·신규 `provision_frontend.py`에도 동일 함수 연결 반영함. 국가 헤더 지원 원본 요청 정책·`Managed-CachingDisabled` 유지, 앱 이미지 배포만으로 함수는 갱신되지 않음
+- 비용 범위: 기존 DNS·CloudFront·Lightsail 재사용, CloudFront Functions 호출 추가함. 기본 동작의 요청마다 실행되며 홈 이외에는 즉시 통과함. Functions 요금은 계정 요금제·무료 사용량·호출량에 따름. Route 53·Lambda@Edge 추가 없음
 - CloudFront HTTP 정책: 기본·`/api`·`/api/*` 모두 `redirect-to-https`, GET·HEAD는 301, HTTP/1.1 이상 쓰기 요청은 메서드·본문을 유지하는 307 이동
 - 배포 검사: 예상 경로·본문 외 최종 호스트도 비교, 대표 주소에서 다른 호스트로 이동하면 실패 처리
 - 도메인 등록·DNS: LETO, 기존 CloudFront 배포·Lightsail 서버 재사용
@@ -394,6 +394,7 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 
 - [CloudFront 사용자 지정 원본](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html)
 - [CloudFront 대체 도메인 인증서](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html)
+- [CloudFront 국가별 이동 예제](https://github.com/aws-samples/amazon-cloudfront-functions/tree/main/redirect-based-on-country)
 - [CloudFront 관리형 원본 요청 정책](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
 - [Nginx 프록시 모듈](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)
 

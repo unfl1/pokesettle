@@ -8,6 +8,11 @@ from pathlib import Path
 
 import boto3
 
+if __package__:
+    from .locale_redirect import publish_locale_function
+else:
+    from locale_redirect import publish_locale_function
+
 
 def provision(domain, token_path, state_path):
     if not re.fullmatch(r"[a-z0-9][a-z0-9.-]+\.[a-z]{2,}", domain):
@@ -46,6 +51,9 @@ def provision(domain, token_path, state_path):
                 "AllowedMethods": {"Quantity": 7, "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
                                    "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}},
                 "CachePolicyId": cache_id, "OriginRequestPolicyId": request_id,
+                "FunctionAssociations": {"Quantity": 1, "Items": [{
+                    "EventType": "viewer-request", "FunctionARN": publish_locale_function(cf),
+                }]},
             },
             "ViewerCertificate": {"CloudFrontDefaultCertificate": True},
         })["Distribution"]
