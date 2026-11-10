@@ -65,12 +65,12 @@ export default function ChatPanel() {
   const items = w.messages.data ?? [];
   const loading = w.messages.isPending && Boolean(w.conversationId);
   return (
-    <div className="chat-layout flex-1 min-w-0 min-h-0 flex border border-line rounded-[12px] bg-surface overflow-hidden screen-780:[&[data-history-open='true']_.chat-sidebar]:flex screen-780:[&[data-history-open='true']_.chat-sidebar]:w-full screen-780:[&[data-history-open='true']_.chat-panel]:hidden" data-history-open={historyOpen}>
-      <aside id="chat-history" className="chat-sidebar w-65 shrink-0 flex flex-col min-h-0 [padding:20px_12px_12px] border-r border-line bg-canvas screen-780:hidden" aria-label={translate("채팅 내역")}
+    <div className="chat-layout flex-1 min-w-0 min-h-0 flex border border-line rounded-[12px] bg-surface overflow-hidden max-tablet:[&[data-history-open='true']_.chat-sidebar]:flex max-tablet:[&[data-history-open='true']_.chat-sidebar]:w-full max-tablet:[&[data-history-open='true']_.chat-panel]:hidden" data-history-open={historyOpen}>
+      <aside id="chat-history" className="chat-sidebar w-65 shrink-0 flex flex-col min-h-0 [padding:20px_12px_12px] border-r border-line bg-canvas max-tablet:hidden" aria-label={translate("채팅 내역")}
         onKeyDown={(event) => { if (event.key === 'Escape') closeHistory(); }}>
         <div className="chat-sidebar-heading flex items-center justify-between [padding:0_10px_18px] text-[14px] font-semibold">
           <h2>{translate("채팅 내역")}</h2>
-          <button ref={historyClose} className="chat-history-close hidden p-2 rounded-[6px] screen-780:flex" onClick={closeHistory} aria-label={translate("채팅 내역 닫기")}><X size={18} /></button>
+          <button ref={historyClose} className="chat-history-close hidden p-2 rounded-[6px] max-tablet:flex" onClick={closeHistory} aria-label={translate("채팅 내역 닫기")}><X size={18} /></button>
         </div>
         <button className="chat-new flex items-center gap-2.5 p-3 border border-line rounded-[9px] bg-surface text-[14px] hover:border-accent" onClick={() => { w.createNew(); closeHistory(); }}
           disabled={w.busy || !w.session.isSuccess}
@@ -112,9 +112,9 @@ export default function ChatPanel() {
           }}>{translate(w.deleteConversation.isPending ? "삭제 중…" : "네")}</button>
         </div>
       </dialog>
-      <section className="chat-panel flex-1 min-w-0 min-h-0 flex flex-col bg-surface overflow-hidden [&_>_form]:shrink-0 [&_>_form]:[width:calc(100%_-_44px)] [&_>_form]:max-w-200 [&_>_form]:ml-auto [&_>_form]:mr-auto [&_>_[role='alert']]:shrink-0 [&_>_[role='alert']]:[width:calc(100%_-_44px)] [&_>_[role='alert']]:max-w-200 [&_>_[role='alert']]:ml-auto [&_>_[role='alert']]:mr-auto screen-780:[&_>_form]:[width:calc(100%_-_26px)] screen-780:[&_>_form]:mb-2.5 screen-780:[&_>_[role='alert']]:[width:calc(100%_-_26px)] screen-780:[&_>_form_>_div_>_span]:text-[12px]" aria-label={translate("전략 대화")}>
-      <header className="chat-panel-header shrink-0 flex items-center gap-3 py-4.5 px-7 border-b border-line screen-780:p-3 screen-780:[&_p]:hidden">
-        <button ref={historyToggle} className="chat-history-toggle hidden p-2 rounded-[6px] screen-780:flex" aria-label={translate("채팅 내역 열기")}
+      <section className="chat-panel flex-1 min-w-0 min-h-0 flex flex-col bg-surface overflow-hidden [&_>_form]:shrink-0 [&_>_form]:[width:calc(100%_-_44px)] [&_>_form]:max-w-200 [&_>_form]:ml-auto [&_>_form]:mr-auto [&_>_[role='alert']]:shrink-0 [&_>_[role='alert']]:[width:calc(100%_-_44px)] [&_>_[role='alert']]:max-w-200 [&_>_[role='alert']]:ml-auto [&_>_[role='alert']]:mr-auto max-tablet:[&_>_form]:[width:calc(100%_-_26px)] max-tablet:[&_>_form]:mb-2.5 max-tablet:[&_>_[role='alert']]:[width:calc(100%_-_26px)] max-tablet:[&_>_form_>_div_>_span]:text-[12px]" aria-label={translate("전략 대화")}>
+      <header className="chat-panel-header shrink-0 flex items-center gap-3 py-4.5 px-7 border-b border-line max-tablet:p-3 max-tablet:[&_p]:hidden">
+        <button ref={historyToggle} className="chat-history-toggle hidden p-2 rounded-[6px] max-tablet:flex" aria-label={translate("채팅 내역 열기")}
           aria-expanded={historyOpen} aria-controls="chat-history" onClick={() => setHistoryOpen(true)}>
           <PanelLeft size={20} />
         </button>
@@ -125,7 +125,7 @@ export default function ChatPanel() {
         </div>
       </header>
       <div
-        className="chat-feed flex-1 min-h-0 overflow-y-auto overscroll-contain [padding:28px_max(28px,_calc((100%_-_800px)_/_2))] [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] screen-780:py-5 screen-780:px-4"
+        className="chat-feed flex-1 min-h-0 overflow-y-auto overscroll-contain [padding:28px_max(28px,_calc((100%_-_800px)_/_2))] [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] max-tablet:py-5 max-tablet:px-4"
         ref={feed}
         tabIndex={0}
         role="log"

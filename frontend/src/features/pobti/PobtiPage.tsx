@@ -48,7 +48,7 @@ export default function PobtiPage() {
   }
   const question = questions[step];
   const profile = result ? profiles[result] : null;
-  return <div className="pobti-page [width:min(100%,_720px)] [margin:0_auto] [&_button:focus-visible]:[outline:3px_solid_var(--color-accent)] [&_button:focus-visible]:[outline-offset:4px]">
+  return <div className="pobti-page [width:min(100%,_720px)] mx-auto [&_button:focus-visible]:[outline:3px_solid_var(--color-accent)] [&_button:focus-visible]:[outline-offset:4px]">
     <div className="pobti-topline flex flex-wrap justify-between gap-3 mb-3.5 text-muted text-[12px] [&_>_span:first-child]:flex [&_>_span:first-child]:items-center [&_>_span:first-child]:gap-1.5 [&_>_span:first-child]:text-accent [&_>_span:first-child]:font-bold [&_>_span:first-child]:tracking-[1px]"><span><Sparkles size={16} aria-hidden="true" /> PokeSettle ORIGINAL</span><span>{t('12문항 · 약 2분')}</span></div>
     <section className="pobti-card p-10 border border-line rounded-[24px] bg-surface text-center shadow-[0_16px_48px_#07164d10] [&_h1]:[margin:0_0_12px] [&_h1]:text-[clamp(32px,_5vw,_48px)] [&_h1]:font-extrabold [&_h1]:leading-[1.3] [&_h1]:tracking-[-1px] [&_h1]:wrap-anywhere [&_progress]:block [&_progress]:w-full [&_progress]:h-1.5 [&_progress]:[margin:12px_0_40px] [&_progress]:border-0 [&_progress]:rounded-[8px] [&_progress]:overflow-hidden [&_progress]:bg-accent-soft [&_progress]:[accent-color:var(--color-accent)] [&_progress::-webkit-progress-bar]:bg-accent-soft [&_progress::-webkit-progress-value]:bg-accent [&_h1.pobti-question]:min-h-21 [&_h1.pobti-question]:text-[26px] [&_h1.pobti-question]:leading-[1.6] screen-540:py-7 screen-540:px-4.5 screen-540:rounded-[18px] screen-540:[&_h1.pobti-question]:text-[22px]" aria-label={t('포BTI')}>
       {profile && result ? <>
@@ -83,7 +83,7 @@ export default function PobtiPage() {
         <div className="pobti-orb grid place-items-center w-33 h-33 [margin:0_auto_24px] [border:8px_solid_var(--color-surface)] rounded-full bg-[linear-gradient(145deg,_var(--color-accent-soft),_var(--color-canvas))] shadow-[0_8px_24px_#0057ff18] text-[58px] text-accent" aria-hidden="true">✦</div>
         <h1 ref={heading} tabIndex={-1}>{t('포BTI')}</h1>
         <p className="pobti-subtitle [margin:0_0_16px] text-[20px] font-[650] text-ink screen-540:text-[18px]">{t('포켓몬 세계 속 나는 어떤 모습일까?')}</p>
-        <p className="pobti-description [margin:0_auto] max-w-100 text-muted leading-[1.9]">{t('모험 속 12가지 선택으로 나의 성향과 어울리는 포켓몬을 만나 보세요.')}</p>
+        <p className="pobti-description mx-auto max-w-100 text-muted leading-[1.9]">{t('모험 속 12가지 선택으로 나의 성향과 어울리는 포켓몬을 만나 보세요.')}</p>
         <div className="pobti-tags flex flex-wrap justify-center gap-2 [margin:24px_0_32px] [&_span]:py-1.5 [&_span]:px-3 [&_span]:border [&_span]:border-line [&_span]:rounded-[30px] [&_span]:text-muted [&_span]:text-[12px] [&_span]:bg-surface"><span>{t('16가지 모험 유형')}</span><span>{t('로그인 없이 바로')}</span></div>
         <button className="pobti-primary inline-flex items-center justify-center gap-2.5 min-h-12 py-3.5 px-6 rounded-[12px] font-bold text-on-accent bg-accent hover:bg-accent-strong" onClick={start}>{t('내 포켓몬 찾기')}<ArrowRight size={18} /></button>
       </>}

@@ -1,13 +1,12 @@
-@import 'tailwindcss';
+/* Scope utility detection to application sources, independent of the working directory. */
+@import 'tailwindcss' source('./');
 
 @theme {
-  /* Keep existing pixel spacing independent of the 14px root font. */
+  /* Preserve the existing 4px layout scale independently of root typography. */
   --spacing: 4px;
   --color-accent: #0057ff;
   --color-on-accent: #ffffff;
   --color-accent-strong: #0041cc;
-  --color-brand-cyan: #36c5f0;
-  --color-brand-navy: #07164d;
   --color-link: var(--color-accent);
   --color-accent-soft: #e6efff;
   --color-accent-hover: #f2f7ff;
@@ -22,7 +21,6 @@
   --color-warning: var(--color-highlight-ink);
   --color-warning-soft: var(--color-highlight);
   --color-warning-line: var(--color-highlight);
-  --font-sans: var(--font-pretendard), Arial, sans-serif;
   --text-base: 16px;
   --text-lg: 18px;
   --text-xl: 20px;
@@ -141,7 +139,10 @@
   --animate-effect-capture-light: captureLight 900ms 600ms 3, captureLock 300ms 3300ms forwards;
 }
 
-@custom-variant tall (@media (min-height: 1000px));
+/* Resolve the next/font variable where font-sans is used (including descendants). */
+@theme inline {
+  --font-sans: var(--font-pretendard), Arial, sans-serif;
+}
 
 @custom-variant max-desktop (@media (width <= 1150px));
 
@@ -151,7 +152,6 @@
 
 @custom-variant screen-1080 (@media (width <= 1080px));
 @custom-variant screen-900 (@media (width <= 900px));
-@custom-variant screen-780 (@media (width <= 780px));
 @custom-variant screen-760 (@media (width <= 760px));
 @custom-variant screen-600 (@media (width <= 600px));
 @custom-variant screen-540 (@media (width <= 540px));
