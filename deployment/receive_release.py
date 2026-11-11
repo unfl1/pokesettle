@@ -11,6 +11,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import traceback
 import urllib.request
 from pathlib import Path
 
@@ -19,6 +20,7 @@ LEGACY = Path("/home/ubuntu/poketact")
 ENV = LEGACY / ".env.production"
 MONITOR_ENV = Path("/etc/poketact/observability.env")
 MAX_BUNDLE = 1_500_000_000
+DIAGNOSTICS = None
 CONFIG_FILES = {
     "compose.production.yaml", "compose.observability.yaml",
     "deployment/observability/prometheus.yaml", "deployment/observability/alerts.yaml",
@@ -30,8 +32,16 @@ CONFIG_FILES = {
 
 
 def run(args, *, env=None):
-    # Never relay Docker/Compose diagnostics: expanded environment values can be present.
-    result = subprocess.run(args, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Expanded environment values may occur here. Keep diagnostics root-only,
+    # never in the public Actions output, and stream to disk rather than RAM.
+    if DIAGNOSTICS is None:
+        result = subprocess.run(args, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        with open(DIAGNOSTICS, "a", opener=lambda p, flags: os.open(p, flags, 0o600)) as log:
+            log.write(f"\nCommand: {args!r}\n")
+            log.flush()
+            result = subprocess.run(args, env=env, stdout=log, stderr=subprocess.STDOUT)
+            log.write(f"Exit code: {result.returncode}\n")
     if result.returncode:
         raise RuntimeError("Deployment command failed; inspect privately on the server")
 
@@ -128,11 +138,22 @@ def deploy(release, sha):
             try:
                 ready()
                 break
-            except Exception:
+            except Exception as error:
                 if attempt == 29:
-                    raise RuntimeError("Release readiness check failed") from None
+                    raise RuntimeError("Release readiness check failed") from error
                 time.sleep(2)
     except Exception:
+        if DIAGNOSTICS is not None:
+            try:
+                with open(DIAGNOSTICS, "a", opener=lambda p, flags: os.open(p, flags, 0o600)) as log:
+                    traceback.print_exc(file=log)
+            except OSError:
+                pass  # Disk/log errors must not prevent restoring the old release.
+            for diagnostic in (("ps", "--all", "--format", "json"), ("logs", "--no-color", "--tail", "100")):
+                try:
+                    compose(release, sha, *diagnostic)
+                except Exception:
+                    pass  # Collecting diagnostics must never prevent rollback.
         services = ["api"]
         if previous_worker:
             services += ["worker"]
@@ -175,6 +196,7 @@ def deploy(release, sha):
 
 
 def main(command):
+    global DIAGNOSTICS
     match = re.fullmatch(r"deploy ([a-f0-9]{40})", command)
     if not match:
         raise ValueError("Only deploy followed by a commit SHA is allowed")
@@ -186,6 +208,7 @@ def main(command):
         if shutil.disk_usage(ROOT).free < 8_000_000_000:
             raise RuntimeError("At least 8 GB free disk required")
         release = Path(tempfile.mkdtemp(prefix=match[1] + "-", dir=ROOT))
+        DIAGNOSTICS = release / "diagnostics.log"
         bundle = release / "bundle.tar.gz"
         try:
             total = 0
@@ -199,6 +222,8 @@ def main(command):
             bundle.unlink()
             deploy(release, match[1])
         except Exception:
+            with open(DIAGNOSTICS, "a", opener=lambda p, flags: os.open(p, flags, 0o600)) as log:
+                traceback.print_exc(file=log)
             # Preserve config for private diagnosis, but discard large transfer artifacts.
             bundle.unlink(missing_ok=True)
             (release / "image.tar").unlink(missing_ok=True)

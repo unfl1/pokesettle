@@ -1,6 +1,7 @@
 import importlib
 import io
 import json
+import stat
 import sys
 import tarfile
 from types import SimpleNamespace
@@ -10,6 +11,17 @@ import pytest
 from deployment import receive_release as receiver
 from deployment.check_production import check as check_production
 from deployment.package_release import package
+
+
+def test_failed_command_keeps_private_diagnostics_out_of_ci(tmp_path, monkeypatch, capsys):
+    log = tmp_path / "diagnostics.log"
+    monkeypatch.setattr(receiver, "DIAGNOSTICS", log)
+    with pytest.raises(RuntimeError, match="inspect privately"):
+        receiver.run([sys.executable, "-c", "import sys; print('PRIVATE_DIAGNOSTIC'); sys.exit(7)"])
+    assert "PRIVATE_DIAGNOSTIC" in log.read_text()
+    assert "Exit code: 7" in log.read_text()
+    assert stat.S_IMODE(log.stat().st_mode) == 0o600
+    assert "PRIVATE_DIAGNOSTIC" not in str(capsys.readouterr())
 
 
 @pytest.mark.parametrize("failure", [None, "old_home", "redirect", "host_redirect", "scheme_redirect", "chat", "pokedex", "assets", "asset_status", "api"])
@@ -52,7 +64,7 @@ def test_public_smoke_checks_home_chat_assets_and_api(monkeypatch, failure):
             check_production(base)
     else:
         check_production(base)
-        assert calls == [base + "/ko", base + "/ko/chat", base + "/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25", base + asset, base + "/api/status"]
+        assert calls == [base + "/ko", base + "/ko/chat", base + "/ko/pokedex/pikachu", base + asset, base + "/api/status"]
 
 
 def test_public_smoke_rejects_plain_http():
@@ -106,7 +118,8 @@ def test_release_package_excludes_environment_and_unlisted_files(tmp_path, monke
 
 @pytest.mark.parametrize("previous_worker", [False, True])
 @pytest.mark.parametrize("current_worker", [False, True])
-def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_path, monkeypatch, previous_worker, current_worker):
+@pytest.mark.parametrize("diagnostic_failure", [False, True])
+def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_path, monkeypatch, previous_worker, current_worker, diagnostic_failure):
     monkeypatch.setattr(receiver, "ROOT", tmp_path)
     monkeypatch.setattr(receiver, "run", lambda *a, **k: None)
     monkeypatch.setattr(receiver.os, "chown", lambda *a: None)
@@ -120,10 +133,18 @@ def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_pa
     (release / "compose.production.yaml").write_text("services:\n  api:\n    image: api\n" + ("  worker:\n    image: api\n" if current_worker else ""))
     (release / "image.tar").write_bytes(b"image")
     calls = []
-    monkeypatch.setattr(receiver, "compose", lambda *a, **k: calls.append((a, k)))
+    monkeypatch.setattr(receiver, "DIAGNOSTICS", tmp_path / "diagnostics.log")
+
+    def compose(*args, **kwargs):
+        calls.append((args, kwargs))
+        if diagnostic_failure and any(value in args for value in ("ps", "logs")):
+            raise RuntimeError("diagnostics failed")
+
+    monkeypatch.setattr(receiver, "compose", compose)
     with pytest.raises(RuntimeError, match="previous API image restored"):
         receiver.deploy(release, "a" * 40)
     assert json.loads((tmp_path / "current.json").read_text()) == previous
+    assert "not ready" in receiver.DIAGNOSTICS.read_text()
     assert calls[-1][0][0] == tmp_path / "previous"
     assert calls[-1][0][1] == "old"
     assert "down" not in str(calls)
