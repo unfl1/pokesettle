@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.app.core.config import Settings
 from backend.app.main import create_app
 from backend.app.rag.vector_store import VectorStore
-from backend.tests.conftest import document, wait_for_job
+from test.backend.conftest import document, wait_for_job
 
 
 def controlled_embed(texts):

@@ -10,7 +10,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.main import create_app
 from backend.app.schemas import Pokemon
 from backend.scripts.prepare_battle_data import build_chart
-from backend.tests.conftest import record
+from test.backend.conftest import record
 
 
 @pytest.fixture

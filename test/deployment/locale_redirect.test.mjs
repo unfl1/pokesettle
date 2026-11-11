@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 
-const handler = runInNewContext(`${readFileSync(new URL('./locale_redirect.js', import.meta.url), 'utf8')}; handler;`);
+const handler = runInNewContext(`${readFileSync(new URL('../../deployment/aws/locale_redirect.js', import.meta.url), 'utf8')}; handler;`);
 function request(country, preference, extra = {}) {
   return {
     uri: '/', method: 'GET', querystring: {},

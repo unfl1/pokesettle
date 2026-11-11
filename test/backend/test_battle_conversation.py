@@ -96,7 +96,7 @@ def test_real_pipeline_persists_user_state_and_supplies_citable_calculation(setu
             BattleUpdate(relevant=False),
         ]
     )
-    from backend.tests.conftest import document
+    from test.backend.conftest import document
 
     setup.vectors.index_document("pokemon:3", document("poketact:strategy:test", "TEST ONLY: conditional strategy."))
     payloads = []

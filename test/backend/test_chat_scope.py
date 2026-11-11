@@ -9,7 +9,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest
 from backend.app.services.chat_scope import SCOPE_REFUSAL, ChatScope, check_chat_scope
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 @pytest.mark.parametrize("question", [

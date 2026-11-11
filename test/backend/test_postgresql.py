@@ -90,7 +90,7 @@ def test_migration_rolls_back_on_invalid_foreign_key(tmp_path, pg_store):
 
 def test_pgvector_index_and_manifest_survive_restart(setup):
     from backend.app.rag.vector_store import VectorStore
-    from backend.tests.conftest import document, embed
+    from test.backend.conftest import document, embed
 
     count = setup.vectors.index_document("pokemon:1", document())
     with closing(Store(setup.store.database_url, setup.store.schema)) as restarted_store:
@@ -110,7 +110,7 @@ def test_pgvector_index_and_manifest_survive_restart(setup):
 def test_reindex_preserves_migrated_document_revision_over_bundled_snapshot(setup, monkeypatch):
     from backend.app.rag.vector_store import VectorStore
     from backend.scripts import index_data
-    from backend.tests.conftest import document, embed
+    from test.backend.conftest import document, embed
 
     migrated = document(body="TEST migrated source revision with retained provenance.")
     bundled = document(body="TEST older bundled source revision.")

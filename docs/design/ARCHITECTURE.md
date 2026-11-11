@@ -4,9 +4,9 @@
 
 작성일: 2026-10-21. Phase 0 제안 계약임. 아래 경로·모델·설정은 향후 구현 설계이며 실제 모듈이나 데이터베이스를 생성하지 않음.
 
-> 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정은 [설정 예시](../../.env.example), 동작 검증은 [RAG 테스트](../../backend/tests/test_rag.py) 참조
+> 구현·저장 기술 업데이트 (2026-10-22): 아래 상세 설계에는 Phase 0 당시 제안도 포함됨. 데이터 수집·두 논리 컬렉션·LangGraph·API 구현을 유지하고 실제 저장은 `backend/app/storage.py`의 PostgreSQL 세션/대화/메시지/작업 테이블과 namespace별 JSON 캐시로 변경함. 문서·후보·manifest·인용 스냅샷은 이 캐시와 메시지 JSON에 저장해 Phase 1에서 불필요한 별도 테이블을 축소함. 모델 설정은 [설정 예시](../../.env.example), 동작 검증은 [RAG 테스트](../../test/backend/test_rag.py) 참조
 
-> Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [대화·검색 테스트](../../backend/tests/test_phase2.py) 참조.
+> Phase 2 업데이트: `frontend/src/components`는 대화·인용·포켓몬 프로필, `hooks/useWorkspace.ts`는 세션·대화·작업 상태, `services/api.ts`는 HTTP 경계를 담당함. React Query 캐시 키를 포켓몬/대화/작업 ID로 나누고 전송 시점의 ID에 결과를 연결함. UI의 계산은 실제 종족값 표시뿐이며 전투 계산 모듈은 아직 없음. 조건 해석과 실제 속성 검증은 `backend/discovery.py`에 분리함. [대화·검색 테스트](../../test/backend/test_phase2.py) 참조.
 
 관련 문서: [프로젝트 명세](PROJECT_SPEC.md), [출처 검증](../guides/DATA_SOURCES.md), [API 계약](API_SPEC.md).
 

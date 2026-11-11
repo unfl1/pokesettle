@@ -11,7 +11,7 @@ from backend.app.core.usage import UsageGuard, active_usage, request_subjects
 from backend.app.main import create_app
 from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 def test_successful_usage_settles_once_and_preserves_other_reservations(pg_store):

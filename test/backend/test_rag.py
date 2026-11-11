@@ -7,7 +7,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.rag.graph import build_graph, render_answer
 from backend.app.rag.vector_store import VectorStore
 from backend.app.schemas import Generation
-from backend.tests.conftest import document, embed
+from test.backend.conftest import document, embed
 
 
 def test_100_metadata_and_idempotent_upsert(setup):

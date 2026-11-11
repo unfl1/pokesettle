@@ -14,7 +14,7 @@ from backend.scripts.compare_answers import (
     references,
     review_template,
 )
-from backend.tests.conftest import document
+from test.backend.conftest import document
 
 
 def cases():

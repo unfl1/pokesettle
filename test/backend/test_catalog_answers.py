@@ -8,7 +8,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.main import create_app
 from backend.app.services.catalog_answers import answer_catalog, catalog_question
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 @pytest.mark.parametrize(

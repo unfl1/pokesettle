@@ -96,7 +96,7 @@ test('legacy English policies redirect once and unsupported paths stay 404', asy
 });
 
 test('legal dictionaries have complete translations and preserve literal identifiers', () => {
-  const dictionaries = Object.fromEntries(languages.map(language => [language.code, JSON.parse(readFileSync(new URL(`../src/components/legal/dictionaries/${language.code}.json`, import.meta.url), 'utf8')) as Record<string, string>]));
+  const dictionaries = Object.fromEntries(languages.map(language => [language.code, JSON.parse(readFileSync(new URL(`../../frontend/src/components/legal/dictionaries/${language.code}.json`, import.meta.url), 'utf8')) as Record<string, string>]));
   const keys = Object.keys(dictionaries.ko).sort();
   for (const language of languages) {
     const dictionary = dictionaries[language.code];

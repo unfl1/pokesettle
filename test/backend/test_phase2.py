@@ -7,7 +7,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest, DiscoveryPlan, DiscoveryRequest
 from backend.app.services.discovery import discover
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 def chat(pokemon_id, conversation_id=None):

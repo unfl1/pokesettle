@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.app.api.dependencies import get_session, get_store
 from backend.app.api.schemas import ErrorResponse
 from backend.app.main import create_app
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 def test_openapi_describes_all_success_bodies_status_codes_and_safe_errors():

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { catchCooldownMs, collectionKey, cooldownKey, parseCollection, parseNextCatchAt, pickUncaught } from '../src/features/collection/storage';
+import { catchCooldownMs, collectionKey, cooldownKey, parseCollection, parseNextCatchAt, pickUncaught } from '../../frontend/src/features/collection/storage';
 
 const dex = (page: Page) => page.getByRole('button', { name: '나의 관동 도감', exact: true })
   .and(page.getByTitle('나의 관동 도감', { exact: true }));
