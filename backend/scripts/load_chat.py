@@ -1,14 +1,17 @@
 """Isolated local k6 run with real PostgreSQL, RAG and configured model provider.
 
 Usage: python -m backend.scripts.load_chat --users 50 --name distinct-50
-Raw measurements stay in ignored runtime/load-test/. Never targets production.
+Raw measurements stay in ignored runtime/load-test/.
+Use --production explicitly to exercise the public service with real paid calls.
 """
 
 import argparse
 import asyncio
 import json
 import os
+import re
 import resource
+import shutil
 import signal
 import subprocess
 import sys
@@ -323,6 +326,114 @@ def run(args, settings):
     return metadata['k6_exit_code']
 
 
+def production_result(output, users):
+    """Require every scheduled user to finish; preserve failure reasons without bodies."""
+    summary_path = output / 'k6-summary.json'
+    metrics = json.loads(summary_path.read_text()).get('metrics', {}) if summary_path.exists() else {}
+
+    def value(metric, field, default=0):
+        return metrics.get(metric, {}).get('values', {}).get(field, default)
+
+    reasons, answers, statuses = Counter(), Counter(), Counter()
+    samples = output / 'k6-samples.jsonl'
+    if samples.exists():
+        with samples.open() as source:
+            for line in source:
+                sample = json.loads(line)
+                if sample.get('type') != 'Point':
+                    continue
+                data = sample['data']
+                tags = data.get('tags', {})
+                if sample['metric'] in {'chat_rejected', 'chat_failed'}:
+                    reasons[tags.get('code', 'unknown')] += data['value']
+                elif sample['metric'] == 'chat_answer_status':
+                    answers[tags.get('status', 'missing')] += data['value']
+                elif sample['metric'] == 'http_reqs':
+                    statuses[tags.get('status', 'unknown')] += data['value']
+    started = value('chat_started', 'count')
+    finished = value('chat_finished', 'count')
+    accepted = value('chat_accepted', 'passes')
+    completed = value('chat_completed', 'passes')
+    return {
+        'expected_users': users, 'started': started, 'finished': finished,
+        'accepted': accepted, 'completed': completed,
+        'all_users_completed': started == finished == accepted == completed == users,
+        'admission_p95_ms': value('chat_admission_ms', 'p(95)', None),
+        'completion_p95_ms': value('chat_completion_ms', 'p(95)', None),
+        'completion_max_ms': value('chat_completion_ms', 'max', None),
+        'launch_skew_p95_ms': value('chat_launch_skew_ms', 'p(95)', None),
+        'failure_reasons': dict(reasons), 'answer_statuses': dict(answers),
+        'http_statuses': dict(statuses),
+    }
+
+
+def run_production(args):
+    """Public ingress only: no fake IPs, quota overrides or cloned production data."""
+    if args.shared_ip or args.mock_model or args.serve or args.worker:
+        raise SystemExit('Production mode cannot simulate IPs/models or start local services')
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,79}', args.name):
+        raise SystemExit('Use a simple unique run name without directory separators')
+    if not shutil.which('k6'):
+        raise SystemExit('Install k6 before running the production test')
+    output = ROOT / 'runtime' / 'load-test' / args.name
+    output.mkdir(parents=True, exist_ok=False)
+    metadata = {
+        'environment': 'production CloudFront → Nginx → API → worker → real model',
+        'base_url': 'https://pokesettle.com', 'users': args.users,
+        'source_ip_mode': 'actual single generator IP; shared-IP quotas apply',
+        'model_mode': 'real', 'question_mode': 'mixed' if args.mixed else 'single',
+        'started_at': time.time(), 'session_interval_seconds': 2.2,
+        'completion_deadline_seconds': 360,
+        'dns_policy': 'onlyIPv6' if args.ipv6 else 'default',
+        'http1': args.http1,
+    }
+    def health_client():
+        # Keep readiness on the same IP family as the load generator.
+        transport = httpx.HTTPTransport(local_address='::') if args.ipv6 else None
+        return httpx.Client(base_url=metadata['base_url'], timeout=15, transport=transport)
+
+    with health_client() as client:
+        response = client.get('/api/status')
+        response.raise_for_status()
+        metadata['ready_before'] = response.json()['data']['ready']
+        if not metadata['ready_before']:
+            raise SystemExit('Production API/worker not ready; no sessions/questions sent')
+    print(f'Production test: {args.users} questions; real model calls; existing quotas retained', flush=True)
+    try:
+        with (output / 'k6.log').open('w') as log:
+            result = subprocess.run([
+                'k6', 'run', '--quiet', '--out', f'json={output / "k6-samples.jsonl"}',
+                *(['--dns', 'policy=onlyIPv6'] if args.ipv6 else []),
+                str(ROOT / 'backend/scripts/load_chat.k6.js'),
+            ], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env={
+                **{key: value for key, value in os.environ.items() if not key.startswith('LOAD_')},
+                'LOAD_PRODUCTION': '1', 'LOAD_BASE_URL': metadata['base_url'],
+                'LOAD_USERS': str(args.users), 'LOAD_TIMEOUT': '360',
+                'LOAD_SESSION_INTERVAL': '2.2', 'LOAD_SHARED_IP': '0',
+                'LOAD_QUESTION': args.question, 'LOAD_MIXED': str(int(args.mixed)),
+                'LOAD_SUMMARY': str(output / 'k6-summary.json'),
+                **({'GODEBUG': ','.join(filter(None, [os.environ.get('GODEBUG'), 'http2client=0']))}
+                   if args.http1 else {}),
+            }, timeout=args.users * 2.2 + 480)
+            metadata['k6_exit_code'] = result.returncode
+    finally:
+        metadata['finished_at'] = time.time()
+        try:
+            with health_client() as client:
+                response = client.get('/api/status')
+                metadata['status_after'] = response.status_code
+                metadata['ready_after'] = response.status_code == 200 and response.json()['data']['ready']
+        except (httpx.HTTPError, ValueError, KeyError):
+            metadata['ready_after'] = False
+        metadata['result'] = production_result(output, args.users)
+        metadata['passed'] = (metadata.get('k6_exit_code') == 0 and metadata['ready_after']
+                              and metadata['result']['all_users_completed'])
+        (output / 'run.json').write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
+    print(json.dumps(metadata, indent=2, ensure_ascii=False))
+    print('Results:', output)
+    return 0 if metadata['passed'] else metadata.get('k6_exit_code') or 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--users', type=int, default=100, choices=range(1, 101))
@@ -335,10 +446,16 @@ def main():
     parser.add_argument('--mock-model', action='store_true', help='Simulated model only; no provider performance claim')
     parser.add_argument('--mock-delay', type=float, default=1)
     parser.add_argument('--mixed', action='store_true', help='Ten species and two strategy questions per species')
+    parser.add_argument('--production', action='store_true',
+                        help='Public production test with real model calls and existing quotas (1–100 users)')
+    parser.add_argument('--ipv6', action='store_true', help='Production generator: resolve IPv6 only')
+    parser.add_argument('--http1', action='store_true', help='Production generator: use HTTP/1.1 for transport diagnosis')
     parser.add_argument('--schema', help=argparse.SUPPRESS)
     parser.add_argument('--stats', help=argparse.SUPPRESS)
     args = parser.parse_args()
-    if args.serve:
+    if args.production:
+        raise SystemExit(run_production(args))
+    elif args.serve:
         serve(args, Settings.from_env())
     else:
         raise SystemExit(run(args, Settings.from_env()))
