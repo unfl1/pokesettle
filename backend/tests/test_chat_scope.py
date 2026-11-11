@@ -9,6 +9,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest
 from backend.app.services.chat_scope import SCOPE_REFUSAL, ChatScope, check_chat_scope
+from backend.tests.conftest import wait_for_job
 
 
 @pytest.mark.parametrize("question", [
@@ -113,7 +114,7 @@ def test_api_returns_saved_refusal_as_completed_chat_job(setup, monkeypatch):
             "pokemonId": "pokemon:1", "question": "피카츄랑 점심 메뉴 추천해줘", "clientRequestId": str(uuid4()),
         })
         assert response.status_code == 202
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "completed"
         assert job["result"]["answerStatus"] == "abstained"
         assert job["result"]["answer"] == SCOPE_REFUSAL

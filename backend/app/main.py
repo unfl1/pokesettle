@@ -13,17 +13,24 @@ from backend.app.data_preparation.sources import build_source
 from backend.app.http_client import SourceClient
 from backend.app.rag.model import StructuredModel
 from backend.app.rag.vector_store import VectorStore
+from backend.app.services.job_queue import JobQueue
 from backend.app.services.knowledge import KnowledgeService
 from backend.app.services.metagame import MetagameService
 from backend.app.storage import Store
+from backend.app.worker import JobWorker
 
 
 def create_service(settings, telemetry=None):
-    store = Store(settings.database_url, settings.database_schema)
-    catalog = Catalog(settings.data_dir / "pokemon.json")
-    vectors = VectorStore(settings, store)
-    source = build_source(settings, SourceClient(settings, store))
-    return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings, telemetry))
+    store = Store(settings.database_url, settings.database_schema,
+                  pool_size=settings.database_pool_size, pool_timeout=settings.database_pool_timeout)
+    try:
+        catalog = Catalog(settings.data_dir / "pokemon.json")
+        vectors = VectorStore(settings, store)
+        source = build_source(settings, SourceClient(settings, store))
+        return KnowledgeService(settings, catalog, store, vectors, source, StructuredModel(settings, telemetry))
+    except BaseException:
+        store.close()
+        raise
 
 
 def create_app(settings=None, *, service=None, usage=None):
@@ -34,14 +41,31 @@ def create_app(settings=None, *, service=None, usage=None):
     async def lifespan(app):
         # Importing the module must not open a database connection.
         app.state.service = service if service is not None else create_service(settings, telemetry)
-        app.state.service.store.recover_jobs()
-        app.state.usage = usage if usage is not None else UsageGuard(app.state.service.store, settings, telemetry)
-        if settings.telemetry_enabled:
-            telemetry.start(settings.runtime_dir / "telemetry")
+        worker = None
         try:
+            app.state.service.store.recover_jobs()
+            app.state.usage = usage if usage is not None else UsageGuard(app.state.service.store, settings, telemetry)
+            app.state.queue = JobQueue(app.state.service.store, app.state.usage)
+            if settings.job_worker_embedded:
+                worker = JobWorker(app.state.service, app.state.usage)
+                worker.start()
+            if settings.telemetry_enabled:
+                telemetry.start(settings.runtime_dir / "telemetry")
             yield
         finally:
+            if worker:
+                worker.close()
             telemetry.close()
+            if service is None:
+                try:
+                    model = getattr(app.state.service, "model", None)
+                    if model is not None:
+                        await model.aclose()
+                finally:
+                    embed = getattr(getattr(app.state.service, "vectors", None), "embed", None)
+                    if callable(getattr(embed, "close", None)):
+                        embed.close()
+                    app.state.service.store.close()
 
     app = FastAPI(title="PokeSettle", version="0.1.0", lifespan=lifespan)
     app.state.service = service

@@ -1,4 +1,5 @@
 import json
+import threading
 from contextlib import nullcontext
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -43,6 +44,35 @@ class StructuredModel:
     def __init__(self, settings, telemetry=None):
         self.settings = settings
         self.telemetry = telemetry
+        self._clients = {}
+        self._client_lock = threading.Lock()
+
+    def _client(self, model_name, purpose):
+        luna = model_name in {"gpt-5.6-luna", "gpt-6-luna"}
+        reasoning = ("medium" if purpose == "battle_state" else "none") if luna else None
+        temperature = 0 if purpose in {"discovery", "generate", "chat_scope"} and not luna else None
+        key = model_name, reasoning, temperature
+        with self._client_lock:
+            if key not in self._clients:
+                self._clients[key] = ChatOpenAI(
+                    model=model_name, reasoning_effort=reasoning, temperature=temperature,
+                    api_key=self.settings.api_key, base_url=self.settings.base_url,
+                    timeout=self.settings.llm_timeout, max_retries=0,
+                    max_completion_tokens=self.settings.model_max_output_tokens,
+                )
+            return self._clients[key]
+
+    async def aclose(self):
+        # Only close after the worker has drained its in-flight requests.
+        with self._client_lock:
+            clients, self._clients = list(self._clients.values()), {}
+        for client in clients:
+            root = getattr(client, "root_client", None)
+            if root is not None:
+                root.close()
+            root_async = getattr(client, "root_async_client", None)
+            if root_async is not None:
+                await root_async.close()
 
     def invoke(self, purpose, system, payload, schema):
         if not self.settings.model_configured:
@@ -68,18 +98,7 @@ class StructuredModel:
                 model_name = self.settings.chat_model
             response = None
             try:
-                luna = model_name in {"gpt-5.6-luna", "gpt-6-luna"}
-                model = ChatOpenAI(
-                    model=model_name,
-                    reasoning_effort=("medium" if purpose == "battle_state" else "none") if luna else None,
-                    temperature=0 if purpose in {"discovery", "generate", "chat_scope"} and not luna else None,
-                    api_key=self.settings.api_key,
-                    base_url=self.settings.base_url,
-                    timeout=self.settings.llm_timeout,
-                    # Each explicit retry must select and reserve its own model.
-                    max_retries=0,
-                    max_completion_tokens=self.settings.model_max_output_tokens,
-                )
+                model = self._client(model_name, purpose)
                 with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
                     response = model.with_structured_output(
                         schema, method="json_schema", strict=True, include_raw=True

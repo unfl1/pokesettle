@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from backend.app.core.config import Settings
 from backend.app.main import create_app
 from backend.app.rag.vector_store import VectorStore
-from backend.tests.conftest import document
+from backend.tests.conftest import document, wait_for_job
 
 
 def controlled_embed(texts):
@@ -148,7 +148,7 @@ def test_status_and_saved_answer_record_actual_retrieval_configuration(setup):
             },
         )
         assert response.status_code == 202
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "completed"
         result = job["result"]
         assert result["retrieval"] == status["retrieval"]

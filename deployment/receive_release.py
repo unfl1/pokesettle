@@ -76,6 +76,12 @@ def ready():
             raise RuntimeError("Grafana is not ready")
 
 
+def has_worker(directory):
+    """Support both legacy releases and the dedicated-worker Compose layout."""
+    path = directory / "compose.production.yaml"
+    return path.is_file() and bool(re.search(r"(?m)^  worker:\s*$", path.read_text()))
+
+
 def deploy(release, sha):
     current = ROOT / "current.json"
     previous = json.loads(current.read_text()) if current.exists() else {
@@ -84,6 +90,8 @@ def deploy(release, sha):
     (release / ".env.production").symlink_to(ENV)
     (release / ".env.observability").symlink_to(MONITOR_ENV)
     compose(release, sha, "config", "--quiet")
+    worker_enabled = has_worker(release)
+    previous_worker = previous.get("worker", has_worker(Path(previous["directory"])))
     run(["docker", "load", "--input", str(release / "image.tar")])
     run(["docker", "image", "inspect", "poketact-backend:" + sha])
     run(["docker", "image", "inspect", "poketact-frontend:" + sha])
@@ -102,8 +110,19 @@ def deploy(release, sha):
                 raise
             time.sleep(5)
     try:
+        if previous_worker and not worker_enabled:
+            # A legacy API cannot drain durable queue leases. Stop admissions
+            # and interrupt the old queue before replacing it with that API.
+            compose(Path(previous["directory"]), previous["image_tag"], "stop", "api", "worker",
+                    monitoring=previous["monitoring"])
+            compose(Path(previous["directory"]), previous["image_tag"], "run", "--rm", "--no-deps",
+                    "worker", "python", "-m", "backend.app.worker", "--interrupt-all",
+                    monitoring=previous["monitoring"])
+        services = ["api", "frontend", "prometheus", "loki", "alloy", "node-exporter", "grafana"]
+        if worker_enabled:
+            services.insert(1, "worker")
         compose(release, sha, "up", "-d", "--wait", "--wait-timeout", "180", "--no-deps", "--no-build",
-                "api", "frontend", "prometheus", "loki", "alloy", "node-exporter", "grafana")
+                *services)
         # Grafana may still be initializing after its container has started.
         for attempt in range(30):
             try:
@@ -115,6 +134,12 @@ def deploy(release, sha):
                 time.sleep(2)
     except Exception:
         services = ["api"]
+        if previous_worker:
+            services += ["worker"]
+        elif worker_enabled:
+            compose(release, sha, "stop", "api", "worker")
+            compose(release, sha, "run", "--rm", "--no-deps", "worker",
+                    "python", "-m", "backend.app.worker", "--interrupt-all")
         if previous.get("frontend"):
             services += ["frontend"]
         else:
@@ -126,7 +151,7 @@ def deploy(release, sha):
         if not previous["monitoring"]:
             compose(release, sha, "stop", "prometheus", "loki", "alloy", "node-exporter", "grafana")
         raise RuntimeError("New release failed; previous API image restored") from None
-    record = {"directory": str(release), "image_tag": sha, "monitoring": True, "frontend": True}
+    record = {"directory": str(release), "image_tag": sha, "monitoring": True, "frontend": True, "worker": worker_enabled}
     temporary = ROOT / "current.next.json"
     temporary.write_text(json.dumps(record))
     temporary.replace(current)

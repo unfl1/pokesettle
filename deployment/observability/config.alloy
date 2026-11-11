@@ -4,7 +4,10 @@ logging {
 
 // Collect only our allowlisted operational JSON, never Docker stdout or DB logs.
 local.file_match "operational" {
-  path_targets = [{"__path__" = "/app/runtime/telemetry/events.jsonl", "job" = "poketact"}]
+  path_targets = [
+    {"__path__" = "/app/runtime/telemetry/events.jsonl", "job" = "poketact"},
+    {"__path__" = "/app/runtime/telemetry/worker/events.jsonl", "job" = "poketact-worker"},
+  ]
 }
 
 loki.source.file "operational" {

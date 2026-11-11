@@ -169,7 +169,9 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
         query.state.data?.status ?? '',
       )
         ? false
-        : 600,
+        : query.state.data?.status === 'queued'
+          ? 2000
+          : query.state.dataUpdateCount < 10 ? 1000 : 2000,
   });
 
   useEffect(() => {

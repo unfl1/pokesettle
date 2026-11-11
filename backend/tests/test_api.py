@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest
+from backend.tests.conftest import wait_for_job
 
 
 def request_body(**changes):
@@ -25,7 +26,7 @@ def test_api_end_to_end_jobs_idempotency_and_camel_case(setup):
         body = request_body()
         response = client.post("/api/chat", json=body)
         assert response.status_code == 202
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "completed", job
         assert job["result"]["citations"][0]["sourceType"] == "metadata"
         assert job["result"]["conversationId"]
@@ -74,7 +75,7 @@ def test_job_failure_does_not_expose_raw_provider_error(setup):
     with TestClient(create_app(setup.settings, service=setup.service)) as client:
         client.post("/api/session")
         response = client.post("/api/chat", json=request_body())
-        job = client.get(response.json()["data"]["statusUrl"])
+        job = wait_for_job(client, response.json()["data"]["statusUrl"])
         assert job.json()["data"]["status"] == "failed"
         assert "SECRET_TEST_TOKEN" not in job.text
         assert "full prompt" not in job.text
@@ -97,7 +98,7 @@ def test_session_isolation_and_cross_pokemon_conversation(setup):
             json=request_body(pokemonId="pokemon:2", conversationId=first["conversation_id"]),
         )
         assert response.status_code == 202
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["result"]["conversationId"] == first["conversation_id"]
         job_id, _ = setup.store.create_job(session_a, "collect", str(uuid4()), {})
         setup.store.update_job(job_id, status="running", stage="collecting")

@@ -2,6 +2,7 @@ import hashlib
 import json
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 
 import pytest
 
@@ -72,8 +73,8 @@ def test_legacy_migration_preserves_order_and_source_and_rejects_overwrite(tmp_p
     assert hashlib.sha256(path.read_bytes()).hexdigest() == before
     with pytest.raises(ValueError, match="비어 있지"):
         migrate(path, pg_store)
-    restarted = Store(pg_store.database_url, pg_store.schema)
-    assert len(restarted.history("c")) == 2
+    with closing(Store(pg_store.database_url, pg_store.schema)) as restarted:
+        assert len(restarted.history("c")) == 2
 
 
 def test_migration_rolls_back_on_invalid_foreign_key(tmp_path, pg_store):
@@ -92,18 +93,18 @@ def test_pgvector_index_and_manifest_survive_restart(setup):
     from backend.tests.conftest import document, embed
 
     count = setup.vectors.index_document("pokemon:1", document())
-    restarted_store = Store(setup.store.database_url, setup.store.schema)
-    restarted_vectors = VectorStore(setup.settings, restarted_store, embed, "synthetic-test-32")
-    assert restarted_vectors.index_document("pokemon:1", document()) == count
-    assert restarted_vectors.docs.count() == count
-    assert len(restarted_vectors.retrieve("pokemon:1", "alpha")) > 1
-    assert restarted_store.get("manifest", "pokemon:1:subject")["ids"]
-    assert not (setup.settings.runtime_dir / "chroma").exists()
-    with restarted_store.connect() as db:
-        assert (
-            db.execute("SELECT to_regclass('vector_entries') AS name").fetchone()["name"]
-            is not None
-        )
+    with closing(Store(setup.store.database_url, setup.store.schema)) as restarted_store:
+        restarted_vectors = VectorStore(setup.settings, restarted_store, embed, "synthetic-test-32")
+        assert restarted_vectors.index_document("pokemon:1", document()) == count
+        assert restarted_vectors.docs.count() == count
+        assert len(restarted_vectors.retrieve("pokemon:1", "alpha")) > 1
+        assert restarted_store.get("manifest", "pokemon:1:subject")["ids"]
+        assert not (setup.settings.runtime_dir / "chroma").exists()
+        with restarted_store.connect() as db:
+            assert (
+                db.execute("SELECT to_regclass('vector_entries') AS name").fetchone()["name"]
+                is not None
+            )
 
 
 def test_reindex_preserves_migrated_document_revision_over_bundled_snapshot(setup, monkeypatch):

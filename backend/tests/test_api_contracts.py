@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from backend.app.api.dependencies import get_session, get_store
 from backend.app.api.schemas import ErrorResponse
 from backend.app.main import create_app
+from backend.tests.conftest import wait_for_job
 
 
 def test_openapi_describes_all_success_bodies_status_codes_and_safe_errors():
@@ -126,7 +127,7 @@ def test_runtime_cookie_job_location_and_bodyless_delete_keep_their_contract(set
         )
         assert job.status_code == 202
         assert job.headers["location"] == job.json()["data"]["statusUrl"]
-        result = client.get(job.headers["location"])
+        result = wait_for_job(client, job.headers["location"])
         assert result.status_code == 200
         assert result.json()["data"]["status"] == "completed"
         for response in (session, team, job, result):

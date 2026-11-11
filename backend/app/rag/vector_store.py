@@ -19,7 +19,7 @@ class VectorStore:
         if embed is None:
             if settings.embedding_model != "all-MiniLM-L6-v2":
                 raise ValueError("지원하는 로컬 임베딩 모델은 all-MiniLM-L6-v2입니다.")
-            embed = LocalEmbeddings(settings.runtime_dir / "embedding_model")
+            embed = LocalEmbeddings(settings.runtime_dir / "embedding_model", settings.embedding_batch_size)
         self.embed = embed
         self.embedding_identity = embedding_identity or settings.embedding_model
         initialize_vectors(store)

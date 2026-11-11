@@ -11,6 +11,7 @@ from backend.app.core.usage import UsageGuard, active_usage, request_subjects
 from backend.app.main import create_app
 from backend.app.rag.model import StructuredModel
 from backend.app.schemas import Generation
+from backend.tests.conftest import wait_for_job
 
 
 def test_successful_usage_settles_once_and_preserves_other_reservations(pg_store):
@@ -289,7 +290,7 @@ def test_proxy_identity_ignores_spoofed_headers_and_groups_ipv6(pg_store):
 
 
 def test_jobs_idempotency_and_discovery_share_limits(setup):
-    settings = replace(setup.settings, usage_requests_per_minute=1)
+    settings = replace(setup.settings, usage_requests_per_minute=1, usage_ip_requests_per_minute=1)
     from uuid import uuid4
 
     body = {"pokemonId": "pokemon:1", "question": "test question", "clientRequestId": str(uuid4())}
@@ -395,7 +396,7 @@ def test_background_jobs_have_usage_context_and_free_catalog_survives_budget_blo
                 "clientRequestId": str(uuid4()),
             },
         )
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "failed"
         assert job["error"]["code"] == "MODEL_BUDGET_EXHAUSTED"
         assert not setup.model.calls
@@ -490,7 +491,7 @@ def test_router_selects_fallback_before_full_next_call_exceeds_primary(pg_store,
 
     class Client:
         def __init__(self, **kwargs):
-            called.append(kwargs['model'])
+            self.model_name = kwargs['model']
             assert kwargs['reasoning_effort'] == 'none'
             assert kwargs['temperature'] is None
 
@@ -498,6 +499,7 @@ def test_router_selects_fallback_before_full_next_call_exceeds_primary(pg_store,
             return self
 
         def invoke(self, messages):
+            called.append(self.model_name)
             if len(called) == 1:
                 raise RuntimeError('unknown provider outcome')
             return {'parsed': result, 'parsing_error': None,

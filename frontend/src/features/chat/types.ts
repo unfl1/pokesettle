@@ -56,6 +56,7 @@ export interface Job {
   jobId: string;
   status: 'queued' | 'running' | 'completed' | 'failed' | 'interrupted';
   stage: string;
+  queuePosition?: number | null;
   result: GroundedResult | null;
   error: SafeError | null;
 }

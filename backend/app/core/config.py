@@ -17,10 +17,13 @@ class Settings:
     runtime_dir: Path = ROOT / "runtime"
     database_url: str = field(default="postgresql://localhost:5432/poketact", repr=False)
     database_schema: str = "poketact"
+    database_pool_size: int = 10
+    database_pool_timeout: float = 5
     api_key: str = field(default="", repr=False)
     chat_model: str = "gpt-5.6-luna"
     base_url: str | None = None
     embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_batch_size: int = 4
     chunk_size: int = 1000
     chunk_overlap: int = 200
     top_k: int = 6
@@ -40,7 +43,11 @@ class Settings:
     usage_requests_per_minute: int = 3
     usage_requests_per_day: int = 200
     usage_ip_requests_per_day: int = 400
-    usage_global_concurrency: int = 2
+    usage_global_concurrency: int = 100
+    usage_ip_requests_per_minute: int = 120
+    job_queue_capacity: int = 200
+    job_queue_timeout: int = 300
+    job_worker_embedded: bool = True
     usage_calls_per_job: int = 8
     usage_daily_tokens: int = PRIMARY_MODEL_TOKEN_CAP
     usage_fallback_daily_tokens: int = DAILY_MODEL_TOKEN_CAP
@@ -49,6 +56,10 @@ class Settings:
     model_max_output_tokens: int = 2_000
 
     def __post_init__(self):
+        if not 1 <= self.embedding_batch_size <= 32:
+            raise ValueError("EMBEDDING_BATCH_SIZE는 1~32이어야 합니다.")
+        if self.database_pool_size <= 0 or self.database_pool_timeout <= 0:
+            raise ValueError("DB 연결 풀 크기와 대기 시간은 양수여야 합니다.")
         if not 0 <= self.chunk_overlap < self.chunk_size:
             raise ValueError("0 <= CHUNK_OVERLAP < CHUNK_SIZE 이어야 합니다.")
         if not 2 <= self.top_k <= 20:
@@ -62,6 +73,7 @@ class Settings:
         if min(self.http_timeout, self.llm_timeout) <= 0 or self.request_interval < 0:
             raise ValueError("시간 설정이 잘못되었습니다.")
         limits = (self.usage_requests_per_minute, self.usage_requests_per_day,
+                  self.usage_ip_requests_per_minute, self.job_queue_capacity, self.job_queue_timeout,
                   self.usage_global_concurrency, self.usage_calls_per_job, self.usage_ip_requests_per_day,
                   self.usage_daily_tokens, self.usage_fallback_daily_tokens, self.usage_daily_calls,
                   self.model_max_input_tokens, self.model_max_output_tokens)
@@ -82,11 +94,14 @@ class Settings:
             runtime_dir=Path(os.getenv("RUNTIME_DIR", str(ROOT / "runtime"))),
             database_url=os.getenv("DATABASE_URL", "postgresql://localhost:5432/poketact"),
             database_schema=os.getenv("DATABASE_SCHEMA", "poketact"),
+            database_pool_size=int(os.getenv("DATABASE_POOL_SIZE", "10")),
+            database_pool_timeout=float(os.getenv("DATABASE_POOL_TIMEOUT_SECONDS", "5")),
             api_key=os.getenv("OPENAI_API_KEY", ""),
             chat_model=os.getenv("CHAT_MODEL", "gpt-5.6-luna"),
             # Pass an explicit default: the SDK otherwise rereads an empty env value.
             base_url=os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1",
             embedding_model=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
+            embedding_batch_size=int(os.getenv("EMBEDDING_BATCH_SIZE", "4")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "200")),
             top_k=int(os.getenv("TOP_K", "6")),
@@ -110,10 +125,13 @@ class Settings:
             trust_usage_proxy=os.getenv("TRUST_USAGE_PROXY", "false").lower() == "true",
             **{name: int(os.getenv(name.upper(), str(default))) for name, default in {
                 "usage_requests_per_minute": 3, "usage_requests_per_day": 200, "usage_ip_requests_per_day": 400,
-                "usage_global_concurrency": 2, "usage_calls_per_job": 8,
+                "usage_global_concurrency": 100, "usage_calls_per_job": 8,
+                "usage_ip_requests_per_minute": 120, "job_queue_capacity": 200,
+                "job_queue_timeout": 300,
                 "usage_daily_tokens": PRIMARY_MODEL_TOKEN_CAP,
                 "usage_fallback_daily_tokens": DAILY_MODEL_TOKEN_CAP, "usage_daily_calls": 1000,
                 "model_max_input_tokens": 24_000, "model_max_output_tokens": 2_000,
             }.items()},
             telemetry_enabled=os.getenv("TELEMETRY_ENABLED", "false").lower() == "true",
+            job_worker_embedded=os.getenv("JOB_WORKER_EMBEDDED", "true").lower() == "true",
         )

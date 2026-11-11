@@ -7,6 +7,7 @@ from backend.app.core.errors import ServiceError
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest, DiscoveryPlan, DiscoveryRequest
 from backend.app.services.discovery import discover
+from backend.tests.conftest import wait_for_job
 
 
 def chat(pokemon_id, conversation_id=None):
@@ -71,7 +72,7 @@ def test_guide_is_grounded_persisted_and_scope_checked(setup):
         body = {"clientRequestId": str(uuid4())}
         response = client.post("/api/pokemon/pokemon:1/guide", json=body)
         assert response.status_code == 202
-        result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
+        result = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]["result"]
         assert result["feature"] == "pokemon_guide"
         assert result["guideScope"] == "generic_reference"
         assert result["citations"] and result["guideLimitations"]
@@ -241,7 +242,7 @@ def test_general_conversations_are_independent_of_catalog_and_reset_state(setup)
             },
         )
         assert response.status_code == 202
-        result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
+        result = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]["result"]
         assert "도감에서 선택할 필요는 없어요" in result["answer"]
         client.cookies.set("pokecoach_session", setup.store.new_session())
         assert client.get("/api/conversations").json()["data"]["total"] == 0
@@ -262,7 +263,7 @@ def test_chat_without_selected_pokemon_resolves_named_topics_in_same_conversatio
                 },
             )
             assert response.status_code == 202
-            result = client.get(response.json()["data"]["statusUrl"]).json()["data"]["result"]
+            result = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]["result"]
             assert result["conversationId"] == cid
             assert result["answerPath"] == "catalog_navigation"
             assert result["catalogNavigation"]["pokemon"]["nameKo"] == name

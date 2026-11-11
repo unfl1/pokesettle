@@ -220,6 +220,7 @@ class JobData(ResponseModel):
     error: SafeError | None
     created_at: str
     updated_at: str
+    queue_position: int | None = None
 
 
 class SavedTeam(ResponseModel):

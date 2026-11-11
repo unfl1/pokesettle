@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+import time
 from dataclasses import replace
 from types import SimpleNamespace
 from uuid import uuid4
@@ -17,6 +18,17 @@ from backend.app.schemas import Candidate, DiscoveryPlan, Document, Generation, 
 from backend.app.services.chat_scope import ChatScope
 from backend.app.services.knowledge import KnowledgeService
 from backend.app.storage import Store
+
+
+def wait_for_job(client, url):
+    deadline = time.monotonic() + 5
+    while True:
+        response = client.get(url)
+        if response.status_code != 200 or response.json()["data"]["status"] not in {"queued", "running"}:
+            return response
+        if time.monotonic() >= deadline:
+            pytest.fail("Job did not finish within the integration test deadline")
+        time.sleep(.01)
 
 
 def embed(texts):
@@ -166,6 +178,7 @@ def pg_store():
     try:
         yield store
     finally:
+        store.close()
         with psycopg.connect(database_url) as db:
             db.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(store.schema)))
 

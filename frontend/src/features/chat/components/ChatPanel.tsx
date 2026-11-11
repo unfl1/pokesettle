@@ -18,6 +18,7 @@ import { ChatMessage } from './Reference';
 import { useWorkspaceContext } from '../../../providers/AppProviders';
 
 const stages: Record<string, string> = {
+  waiting: '질문을 접수했어요. 답변 차례를 기다리고 있어요',
   validating: '질문을 확인하고 있어요',
   catalog_lookup: '도감 기본 정보를 확인하고 있어요',
   interpreting_battle: '말씀한 전투 상황을 정리하고 있어요',
@@ -199,7 +200,9 @@ export default function ChatPanel() {
                 <strong>
                   {translate(stages[w.job.data?.stage ?? 'validating'] ?? '요청을 처리하고 있어요')}
                 </strong>
-                <p>{translate("다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.")}</p>
+                <p>{w.job.data?.status === 'queued' && w.job.data.queuePosition
+                  ? translate('현재 대기 순서: {position}번째', { position: w.job.data.queuePosition })
+                  : translate("다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.")}</p>
               </div>
             </div>
           </>

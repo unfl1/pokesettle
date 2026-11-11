@@ -693,5 +693,7 @@
   "화면 모드": "Appearance",
   "라이트 모드": "Light mode",
   "다크 모드": "Dark mode",
-  "화면 모드를 저장할 수 없어요. 이번 페이지에서만 적용돼요.": "Your appearance preference could not be saved. It applies only to this page."
+  "화면 모드를 저장할 수 없어요. 이번 페이지에서만 적용돼요.": "Your appearance preference could not be saved. It applies only to this page.",
+  "질문을 접수했어요. 답변 차례를 기다리고 있어요": "Your question is queued. Waiting to prepare your answer.",
+  "현재 대기 순서: {position}번째": "Queue position: {position}"
 }

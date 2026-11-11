@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Request, Response
+from fastapi import APIRouter, Request, Response
 
 from backend.app.api import schemas
 from backend.app.api.dependencies import ServiceDep, SessionDep, SettingsDep, StoreDep
@@ -18,14 +18,13 @@ router = APIRouter(tags=["knowledge"], responses=error_responses(401, 404, 409, 
 def collect(
     request: Request,
     response: Response,
-    background: BackgroundTasks,
     body: CollectRequest,
     *,
     settings: SettingsDep,
     session_id: SessionDep,
     service: ServiceDep,
 ):
-    return submit(request, response, background, body, "collect", service, settings, session_id)
+    return submit(request, response, body, "collect", service, settings, session_id)
 
 
 @router.post(
@@ -37,14 +36,13 @@ def collect(
 def chat(
     request: Request,
     response: Response,
-    background: BackgroundTasks,
     body: ChatRequest,
     *,
     settings: SettingsDep,
     session_id: SessionDep,
     service: ServiceDep,
 ):
-    return submit(request, response, background, body, "chat", service, settings, session_id)
+    return submit(request, response, body, "chat", service, settings, session_id)
 
 
 @router.get(
