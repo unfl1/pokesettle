@@ -2,7 +2,7 @@
 
 Pokémon Champions 랭크 싱글 준비와 복기를 위한 RAG 기반 포켓몬 전략 챗봇
 
-[서비스 바로가기](https://www.pokesettle.com)
+[서비스 바로가기](https://pokesettle.com)
 
 ## 주요 기능
 
@@ -58,7 +58,7 @@ pnpm --dir frontend dev
 
 ## 문서와 출처
 
-- [아키텍처](docs/design/ARCHITECTURE.md) | [API 계약](docs/design/API_SPEC.md) | [프로젝트 명세](docs/design/PROJECT_SPEC.md)
+- [제품·구조·API 기준](docs/design/PROJECT_SPEC.md)
 - [설정과 배포](docs/guides/OPERATIONS.md) | [데이터 출처와 이용 조건](docs/guides/DATA_SOURCES.md)
 - 데이터: [PokéAPI](https://pokeapi.co/docs/v2), [라이선스](data/licenses/POKEAPI_LICENSE.md)
 - 이미지: [PokéAPI sprites](https://github.com/PokeAPI/sprites), Pokémon © The Pokémon Company

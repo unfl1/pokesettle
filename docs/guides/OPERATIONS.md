@@ -1,5 +1,7 @@
 # 배포·운영 지침
 
+저장소 설정 기준이며 실제 운영 서버 상태는 배포·변경 전에 별도 확인함. 제품·구조·API는 [통합 명세](../design/PROJECT_SPEC.md), 데이터·모델 이용 조건은 [출처 문서](DATA_SOURCES.md)에서 관리함
+
 - 저장소 Docker 설정: `deployment/docker/`
 - 직접 빌드: `docker build -f deployment/docker/Dockerfile -t poketact-backend:local .`
 - 자동 배포 번들은 기존 서버 경로 유지, 저장소 이동에 따른 서버 수신기 재설치 불필요
@@ -152,19 +154,6 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 
 - 기본 한도: 세션당 분당 3개·하루 200개·유료 대기/실행 작업 1개, 챗봇 접수의 IP당 분당 120개·하루 400개, 서비스 전체 동시 실행 100개·대기 포함 접수 200개 적용함. 동기 조건 검색의 기존 세션/IP 중복 제한 유지함
 - 적용 경로: 챗봇·가이드·문서 수집·자연어 포켓몬 검색, 기본 GET 도감 조회와 계산기는 유료 모델 호출 없음
-- 일반 종별 전략·육성·배경 질문: 기본 출처 조합에서 검색어를 종 이름·등록 특성으로 생성하고 정확한 리소스·자체 전략 후보를 로컬 선별, 검색어 생성·후보 선별용 모델 호출 생략
-- 명시한 기술·특성 효과·다른 포켓몬·규칙 등 해석할 조건이 남거나 Wikipedia 출처를 활성화한 경우 기존 모델 검색어 생성·선별 경로 유지, 답변 생성·인용 검증·적용 범위 제한 유지
-- 답변 순서: 추천 행동·3마리 선출/선봉 → 근거·이유 → 조건부 대안 → 필요한 한계 설명, 전투 입력 확인·가정·미확인·출처 표시는 본문 아래 배치
-- 문장별 evidence 연결과 인용 검증 유지, 표시용 인용 번호·원문 버전은 답변 끝에 모아 중복 제거, 저장된 이전 답변도 UI에서 인용 번호 위치 정리
-- 영어 프롬프트·한국어 답변 지시 사용, 스키마와 서버가 보장하는 배열 상한·출력 형식 및 중복 말투 설명 제거, 근거·가정·Champions 적용 범위 지시 유지
-- 계산 답변이 준비된 전투는 공통 근거 규칙과 보충 설명 전용 지시만 사용, 전략 보충 설명 최대 2개를 전용 스키마로 생성, 추천 행동·계산 수치·주의사항은 서버에서 렌더링
-- `PROMPT_VERSION=conversation-coach-v6`로 검색 계획·수집 완료 캐시 구분, 생성·검색 조건 캐시는 프롬프트 본문 변경으로 자동 구분, 전환 직후 최초 요청은 재생성 가능
-- 선출 또는 보충 설명에 사용할 근거가 없는 전투는 인용 검증 후 계산 답변 직접 반환, 생성 호출 생략
-- 직전 답변이 전투이고 명확한 재설명·요약 문구만 입력한 경우 기존 상태로 재계산, 상태 추출 호출 생략; 변경사항을 포함한 문장·모호한 후속 질문·다른 주제 이후 요청은 기존 모델 해석 유지
-- 도감 가이드는 개인 대화 이력을 입력에서 제외하고 검증된 생성 결과 캐시 사용, 매 요청의 문서 수집·검색 후 현재 근거로 인용 재검증
-- 가이드 캐시 키: 질문·레귤레이션·선택 근거 전체·검색 설정·프롬프트·스키마·모델·접속 주소·출력 한도, 입력 변경 시 재생성; 일반 채팅·전투·유보 응답·인용 검증 실패 응답은 캐시 제외
-- 가이드 캐시 적중 시에도 세션 소유권·요청 횟수·동시 실행 제한 적용, 대화와 메시지는 요청별 신규 저장; 동일 조건의 동시 최초 요청은 중복 생성 가능
-- 답변 입력: 근거 본문·식별자·게임/형식/레귤레이션·검증 상태 유지, 인용용 URL·라이선스·저장 메타데이터는 서버에서 보관하고 JSON 구분자 공백 제거, 근거 본문 임의 절단 없음
 - 익명 세션은 사람별 인증과 구분, 같은 네트워크 이용자는 IP 한도 공유, IPv6는 /64 단위 공유
 - 원본에서 검증한 CloudFront 마지막 X-Forwarded-For 주소만 `X-PokeTact-Viewer-IP`로 덮어쓰기, 앱은 운영 Compose에서만 해당 헤더 신뢰
 - 배포 순서: 새 Nginx 템플릿의 `map`·`proxy_set_header` 반영 후 `nginx -t`·reload 수행, 이후 앱 배포; 누락·잘못된 IP 헤더는 유료 작업 503 차단
@@ -173,12 +162,9 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 - 보조 모델 `gpt-6-luna`: 별도 최대 230,000 토큰, 전환 전 당일 기존 사용량 유지, 두 예산 모두 다음 호출을 수용하지 못하면 `MODEL_BUDGET_EXHAUSTED` 429 반환함
 - `USAGE_DAILY_TOKENS`·`USAGE_FALLBACK_DAILY_TOKENS`로 한도 축소 가능, 코드 상한 초과 증액 불가, 공급자 호출 1,000회·세션/IP·동시 실행 제한은 두 모델 합산 유지함
 - 운영 Compose는 `CHAT_MODEL=gpt-5.6-luna`·`USAGE_DAILY_TOKENS=2450000`·`USAGE_FALLBACK_DAILY_TOKENS=230000` 명시, 기존 서버 `.env.production`의 이전 모델·23만 기본 예산을 덮어씀. 운영 한도 축소 시 해당 Compose 환경값도 함께 변경함
-- [OpenAI 무료 토큰 공식 안내](https://help.openai.com/en/articles/10306912) 기준 두 모델은 서로 다른 무료 그룹임. 혜택 등록·API 입력/출력 공유·양수 잔액 필요, 같은 조직의 다른 프로젝트 사용량은 앱에서 집계하지 않으므로 별도 확인 필요함
+- 앱의 모델 예산은 공급자의 실제 요금·혜택·조직 전체 사용량과 별개임. 공급자 콘솔의 청구·한도 확인 필요함
 - 하루 200개는 사용자 최대 접수량이며 유료 응답 200개 보장과 구분, 전체 한도 도달 시 기본 GET 도감 조회 유지
 - 호출 전 예약 토큰은 프롬프트·자료·스키마의 UTF-8 바이트와 여유분·최대 출력을 합친 보수적 값, 실제 사용 토큰·달러 청구액과 구분; 공급자별 요금·토큰 계산 방식과 엄밀한 청구액 상한은 별도 검증 필요
-- 챗봇의 이전 기록은 질문·답변 본문만 모델에 전달, 과거 출처·전투 계산 객체 재전송 제외; 이력 JSON 6,000 UTF-8 바이트 또는 입력 예약 상한 초과 시 오래된 기록부터 제외하고 질문이 제거된 답변도 제외하며 현재 질문·전투 상태·이번 근거 유지, 해당 자료만으로도 초과하면 `MODEL_INPUT_LIMIT` 반환
-- 일반 질의에는 공통 근거·인용·불확실성 지침 전달, 계산된 전투 문맥이 있을 때만 전투 도구 해석 지침 추가
-- 현재 전투 분석이 이번 근거에 포함되면 모델 입력에서 해당 evidence_id만 참조, 전체 분석 중복 전송 제외; 근거 목록에서 제외된 경우 전체 분석 유지, UI·저장 결과·사용량 제한 유지
 - `MODEL_INPUT_LIMIT`는 호출당 입력 예약 상한이며 개인·IP별 요청 횟수나 서비스 전체 일일 예산 초과와 구분
 - 공급자 응답 수신 시 구조화 출력 파싱 성공 여부와 무관하게 공급자 `usage_metadata`의 입력·출력·전체 토큰 합계를 검증한 뒤 실제 전체 토큰으로 정산, 예약별 DB 식별자로 중복 정산 차단·원래 UTC 날짜에만 반영, 호출 횟수는 환급 없음
 - 사용량 누락·형식 오류·불명확한 공급자 실패·시간 초과는 전체 예약 유지, 과거 예약의 실제 사용량 추정·소급 환급 없음, 재시작 후 사용량 유지, DB 장애 시 예약 불가로 모델 호출 중단
@@ -216,7 +202,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait postgres
 sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml run --rm index
 sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml run --rm index python -m backend.scripts.index_strategy
-sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api worker
 curl --fail http://127.0.0.1:8000/api/status
 ```
 
@@ -233,7 +219,7 @@ curl --fail http://127.0.0.1:8000/api/status
 
 ```bash
 sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml build api
-sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api
+sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml up -d --wait api worker
 sudo docker compose --project-directory . --env-file .env.production -f deployment/docker/compose.production.yaml ps
 ```
 
@@ -275,12 +261,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - 메타 화면 최초 조회·갱신: 외부 시즌 목록과 순위 스냅샷 확인 동안 로딩 안내·자리 표시 노출, 서버 캐시 유효기간 6시간·갱신 실패 시 최대 24시간 임시 캐시 유지
 - 정책 언어: 영어 `/terms`·`/privacy`, 한국어 `/ko/terms`·`/ko/privacy`, 일본어 `/ja/terms`·`/ja/privacy`, 중국어 `/zh/terms`·`/zh/privacy` 제공함. 기존 `/en/terms`·`/en/privacy`는 영어 루트 주소로 308 연결, 문서 본문·목차·시행일·푸터·메타데이터·사이트맵은 선택 언어에 맞춰 제공함
 - SEO 원본 도메인: 기본 `https://pokesettle.com`, 다른 도메인은 빌드 환경의 `SITE_URL` 설정 후 재빌드 필요, 런타임 변경만으로 정적 sitemap·robots 변경 불가
-- 화면 경계: 홈은 `[lang]/(home)`, 기능 화면은 `[lang]/(root)`에 배치함. 기능 화면의 `WorkspaceShell`·푸터·언어 안내는 서버에서 렌더링하고 공통 `[lang]/layout.tsx`의 Provider로 Next Link 이동 중 초안 유지함
-- 초안 전달: `pagehide`에서 현재 탭 `sessionStorage`에 질문·팀 초안만 임시 보관, 다음 문서에서 검증·소비 후 삭제, 명시적 새로고침은 복원 없이 초기화, 대화 메시지·답변은 저장 제외
-- 내부 링크: 기능 메뉴의 사전 조회·클릭 대기 표시 유지, 홈 카드·브랜드는 사전 조회 없이 클라이언트 이동, 도감·메타는 RSC 이동에서 로딩 안내·스트리밍 제공, 문서 직접 접속은 완성된 HTML 제공
 - 공개 SSR 캐시: 도감 초기 목록·ID 상세·메타 GET만 60초 재검증, 원본은 런타임 `API_ORIGIN` 사용, 빌드 시 API 조회 제외, Next.js 데이터 캐시 재검증 중 이전 응답 사용 가능
-- 개인 SSR: 챗봇·시나리오 직접 접속 시 기존 `pokecoach_session`으로 대화 목록·최신 대화 메시지 또는 저장 팀을 서버 조회하고 React Query로 하이드레이션함. 개인 GET은 `no-store`, 페이지 응답은 `private, no-store`, 요청별 QueryClient 사용함
-- 세션 없는 방문·만료·초기 조회 실패는 브라우저의 세션 생성·조회·오류 처리 경로로 복구함. 서버 렌더링에서 세션 생성·쿠키 갱신 없음. 최초 데이터 유지 시간은 상태 15초·대화/메시지/팀 30초, 이후 폴링·변경 무효화 유지함
 - `PUBLIC_DATA_CACHE_SECONDS=0`: 공개 SSR 캐시 비활성화 옵션, 상태를 변경하는 E2E fixture의 검사 간 격리에 사용, 운영 기본값은 60초
 - 로컬 Next.js 환경 변수는 `frontend/.env.local`에 설정, 루트 백엔드 `.env`와 분리
 - `GA_ID`: 프런트엔드 서버 런타임 GA4 측정 ID, `/analytics/config`의 no-store 응답으로 클라이언트에서 조회, 미설정 시 Analytics 비활성화, 변경 후 프런트 컨테이너 재생성, 페이지 정적 생성 유지
@@ -308,45 +289,17 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 | ACM 검증 호스트 | ACM 지정 CNAME | CloudFront 인증서 발급·자동 갱신 |
 
 - CloudFront 인증서: `us-east-1` ACM의 `pokesettle.com`·`www.pokesettle.com` 포함 인증서, 서버 인증서: Certbot의 `pokesettle.com`·`api.pokesettle.com`
-- 이전 치코리타 도메인: 최종 CloudFront 별칭·Nginx 호스트·CORS·DNS 연결에서 제거, 새 서비스로 이동 처리 없음
 - 전환 순서: 새 DNS·인증서 → Nginx 새 원본 준비 → 앱 배포·CORS 변경 → CloudFront 새 별칭·원본 전환 → 공개 검사 → 이전 도메인 연결 정리
 - GitHub production 환경의 `PRODUCTION_URL`은 non-www 메타데이터를 포함한 앱 배포 시 `https://pokesettle.com`으로 설정 필요
 - 기존 저장 데이터 호환성: Compose 프로젝트·DB·볼륨·서버 경로·메트릭·문서 ID·세션 키·비공개 원본 헤더의 `poketact` 식별자 유지
-- GitHub 저장소 `unfl1/poketact` 및 로컬 디렉터리 유지, 공개 서비스 이름과 별도 관리
 - 원본 수신기 교체 시 새 이름과 이전 이름의 준비 상태를 모두 인식하여 이전 이미지 롤백 허용
 - 도메인 변경 전 브라우저 쿠키·sessionStorage는 새 도메인으로 자동 이전되지 않음, 기존 DB 데이터는 유지하되 새 주소에서는 새 세션 시작
 
-### 프론트 스타일 구성
+### 빌드와 개발 진입점
 
-- 화면 레이아웃·반응형·상태 스타일: JSX의 Tailwind CSS 유틸리티 사용, 수집 기능 CSS 모듈 제거
-- `frontend/src/globals.css`: Tailwind 진입점·디자인 토큰·반응형 변형·애니메이션 테마·플러그인 지시문만 유지
-- `frontend/src/styles/document.ts`: 공통 기본값·포커스·동작 축소를 루트 Tailwind 유틸리티로 관리, `:where()`로 개별 컴포넌트 유틸리티 우선권 유지
-- `frontend/tailwind-fonts.mjs`·`frontend/src/styles/pretendard-subsets.json`: 91개 Pretendard 보조 서브셋의 폰트 등록을 Tailwind 플러그인으로 생성, unicode-range·라이선스 주석 보존, 기존 폰트 CSS 파일 제거
-- 타입 색상: `frontend/src/features/pokemon/typeColors.ts`의 정적 Tailwind 클래스 매핑 사용
-- JSX 인라인 스타일 제거: 제목 표시 지연은 정적 Tailwind 클래스 목록, 종족값 막대 비율은 SVG 수치 속성, 포획 이동은 Web Animations API 사용
-- 제목 번역이 길어지는 경우 `src/styles/titleDelays.ts` 지연 클래스 확장, 목록을 초과하는 글자는 마지막 지연값 적용
-
-### 로컬 실행과 빌드
-
-```bash
-pnpm --dir frontend install --frozen-lockfile
-pnpm --dir frontend dev
-pnpm --dir frontend run build
-```
-
-- 작업 후 자동 검사 및 PR·배포 전 회귀 검사 제거, 배포 이미지 빌드·운영 상태 확인 유지
-- 선택 명령: `pnpm --dir frontend format`, `format:check`, `lint`, `lint:fix`, `typecheck`
-- Prettier 3.9.10·oxlint 1.90.0·TypeScript 7.0.2 사용, 기존 테스트 소스·수동 실행 명령 유지
-
-### Codex Next.js DevTools MCP
-
-- 설정: `frontend/.codex/config.toml`, `pnpm dlx next-devtools-mcp@latest` 표준 입출력 서버, 최초 실행 시 패키지 내려받기
-- 실행 조건: Node.js·pnpm이 Codex 실행 환경의 `PATH`에 존재, `frontend` 작업 디렉터리에서 새 Codex 세션 시작, 신뢰한 프로젝트의 설정 로드 필요
-- 개발 서버: `pnpm --dir frontend dev`, 기본 포트 `3000`, Next.js 내장 `/_next/mcp` 연결
-- 확인 도구: `nextjs_index`의 `port: "3000"`으로 서버 검색, `nextjs_call`의 `get_routes`·`get_errors`·`get_compilation_issues`로 경로·오류 분석
-- 범위: 개발 전용 도구, 프로덕션 Next.js 서버는 MCP 분석 대상 제외
-- E2E 포트 분리: 기존 개발 서버 실행 중 `PLAYWRIGHT_PORT=3002 pnpm --dir frontend test:e2e`, 새 빌드 서버에서 검증
-- 근거: [Next.js MCP](https://nextjs.org/docs/app/guides/mcp), [Codex MCP 설정](https://learn.chatgpt.com/docs/extend/mcp), 확인일 `2026-10-27`
+- 로컬 설치·실행은 [README](../../README.md#로컬-실행) 참조함
+- 프런트 빌드: `pnpm --dir frontend build`, 코드 변경에 필요한 수동 검사만 선택 실행함
+- 스타일 규칙은 `AGENTS.md`·`.agent/rules/frontend-styling.md`에서 관리함. 도구 사용법·구현 학습은 로컬 학습 가이드로 이동함
 
 - 프로덕션 이미지: `deployment/docker/Dockerfile.frontend`, `.next/standalone`·`.next/static`·`public` 포함
 - 운영 설정: `deployment/docker/compose.production.yaml`, `deployment/docker/.env.production.example`
@@ -383,18 +336,15 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 ```
 
 - API 캐시 비활성화, 쿠키·쿼리·요청 헤더 전달, Nginx 응답 `Cache-Control: no-store` 적용
-- 기존 S3·Vite 배포 전환 순서: Nginx 템플릿 백업·반영 → `nginx -t`·reload → 인증된 원본 `/chat` 응답 확인 → `connect_frontend.py`로 CloudFront 전환 → 공개 검사
 - 전환 전 서버의 root 소유 `/usr/local/lib/poketact/receive-release.py`를 검토한 최신 `deployment/receive_release.py`로 갱신, 이전 수신기는 Next.js 이미지가 전달돼도 프론트 컨테이너 기동·준비 검사 미수행
 - 서버 수신기는 릴리스 번들에 포함되지 않으므로 앱 재배포만으로 갱신되지 않음, 기존 수신기 백업 후 root 소유·실행 권한 유지
 - 별도 worker 전환 시에도 최신 수신기 설치 필요함. 새 수신기는 worker 기동·롤백을 포함함. 이전 릴리스에 worker가 없으면 신규 API·worker를 중지하고 대기열 작업을 interrupted로 정리한 뒤 복원함. 불명확한 유료 호출의 토큰 예약은 환불하지 않음
 - Nginx 화면 요청은 `127.0.0.1:3001`, `/api/` 요청은 `127.0.0.1:8000`으로 전달, 기존 원본 인증값·인증서·API 요청 제한 유지
-- 공개 HTML의 `Server: AmazonS3`·`/assets/`와 Next.js 자산 부재는 기존 정적 원본 유지 징후, 캐시 무효화만으로 원본 전환 불가
 - 전환 후 `PRODUCTION_URL=https://www.example.com python3 deployment/check_production.py`로 서버 렌더링·정적 자산·API 준비 상태 확인, 실제 도메인 사용
 - 세션 쿠키 Secure·HttpOnly·SameSite=Lax 적용, DB·8000번 직접 공개 제외
 - Nginx 템플릿: 전체 쓰기 초당 300회·burst 300, 인증한 CloudFront viewer IP별 읽기 초당 200회·burst 400 적용함. 기존 CloudFront 연결 IP 키와 전역 쓰기 분당 30회·burst 5 제한은 100명 동시 접수를 차단하므로 교체함. 읽기 zone 이름을 api_viewer_reads_v2로 변경해 reload 시 이전 키와 공유 메모리 충돌 방지함
 - 원본 검증값은 서버 직접 호출 제한용이며 서비스 이용자 인증과 구분
 - 요청 제한은 AI 지출의 금액 상한을 보장하지 않음, 공개 운영 시 별도 사용량 관리 필요
-- 루트 HTTP·HTTPS는 HTTPS `www`로 이동, 나머지 HTTP 호스트는 인증서 검증 경로 외 404 반환
 
 ### 참고
 
@@ -409,24 +359,7 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 
 변경일: 2026-10-22 (Asia/Seoul)
 
-### 구현
-
-| 원인 | 수정 | 결과 |
-|---|---|---|
-| 상태 저장에 SQLite 사용 | PostgreSQL·psycopg로 교체 | 세션·대화·팀·작업·캐시를 PostgreSQL에 저장함 |
-| SQLite 전용 SQL·행 순서 사용 | 매개변수·upsert·identity `seq` 적용 | 기존 API·대화 순서·세션 소유권 유지함 |
-| 동시 작업 요청·상태 갱신 경합 | 트랜잭션 advisory lock·`FOR UPDATE` 적용 | 동일 요청 ID 중복 생성과 상태 덮어쓰기 방지함 |
-| 이전 색인의 완료 캐시 재사용 위험 | 읽기 전용 이전·manifest/완료 캐시 제외·원문 재색인 | 실제 PostgreSQL 벡터 청크 확인 후 PostgreSQL에 완료 상태 생성함 |
-
-| 저장 대상 | 저장소 |
-|---|---|
-| 세션·대화·메시지·팀·작업·캐시·원문·manifest | PostgreSQL의 `sessions`, `conversations`, `messages`, `teams`, `jobs`, `cache` |
-| 포켓몬 메타·문서 청크·임베딩 | PostgreSQL `vector_collections`·`vector_entries`의 `pokemon_meta`·`pokemon_docs` 논리 컬렉션 |
-| 도감·출처·규칙 기준 스냅샷 | `data/` JSON |
-
-- 원본 PDF 5쪽의 Chroma 지정은 확인된 사실임. 사용자가 PostgreSQL + pgvector 통합을 선택함. 과제 측 대체 허용 확인과 구분함.
-- 기존 `runtime/embedding_model` 캐시 재사용함. ChromaDB·langchain-chroma 의존성과 런타임 저장 경로 제거함.
-- 메타데이터는 JSONB 동등 필터, 벡터는 `<->` 정확 L2 검색 적용함. 모델·차원 불일치와 비유한 벡터 입력 거부함.
+현재 저장 구조·검색 방식은 [통합 명세](../design/PROJECT_SPEC.md#데이터와-rag)에서 관리함. 아래는 DB 설정·색인·이전 명령임
 
 ### 실행
 
@@ -443,20 +376,12 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 - `RUNTIME_DIR`: 기본 저장소의 `runtime`. 로컬 임베딩 모델 캐시 경로임. 벡터 데이터는 PostgreSQL에 저장함.
 - 기존 모델 공급자 설정 유지함. DB 연결 문자열은 설정 객체의 `repr`에서 제외함.
 
-```bash
-docker compose up -d --wait postgres
-uv sync --python 3.12 --frozen --group dev
-uv run --frozen python -m backend.scripts.index_data
-uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
-```
+로컬 초기 실행 명령은 [README](../../README.md#로컬-실행) 참조함
+
 
 - 기존 PostgreSQL 사용 시 Compose 시작 생략 가능함. UTF-8 DB·pgvector 설치·스키마 생성 권한 필요함. `CREATE EXTENSION vector WITH SCHEMA public` 실행 권한 또는 관리자의 사전 확장 생성 필요함.
 - Compose DB는 `127.0.0.1`에만 노출함. named volume에 데이터 유지함.
 - Compose는 pgvector 포함 PostgreSQL 이미지를 사용함. 별도 벡터 DB 서비스 불필요함.
-- 앱 모듈 import는 DB 연결을 수행하지 않음. 실제 서비스 초기화는 FastAPI lifespan에서 수행함.
-- Store별 psycopg 연결 풀 사용함. 연결 생성 시 전용 스키마 경로를 한 번 설정하고 트랜잭션 종료 시 commit·rollback 후 재사용함. API가 생성한 풀은 초기화 실패·종료 시 닫고, 주입한 서비스의 풀은 호출자가 정리함
-- 모델 클라이언트는 모델·추론 설정·temperature별로 재사용함. 요청별 입력·결과·예산 예약은 공유하지 않음. worker의 진행 중 작업 종료 후 SDK 동기·비동기 연결을 명시적으로 닫음
-- 사용량 검사에서는 프로세스 내부 잠금을 먼저 획득한 뒤 DB 연결을 빌림. 기존 PostgreSQL advisory transaction lock을 유지해 독립 프로세스 간 접수·예산 정합성 유지함. 진행 중 작업 한도 초과 시 시각 조회·정리 쿼리 생략, 오래된 카운터·예약 정리는 당일 성공 접수 후 반복 생략함
 
 ### 로컬 챗봇 동시 부하 측정
 
@@ -519,27 +444,14 @@ uv run --frozen python -m backend.scripts.index_data
 - 이전 도구 재실행 시 데이터 덮어쓰기 없음. 새 `DATABASE_SCHEMA`를 지정한 별도 이전 필요함.
 
 
-### 출처·라이선스
+### 선택 실행 검증
 
-확인일: 2026-10-22 (Asia/Seoul)
-
-- [Psycopg 공식 문서](https://www.psycopg.org/psycopg3/docs/): 연결·행 사전·트랜잭션·SQL 매개변수 참고함. 배포 패키지 라이선스 원문 유지함.
-- [pgvector 공식 문서](https://github.com/pgvector/pgvector): PostgreSQL License. 벡터 타입·L2 거리·정확 검색·Docker 구성 참고함.
-- [all-MiniLM-L6-v2 모델 카드](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2): Apache-2.0 모델, 영어 중심·384차원임.
-- [ONNX export 프로젝트](https://github.com/chroma-core/onnx-embedding): Apache-2.0 프로젝트. 기존 로컬 모델 캐시 재사용함. 배포 URL의 Chroma 명칭은 모델 호스팅 주소이며 ChromaDB 런타임 의존성과 구분함.
-
-- 모델 신규 다운로드는 SHA-256 `913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3` 검증 후 정규 파일 두 개만 추출함.
-
-
-### 공개 도감 SSR 빌드·검증
-
-- 프론트 빌드 전 이름 스냅샷과 도감 ID의 일치 검증 및 URL 인덱스 생성, Docker 빌드 입력에 `data/pokemon.json`·`data/pokemon_names.json` 포함
-- 정적 사이트맵: 기능 URL 20개 + 상세 URL 5,404개, 빌드 시 API·모델 호출 없음
-- 서버 SSR: API 연결 실패를 없는 포켓몬으로 처리하지 않음, 일반 도감은 메모리 카탈로그, 메타는 기존 서버 캐시의 기준일·stale 상태 사용
-- 메타 조회·선택: 순위·세팅·출처·날짜를 서버 HTML로 제공함. `?pokemon=<nameEn>` 선택과 서버 재조회 사용, 브라우저의 중복 `/api/meta/singles` 조회 제거함. 공개 SSR 캐시 기본 60초 정책 유지함
-- 하이드레이션 검사: `test/frontend/ssr-boundaries.spec.ts`에서 JavaScript 없는 메타 선택·공통 헤더, 4개 언어의 지연 스크립트·날짜 포맷 차이·저장소 기록에서 DOM 보존과 오류 부재 검증함
-- 테스트 의존성: `pnpm --dir test install --frozen-lockfile`로 기존과 같은 Playwright·Node 타입 버전 설치함. E2E 실행 명령 `pnpm --dir frontend test:e2e` 유지, AWS 리다이렉트 검사는 `node --test test/deployment/locale_redirect.test.mjs` 사용함
-- 프론트 E2E: `test/frontend/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
-- 공개 캐시 검사: `pnpm --dir frontend build` 후 `pnpm --dir frontend test:public-cache`, 기본 캐시 활성 상태에서 원본 호출 수·실패 응답 복구·런타임 GA 설정 검증
-- 공개 smoke: 홈·챗봇·정적 자산·API 준비 상태와 피카츄 상세의 실제 HTML 본문·canonical 확인
-- 전역 CSS: `frontend/src/globals.css`, 아이콘: 기존 SVG와 16·32·48px `app/favicon.ico`
+- 구조·SSR·캐시 경계는 [통합 명세](../design/PROJECT_SPEC.md#화면url캐시-경계)에서 관리함
+- Python: `uv run --frozen pytest`, 기본 수집 경로 `test/backend` 사용함. DB 통합 검사는 별도 테스트 DB의 `POKETACT_TEST_DATABASE_URL` 설정 필요함
+- 프런트 테스트 의존성: `pnpm --dir test install --frozen-lockfile`, 기존과 같은 Playwright·Node 타입 버전 사용함
+- E2E: 프런트 빌드 후 `pnpm --dir frontend test:e2e`, `test/frontend/fixture-api.mjs`의 로컬 합성 API 사용함. 개발 서버와 포트가 겹치면 `PLAYWRIGHT_PORT` 지정함
+- 프런트 테스트 타입: `pnpm --dir frontend exec tsc --project ../test/frontend/tsconfig.json --noEmit` 사용함
+- AWS 로케일 이동: `node --test test/deployment/locale_redirect.test.mjs` 사용함
+- 공개 캐시: 프런트 빌드 후 `pnpm --dir frontend test:public-cache`, 호출 재사용·실패 복구·런타임 GA 설정 검증함
+- 운영 공개 검사: `PRODUCTION_URL=https://pokesettle.com python3 deployment/check_production.py`, 홈·챗봇·피카츄 상세 SSR·canonical·정적 자산·API 준비 상태 확인함
+- 수동 검사 통과와 운영 배포 완료 구분함. 배포 이미지 빌드와 실제 서버·공개 경로 확인 유지함
