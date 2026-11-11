@@ -8,6 +8,7 @@ from backend.app.catalog import Catalog
 from backend.app.core.config import ROOT
 from backend.app.main import create_app
 from backend.app.services.catalog_answers import answer_catalog, catalog_question
+from backend.tests.conftest import wait_for_job
 
 
 @pytest.mark.parametrize(
@@ -56,7 +57,7 @@ def test_direct_catalog_without_model_or_vectors_persists_and_api_accepts(setup,
             },
         )
         assert result.status_code == 202
-        data = client.get(result.json()["data"]["statusUrl"]).json()["data"]["result"]
+        data = wait_for_job(client, result.json()["data"]["statusUrl"]).json()["data"]["result"]
         assert data["answerPath"] == "catalog_navigation"
         assert data["catalogNavigation"]["pokemon"]["pokemonId"] == "pokemon:25"
         assert data["citations"] == []
@@ -174,7 +175,7 @@ def test_navigation_api_works_without_model_and_does_not_consume_ai_quota(setup)
             for question in ["피카츄는 뭐야?", "불꽃기술은 뭐가 있어?", "피카츄는 무슨 포켓몬이야?", "리자몽에 대한 정보 알려줘", "리자몽 종족값 알려줘", "리자몽 기술 알려줘"]:
                 response = client.post("/api/chat", json={"question": question, "clientRequestId": str(uuid4())})
                 assert response.status_code == 202
-                job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+                job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
                 assert job["status"] == "completed"
                 assert job["result"]["catalogNavigation"]["section"] in {"profile", "moves"}
         finally:

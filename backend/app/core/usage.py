@@ -51,6 +51,7 @@ def request_subjects(request, session_id, settings):
 class UsageGuard:
     def __init__(self, store, settings, telemetry=None):
         self.store, self.settings, self.telemetry = store, settings, telemetry
+        self._cleanup_day = None
         with store.connect() as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS usage_secret (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL)"
@@ -66,12 +67,13 @@ class UsageGuard:
             db.execute("""CREATE TABLE IF NOT EXISTS usage_leases (
                 id TEXT PRIMARY KEY, subjects TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0,
                 expires_at TIMESTAMPTZ NOT NULL)""")
+            db.execute("ALTER TABLE usage_leases ADD COLUMN IF NOT EXISTS queued BOOLEAN NOT NULL DEFAULT false")
             db.execute("""CREATE TABLE IF NOT EXISTS usage_reservations (
                 id TEXT PRIMARY KEY, bucket TEXT NOT NULL, tokens BIGINT NOT NULL)""")
 
     @contextmanager
     def locked(self):
-        with self.store.connect() as db:
+        with self.store.usage_lock, self.store.connect() as db:
             # All admission/reservation changes share one transaction lock across workers.
             db.execute("SELECT pg_advisory_xact_lock(733041827)")
             try:
@@ -100,37 +102,43 @@ class UsageGuard:
         )
 
     def begin(self, subjects):
+        with self.locked() as db:
+            lease, day = self._begin(db, subjects, queued=False)
+        self._cleanup_day = day
+        return lease
+
+    def _begin(self, db, subjects, *, queued):
+        """Admit within the caller's usage lock and transaction."""
         s = self.settings
         lease = uuid4().hex
-        with self.locked() as db:
-            # DB time prevents worker clock skew; buckets use UTC, not local server time.
-            clock = db.execute(
-                "SELECT to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') AS day, to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD HH24:MI') AS minute"
-            ).fetchone()
-            db.execute("DELETE FROM usage_leases WHERE expires_at <= now()")
+        leases = db.execute(
+            "SELECT subjects,queued FROM usage_leases WHERE expires_at > now()"
+        ).fetchall()
+        # Queued chat users share an IP quota, not an exclusive IP execution slot.
+        conflict = any(
+            subjects[0] in json.loads(row["subjects"]) if queued
+            else set(subjects) & set(json.loads(row["subjects"])) for row in leases
+        )
+        if conflict or (not queued and sum(not row["queued"] for row in leases) >= s.usage_global_concurrency):
+            raise denied("USAGE_BUSY", "진행 중인 질문이 있습니다. 완료 후 다시 시도해 주세요.")
+        clock = db.execute(
+            "SELECT to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD') AS day, to_char(now() AT TIME ZONE 'UTC','YYYY-MM-DD HH24:MI') AS minute"
+        ).fetchone()
+        db.execute("DELETE FROM usage_leases WHERE expires_at <= now()")
+        if self._cleanup_day != clock["day"]:
             db.execute("DELETE FROM usage_counters WHERE left(bucket,10) < %s", (clock["day"],))
             db.execute("DELETE FROM usage_reservations WHERE left(bucket,10) < %s", (clock["day"],))
-            leases = db.execute("SELECT subjects FROM usage_leases").fetchall()
-            if len(leases) >= s.usage_global_concurrency or any(
-                set(subjects) & set(json.loads(r["subjects"])) for r in leases
-            ):
-                raise denied("USAGE_BUSY", "진행 중인 질문이 있습니다. 완료 후 다시 시도해 주세요.")
-            for index, subject in enumerate(subjects):
-                self.charge(
-                    db, clock["minute"] + ":requests", subject, 1, s.usage_requests_per_minute
-                )
-                self.charge(
-                    db,
-                    clock["day"] + ":requests",
-                    subject,
-                    1,
-                    s.usage_requests_per_day if index == 0 else s.usage_ip_requests_per_day,
-                )
-            db.execute(
-                "INSERT INTO usage_leases (id,subjects,expires_at) VALUES (%s,%s,now()+interval '15 minutes')",
-                (lease, json.dumps(subjects)),
-            )
-        return lease
+        for index, subject in enumerate(subjects):
+            minute_limit = s.usage_ip_requests_per_minute if queued and index else s.usage_requests_per_minute
+            self.charge(db, clock["minute"] + ":requests", subject, 1, minute_limit)
+            self.charge(db, clock["day"] + ":requests", subject, 1,
+                        s.usage_requests_per_day if index == 0 else s.usage_ip_requests_per_day)
+        db.execute(
+            """INSERT INTO usage_leases (id,subjects,expires_at,queued)
+                VALUES (%s,%s,now()+interval '15 minutes',%s)""",
+            (lease, json.dumps(subjects), queued),
+        )
+        return lease, clock["day"]
 
     def finish(self, lease):
         with self.locked() as db:
@@ -159,7 +167,7 @@ class UsageGuard:
             raise ValueError("Invalid model reservation")
         with self.locked() as db:
             row = db.execute(
-                "SELECT calls FROM usage_leases WHERE id=%s AND expires_at>now()", (lease,)
+                "SELECT calls FROM usage_leases WHERE id=%s AND expires_at>now() AND NOT queued", (lease,)
             ).fetchone()
             if not row or row["calls"] >= s.usage_calls_per_job:
                 raise denied("MODEL_CALL_LIMIT", "질문당 모델 호출 한도에 도달했습니다.")

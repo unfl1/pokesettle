@@ -14,12 +14,18 @@ router = APIRouter(tags=["system"])
     response_model=schemas.Envelope[schemas.StatusData],
     response_model_exclude_unset=True,
 )
-def status(request: Request, *, settings: SettingsDep, catalog: CatalogDep, vectors: VectorDep):
+def status(request: Request, *, settings: SettingsDep, catalog: CatalogDep, vectors: VectorDep, store: StoreDep):
     missing = []
     if not settings.model_configured:
         missing.append("MODEL_KEY_MISSING")
     if not vectors.meta.count():
         missing.append("INDEX_NOT_READY")
+    if not settings.job_worker_embedded:
+        with store.connect() as db:
+            worker = db.execute("""SELECT 1 FROM job_workers WHERE NOT draining
+                AND heartbeat_at>clock_timestamp()-interval '20 seconds' LIMIT 1""").fetchone()
+        if not worker:
+            missing.append("WORKER_NOT_READY")
     return ok(
         request,
         {

@@ -15,6 +15,7 @@ from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.schemas import ChatRequest
 from backend.app.services.catalog_answers import catalog_question
 from backend.app.services.topics import mentioned_pokemon
+from backend.tests.conftest import wait_for_job
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +70,7 @@ def test_typo_question_without_selected_id_uses_model_free_catalog(setup, catalo
         client.post("/api/session")
         response = client.post("/api/chat", json={"question": f"{typed} 타입 뭐야?", "clientRequestId": str(uuid4())})
         assert response.status_code == 202
-        job = client.get(response.json()["data"]["statusUrl"]).json()["data"]
+        job = wait_for_job(client, response.json()["data"]["statusUrl"]).json()["data"]
         assert job["status"] == "completed"
         assert job["result"]["answerPath"] == "catalog_navigation"
         assert job["result"]["catalogNavigation"]["pokemon"]["nameKo"] == expected

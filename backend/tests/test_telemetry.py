@@ -14,7 +14,8 @@ from backend.app.rag.model import StructuredModel
 
 def app_with_routes():
     service = SimpleNamespace(store=SimpleNamespace(recover_jobs=lambda: None))
-    app = create_app(Settings(), service=service, usage=object())
+    settings = Settings(job_worker_embedded=False)
+    app = create_app(settings, service=service, usage=SimpleNamespace(settings=settings))
 
     @app.get("/test/items/{item_id}")
     def item(item_id: str):

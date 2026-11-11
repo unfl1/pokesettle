@@ -59,7 +59,10 @@ flowchart TD
 | `backend/app/storage.py` | PostgreSQL 저장과 트랜잭션 | UI에서 DB 직접 접근 금지 |
 | `backend/app/battle` | Phase 3 이후 검증된 상성·적격성·후보 계산 | LLM이 데미지·확률을 산출하지 않음 |
 
-초기 운영은 개인용 로컬 단일 FastAPI 프로세스와 PostgreSQL + pgvector 서버임. 별도 큐·Redis·Node 서비스·Zustand를 미리 도입하지 않음. 작업은 백그라운드 실행하고 상태를 PostgreSQL에 남겨 polling으로 표시함. 프로세스 재시작 시 진행 중 작업을 `interrupted`로 복구하고 완료를 가장하지 않음. 다중 프로세스/외부 공개는 추후 인증·작업 큐 설계 후 지원함.
+- 운영은 FastAPI 접수·조회 프로세스와 별도 Python worker 프로세스로 분리함. Redis 추가 없이 PostgreSQL `job_queue`에 요청 본문·사용량 lease·실행 소유권 저장함
+- 기본 동시 실행 100개·대기 포함 접수 200개, 세션당 유료 작업 1개 적용함. worker는 DB 트랜잭션·advisory lock·`FOR UPDATE SKIP LOCKED`로 작업을 한 번만 claim함
+- 대기 작업은 API 재시작 후 보존함. 실행 소유권은 75초이며 worker가 5초 간격으로 갱신함. 소유권 만료 시 interrupted 처리하고 유료 호출의 자동 재실행 방지함. 만료된 worker의 늦은 상태 갱신 차단함
+- 로컬은 `JOB_WORKER_EMBEDDED=true`로 API 요청 스레드와 분리된 실행 풀 사용 가능함. 운영 Compose는 false로 고정하고 worker 컨테이너에서 실행함. DB 연결 풀은 프로세스마다 최대 10개이며 트랜잭션 종료 후 반환함
 
 ## 2. 수집·색인 경로
 

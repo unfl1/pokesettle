@@ -112,21 +112,22 @@ Phase 1·2 경로와 Phase 3의 일반 타입 시나리오 경로 구현. Champi
 }
 ```
 
-서버가 등록된 출처 어댑터로만 검색하고 캐시·자체 문서 포함 규칙을 적용함. 강제 갱신은 이 요청에서 허용하지 않음. 202 응답 data는 `jobId`, `status:"queued"`, `statusUrl`임. 진행 위치는 `Location` 헤더에도 둠.
+서버가 등록된 출처 어댑터로만 검색하고 캐시·자체 문서 포함 규칙을 적용함. 강제 갱신은 이 요청에서 허용하지 않음. 202 응답 data는 `jobId`, 접수 시점의 `status`, `statusUrl`임. PostgreSQL 대기열에 요청·사용량 lease를 원자적으로 저장하고 별도 worker가 실행함. 진행 위치는 `Location` 헤더에도 둠.
 
 `GET /api/jobs/{jobId}`:
 
 | 필드 | 계약 |
 |---|---|
 | `status` | `queued/running/completed/failed/interrupted` |
-| `stage` | `validating/extracting_queries/searching/filtering/collecting/indexing/retrieving/generating/validating_citations/saving/done` 중 적용 단계 |
+| `stage` | `waiting/validating/extracting_queries/searching/filtering/collecting/indexing/retrieving/generating/validating_citations/saving/done` 중 적용 단계 |
 | `progress` | `{completedUnits,totalUnits}` 또는 null. 총량 미확인 시 가짜 퍼센트 금지 |
 | `cache` | 검색어/원문 cache hit·miss 수. 디버그 프롬프트 비노출 |
 | `result` | 완료 시 종류별 결과, 나머지는 null |
 | `error` | 실패 시 공통 안전 오류, 나머지는 null |
 | `createdAt`, `updatedAt` | UTC 시각 |
+| `queuePosition` | 대기 중 순서, 실행 중·완료 시 null |
 
-polling 기본 1초, 장기 작업은 2~5초로 간격 확대함. 다른 세션의 job은 404. 완료가 되어도 `answerStatus=abstained`일 수 있으며 유보는 서버 오류가 아님. 수집 결과는 `documentCount`, `chunkCount`, 채택 문서 제목/출처, `subjectDocumentStatus`를 포함함. 필수 자체 문서가 없으면 성공 완료로 보고하지 않음.
+polling은 대기 중 2초, 실행 중 초기 1초·10회 조회 이후 2초 적용함. 대기열 기본 접수 200개·실행 100개·대기 제한 300초 적용함. API 재시작은 DB 대기열에 보관한 작업을 중단하지 않음. 실행 worker의 소유권이 만료되면 안전한 interrupted 오류를 반환하고 자동 재실행하지 않음. 다른 세션의 job은 404. 완료가 되어도 `answerStatus=abstained`일 수 있으며 유보는 서버 오류가 아님. 수집 결과는 `documentCount`, `chunkCount`, 채택 문서 제목/출처, `subjectDocumentStatus`를 포함함. 필수 자체 문서가 없으면 성공 완료로 보고하지 않음.
 
 ## 6. 대화와 RAG 응답
 
@@ -216,6 +217,9 @@ conversationId가 null이면 새 대화 생성. 기존 ID는 소유 세션·regu
 | 422 `INVALID_INPUT` / `UNKNOWN_REGULATION` | 길이·필드·ID 검증 실패 | 안전한 필드 오류 |
 | 503 `INDEX_NOT_READY` | 필수 메타 색인 미완료 | 데이터 준비 안내 |
 | 503 `MODEL_KEY_MISSING` | 서버 키/모델 설정 누락 | 서버 설정 안내, 실제 키 비노출 |
+| 429 `QUEUE_FULL` | 실행·대기 작업이 접수 상한에 도달 | 혼잡 안내·재시도 가능 |
+| 작업 오류 `QUEUE_TIMEOUT` / `JOB_INTERRUPTED` | 대기 시간·실행 소유권 만료 | 조회 HTTP 200·작업 상태 interrupted·새 요청으로 재시도 |
+| 503 `DATABASE_BUSY` | DB 연결 풀 대기 시간 초과 또는 대기열 포화 | 일반 혼잡 안내·재시도 가능, DB 접속 정보 비노출 |
 | 502/504 `SOURCE_UNAVAILABLE` / `MODEL_TIMEOUT` | 외부 출처/모델 실패 | 가능한 경우 재시도 |
 | 502 `SUBJECT_DOCUMENT_UNAVAILABLE` | 자체 문서 확보 실패 | 문서 준비 미완료 안내, 완료로 위장 금지 |
 | 502 `GENERATION_INVALID` | 제한 재시도 후 출력 검증 실패 | 안전한 오류, 내부 전문 비노출 |

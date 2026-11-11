@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Query, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 
 from backend.app.api import schemas
 from backend.app.api.dependencies import (
@@ -149,7 +149,6 @@ def discovery(
 def guide(
     request: Request,
     response: Response,
-    background: BackgroundTasks,
     pokemon_id: str,
     body: GuideRequest,
     session_id: SessionDep,
@@ -159,4 +158,4 @@ def guide(
 ):
     guide_question = "선택한 포켓몬의 근거 기반 운용 가이드를 작성해 주세요. 먼저 일반 도감에서 확인되는 타입, 종족값의 특징, 특성 이름과 수집 문서에 설명된 특성 작용을 근거와 함께 정리하세요. 운용 역할과 주의점은 문서가 직접 뒷받침할 때만 설명하고, 없으면 미확인으로 구분하세요. Champions의 적격성·추천 세트·승률·데미지는 추측하지 마세요. 도감의 생태 이야기는 생략하고 타입·종족값·특성 설명에 집중해 최대 6개 주장으로 간결하게 답하세요. 문서에 없는 운용 역할과 Champions 적용 여부는 claims가 아니라 unknowns에 따로 기록하세요."
     chat_body = ChatRequest(**body.model_dump(), pokemon_id=pokemon_id, question=guide_question)
-    return submit(request, response, background, chat_body, "guide", service, settings, session_id)
+    return submit(request, response, chat_body, "guide", service, settings, session_id)

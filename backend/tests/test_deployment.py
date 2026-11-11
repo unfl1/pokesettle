@@ -104,17 +104,20 @@ def test_release_package_excludes_environment_and_unlisted_files(tmp_path, monke
     assert (destination / "image.tar").read_bytes() == b"image"
 
 
-def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_path, monkeypatch):
+@pytest.mark.parametrize("previous_worker", [False, True])
+@pytest.mark.parametrize("current_worker", [False, True])
+def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_path, monkeypatch, previous_worker, current_worker):
     monkeypatch.setattr(receiver, "ROOT", tmp_path)
     monkeypatch.setattr(receiver, "run", lambda *a, **k: None)
     monkeypatch.setattr(receiver.os, "chown", lambda *a: None)
     monkeypatch.setattr(receiver.subprocess, "run", lambda *a, **k: SimpleNamespace(stdout=str(tmp_path)))
     monkeypatch.setattr(receiver.time, "sleep", lambda *a: None)
     monkeypatch.setattr(receiver, "ready", lambda: (_ for _ in ()).throw(RuntimeError("not ready")))
-    previous = {"directory": str(tmp_path / "previous"), "image_tag": "old", "monitoring": True}
+    previous = {"directory": str(tmp_path / "previous"), "image_tag": "old", "monitoring": True, "worker": previous_worker}
     (tmp_path / "current.json").write_text(json.dumps(previous))
     release = tmp_path / "new"
     release.mkdir()
+    (release / "compose.production.yaml").write_text("services:\n  api:\n    image: api\n" + ("  worker:\n    image: api\n" if current_worker else ""))
     (release / "image.tar").write_bytes(b"image")
     calls = []
     monkeypatch.setattr(receiver, "compose", lambda *a, **k: calls.append((a, k)))
@@ -125,15 +128,22 @@ def test_failed_readiness_restores_previous_api_without_advancing_pointer(tmp_pa
     assert calls[-1][0][1] == "old"
     assert "down" not in str(calls)
     assert "--no-deps" in calls[-1][0]
+    assert ("worker" in calls[-1][0]) == previous_worker
+    if not previous_worker and current_worker:
+        assert any("stop" in args and "worker" in args for args, _ in calls)
+    if not previous_worker and not current_worker:
+        assert all("worker" not in args for args, _ in calls)
 
 
 @pytest.mark.parametrize("cleanup_failure", [None, "poketact-backend", "poketact-frontend"])
-def test_healthy_release_cleans_both_image_repositories_and_preserves_rollback(tmp_path, monkeypatch, cleanup_failure):
+@pytest.mark.parametrize("worker_enabled", [False, True])
+def test_healthy_release_cleans_both_image_repositories_and_preserves_rollback(tmp_path, monkeypatch, cleanup_failure, worker_enabled):
     active, previous_tag, stale = "a" * 40, "b" * 40, "c" * 40
     previous_dir = tmp_path / (previous_tag + "-previous")
     previous_dir.mkdir()
     release = tmp_path / (active + "-new")
     release.mkdir()
+    (release / "compose.production.yaml").write_text("services:\n  api:\n    image: api\n" + ("  worker:\n    image: api\n" if worker_enabled else ""))
     (release / "image.tar").write_bytes(b"image")
     (tmp_path / "current.json").write_text(json.dumps({
         "directory": str(previous_dir), "image_tag": previous_tag,
@@ -141,7 +151,8 @@ def test_healthy_release_cleans_both_image_repositories_and_preserves_rollback(t
     }))
     monkeypatch.setattr(receiver, "ROOT", tmp_path)
     monkeypatch.setattr(receiver, "run", lambda *a, **k: None)
-    monkeypatch.setattr(receiver, "compose", lambda *a, **k: None)
+    compose_calls = []
+    monkeypatch.setattr(receiver, "compose", lambda *a, **k: compose_calls.append(a))
     monkeypatch.setattr(receiver, "ready", lambda: None)
     monkeypatch.setattr(receiver.os, "chown", lambda *a: None)
     removed, listed = [], []
@@ -164,6 +175,9 @@ def test_healthy_release_cleans_both_image_repositories_and_preserves_rollback(t
     assert set(removed) == {f"{repo}:{stale}" for repo in listed if repo != cleanup_failure}
     assert previous_dir.is_dir()
     assert json.loads((tmp_path / "current.json").read_text())["image_tag"] == active
+    assert json.loads((tmp_path / "current.json").read_text())["worker"] is worker_enabled
+    activation = next(args for args in compose_calls if "up" in args)
+    assert ("worker" in activation) is worker_enabled
 
 
 @pytest.mark.parametrize("command", ["bash", "deploy main", "deploy " + "a" * 40 + "; id", "deploy " + "../a" * 40])

@@ -14,6 +14,11 @@ services:
       TELEMETRY_ENABLED: "true"
     networks: [default, observability]
 
+  worker:
+    environment:
+      TELEMETRY_ENABLED: "true"
+    networks: [default, observability]
+
   prometheus:
     <<: *monitor
     image: prom/prometheus:v3.15.1

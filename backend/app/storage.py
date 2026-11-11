@@ -1,15 +1,20 @@
 import hashlib
 import json
 import re
-from contextlib import contextmanager
+import threading
+from contextlib import contextmanager, nullcontext
+from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import psycopg
 from psycopg import sql
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool, PoolTimeout, TooManyRequests
 
 from backend.app.core.errors import ServiceError
+
+active_job_claim = ContextVar("active_job_claim", default=None)
 
 
 def now():
@@ -23,14 +28,30 @@ def digest(value):
 
 
 class Store:
-    def __init__(self, database_url: str, schema: str = "poketact"):
+    def __init__(self, database_url: str, schema: str = "poketact", *,
+                 pool_size: int = 10, pool_timeout: float = 5):
         if not re.fullmatch(r"[a-z_][a-z0-9_]{0,62}", schema):
             raise ValueError("DATABASE_SCHEMA는 소문자 영문·숫자·밑줄만 사용해야 합니다.")
         if not database_url:
             raise ValueError("DATABASE_URL 설정이 필요합니다.")
         self.database_url, self.schema = database_url, schema
+        # Wait for the usage critical section before borrowing a DB connection.
+        self.usage_lock = threading.RLock()
         with psycopg.connect(database_url, connect_timeout=10) as db:
             db.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(schema)))
+        self.pool = ConnectionPool(
+            database_url, min_size=1, max_size=pool_size, timeout=pool_timeout,
+            max_waiting=100, open=True,
+            kwargs={"connect_timeout": 10, "row_factory": dict_row},
+            configure=self._configure_connection,
+        )
+        try:
+            self._initialize()
+        except BaseException:
+            self.close()
+            raise
+
+    def _initialize(self):
         with self.connect() as db:
             for statement in (
                 "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires_at TEXT NOT NULL)",
@@ -42,16 +63,37 @@ class Store:
                 "CREATE INDEX IF NOT EXISTS conversations_owner ON conversations(session_id,pokemon_id,seq DESC)",
                 "CREATE INDEX IF NOT EXISTS messages_conversation ON messages(conversation_id,seq)",
                 "CREATE INDEX IF NOT EXISTS teams_owner ON teams(session_id)",
+                """CREATE TABLE IF NOT EXISTS job_queue (
+                    job_id TEXT PRIMARY KEY REFERENCES jobs(id), body JSONB NOT NULL,
+                    lease TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+                    expires_at TIMESTAMPTZ NOT NULL, claimed_by TEXT, claimed_until TIMESTAMPTZ)""",
+                "CREATE INDEX IF NOT EXISTS job_queue_pending ON job_queue(created_at,job_id) WHERE claimed_by IS NULL",
+                """CREATE TABLE IF NOT EXISTS job_workers (
+                    id TEXT PRIMARY KEY, heartbeat_at TIMESTAMPTZ NOT NULL,
+                    draining BOOLEAN NOT NULL DEFAULT false)""",
             ):
                 db.execute(statement)
 
+    def _configure_connection(self, db):
+        # Each Store owns a schema-specific pool. Set its default once per
+        # physical connection instead of adding a query to every transaction.
+        db.execute(sql.SQL("SET search_path TO {}, public").format(sql.Identifier(self.schema)))
+        db.commit()
+
     @contextmanager
     def connect(self):
-        with psycopg.connect(self.database_url, connect_timeout=10, row_factory=dict_row) as db:
-            db.execute(
-                sql.SQL("SET LOCAL search_path TO {}, public").format(sql.Identifier(self.schema))
-            )
-            yield db
+        try:
+            # Commit/rollback before returning the connection to this Store's pool.
+            with self.pool.connection() as db:
+                yield db
+        except (PoolTimeout, TooManyRequests):
+            raise ServiceError(
+                "DATABASE_BUSY", "서버의 데이터 처리 요청이 많습니다. 잠시 후 다시 시도해 주세요.",
+                503, True,
+            ) from None
+
+    def close(self):
+        self.pool.close()
 
     def get(self, namespace, key):
         with self.connect() as db:
@@ -213,9 +255,9 @@ class Store:
             {"role": row["role"], "content": json.loads(row["content"])} for row in reversed(rows)
         ]
 
-    def create_job(self, session_id, kind, client_id, request):
+    def create_job(self, session_id, kind, client_id, request, *, db=None):
         request_hash = digest(request)
-        with self.connect() as db:
+        with self.connect() if db is None else nullcontext(db) as db:
             db.execute(
                 "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
                 (json.dumps([session_id, kind, client_id]),),
@@ -249,14 +291,29 @@ class Store:
     def job(self, job_id, session_id):
         with self.connect() as db:
             row = db.execute(
-                "SELECT payload FROM jobs WHERE id=%s AND session_id=%s", (job_id, session_id)
+                """SELECT j.payload,q.job_id AS queued_job, CASE WHEN q.job_id IS NOT NULL AND q.claimed_by IS NULL
+                    THEN (SELECT count(*) FROM job_queue p WHERE p.claimed_by IS NULL
+                        AND (p.created_at,p.job_id) <= (q.created_at,q.job_id)) END AS queue_position
+                    FROM jobs j LEFT JOIN job_queue q ON q.job_id=j.id
+                    WHERE j.id=%s AND j.session_id=%s""", (job_id, session_id)
             ).fetchone()
         if not row:
             raise ServiceError("RESOURCE_NOT_FOUND", "작업을 찾을 수 없습니다.", 404)
-        return json.loads(row["payload"])
+        payload = json.loads(row["payload"])
+        if row["queued_job"] and payload["status"] in {"completed", "failed", "interrupted"}:
+            payload.update(status="running", stage="saving")
+        return {**payload, "queue_position": row["queue_position"]}
 
-    def update_job(self, job_id, **fields):
-        with self.connect() as db:
+    def update_job(self, job_id, *, db=None, **fields):
+        with self.connect() if db is None else nullcontext(db) as db:
+            claim = active_job_claim.get()
+            if claim and claim[0] == job_id:
+                owned = db.execute(
+                    """SELECT job_id FROM job_queue WHERE job_id=%s AND claimed_by=%s
+                        AND claimed_until>clock_timestamp() FOR UPDATE""", claim,
+                ).fetchone()
+                if not owned:
+                    raise ServiceError("JOB_OWNERSHIP_LOST", "작업 실행 권한이 만료되었습니다.", 409, True)
             row = db.execute(
                 "SELECT payload FROM jobs WHERE id=%s FOR UPDATE", (job_id,)
             ).fetchone()
@@ -269,7 +326,9 @@ class Store:
 
     def recover_jobs(self):
         with self.connect() as db:
-            rows = db.execute("SELECT id,payload FROM jobs").fetchall()
+            rows = db.execute("""SELECT id,payload FROM jobs j WHERE NOT EXISTS
+                (SELECT 1 FROM job_queue q WHERE q.job_id=j.id)
+                AND payload::jsonb->>'status' IN ('queued','running')""").fetchall()
             for row in rows:
                 payload = json.loads(row["payload"])
                 if payload["status"] in ("queued", "running"):

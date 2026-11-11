@@ -39,6 +39,7 @@ sudo bash deployment/bootstrap_server.sh dedicated-deploy-key.pub
 sudo install -o root -g root -m 755 deployment/receive_release.py /usr/local/lib/poketact/receive-release.py
 ```
 
+- 수신기는 릴리스 Compose에 worker가 있을 때만 기동함. worker 도입 전 릴리스도 계속 지원하며 새·이전 릴리스 구성에 맞게 기동·롤백 서비스 결정함
 - 수신기 갱신 후 backend·frontend 이미지 모두 현재·직전 SHA 보존, 이전 SHA 이미지 정리함. 이미지 정리 실패는 정상 배포를 실패 처리하지 않음
 - 전용 공개키는 `deploy <40자리 커밋 SHA>` 강제 명령만 허용, 포트 포워딩·PTY·일반 셸 차단
 - 일반 관리용 SSH 키는 별도 유지
@@ -147,7 +148,7 @@ ssh -L 13000:127.0.0.1:3000 사용자@서버
 
 ## 반복 호출·사용량 방어
 
-- 기본 한도: 세션당 분당 3개·하루 200개, IP당 하루 400개, 세션/IP당 동시 1개·서비스 전체 동시 2개 작업
+- 기본 한도: 세션당 분당 3개·하루 200개·유료 대기/실행 작업 1개, 챗봇 접수의 IP당 분당 120개·하루 400개, 서비스 전체 동시 실행 100개·대기 포함 접수 200개 적용함. 동기 조건 검색의 기존 세션/IP 중복 제한 유지함
 - 적용 경로: 챗봇·가이드·문서 수집·자연어 포켓몬 검색, 기본 GET 도감 조회와 계산기는 유료 모델 호출 없음
 - 일반 종별 전략·육성·배경 질문: 기본 출처 조합에서 검색어를 종 이름·등록 특성으로 생성하고 정확한 리소스·자체 전략 후보를 로컬 선별, 검색어 생성·후보 선별용 모델 호출 생략
 - 명시한 기술·특성 효과·다른 포켓몬·규칙 등 해석할 조건이 남거나 Wikipedia 출처를 활성화한 경우 기존 모델 검색어 생성·선별 경로 유지, 답변 생성·인용 검증·적용 범위 제한 유지
@@ -218,7 +219,8 @@ curl --fail http://127.0.0.1:8000/api/status
 ```
 
 - 첫 색인 시 체크섬 검증된 임베딩 파일 다운로드 및 벡터 생성, 전략 색인 시 PokéAPI 자료 요청 발생
-- API는 단일 worker로 실행, PostgreSQL 준비 이후 시작
+- 외부 worker 모드에서 `/api/status`는 최근 20초 내 실행 가능 worker heartbeat가 없으면 `WORKER_NOT_READY`·ready=false 반환함. worker 누락 배포를 성공으로 처리하지 않음
+- API는 단일 Uvicorn worker로 접수·조회만 처리함. PostgreSQL 준비 이후 별도 worker 컨테이너가 최대 100개 답변 작업을 실행함. API·worker 프로세스별 DB 연결 상한은 기본 10개임
 - 상태 검사는 색인·모델 설정 여부 확인용이며 실제 모델 호출 성공 보장과 구분
 - PostgreSQL은 호스트 포트 미공개, FastAPI는 호스트 `127.0.0.1:8000`에만 바인딩
 - 인터넷 공개 전 HTTPS 프록시·접근 통제·요청 제한·API 지출 한도 구성 필요
@@ -382,11 +384,12 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 - 기존 S3·Vite 배포 전환 순서: Nginx 템플릿 백업·반영 → `nginx -t`·reload → 인증된 원본 `/chat` 응답 확인 → `connect_frontend.py`로 CloudFront 전환 → 공개 검사
 - 전환 전 서버의 root 소유 `/usr/local/lib/poketact/receive-release.py`를 검토한 최신 `deployment/receive_release.py`로 갱신, 이전 수신기는 Next.js 이미지가 전달돼도 프론트 컨테이너 기동·준비 검사 미수행
 - 서버 수신기는 릴리스 번들에 포함되지 않으므로 앱 재배포만으로 갱신되지 않음, 기존 수신기 백업 후 root 소유·실행 권한 유지
+- 별도 worker 전환 시에도 최신 수신기 설치 필요함. 새 수신기는 worker 기동·롤백을 포함함. 이전 릴리스에 worker가 없으면 신규 API·worker를 중지하고 대기열 작업을 interrupted로 정리한 뒤 복원함. 불명확한 유료 호출의 토큰 예약은 환불하지 않음
 - Nginx 화면 요청은 `127.0.0.1:3001`, `/api/` 요청은 `127.0.0.1:8000`으로 전달, 기존 원본 인증값·인증서·API 요청 제한 유지
 - 공개 HTML의 `Server: AmazonS3`·`/assets/`와 Next.js 자산 부재는 기존 정적 원본 유지 징후, 캐시 무효화만으로 원본 전환 불가
 - 전환 후 `PRODUCTION_URL=https://www.example.com python3 deployment/check_production.py`로 서버 렌더링·정적 자산·API 준비 상태 확인, 실제 도메인 사용
 - 세션 쿠키 Secure·HttpOnly·SameSite=Lax 적용, DB·8000번 직접 공개 제외
-- 전체 쓰기 요청 분당 30회·순간 burst 5, 읽기 CloudFront 연결 IP별 초당 10회 적용
+- Nginx 템플릿: 전체 쓰기 초당 300회·burst 300, 인증한 CloudFront viewer IP별 읽기 초당 200회·burst 400 적용함. 기존 CloudFront 연결 IP 키와 전역 쓰기 분당 30회·burst 5 제한은 100명 동시 접수를 차단하므로 교체함. 읽기 zone 이름을 api_viewer_reads_v2로 변경해 reload 시 이전 키와 공유 메모리 충돌 방지함
 - 원본 검증값은 서버 직접 호출 제한용이며 서비스 이용자 인증과 구분
 - 요청 제한은 AI 지출의 금액 상한을 보장하지 않음, 공개 운영 시 별도 사용량 관리 필요
 - 루트 HTTP·HTTPS는 HTTPS `www`로 이동, 나머지 HTTP 호스트는 인증서 검증 경로 외 404 반환
@@ -430,6 +433,11 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 - `POSTGRES_PASSWORD`: 로컬 Compose DB 비밀번호.
 - `DATABASE_URL`: 같은 사용자·비밀번호·포트·DB로 구성한 연결 URL. 비밀번호의 예약 문자는 URL 인코딩 필요함.
 - `DATABASE_SCHEMA`: 기본 `poketact`. 소문자 영문·숫자·밑줄 사용함.
+- `JOB_WORKER_EMBEDDED`: 로컬 기본 true, 운영 Compose는 false임. 별도 실행은 `uv run --frozen python -m backend.app.worker` 사용함
+- `USAGE_GLOBAL_CONCURRENCY`: 기본 100개, 작업 실행 상한이며 공급자 RPM·TPM과 구분함. `JOB_QUEUE_CAPACITY=200`·`JOB_QUEUE_TIMEOUT=300`으로 접수 상한과 최대 대기 초 설정함. 공급자·서비스 자체 일일 예산 초과 시 별도 실패 가능함
+- `DATABASE_POOL_SIZE`: API·worker 프로세스별 DB 연결 상한, 기본 10개임. 전체 프로세스·별도 작업 도구의 연결 합계와 PostgreSQL 여유 연결을 함께 고려함
+- `DATABASE_POOL_TIMEOUT_SECONDS`: 풀 연결 대기 한도, 기본 5초임. 풀 대기열 상한 100개 적용, 시간 초과·대기열 포화 시 재시도 가능한 `503 DATABASE_BUSY` 반환함
+- `EMBEDDING_BATCH_SIZE`: 기본 4개임. 전용 추론 스레드 1개와 함께 사용해 요청 스레드별 네이티브 추론 버퍼 증가·큰 색인 배치의 메모리 부담을 제한함. 모델·차원·청크 규칙은 유지함
 - `RUNTIME_DIR`: 기본 저장소의 `runtime`. 로컬 임베딩 모델 캐시 경로임. 벡터 데이터는 PostgreSQL에 저장함.
 - 기존 모델 공급자 설정 유지함. DB 연결 문자열은 설정 객체의 `repr`에서 제외함.
 
@@ -444,6 +452,32 @@ uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --work
 - Compose DB는 `127.0.0.1`에만 노출함. named volume에 데이터 유지함.
 - Compose는 pgvector 포함 PostgreSQL 이미지를 사용함. 별도 벡터 DB 서비스 불필요함.
 - 앱 모듈 import는 DB 연결을 수행하지 않음. 실제 서비스 초기화는 FastAPI lifespan에서 수행함.
+- Store별 psycopg 연결 풀 사용함. 연결 생성 시 전용 스키마 경로를 한 번 설정하고 트랜잭션 종료 시 commit·rollback 후 재사용함. API가 생성한 풀은 초기화 실패·종료 시 닫고, 주입한 서비스의 풀은 호출자가 정리함
+- 모델 클라이언트는 모델·추론 설정·temperature별로 재사용함. 요청별 입력·결과·예산 예약은 공유하지 않음. worker의 진행 중 작업 종료 후 SDK 동기·비동기 연결을 명시적으로 닫음
+- 사용량 검사에서는 프로세스 내부 잠금을 먼저 획득한 뒤 DB 연결을 빌림. 기존 PostgreSQL advisory transaction lock을 유지해 독립 프로세스 간 접수·예산 정합성 유지함. 진행 중 작업 한도 초과 시 시각 조회·정리 쿼리 생략, 오래된 카운터·예약 정리는 당일 성공 접수 후 반복 생략함
+
+### 로컬 챗봇 동시 부하 측정
+
+- 도구: 별도 설치한 [k6](https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/per-vu-iterations/) 사용함. 각 가상 사용자당 질문 1개를 같은 시각에 전송하고 대기 중 2초·실행 중 1초 간격으로 작업 상태 조회함
+- 실행 조건: 로컬 PostgreSQL·준비된 색인·실제 모델 API 설정 필요함. 로컬 단일 API 프로세스에서 실행하며 운영 서버 성능 검증과 구분함
+- 실행 구조: 로컬 API와 별도 worker 프로세스 실행함. `--users 100 --mixed`는 10종·20개 질문 유형을 섞은 100명, `--mock-model`은 합성 모델 지연으로 인프라만 확인하는 별도 모드임. 합성 결과를 실제 모델 성능으로 해석하지 않음
+- 데이터 격리: 임시 `load_*` 스키마에 색인·참조 캐시만 복사하고 종료 후 삭제함. 기존 대화·세션·사용량 테이블 복사·수정 없음
+- 비용: 실제 모델 호출 발생함. 임시 사용량 카운터는 기존 일일 사용량과 별도이며 공급자 계정의 사용량·요금에는 합산됨
+
+```bash
+uv run --frozen python -m backend.scripts.load_chat --users 100 --mixed --name mixed-100
+uv run --frozen python -m backend.scripts.load_chat --users 100 --shared-ip --mock-model --name shared-ip-simulated-100
+uv run --frozen python -m backend.scripts.load_chat --users 1 --name baseline-1
+uv run --frozen python -m backend.scripts.load_chat --users 50 --name distinct-50
+uv run --frozen python -m backend.scripts.load_chat --users 50 --shared-ip --name shared-ip-50
+uv run --frozen python -m backend.scripts.load_chat --users 50 --name catalog-50 --question '피카츄 타입 알려줘'
+```
+
+- 각 실행 완료 후 다음 명령 실행함. 결과 디렉터리가 존재하면 새 `--name` 지정 필요함
+- 지표: 질문 접수·완료 비율, 접수 지연과 완료 지연 분리, 시작 시각 편차, 오류 코드, 모델 단계별 시간, DB 연결 수·연결 준비 시간, DB 잠금 대기 연결 표본 측정함
+- 결과: 무시 경로 `runtime/load-test/{name}/`의 `k6-summary.json`·`k6-samples.jsonl`·`server-stats.json`·`worker-stats.json`·`run.json`에 기록함. 접수 429도 완료 실패로 집계하며 완료율 100% 기준 미달 시 k6 종료 코드 99 반환함
+- 해석: `completed`는 작업 완료이며 답변의 정확성·완전성 보장과 구분함. 완료 지연은 접수된 작업만 집계함. 현재 DB 연결 준비 시간은 풀 checkout 대기 시간이며, 사용량 잠금 획득 시간에는 프로세스 내부 대기·연결 준비 포함함. 과거 비풀링 결과의 DB 준비 시간에는 실제 접속·스키마 설정 포함함
+- 연결 수: `counts.db_checkouts`는 연결 대여 횟수, `pool_stats.connections_num`은 풀의 실제 연결 시도 횟수임. 과거 비풀링 결과의 `db_connections_opened`와 대여 횟수를 직접 비교하지 않음. 집계에는 준비·세션 생성·종료 단계 포함함
 
 ### 기존 데이터 이전
 
@@ -460,7 +494,7 @@ uv run --frozen python -m backend.scripts.index_data
 - 이미 PostgreSQL 상태 저장을 사용 중이면 SQLite 이전을 다시 실행하지 않고 `index_data`만 실행함. 기존 캐시·원문에서 새 벡터 색인 구성 가능함.
 - `manifest`·`query_complete` 캐시는 제외함. `index_data`가 기준 JSON과 이전한 `document` 원문 캐시로 pgvector 색인을 검증·재구축함.
 - 이전된 원문은 번들 JSON 색인 전에 읽어 보존하고 번들 색인 후 재적용함.
-- 앱 재시작 시 `queued`·`running` 작업은 기존 동작과 동일하게 `interrupted` 복구함.
+- DB 대기열 등록 작업은 API 재시작 후 보존함. 이전 방식의 대기열 미등록 queued·running 작업만 즉시 interrupted 복구함. worker 소유권 만료 작업은 별도 회수·중단하며 자동 유료 재실행 없음
 - 이전 도구 재실행 시 데이터 덮어쓰기 없음. 새 `DATABASE_SCHEMA`를 지정한 별도 이전 필요함.
 
 

@@ -4,6 +4,7 @@ import hashlib
 import shutil
 import tarfile
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
 from pathlib import Path
 from urllib.request import urlopen
@@ -18,8 +19,15 @@ MODEL_SHA256 = "913d7300ceae3b2dbc2c50d1de4baacab4be7b9380491c27fab7418616a16ec3
 
 
 class LocalEmbeddings:
-    def __init__(self, directory):
+    def __init__(self, directory, batch_size=4):
         self.directory = Path(directory) / "onnx"
+        self.batch_size = batch_size
+        # Retrieval already serializes inference. Reuse one calling thread as
+        # well, so native per-thread inference buffers do not scale with users.
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="embedding")
+
+    def close(self):
+        self._executor.shutdown(wait=True)
 
     def _prepare(self):
         if all((self.directory / name).is_file() for name in ("model.onnx", "tokenizer.json")):
@@ -63,9 +71,12 @@ class LocalEmbeddings:
         )
 
     def __call__(self, texts):
+        return self._executor.submit(self._embed, texts).result()
+
+    def _embed(self, texts):
         vectors = []
-        for start in range(0, len(texts), 32):
-            tokens = self.tokenizer.encode_batch(texts[start : start + 32])
+        for start in range(0, len(texts), self.batch_size):
+            tokens = self.tokenizer.encode_batch(texts[start : start + self.batch_size])
             ids = np.asarray([t.ids for t in tokens], dtype=np.int64)
             mask = np.asarray([t.attention_mask for t in tokens], dtype=np.int64)
             hidden = self.model.run(

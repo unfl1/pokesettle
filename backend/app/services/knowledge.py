@@ -28,12 +28,12 @@ class KnowledgeService:
     def __init__(self, settings, catalog, store, vectors, source, model):
         self.settings, self.catalog, self.store = settings, catalog, store
         self.vectors, self.source, self.model = vectors, source, model
-        self.collection_lock = threading.RLock()
+        self.collection_locks = {key: threading.RLock() for key in catalog.items}
 
     def collect(self, pokemon_id, question, regulation_id=None, stage=lambda _: None):
         pokemon = self.catalog.get(pokemon_id)
         # Serializes query cache publication and document manifests across jobs.
-        with self.collection_lock:
+        with self.collection_locks.setdefault(pokemon_id, threading.RLock()):
             started = time.monotonic()
             stage("extracting_queries")
             plan_key = digest([self.source.name, pokemon_id, question, regulation_id, PROMPT_VERSION, "resource-routing-v2"])
