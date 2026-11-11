@@ -476,8 +476,27 @@ uv run --frozen python -m backend.scripts.load_chat --users 50 --name catalog-50
 - 각 실행 완료 후 다음 명령 실행함. 결과 디렉터리가 존재하면 새 `--name` 지정 필요함
 - 지표: 질문 접수·완료 비율, 접수 지연과 완료 지연 분리, 시작 시각 편차, 오류 코드, 모델 단계별 시간, DB 연결 수·연결 준비 시간, DB 잠금 대기 연결 표본 측정함
 - 결과: 무시 경로 `runtime/load-test/{name}/`의 `k6-summary.json`·`k6-samples.jsonl`·`server-stats.json`·`worker-stats.json`·`run.json`에 기록함. 접수 429도 완료 실패로 집계하며 완료율 100% 기준 미달 시 k6 종료 코드 99 반환함
+
 - 해석: `completed`는 작업 완료이며 답변의 정확성·완전성 보장과 구분함. 완료 지연은 접수된 작업만 집계함. 현재 DB 연결 준비 시간은 풀 checkout 대기 시간이며, 사용량 잠금 획득 시간에는 프로세스 내부 대기·연결 준비 포함함. 과거 비풀링 결과의 DB 준비 시간에는 실제 접속·스키마 설정 포함함
 - 연결 수: `counts.db_checkouts`는 연결 대여 횟수, `pool_stats.connections_num`은 풀의 실제 연결 시도 횟수임. 과거 비풀링 결과의 `db_connections_opened`와 대여 횟수를 직접 비교하지 않음. 집계에는 준비·세션 생성·종료 단계 포함함
+
+### 운영 챗봇 100명 동시 질문 검증
+
+- `--production` 명시 시 `https://pokesettle.com`의 CloudFront → Nginx → API → worker 경로로 실제 질문 전송함. 실제 모델 비용·운영 세션·대화·사용량 기록 발생함
+- 가상 IP·모델 모의 응답·사용량 한도 변경 없음. 단일 발생기의 실제 IP를 공유하므로 분산된 100개 IP와 구분함
+- 대상 인원 1~100명으로 제한함. 세션은 2.2초 간격으로 사전 생성한 뒤 각 사용자당 질문 1개를 같은 시각에 전송함. 세션 최초 생성의 동시 부하는 별도임
+- 질문 접수부터 답변 완료까지 최대 360초 측정함. 시작·종료·접수·완료 수가 모두 목표 인원과 일치하고 종료 후 API 준비 상태가 정상일 때만 통과함
+- `run.json`에 접수·완료 p95, 최대 완료 시간, 시작 시각 편차 p95, 실패 코드, HTTP 상태, 답변 상태 집계함. `partial` 답변을 숨기지 않으며 작업 완료와 답변 품질 합격을 구분함
+- 운영 대상 IP 헤더를 추가하지 않으며 `--shared-ip`·`--mock-model`과 조합 차단함. 쿠키·답변 본문·API 키는 측정 파일에 기록하지 않음
+- 먼저 1명 기준 검증 후 100명 실행함. 사전 준비·전송 실패는 100명 처리 성공으로 해석하지 않음. 재실행 시 고유한 `--name` 사용함
+
+```bash
+uv run --frozen python -m backend.scripts.load_chat --production --users 1 --mixed --name production-baseline
+uv run --frozen python -m backend.scripts.load_chat --production --users 100 --mixed --name production-mixed-100
+```
+
+- 발생기 IPv4 연결 시간 초과·HTTP/2 전송 오류 분리 시 `--ipv6 --http1` 옵션 사용함. 선택한 DNS·HTTP 설정을 `run.json`에 기록하며 다른 접속 경로로 일반화하지 않음
+- 운영 Nginx 설정은 이미지 배포와 별개임. 실제 `nginx -T`의 쓰기 제한이 분당 30회·burst 5이면 동시 질문이 원본 진입 전에 차단됨. 저장소 템플릿 반영 여부·worker 준비 상태·서버 자원·모델 사용량을 함께 확인함
 
 ### 기존 데이터 이전
 
