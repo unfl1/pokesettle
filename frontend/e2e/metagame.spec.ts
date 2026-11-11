@@ -36,7 +36,7 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
       : path === '/api/session' ? { active: true } : { items: [] };
     return route.fulfill({ json: { data, warnings: [], requestId: 'synthetic' } });
   });
-  await page.goto('/meta');
+  await page.goto('/ko/meta');
   await expect(page.getByRole('heading', { name: '싱글 메타 순위' })).toBeVisible();
   await expect(page.getByText('합성 기술')).toBeVisible();
   await expect(page.getByText('구애스카프', { exact: true })).toBeVisible();
@@ -55,12 +55,12 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
   const settingsBox = await page.getByRole('region', { name: '주요 세팅' }).boundingBox();
   const notesBox = await notes.boundingBox();
   expect(notesBox!.y).toBeGreaterThanOrEqual(settingsBox!.y + settingsBox!.height);
-  await expect(page.getByRole('link', { name: '도감 보기' })).toHaveAttribute('href', '/ko/pokedex/%ED%95%A9%EC%84%B1-%ED%8F%AC%EC%BC%93%EB%AA%AC-25');
+  await expect(page.getByRole('link', { name: '도감 보기' })).toHaveAttribute('href', '/ko/pokedex/synthetic-one');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await page.screenshot({ path: '/tmp/poketact-meta-localized.png', fullPage: true, animations: 'disabled' });
-  await page.getByRole('button', { name: /Synthetic Form/ }).click();
+  await page.getByRole('link', { name: /Synthetic Form/ }).click();
   await expect(page).toHaveURL(/pokemon=Synthetic(?:\+|%20)Form/);
   await expect(page.getByText('Synthetic Ability')).toBeVisible();
   await expect(page.getByText('미제공', { exact: true })).toBeVisible();
@@ -78,7 +78,7 @@ test('싱글 메타 선택·출처·원문 대체·모바일 표시', async ({ p
 test('외부 장애 안내 후 재시도·만료 캐시 안내', async ({ page, request }) => {
   await page.route('**/_next/image?**', route => route.abort());
   await request.post(fixture, { data: { ready: false } });
-  await page.goto('/meta');
+  await page.goto('/ko/meta');
   await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText('싱글 메타를 불러오지 못했어요.');
   await request.post(fixture, { data: { ready: true, metaData: { ...meta, stale: true } } });
   await page.getByRole('button', { name: '다시 시도', exact: true }).click();
@@ -95,4 +95,60 @@ test('메타 응답을 기다리는 동안 외부 조회 안내와 로딩 영역
   await expect(page.getByRole('region', { name: '싱글 사용 순위' })).toHaveCount(0);
   await expect(page.getByText('합성 기술')).toBeVisible();
   await expect(page.getByText('최초 조회나 갱신 시 외부 자료를 확인하므로 잠시 걸릴 수 있어요.')).toHaveCount(0);
+});
+
+
+const localizedPokemon = {
+  ...meta.items[0], pokemonId: 'pokemon:25', nameEn: 'Pikachu', nameKo: '피카츄',
+  names: { ko: '피카츄', en: 'Pikachu', ja: 'ピカチュウ', zh: '皮卡丘' },
+  slugs: { ko: '피카츄', en: 'pikachu', ja: 'ピカチュウ', zh: '皮卡丘' },
+};
+
+test('메타 상세 URL·기존 쿼리·언어 전환과 직접 접속', async ({ page, request }) => {
+  await request.post(fixture, { data: { ready: true, metaData: { ...meta, items: [localizedPokemon] } } });
+  await page.goto('/ko/meta');
+  const ranking = page.getByRole('region', { name: '싱글 사용 순위' });
+  await expect(ranking.getByRole('link')).toHaveAttribute('href', '/ko/meta/' + 'pikachu');
+  await ranking.getByRole('link').click();
+  await expect(page).toHaveURL(new RegExp('/ko/meta/' + 'pikachu'));
+  await expect(page.getByRole('region', { name: '주요 세팅' })).toContainText('피카츄');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://pokesettle.com/ko/meta/' + 'pikachu');
+  for (const [locale, path, name] of [
+    ['en', '/meta/pikachu', 'Pikachu'],
+    ['ja', '/ja/meta/' + 'pikachu', 'ピカチュウ'],
+    ['zh', '/zh/meta/' + 'pikachu', '皮卡丘'],
+    ['ko', '/ko/meta/' + 'pikachu', '피카츄'],
+  ]) {
+    await page.getByRole('combobox', { name: /언어|Language|言語|语言/ }).selectOption(locale);
+    await expect.poll(() => new URL(page.url()).pathname).toBe(path);
+    await expect(page.getByRole('heading', { name: new RegExp(name) })).toBeVisible();
+  }
+  await page.reload();
+  await expect(page.getByText('합성 기술')).toBeVisible();
+  await page.goto('/ko/meta?pokemon=Pikachu');
+  await expect.poll(() => new URL(page.url()).pathname).toBe('/ko/meta/' + 'pikachu');
+  expect(new URL(page.url()).search).toBe('');
+  await page.goto('/ko/meta/wrong-name-25');
+  await expect.poll(() => new URL(page.url()).pathname).toBe('/ko/meta/' + 'pikachu');
+});
+
+test('메타 상세의 잘못된 ID와 순위에 없는 포켓몬은 404', async ({ request }) => {
+  await request.post(fixture, { data: { ready: true, metaData: { ...meta, items: [localizedPokemon] } } });
+  for (const path of ['/ko/meta/invalid', '/ko/meta/unknown-999999', '/ko/meta/bulbasaur-1']) {
+    const response = await request.get(path);
+    // Streaming notFound can use HTTP 200 with an explicit noindex directive.
+    expect(response.status() === 404 || (await response.text()).includes('name="robots" content="noindex"')).toBe(true);
+  }
+});
+
+test('메타 상세 선택은 JavaScript 없이도 링크로 동작', async ({ browser, request, baseURL }) => {
+  await request.post(fixture, { data: { ready: true, metaData: { ...meta, items: [localizedPokemon] } } });
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto(`${baseURL}/ko/meta`);
+    await page.getByRole('region', { name: '싱글 사용 순위' }).getByRole('link').click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe('/ko/meta/' + 'pikachu');
+    await expect(page.getByText('합성 기술')).toBeVisible();
+  } finally { await context.close(); }
 });

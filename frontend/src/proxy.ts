@@ -39,7 +39,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(destination, 308);
     }
   }
-  const knownPath = ['/terms', '/privacy'].includes(path) || featurePaths.some(feature => (feature || '/') === path) || /^\/pokedex\/[^/]+$/.test(path) || !!pobtiResult;
+  const knownPath = ['/terms', '/privacy'].includes(path) || featurePaths.some(feature => (feature || '/') === path) || /^\/(?:pokedex|meta)\/[^/]+$/.test(path) || !!pobtiResult;
   if (prefixed || knownPath) {
     const segments = path.split('/');
     const legacy = path === '/pokedex' && request.nextUrl.searchParams.has('pokemon');
@@ -49,12 +49,12 @@ export function proxy(request: NextRequest) {
       let segment = '';
       try { segment = decodeURIComponent(segments[2] ?? ''); } catch { /* invalid encoding stays a 404 */ }
       const id = legacy ? values.length === 1 ? values[0] : null : idFromSegment(segment);
-      const entry = routes.find(entry => entry.pokemonId === id);
+      const entry = routes.find(entry => (!legacy && pokemonSegment(entry) === segment) || entry.pokemonId === id);
       if (!entry) {
         const label = { ko: '포켓몬을 찾을 수 없습니다.', en: 'Pokémon not found.', ja: 'ポケモンが見つかりません。', zh: '未找到宝可梦。' }[locale];
         return new NextResponse(`<!doctype html><html lang="${localeRegistry[locale].htmlLang}"><head><meta name="robots" content="noindex"><title>${label}</title></head><body><h1>${label}</h1><a href="${localizedPath(locale, '/pokedex')}">Pokédex</a></body></html>`, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
-      if (legacy || segment !== pokemonSegment(entry, locale) || prefix === defaultLocale) {
+      if (legacy || segment !== pokemonSegment(entry) || prefix === defaultLocale) {
         const destination = request.nextUrl.clone();
         destination.pathname = pokemonPath(entry, locale);
         if (legacy) destination.searchParams.delete('pokemon');

@@ -14,7 +14,7 @@ export default function LanguageSwitcher() {
       if (!isLocale(nextLocale)) return;
       document.cookie = `${localeCookieName}=${nextLocale}; Path=/; Max-Age=${localeCookieMaxAge}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
       const query = window.location.search;
-      const alternate = withoutLocale(pathname).startsWith('/pokedex/')
+      const alternate = /^\/(?:pokedex|meta)\//.test(withoutLocale(pathname))
         ? document.head.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${localeRegistry[nextLocale].htmlLang}"]`)?.href : null;
       const path = alternate ? new URL(alternate).pathname : localizedPath(nextLocale, withoutLocale(pathname));
       router.push(`${path}${query}${window.location.hash}`);

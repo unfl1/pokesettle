@@ -146,15 +146,13 @@
 
 @custom-variant max-desktop (@media (width <= 1150px));
 
-@custom-variant max-tablet (@media (width <= 780px));
-
-@custom-variant max-phone (@media (width <= 480px));
-
 @custom-variant screen-1080 (@media (width <= 1080px));
 @custom-variant screen-900 (@media (width <= 900px));
+@custom-variant max-tablet (@media (width <= 780px));
 @custom-variant screen-760 (@media (width <= 760px));
 @custom-variant screen-600 (@media (width <= 600px));
 @custom-variant screen-540 (@media (width <= 540px));
+@custom-variant max-phone (@media (width <= 480px));
 @custom-variant screen-360 (@media (width <= 360px));
 @custom-variant screen-header (@media (781px <= width <= 1080px));
 

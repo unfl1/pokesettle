@@ -68,9 +68,9 @@ for (const language of languages) {
 test('language switch retains the feature, query, and fragment', async ({ page }) => {
   await page.goto('/ko/pokedex?pokemon=pokemon%3A1#main-content');
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
-  await expect(page).toHaveURL('/pokedex/bulbasaur-1#main-content');
+  await expect(page).toHaveURL('/pokedex/bulbasaur#main-content');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('ja');
-  await expect(page).toHaveURL('/ja/pokedex/フシギダネ-1#main-content');
+  await expect(page).toHaveURL('/ja/pokedex/bulbasaur#main-content');
   await expect(page.getByRole('link', { name: '図鑑', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
@@ -79,12 +79,12 @@ test('legacy URLs redirect once; unsupported locales and unknown paths return 40
     const response = await request.get(path, { maxRedirects: 0 });
     expect(response.status()).toBe(308);
     const destination = new URL(response.headers().location, response.url());
-    expect(destination.pathname + destination.search).toBe(path === '/en' ? '/' : path === '/en/pokedex?pokemon=pokemon%3A25' ? '/pokedex/pikachu-25' : path.slice(3));
+    expect(destination.pathname + destination.search).toBe(path === '/en' ? '/' : path === '/en/pokedex?pokemon=pokemon%3A25' ? '/pokedex/pikachu' : path.slice(3));
   }
   const renamed = await request.get('/en/pokedex/old-name-25?tag=a&tag=b&empty=', { maxRedirects: 0 });
   expect(renamed.status()).toBe(308);
   const renamedUrl = new URL(renamed.headers().location, renamed.url());
-  expect(renamedUrl.pathname + renamedUrl.search).toBe('/pokedex/pikachu-25?tag=a&tag=b&empty=');
+  expect(renamedUrl.pathname + renamedUrl.search).toBe('/pokedex/pikachu?tag=a&tag=b&empty=');
   expect((await request.get(renamedUrl.pathname + renamedUrl.search, { maxRedirects: 0 })).status()).toBe(200);
   for (const path of ['/', '/chat', '/pokedex', '/meta', '/scenario', '/pobti']) {
     expect((await request.get(path, { maxRedirects: 0 })).status()).toBe(200);

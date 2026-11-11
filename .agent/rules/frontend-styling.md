@@ -34,6 +34,7 @@
 - Use `@theme inline` for utilities that must resolve another variable where the utility is applied, such as the Next.js font variable.
 - Preserve semantic color inheritance across light and dark mode. Avoid fixed light colors for surfaces or readable text.
 - Reuse existing responsive variants. `max-tablet` includes 780px; do not reintroduce the duplicate `screen-780` variant. Preserve inclusive boundary behavior when refactoring.
+- Declare overlapping maximum-width variants from widest to narrowest so narrower layouts win in the generated cascade.
 - Keep keyframes in `@theme`, connected to `--animate-*` tokens. Preserve related animation timing and reduced-motion alternatives.
 - Use the font plugin for generated font-face declarations. Do not replace Unicode subsets with eager full-font downloads.
 

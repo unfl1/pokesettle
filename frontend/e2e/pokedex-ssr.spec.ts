@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 const fixture = `http://127.0.0.1:${process.env.FIXTURE_API_PORT ?? '5198'}/__fixture`;
-const ko = '/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-%EC%98%A4%EB%A6%AC%EC%A7%80%EB%84%90%EC%BA%A1-10094';
+const ko = '/ko/pokedex/pikachu-original-cap';
 test.beforeEach(async ({ request }) => { await request.post(fixture, { data: { ready: true } }); });
 test.afterEach(async ({ request }) => { await request.post(fixture, { data: { ready: false } }); });
 
@@ -8,11 +8,15 @@ test('기존 URL과 잘못된 이름은 308, 없는 ID는 실제 404', async ({ 
   const legacy = await request.get('/ko/pokedex?pokemon=pokemon%3A10094&tag=a&tag=b&empty=', { maxRedirects: 0 });
   expect(legacy.status()).toBe(308);
   const url = new URL(legacy.headers().location, legacy.url());
-  expect(decodeURIComponent(url.pathname)).toBe('/ko/pokedex/피카츄-오리지널캡-10094');
+  expect(decodeURIComponent(url.pathname)).toBe('/ko/pokedex/pikachu-original-cap');
   expect(url.search).toBe('?tag=a&tag=b&empty=');
+  const korean = await request.get('/ko/pokedex/' + encodeURIComponent('이상해씨-1'), { maxRedirects: 0 });
+  expect(korean.status()).toBe(308);
+  expect(new URL(korean.headers().location, korean.url()).pathname).toBe('/ko/pokedex/bulbasaur');
+  expect((await request.get('/ko/pokedex/flabebe')).status()).toBe(200);
   const renamed = await request.get('/ko/pokedex/old-name-10094?check=1', { maxRedirects: 0 });
   expect(renamed.status()).toBe(308);
-  expect(decodeURIComponent(new URL(renamed.headers().location, renamed.url()).pathname)).toBe('/ko/pokedex/피카츄-오리지널캡-10094');
+  expect(decodeURIComponent(new URL(renamed.headers().location, renamed.url()).pathname)).toBe('/ko/pokedex/pikachu-original-cap');
   for (const path of ['/ko/pokedex/missing-999999999', '/ko/pokedex?pokemon=pokemon%3A999999', '/ko/pokedex?pokemon=pokemon%3A25&pokemon=pokemon%3A1', '/fr/pokedex/example-25']) {
     expect((await request.get(path)).status(), path).toBe(404);
   }
@@ -26,7 +30,7 @@ test('JavaScript 없이 상세 본문·스탯·출처와 실제 목록 링크 �
   await expect(page.getByRole('heading', { name: '피카츄 (오리지널캡)', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: '종족값' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'PokéAPI 메타데이터 원문' })).toHaveAttribute('href', 'https://pokeapi.co/api/v2/pokemon/10094/');
-  await expect(page.getByRole('link', { name: '이상해씨 선택' })).toHaveAttribute('href', /-1$/);
+  await expect(page.getByRole('link', { name: '이상해씨 선택' })).toHaveAttribute('href', /\/bulbasaur$/);
   const notes = page.getByRole('complementary', { name: '출처 및 이용 안내' });
   await expect(notes).toContainText('Champions 적격성 미확인');
   const profileBox = await page.getByRole('region', { name: '선택한 포켓몬 정보' }).boundingBox();
@@ -50,20 +54,20 @@ test('JavaScript 없이 상세 본문·스탯·출처와 실제 목록 링크 �
   await context.close();
 });
 
-test('상세 metadata와 언어 전환은 동일 ID의 현지화 URL 유지', async ({ page }) => {
+test('상세 metadata와 언어 전환은 동일한 영문 슬러그 유지', async ({ page }) => {
   await page.goto(ko + '?check=1#main-content');
   await expect(page).toHaveTitle('피카츄 (오리지널캡) | 도감 | PokeSettle');
   await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://pokesettle.com' + ko);
   await page.getByRole('combobox', { name: '언어' }).selectOption('en');
-  await expect(page).toHaveURL('/pokedex/pikachu-original-cap-10094?check=1#main-content');
+  await expect(page).toHaveURL('/pokedex/pikachu-original-cap?check=1#main-content');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Original Cap Pikachu');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('ja');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ピカチュウ (オリジナルキャップ)');
   await expect(page.getByRole('link', { name: '図鑑', exact: true })).toHaveAttribute('aria-current', 'page');
-  expect(decodeURIComponent(new URL(page.url()).pathname)).toBe('/ja/pokedex/ピカチュウ-オリジナルキャップ-10094');
+  expect(decodeURIComponent(new URL(page.url()).pathname)).toBe('/ja/pokedex/pikachu-original-cap');
   await page.getByRole('combobox', { name: '言語' }).selectOption('zh');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('皮卡丘 (初始帽子)');
-  await expect(page.locator('head link[hreflang="zh-Hans"]')).toHaveAttribute('href', /\/zh\/pokedex\/.*-10094$/);
+  await expect(page.locator('head link[hreflang="zh-Hans"]')).toHaveAttribute('href', /\/zh\/pokedex\/pikachu-original-cap$/);
 });
 
 test('공개 페이지는 채팅 세션·상태·대화를 조회하지 않고 메타도 SSR', async ({ page, request }) => {
