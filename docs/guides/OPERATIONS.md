@@ -41,6 +41,8 @@ sudo install -o root -g root -m 755 deployment/receive_release.py /usr/local/lib
 
 - 수신기는 릴리스 Compose에 worker가 있을 때만 기동함. worker 도입 전 릴리스도 계속 지원하며 새·이전 릴리스 구성에 맞게 기동·롤백 서비스 결정함
 - 수신기 갱신 후 backend·frontend 이미지 모두 현재·직전 SHA 보존, 이전 SHA 이미지 정리함. 이미지 정리 실패는 정상 배포를 실패 처리하지 않음
+- 배포 명령·종료 코드·오류 출력은 릴리스 디렉터리의 `diagnostics.log`에 0600 권한으로 보존함. 준비 검사 실패 시 예외와 롤백 전 Compose 상태·최근 서비스 로그 수집함. 진단 명령 실패에도 롤백 진행함
+- 진단 로그에 확장된 환경값·서비스 출력이 포함될 수 있어 관리자만 서버에서 조회함. Actions·공개 이슈에 원문 공유 금지함. 릴리스 정리 시 해당 로그도 제거됨
 - 전용 공개키는 `deploy <40자리 커밋 SHA>` 강제 명령만 허용, 포트 포워딩·PTY·일반 셸 차단
 - 일반 관리용 SSH 키는 별도 유지
 - `.env.observability`에 해당하는 실제 Grafana 비밀번호는 서버에서 무작위 생성, Git 제외
