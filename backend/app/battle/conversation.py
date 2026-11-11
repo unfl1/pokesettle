@@ -8,6 +8,7 @@ from pydantic import Field
 from backend.app.battle.damage import DamageInput, calculate_damage
 from backend.app.battle.engine import BattleEngine
 from backend.app.battle.models import TeamAnalysis, TeamMember, TypeName
+from backend.app.battle.selection_plan import explain_selection
 from backend.app.core.errors import ServiceError
 from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.schemas import Generation, Model
@@ -18,12 +19,22 @@ class InputEvidence(Model):
     quote: str
 
 
+class SelectionMemberInput(Model):
+    pokemon_id: str
+    moves: list[str] | None = Field(default=None, max_length=4)
+    ability: str | None = Field(default=None, max_length=80)
+    item: str | None = Field(default=None, max_length=80)
+    quote: str = Field(max_length=2000)
+
+
 class BattleUpdate(Model):
     input_evidence: list[InputEvidence] = Field(default_factory=list, max_length=30)
     relevant: bool = False
     reset: bool = False
     own_team_ids: list[str] | None = Field(default=None, max_length=6)
     opponent_team_ids: list[str] | None = Field(default=None, max_length=6)
+    own_team_members: list[SelectionMemberInput] | None = Field(default=None, max_length=6)
+    opponent_team_members: list[SelectionMemberInput] | None = Field(default=None, max_length=6)
     own_id: str | None = None
     opponent_id: str | None = None
     own_hp_percent: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
@@ -51,6 +62,7 @@ For every value except own_id/opponent_id, provide input_evidence with the field
 Do not record advice as executed actions. A bench HP correction changes bench_members, not own_id. Record complete teams in own_team_ids/opponent_team_ids, not as the current lead or bench.
 HP requires an explicit percentage; never default to 100 or reinterpret an absolute HP value. Record only explicitly possessed/revealed attack types, moves, abilities and items in the correct side's fields; infer none from species, move names or a defensive type. Never copy own moves to the opponent.
 Use requested_defensive_type only for hypothetical defensive type changes, without assuming actual use or game support. Record bench candidates and switch_blocked only when confirmed; bench_members contains only explicit candidate details. Put fields explicitly corrected to unknown in clear_fields.
+For team selection, record explicitly supplied per-Pokémon moves/ability/item in own_team_members or opponent_team_members, including an exact quote naming that Pokémon and its supplied settings. Use raw move names only; never infer types, ownership or effects. Do not use own_id/opponent_id to represent a team member's settings or clear a selection merely because settings were provided. Omit unmentioned settings, including teammates' settings.
 Record opponent_attack_stage/opponent_speed_stage only for stated cumulative stages, not inferred move boosts.
 Create damage_scenarios only when both sides' complete training points, original alignment identifiers, an English move name and neutral reference conditions (no abilities, items, field effects, status or stat changes) are explicit. Never fill unknown training points with zero or assume neutral_conditions=true; otherwise leave it null."""
 
@@ -87,9 +99,34 @@ def grounded_update(update, question, previous=None, catalog=None):
         and not re.search(r"냈|선봉|내보냈|교체했|바꿨|현재.*포켓몬", question)
     ):
         fields["own_id"] = None
+    for side in ("own", "opponent"):
+        key = f"{side}_team_members"
+        checked = []
+        for member in fields.get(key) or []:
+            if not catalog or member["pokemon_id"] not in catalog.items:
+                continue
+            pokemon = catalog.get(member["pokemon_id"])
+            quote = member["quote"]
+            if not quote or quote not in question or not any(
+                name and name.casefold() in quote.casefold()
+                for name in (pokemon.name_ko, pokemon.name_en)
+            ):
+                continue
+            value = {"pokemon_id": member["pokemon_id"], "quote": quote}
+            if member.get("moves"):
+                moves = [name for name in member["moves"] if name.casefold() in quote.casefold()]
+                if moves:
+                    value["moves"] = moves
+            for setting in ("ability", "item"):
+                supplied = member.get(setting)
+                if supplied and supplied.casefold() in quote.casefold():
+                    value[setting] = supplied
+            if len(value) > 2:
+                checked.append(value)
+        fields[key] = checked or None
     for key, value in list(fields.items()):
         if (
-            key in {"input_evidence", "relevant", "reset", "own_id", "opponent_id", "clear_fields"}
+            key in {"input_evidence", "relevant", "reset", "own_id", "opponent_id", "clear_fields", "own_team_members", "opponent_team_members"}
             or value is None
         ):
             continue
@@ -215,6 +252,19 @@ def merge_state(previous, update, allowed_ids, catalog):
         ]
     if (fields or update.clear_fields) and "damage_scenarios" not in fields:
         state.pop("damage_scenarios", None)
+    for side in ("own", "opponent"):
+        key = f"{side}_team_members"
+        existing = {m["pokemon_id"]: m for m in state.get(key, [])}
+        for member in fields.get(key) or []:
+            pid = member["pokemon_id"]
+            if pid in allowed_ids:
+                existing[pid] = {
+                    **existing.get(pid, {}),
+                    **{k: v for k, v in member.items() if v is not None},
+                }
+        roster = fields.get(f"{side}_team_ids", state.get(f"{side}_team_ids", []))
+        if existing:
+            fields[key] = [member for pid, member in existing.items() if pid in roster]
     state.update(fields)
     for pid in [state.get("own_id"), state.get("opponent_id"), *state.get("bench_ids", [])]:
         if pid:
@@ -332,11 +382,50 @@ def evaluate_selection(state, catalog, data_dir):
             f"내 팀과 상대 엔트리를 각각 6마리 알려주세요. 현재 내 팀 {len(own)}마리, 상대 {len(opponent)}마리입니다."
         ]
         return context
+    move_lookup = {
+        name.casefold(): move
+        for move in catalog.details.get("move_details", [])
+        for name in (move["name"], move.get("name_ko")) if name
+    }
+    member_details = {}
+
+    def team_members(side, roster):
+        supplied = {m["pokemon_id"]: m for m in state.get(f"{side}_team_members", [])}
+        active = state.get(f"{side}_id")
+        if active in roster:
+            supplied[active] = {
+                **supplied.get(active, {}),
+                **{key: state[f"{side}_{key}"] for key in ("moves", "ability", "item")
+                   if state.get(f"{side}_{key}") is not None},
+            }
+        members = []
+        for pid in roster:
+            detail = supplied.get(pid, {})
+            resolved, unresolved = [], []
+            for name in detail.get("moves") or []:
+                move = move_lookup.get(name.casefold())
+                if move is None or move["type"] not in engine.chart:
+                    unresolved.append(name)
+                else:
+                    resolved.append({"name": move.get("name_ko") or move["name"],
+                                     "type": move["type"], "category": move["category"]})
+            members.append(TeamMember(pokemon_id=pid, moves=resolved,
+                                      ability=detail.get("ability"), item=detail.get("item")))
+            if detail:
+                member_details[f"{side}:{pid}"] = {
+                    "pokemon_id": pid, "side": side, "move_names": detail.get("moves") or [],
+                    "unresolved_moves": unresolved,
+                    "ability": detail.get("ability"), "item": detail.get("item"),
+                }
+        return members
+
+    own_members = team_members("own", own)
+    opponent_members = team_members("opponent", opponent)
     try:
         result = engine.selection(
             TeamAnalysis(
-                own=[TeamMember(pokemon_id=pid) for pid in own],
-                opponent=[TeamMember(pokemon_id=pid) for pid in opponent],
+                own=own_members,
+                opponent=opponent_members,
             )
         )
     except ServiceError as error:
@@ -347,9 +436,32 @@ def evaluate_selection(state, catalog, data_dir):
         selection={
             "candidate_count": result["candidate_count"],
             "score_kind": result["score_kind"],
+            "recommendation": result["recommendation"],
             "candidates": result["candidates"][:3],
         },
     )
+    details = {}
+    for member in own_members:
+        if member.pokemon_id not in result["recommendation"]["pokemon_ids"]:
+            continue
+        pokemon = catalog.get(member.pokemon_id)
+        detail = dict(member_details.get(f"own:{member.pokemon_id}", {}))
+        detail["matchups"] = []
+        for pid in opponent:
+            attacks = engine.attack_types(member, pokemon)
+            if not attacks:
+                continue
+            attack = max(attacks, key=lambda t: engine.multiplier(t, catalog.get(pid).types))
+            move = next((m for m in member.moves if m.type == attack and m.category != "status"), None)
+            detail["matchups"].append({
+                "opponent_id": pid, "attack_type": attack,
+                "multiplier": engine.multiplier(attack, catalog.get(pid).types),
+                "move_name": move.name if move else None,
+            })
+        details[member.pokemon_id] = detail
+    context["selection"]["member_details"] = details
+    context["selection"]["reported_settings"] = list(member_details.values())
+    context["selection"]["has_details"] = bool(member_details)
     context["selection"]["names"] = {
         pid: catalog.get(pid).name_ko or catalog.get(pid).name_en for pid in [*own, *opponent]
     }
@@ -592,26 +704,6 @@ def coach_fallback(context, evidence):
     )
     if calculation is None:
         return None
-    if context.get("scope") == "generic_team_selection":
-        if context["recommendation"] == "need_six_per_team":
-            return Generation(
-                answer_status="partial", claims=[], assumptions=[], unknowns=context["questions"]
-            )
-        selection = context["selection"]
-        best = selection["candidates"][0]
-        names = selection["names"]
-        team = ", ".join(names[pid] for pid in best["pokemon_ids"])
-        parts = best["components"]
-        texts = [
-            f"{team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
-            f"타입 상성 기준으로 이 조합에 포함된 공격 타입이 상대 6마리 중 {parts['covered_opponents']}마리의 약점을 찌를 수 있기 때문이에요. 기술이 미공개인 멤버는 자기 타입의 공격을 쓴다고 가정하면, 이를 반감하거나 무효화하는 대응은 {parts['resisted_scenarios']}개예요.",
-        ]
-        return Generation(
-            answer_status="partial",
-            claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],
-            assumptions=[],
-            unknowns=[],
-        )
     type_labels = dict(
         zip(
             [
@@ -656,6 +748,25 @@ def coach_fallback(context, evidence):
             ],
         )
     )
+    if context.get("scope") == "generic_team_selection":
+        if context["recommendation"] == "need_six_per_team":
+            return Generation(
+                answer_status="partial", claims=[], assumptions=[], unknowns=context["questions"]
+            )
+        selection = context["selection"]
+        best = selection["candidates"][0]
+        names = selection["names"]
+        team = ", ".join(names[pid] for pid in best["pokemon_ids"])
+        texts = [
+            f"{team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
+            *explain_selection(selection, names, type_labels),
+        ]
+        return Generation(
+            answer_status="partial",
+            claims=[{"text": text, "evidence_ids": [calculation["evidence_id"]]} for text in texts],
+            assumptions=[],
+            unknowns=[],
+        )
     directions = {
         "need_new_opponent": "상대가 쓰러진 상태네요. 다음에 나온 상대를 알려주시면 다시 살펴볼게요.",
         "consider_switch_first": "상대 공격을 잘 받아낼 팀원으로 교체하는 쪽을 추천해요.",

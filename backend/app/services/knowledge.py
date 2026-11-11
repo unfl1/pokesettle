@@ -327,7 +327,13 @@ class KnowledgeService:
                 )
                 or (
                     previous_battle.get("selection_requested")
-                    and not re.search(r"냈|내보냈|지금|대면|공격|교체", request.question)
+                    and (
+                        not re.search(r"냈|내보냈|지금|대면|공격|교체", request.question)
+                        or (
+                            (update.own_team_members or update.opponent_team_members)
+                            and not re.search(r"냈|내보냈|대면|교체했", request.question)
+                        )
+                    )
                 )
             )
             if not battle_state["selection_requested"]:
