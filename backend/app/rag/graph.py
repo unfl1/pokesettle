@@ -211,17 +211,32 @@ def build_graph(vector_store, model, stage=lambda _: None):
         stage("generating")
         context = state.get("battle_context")
         calculated = coach_fallback(context, state["evidence"]) if context else None
+        selection_details = bool(context and context.get("selection", {}).get("has_details"))
+        reported_moves = [
+            name.casefold()
+            for member in (context or {}).get("selection", {}).get("reported_settings", [])
+            for name in member.get("move_names", [])
+        ]
         supplemental_ids = {
             item["evidence_id"] for item in state["evidence"]
             if item.get("source_type") not in {"metadata", "calculation"}
-            and not item.get("document_id", "").startswith("pokeapi:move:")
+            and (
+                not item.get("document_id", "").startswith("pokeapi:move:")
+                or (selection_details and any(name in item["text"].casefold() for name in reported_moves))
+            )
             and not (
                 item.get("document_id", "").startswith("pokeapi:ability:")
                 and context
-                and not any(context.get("state", {}).get(key) for key in ("own_ability", "opponent_ability"))
+                and not (
+                    any(context.get("state", {}).get(key) for key in ("own_ability", "opponent_ability"))
+                    or any(m.get("ability") for m in context.get("selection", {}).get("reported_settings", []))
+                )
             )
         }
-        if calculated and (context.get("scope") == "generic_team_selection" or not supplemental_ids):
+        if calculated and (
+            not supplemental_ids
+            or (context.get("scope") == "generic_team_selection" and not selection_details)
+        ):
             stage("validating_citations")
             return {"result": render_answer(calculated, state["evidence"], state.get("regulation_id"))}
         if not state["evidence"]:
@@ -319,12 +334,12 @@ def build_graph(vector_store, model, stage=lambda _: None):
                             for item in state["evidence"]
                         )
                     ][:2]
+                    claims = [*calculated.claims, *extra]
+                    if selection_details and extra:
+                        claims = [*calculated.claims[:-1], *extra, calculated.claims[-1]]
                     output = Generation(
                         answer_status="partial",
-                        claims=[
-                            *calculated.claims,
-                            *extra,
-                        ],
+                        claims=claims,
                         assumptions=list(dict.fromkeys(calculated.assumptions)),
                         unknowns=list(dict.fromkeys(calculated.unknowns))[:2],
                     )
