@@ -1,7 +1,7 @@
 // Standalone, loopback-only synthetic API for Server Component fetch tests.
 import http from 'node:http';
 import fs from 'node:fs';
-const routes = JSON.parse(fs.readFileSync(new URL('../src/generated/pokemon-routes.json', import.meta.url)));
+const routes = JSON.parse(fs.readFileSync(new URL('../../frontend/src/generated/pokemon-routes.json', import.meta.url)));
 const typeChart = JSON.parse(fs.readFileSync(new URL('../../data/type_chart.json', import.meta.url)));
 const byId = new Map(routes.map(item => [item.pokemonId, item]));
 let ready = false;

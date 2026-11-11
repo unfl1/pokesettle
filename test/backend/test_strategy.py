@@ -41,7 +41,7 @@ def test_strategy_evidence_reaches_generation_with_assumed_status(setup):
     source = StrategySource(ROOT / "data")
     doc = source.fetch_document(source.search("육성", dragonite)[0])
     setup.vectors.index_document(dragonite.pokemon_id, doc)
-    from backend.tests.conftest import document
+    from test.backend.conftest import document
 
     setup.vectors.index_document(
         dragonite.pokemon_id,

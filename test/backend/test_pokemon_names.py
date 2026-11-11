@@ -15,7 +15,7 @@ from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.schemas import ChatRequest
 from backend.app.services.catalog_answers import catalog_question
 from backend.app.services.topics import mentioned_pokemon
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 @pytest.fixture(scope="module")

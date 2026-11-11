@@ -40,7 +40,7 @@ data/strategy/*
 **/__pycache__/
 **/*.pyc
 **/node_modules/
-backend/tests/
+test/
 **/.env
 **/.env.*
 **/*.pem

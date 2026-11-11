@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
 from backend.app.schemas import ChatRequest
-from backend.tests.conftest import wait_for_job
+from test.backend.conftest import wait_for_job
 
 
 def request_body(**changes):

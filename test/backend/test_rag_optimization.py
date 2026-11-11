@@ -5,7 +5,7 @@ import pytest
 
 from backend.app.rag.graph import build_graph
 from backend.app.rag.vector_store import VectorStore
-from backend.tests.conftest import document, embed
+from test.backend.conftest import document, embed
 
 
 @pytest.mark.parametrize("legacy_metadata", [False, True])

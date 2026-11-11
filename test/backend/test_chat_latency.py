@@ -9,7 +9,7 @@ from backend.app.core.config import ROOT
 from backend.app.rag.graph import build_graph
 from backend.app.schemas import BattleExplanation, ChatRequest, Generation
 from backend.app.services.chat_scope import ChatScope
-from backend.tests.conftest import document
+from test.backend.conftest import document
 
 
 @pytest.mark.parametrize('battle,research', [(True, False), (False, False), (True, True)])
@@ -128,7 +128,7 @@ def test_current_matchup_fits_input_limit_without_losing_calculation(setup, monk
     from backend.app.rag.model import StructuredModel, input_reservation
     from backend.app.rag.vector_store import VectorStore
     from backend.app.schemas import Document
-    from backend.tests.conftest import embed
+    from test.backend.conftest import embed
 
     catalog = Catalog(ROOT / 'data/pokemon.json')
     settings = replace(
@@ -189,7 +189,7 @@ def test_registered_strategy_collection_uses_only_answer_model_and_preserves_sou
 
     from backend.app.data_preparation.sources import CombinedSource
     from backend.app.schemas import Candidate
-    from backend.tests.conftest import document
+    from test.backend.conftest import document
 
     source = CombinedSource(setup.source.client, directory=setup.settings.data_dir, wikipedia_enabled=False)
     source.strategy.notes = [{

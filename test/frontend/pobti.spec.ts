@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { axes, calculateType, profiles, questions } from '../src/features/pobti/model';
+import { axes, calculateType, profiles, questions } from '../../frontend/src/features/pobti/model';
 
 test('all answer combinations map deterministically to all sixteen types', () => {
   const counts = new Map<string, number>();

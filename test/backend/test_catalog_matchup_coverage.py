@@ -152,7 +152,7 @@ def test_move_definition_cannot_add_ownership_or_override_matchup_advice(setup):
 
     from backend.app.rag.graph import build_graph
     from backend.app.schemas import Generation
-    from backend.tests.conftest import document
+    from test.backend.conftest import document
 
     catalog = Catalog(ROOT / "data/pokemon.json")
     setup.vectors.upsert_metadata([catalog.get("pokemon:25"), catalog.get("pokemon:635")])

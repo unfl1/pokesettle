@@ -537,8 +537,9 @@ uv run --frozen python -m backend.scripts.index_data
 - 정적 사이트맵: 기능 URL 20개 + 상세 URL 5,404개, 빌드 시 API·모델 호출 없음
 - 서버 SSR: API 연결 실패를 없는 포켓몬으로 처리하지 않음, 일반 도감은 메모리 카탈로그, 메타는 기존 서버 캐시의 기준일·stale 상태 사용
 - 메타 조회·선택: 순위·세팅·출처·날짜를 서버 HTML로 제공함. `?pokemon=<nameEn>` 선택과 서버 재조회 사용, 브라우저의 중복 `/api/meta/singles` 조회 제거함. 공개 SSR 캐시 기본 60초 정책 유지함
-- 하이드레이션 검사: `e2e/ssr-boundaries.spec.ts`에서 JavaScript 없는 메타 선택·공통 헤더, 4개 언어의 지연 스크립트·날짜 포맷 차이·저장소 기록에서 DOM 보존과 오류 부재 검증함
-- 프론트 E2E: `e2e/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
+- 하이드레이션 검사: `test/frontend/ssr-boundaries.spec.ts`에서 JavaScript 없는 메타 선택·공통 헤더, 4개 언어의 지연 스크립트·날짜 포맷 차이·저장소 기록에서 DOM 보존과 오류 부재 검증함
+- 테스트 의존성: `pnpm --dir test install --frozen-lockfile`로 기존과 같은 Playwright·Node 타입 버전 설치함. E2E 실행 명령 `pnpm --dir frontend test:e2e` 유지, AWS 리다이렉트 검사는 `node --test test/deployment/locale_redirect.test.mjs` 사용함
+- 프론트 E2E: `test/frontend/fixture-api.mjs`의 합성 API를 별도 실행, Docker 프론트는 `host.docker.internal:5198`로 서버 요청 연결, 운영 API 사용 제외
 - 공개 캐시 검사: `pnpm --dir frontend build` 후 `pnpm --dir frontend test:public-cache`, 기본 캐시 활성 상태에서 원본 호출 수·실패 응답 복구·런타임 GA 설정 검증
 - 공개 smoke: 홈·챗봇·정적 자산·API 준비 상태와 피카츄 상세의 실제 HTML 본문·canonical 확인
 - 전역 CSS: `frontend/src/globals.css`, 아이콘: 기존 SVG와 16·32·48px `app/favicon.ico`

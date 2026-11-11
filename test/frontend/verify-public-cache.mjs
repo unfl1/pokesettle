@@ -2,7 +2,9 @@
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { request } from '@playwright/test';
+const frontendDir = fileURLToPath(new URL('../../frontend/', import.meta.url));
 
 async function availablePort() {
   const server = createServer();
@@ -24,10 +26,12 @@ const fixturePort = await availablePort();
 const port = await availablePort();
 const fixtureUrl = `http://127.0.0.1:${fixturePort}/__fixture`;
 const origin = `http://127.0.0.1:${port}`;
-const fixture = spawn(process.execPath, ['e2e/fixture-api.mjs'], {
+const fixture = spawn(process.execPath, [fileURLToPath(new URL('./fixture-api.mjs', import.meta.url))], {
+  cwd: frontendDir,
   env: { ...process.env, FIXTURE_API_PORT: String(fixturePort) }, stdio: 'ignore',
 });
 const frontend = spawn(process.execPath, ['.next/standalone/server.js'], {
+  cwd: frontendDir,
   env: { ...process.env, HOSTNAME: '127.0.0.1', PORT: String(port), API_ORIGIN: `http://127.0.0.1:${fixturePort}`, PUBLIC_DATA_CACHE_SECONDS: '', GA_ID: 'G-NAVTEST123' }, stdio: 'ignore',
 });
 async function waitFor(url) {

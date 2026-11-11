@@ -197,13 +197,12 @@ poketact/
 ├── pyproject.toml
 ├── uv.lock
 ├── frontend/
-│   ├── src/{app,features,lib,types}/
-│   └── e2e/
+│   └── src/{app,features,lib,types}/
 ├── backend/
 │   ├── app/{api,core,services,rag,battle,data_preparation}/
 │   ├── calculator/
-│   ├── scripts/
-│   └── tests/
+│   └── scripts/
+├── test/{backend,frontend,deployment}/
 ├── deployment/
 │   ├── docker/              # Dockerfile, production/monitoring Compose, env example
 │   ├── aws/
