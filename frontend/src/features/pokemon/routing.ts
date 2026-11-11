@@ -14,14 +14,12 @@ export function slugifyName(name: string) {
 export function pokemonName(pokemon: RoutePokemon, locale: Locale) {
   return pokemon.names?.[locale] ?? (locale === 'ko' ? pokemon.nameKo : null) ?? pokemon.names?.en ?? pokemon.nameEn ?? pokemon.pokemonId;
 }
-export function pokemonSegment(pokemon: RoutePokemon, locale: Locale) {
-  const match = /^pokemon:([1-9]\d*)$/.exec(pokemon.pokemonId);
-  if (!match) throw new Error('Invalid Pokémon resource ID');
-  const slug = pokemon.slugs?.[locale] ?? slugifyName(pokemonName(pokemon, locale));
-  return `${slug}-${match[1]}`;
+export function pokemonSegment(pokemon: RoutePokemon) {
+  const name = pokemon.slugs?.en ?? pokemon.names?.en ?? pokemon.nameEn ?? pokemon.pokemonId;
+  return slugifyName(name.normalize('NFKD').replace(/\p{M}/gu, ''));
 }
 export function pokemonPath(pokemon: RoutePokemon, locale: Locale) {
-  return localizedPath(locale, `/pokedex/${encodeURIComponent(pokemonSegment(pokemon, locale))}`);
+  return localizedPath(locale, `/pokedex/${encodeURIComponent(pokemonSegment(pokemon))}`);
 }
 export function idFromSegment(segment: string) {
   const match = /^.+-([1-9]\d*)$/.exec(segment.normalize('NFC'));

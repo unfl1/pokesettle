@@ -3,7 +3,7 @@ import { useI18n } from '../../../i18n/I18nProvider';
 
 import { useWorkspaceContext } from "../../../providers/AppProviders";
 import Link from 'next/link';
-import { idFromSegment, pokemonName, pokemonPath } from '../routing';
+import { pokemonSegment, pokemonName, pokemonPath } from '../routing';
 import type { Page } from '../../../types/api';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -21,9 +21,9 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
   const ready = Boolean(workspace.status.data?.ready);
   const sessionReady = workspace.session.isSuccess;
   const moveType = useSearchParams().get('moveType');
-  const routeId = idFromSegment(decodeURIComponent(usePathname().split('/').at(-1) ?? ''));
-  const pokemonId = routeId ?? 'pokemon:25';
-  const Heading = routeId ? 'h2' : 'h1';
+  const pathname = usePathname();
+  const segment = /\/pokedex\/([^/]+)$/.exec(pathname)?.[1];
+  const Heading = segment ? 'h2' : 'h1';
   const [mode, setMode] = useState<'name' | 'conditions'>('name');
   const [name, setName] = useState('');
   const [condition, setCondition] = useState('');
@@ -243,8 +243,8 @@ export default function PokedexPage({ initialPage, children }: { initialPage: Pa
                   key={p.pokemonId}
                   href={`${pokemonPath(p, locale)}${moveType ? `?moveType=${encodeURIComponent(moveType)}#pokemon-learnset` : ''}`}
                   aria-label={translate('{name} 선택', { name: pokemonName(p, locale) })}
-                  aria-current={p.pokemonId === pokemonId ? 'page' : undefined}
-                  data-selected={p.pokemonId === pokemonId}
+                  aria-current={segment ? pokemonSegment(p) === decodeURIComponent(segment) : p.pokemonId === 'pokemon:25' ? 'page' : undefined}
+                  data-selected={segment ? pokemonSegment(p) === decodeURIComponent(segment) : p.pokemonId === 'pokemon:25'}
                 >
                   <span className="text-[14px] tabular-nums text-muted max-phone:hidden group-data-[selected=true]:text-accent">
                     {String(

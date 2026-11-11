@@ -908,7 +908,7 @@ test('도감 안내 답변은 현재 언어의 상세 도감과 기술 필터로
   await page.getByLabel('포켓몬 질문').fill('피카츄 전기 기술 목록 알려줘');
   await page.getByRole('button', { name: '질문 보내기' }).click();
   const link = page.getByRole('link', { name: '도감에서 확인하기' });
-  await expect(link).toHaveAttribute('href', '/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25?moveType=electric#pokemon-learnset');
+  await expect(link).toHaveAttribute('href', '/ko/pokedex/pikachu?moveType=electric#pokemon-learnset');
   await expect(page.getByTestId('answer-state')).toHaveText('도감 안내');
   await page.reload();
   await expect(link).toBeVisible();

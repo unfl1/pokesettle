@@ -279,7 +279,7 @@ Python 3.10+ 기준임. **이 버전들의 배포 여부·상호 호환성은 �
 
 - 도감 목록·상세: Next.js 서버에서 내부 FastAPI 조회 후 최초 HTML에 이름·타입·종족값·설명·출처·목록 링크 포함
 - RAG 입력: 화면 표시용 names·slugs를 검색어 추출 프롬프트에서 제외, UI 현지화로 모델 입력 증가 방지
-- 경계: 도감 프로필·기술 카드와 메타 순위·상세·출처·날짜는 Server Component, 검색·기술 필터·메타 선택 폼·새로 조회·이미지 실패 처리만 Client Component로 구성함. 기술 필터에는 서버가 렌더링한 카드와 필터 정보만 전달함. 전체 도감 URL 인덱스의 클라이언트 전송 제외함
+- 경계: 도감 프로필·기술 카드와 메타 순위·상세·출처·날짜는 Server Component, 검색·기술 필터·새로 조회·이미지 실패 처리만 Client Component로 구성함. 기술 필터에는 서버가 렌더링한 카드와 필터 정보만 전달함. 메타 선택은 서버가 생성한 상세 링크 사용함. 도감·메타의 URL은 공통 영문 슬러그 사용, 전체 도감 URL 인덱스의 클라이언트 전송 제외함
 - URL 인덱스: `data/pokemon_names.json` → 프론트 빌드 시 `scripts/generate-pokemon-routes.mjs` → `src/generated/pokemon-routes.json`, ID 집합·빈 slug·경로 중복 검증
 - 리다이렉트·없는 ID: 스트리밍 이전 proxy에서 308·404 확정, 상세 canonical·hreflang·OG URL·사이트맵은 동일 인덱스 사용
 - 캐시: 도감 초기 목록·ID 상세·메타의 공개 GET만 Next.js 데이터 캐시로 60초 재검증, React `cache`로 렌더 요청 내 중복 조회 축소, 개인 세션 쿠키 전달 제외, 메타의 기존 백엔드 신선도 정책 유지

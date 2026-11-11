@@ -19,10 +19,10 @@ test('메타 본문·출처·선택과 공통 헤더는 JavaScript 없이 동작
     await page.goto(`${baseURL}/ko/meta`);
     await expect(page.getByRole('navigation', { name: '주 메뉴' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'SSR source' })).toBeVisible();
-    await page.getByRole('button', { name: /두 번째 예시/ }).click();
+    await page.getByRole('link', { name: /두 번째 예시/ }).click();
     await expect(page).toHaveURL(/pokemon=Second(?:\+|%20)Fixture/);
     await expect(page.getByRole('region', { name: '주요 세팅' })).toContainText('Selected SSR Move');
-    await expect(page.getByRole('button', { name: /두 번째 예시/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('link', { name: /두 번째 예시/ })).toHaveAttribute('aria-current', 'page');
     await page.goto(`${baseURL}/ko/pobti`);
     await expect(page.getByRole('navigation', { name: '주 메뉴' })).toBeVisible();
     await expect(page.getByRole('combobox', { name: '언어' })).toHaveValue('ko');

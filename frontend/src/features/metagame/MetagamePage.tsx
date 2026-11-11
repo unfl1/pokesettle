@@ -1,8 +1,8 @@
 import 'server-only';
-import MetagameSelection from './MetagameSelection';
+import { metagameSelectionPath } from './routing';
 import Link from 'next/link';
 import { getI18n } from '../../i18n/server';
-import { localeRegistry, localizedPath } from '../../i18n/config';
+import { localeRegistry } from '../../i18n/config';
 import { pokemonPath, pokemonName, referenceName } from '../pokemon/routing';
 import PokemonImage from '../pokemon/components/PokemonImage';
 import RefreshButton from '../../components/layout/RefreshButton';
@@ -29,15 +29,15 @@ export default async function MetagamePage({ data, selected }: { data: SinglesMe
       {data && !data.items.length && <p role="status">{translate("표시할 싱글 순위 데이터가 없어요.")}</p>}
       {pokemon && data && <div className="grid grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] gap-5 max-tablet:grid-cols-1">
         <section className="rounded-xl border border-line bg-surface p-3" aria-label={translate("싱글 사용 순위")}>
-          <MetagameSelection action={localizedPath(locale, '/meta')}><ol className="max-h-[640px] overflow-auto">
+          <ol className="max-h-[640px] overflow-auto">
             {data.items.map(item => <li key={item.nameEn}>
-              <button aria-pressed={pokemon.nameEn === item.nameEn} type="submit" name="pokemon" value={item.nameEn} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-pressed:bg-accent/8 aria-pressed:text-accent">
+              <Link prefetch={false} scroll={false} href={metagameSelectionPath(item, locale)} aria-current={pokemon.nameEn === item.nameEn ? 'page' : undefined} className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-canvas aria-[current=page]:bg-accent/8 aria-[current=page]:text-accent">
                 <span className="w-8 shrink-0 text-[14px] tabular-nums">{translate('순위 {rank}', { rank: item.rank })}</span>
                 <PokemonImage pokemon={item} size="small" />
                 <span className="min-w-0 break-words text-[14px]">{pokemonName({ ...item, pokemonId: item.pokemonId ?? item.nameEn }, locale)}<small className="block text-[14px] text-muted">{item.nameEn}</small></span>
-              </button>
+              </Link>
             </li>)}
-          </ol></MetagameSelection>
+          </ol>
         </section>
         <section className="min-w-0 rounded-xl border border-line bg-surface p-5" aria-label={translate("주요 세팅")}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

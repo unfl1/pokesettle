@@ -12,6 +12,8 @@ for (const locale of ['ko', 'en', 'ja', 'zh']) {
   const paths = routes.map(item => `${item.slugs[locale]}-${item.pokemonId.split(':')[1]}`);
   if (paths.some(item => item.startsWith('undefined-') || item.startsWith('-')) || new Set(paths).size !== routes.length) throw new Error(`Invalid routes: ${locale}`);
 }
+const englishSlugs = routes.map(item => item.slugs.en?.normalize('NFKD').replace(/\p{M}/gu, ''));
+if (englishSlugs.some(slug => !slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) || new Set(englishSlugs).size !== routes.length) throw new Error('English Pokémon slugs must be nonempty and unique');
 fs.mkdirSync(path.join(root, 'src/generated'), { recursive: true });
 fs.writeFileSync(path.join(root, 'src/generated/pokemon-routes.json'), JSON.stringify(routes) + '\n');
 console.log(`Validated ${routes.length} Pokémon route entries`);
