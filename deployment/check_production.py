@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlsplit
 def check(base):
     if urlsplit(base).scheme != "https":
         raise ValueError("HTTPS production URL required")
-    detail_path = "/ko/pokedex/pikachu"
+    detail_path = "/ko/pokedex/%ED%94%BC%EC%B9%B4%EC%B8%84-25"
     pages = {"/ko": "배틀 준비는 PokeSettle에서", "/ko/chat": "전략 챗봇", detail_path: "종족값"}
     assets = set()
     for path, marker in pages.items():
