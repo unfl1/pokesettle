@@ -44,6 +44,7 @@ test('경로 응답 대기 중 클릭한 링크에 표시 후 완료 시 해제'
   const link = page.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '메타 순위' });
   await link.click();
   await expect(link.locator('[data-pending]')).toBeVisible();
+  await expect(page.locator('.navigation-status')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '싱글 메타 순위', exact: true })).toBeVisible();
   await expect(link.locator('[data-pending]')).toHaveCount(0);
 });
