@@ -81,7 +81,7 @@ services:
     <<: *monitor
     networks: [observability, grafana_access]
     image: grafana/grafana:13.2.4
-    mem_limit: 256m
+    mem_limit: 384m
     env_file: .env.observability
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "false"
