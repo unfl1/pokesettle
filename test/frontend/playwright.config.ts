@@ -6,6 +6,7 @@ const fixturePort = process.env.FIXTURE_API_PORT ?? '5198';
 const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: '.',
+  testMatch: '**/*.spec.ts',
   tsconfig: './tsconfig.json',
   fullyParallel: false,
   workers: 1,

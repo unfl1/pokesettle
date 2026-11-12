@@ -2,11 +2,7 @@
   "extends": "../../frontend/tsconfig.json",
   "compilerOptions": {
     "incremental": false,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "./**/*.ts"
-  ]
+  "include": ["./**/*.ts", "./**/*.tsx"]
 }
