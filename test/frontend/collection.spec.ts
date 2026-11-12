@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { catchCooldownMs, collectionKey, cooldownKey, parseCollection, parseNextCatchAt, pickUncaught } from '../../frontend/src/features/collection/storage';
+import { collectionKey, cooldownKey } from '../../frontend/src/features/collection/storage';
 
 const dex = (page: Page) => page.getByRole('button', { name: '나의 관동 도감', exact: true })
   .and(page.getByTitle('나의 관동 도감', { exact: true }));
@@ -35,19 +35,6 @@ test.beforeEach(async ({ context, page }) => {
   await page.clock.install();
   await context.route('**/_next/image?**', route => route.fulfill({ contentType: 'image/svg+xml',
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><circle cx="40" cy="40" r="25" fill="#9acbb5"/></svg>' }));
-});
-
-test('수집 데이터는 1세대 정수만 허용하며 중복과 범위 밖 ID 제외', () => {
-  expect(parseCollection('[151,1,1,0,152,10025,"25",2.5,null]')).toEqual([1, 151]);
-  expect(parseCollection(null)).toEqual([]);
-  expect(() => parseCollection('{')).toThrow();
-  expect(() => parseCollection('{}')).toThrow();
-  const all = Array.from({ length: 151 }, (_, index) => index + 1);
-  expect(pickUncaught(all)).toBeNull();
-  expect(pickUncaught(all.filter(id => id !== 25))).toBe(25);
-  expect(catchCooldownMs).toBe(600_000);
-  for (const raw of [null, 'bad', '-1', 'Infinity', '1.5']) expect(parseNextCatchAt(raw)).toBe(0);
-  expect(parseNextCatchAt('1800000000000')).toBe(1800000000000);
 });
 
 test('루트와 모든 언어의 홈에서 포획 볼·수집 버튼 미표시, 메뉴 5개 유지', async ({ page }) => {

@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 
 const languages = [
   { code: 'ko', html: 'ko', terms: '이용약관', privacy: '개인정보처리방침', contents: '목차', home: '홈으로', select: '언어', date: '2026년 11월 2일', storage: '3. 쿠키와 브라우저 저장소' },
@@ -92,18 +91,5 @@ test('legacy English policies redirect once and unsupported paths stay 404', asy
   }
   for (const url of ['/about', '/fr/terms', '/ko/terms/missing', '/ja/privacy/missing']) {
     expect((await request.get(url)).status()).toBe(404);
-  }
-});
-
-test('legal dictionaries have complete translations and preserve literal identifiers', () => {
-  const dictionaries = Object.fromEntries(languages.map(language => [language.code, JSON.parse(readFileSync(new URL(`../../frontend/src/components/legal/dictionaries/${language.code}.json`, import.meta.url), 'utf8')) as Record<string, string>]));
-  const keys = Object.keys(dictionaries.ko).sort();
-  for (const language of languages) {
-    const dictionary = dictionaries[language.code];
-    expect(Object.keys(dictionary).sort()).toEqual(keys);
-    expect(Object.values(dictionary).every(value => value.length > 0)).toBe(true);
-    for (const identifier of ['sessionStorage', 'localStorage', 'HttpOnly', 'OpenAI', 'Google Analytics']) {
-      expect(Object.values(dictionary).join(' ')).toContain(identifier);
-    }
   }
 });

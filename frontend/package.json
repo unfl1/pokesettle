@@ -15,7 +15,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "test": "node ../test/node_modules/vitest/vitest.mjs run --config ../test/frontend/vitest.config.ts",
+    "test:watch": "node ../test/node_modules/vitest/vitest.mjs --config ../test/frontend/vitest.config.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.0",

@@ -448,7 +448,10 @@ uv run --frozen python -m backend.scripts.index_data
 
 - 구조·SSR·캐시 경계는 [통합 명세](../design/PROJECT_SPEC.md#화면url캐시-경계)에서 관리함
 - Python: `uv run --frozen pytest`, 기본 수집 경로 `test/backend` 사용함. DB 통합 검사는 별도 테스트 DB의 `POKETACT_TEST_DATABASE_URL` 설정 필요함
-- 프런트 테스트 의존성: `pnpm --dir test install --frozen-lockfile`, 기존과 같은 Playwright·Node 타입 버전 사용함
+- 프런트 테스트 의존성: `pnpm --dir test install --frozen-lockfile`, Vitest·React Testing Library·jsdom 및 E2E용 Playwright 설치함
+- 기본 프런트 테스트: `pnpm --dir frontend test`, `test/frontend/**/*.test.ts`·`*.test.tsx`의 로직·컴포넌트 검사 실행함. 변경 감시는 `pnpm --dir frontend test:watch` 사용함
+- Vitest 설정: `test/frontend/vitest.config.ts`·`vitest.setup.ts`, jsdom·React JSX 변환·DOM matcher·테스트별 DOM 정리 적용함. 테스트와 앱의 React 중복 로드를 방지하도록 dedupe 적용함
+- 비동기 서버 컴포넌트·SSR·라우팅·실제 브라우저 레이아웃은 기존 `*.spec.ts` Playwright E2E로 확인함. [Next.js Vitest 가이드](https://nextjs.org/docs/app/guides/testing/vitest) 참고함
 - E2E: 프런트 빌드 후 `pnpm --dir frontend test:e2e`, `test/frontend/fixture-api.mjs`의 로컬 합성 API 사용함. 개발 서버와 포트가 겹치면 `PLAYWRIGHT_PORT` 지정함
 - 프런트 테스트 타입: `pnpm --dir frontend exec tsc --project ../test/frontend/tsconfig.json --noEmit` 사용함
 - AWS 로케일 이동: `node --test test/deployment/locale_redirect.test.mjs` 사용함
