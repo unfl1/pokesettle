@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page) {
+async function fixture(page: Page, linked = false) {
   // Synthetic UI fixtures only; deterministic engine correctness is tested in pytest.
   const pokemon = Array.from({ length: 6 }, (_, i) => ({
     pokemonId: `pokemon:${i + 1}`,
@@ -24,10 +24,10 @@ async function fixture(page: Page) {
   }));
   const members = pokemon.map((p) => ({
     pokemonId: p.pokemonId,
-    moves: [{ name: '입력한 공격', type: 'fire', category: 'physical' }],
-    hpPercent: null,
-    ability: null,
-    item: null,
+    moves: [{ name: linked ? '10만볼트' : '입력한 공격', type: 'fire', category: 'physical' }],
+    hpPercent: linked ? 50 : null,
+    ability: linked ? '테스트 특성' : null,
+    item: linked ? '테스트 도구' : null,
   }));
   let teams = [
     { teamId: 'seed', name: '테스트 구성', members, updatedAt: '2026-10-21' },
@@ -126,10 +126,11 @@ async function fixture(page: Page) {
                 sharedWeaknessPenalty: 0,
               },
             });
+      const chosen = linked ? candidates.at(-1)! : candidates[0];
       return ok({ ...context, candidateCount: 20, candidates, recommendation: {
-        pokemonIds: candidates[0].pokemonIds, leadId: candidates[0].leadId,
+        pokemonIds: chosen.pokemonIds, leadId: chosen.leadId,
         leadReason: '타입 커버와 반감 대응 비교',
-        members: candidates[0].pokemonIds.map(pokemonId => ({pokemonId, attackAssumed: true, attackTargets: ['pokemon:2'], resistTargets: ['pokemon:1']})),
+        members: chosen.pokemonIds.map(pokemonId => ({pokemonId, attackAssumed: true, attackTargets: ['pokemon:2'], resistTargets: ['pokemon:1']})),
         matchups: pokemon.map(p => ({opponentId: p.pokemonId, attackerId: 'pokemon:1', attackType: 'fire', attackMultiplier: 2, attackAssumed: true, incomingTypes: ['grass'], incomingAssumed: true, pivotId: 'pokemon:2', pivotMultiplier: 0.5, leadAction: 'attack', leadAttackType: 'fire', leadAttackMultiplier: 2, leadIncomingMultiplier: 1})),
         uncoveredOpponentIds: [], noResistOpponentIds: ['pokemon:2'],
       } });
@@ -169,7 +170,7 @@ async function fixture(page: Page) {
 }
 
 async function openTeams(page: Page) {
-  await page.goto('/chat');
+  await page.goto('/ko/chat');
   await expect(
     page.getByRole('heading', { name: '전략 챗봇' }),
   ).toBeVisible();
@@ -242,10 +243,11 @@ test('선출 20개·근거·상성 결과 및 입력 변경 시 이전 결과 �
   await expect(
     page.getByRole('region', { name: '팀 분석 결과' }).locator('ol > li'),
   ).toHaveCount(20);
-  await page.getByText('타입 상성 기반 참고용 · 승률과 실제 피해를 보장하지 않아요', { exact: true }).click();
+  await page.getByText('타입 상성 참고용 · 실제 배틀 결과 미검증', { exact: true }).click();
   await expect(
     page.getByText('선출 점수는 비교용이며 승률이 아닙니다.', { exact: false }),
   ).toBeVisible();
+  await page.getByText('양쪽 팀 구성', {exact:false}).first().click();
   const own = page.getByRole('region', { name: '내 팀', exact: true });
   await own.getByRole('button', { name: '1번 멤버 제거', exact: true }).click();
   await expect(
@@ -332,6 +334,8 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
   await panel.getByLabel('계산 기술', { exact: true }).selectOption('thunderbolt');
   await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:2');
+  await panel.getByText('공격자 육성 설정', {exact:true}).click();
+  await panel.getByText('방어자 육성 설정', {exact:true}).click();
   await panel.getByLabel('공격자 성향').selectOption('Modest');
   await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
   await expect(submit).toBeDisabled();
@@ -361,6 +365,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
   await expect(panel.getByText('참조 피해 범위:', { exact: false })).toHaveCount(0);
   await panel.getByLabel('방어자 성향').selectOption('Hardy');
   await expect(panel.getByText('참조 피해 범위:', { exact: false })).toBeVisible();
+  await page.getByText('양쪽 팀 구성', {exact: false}).first().click();
   await page.getByRole('region', { name: '내 팀', exact: true }).getByRole('button', { name: '1번 멤버 제거', exact: true }).click();
   await expect(submit).toBeDisabled();
   await expect(panel.getByText('참조 피해 범위:', { exact: false })).toHaveCount(0);
@@ -369,7 +374,7 @@ test('참조 피해 검증·재시도·입력 변경 및 멤버 제거 시 결�
 
 test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ page }) => {
   await fixture(page);
-  await page.goto('/scenario');
+  await page.goto('/ko/scenario');
   await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
   await page.getByRole('textbox', { name: '팀 이름', exact: true }).fill('편집 중인 팀');
@@ -379,7 +384,7 @@ test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ pag
   await expect(page.getByRole('region', { name: '내 팀', exact: true })).toBeHidden();
   await page.getByRole('textbox', { name: '포켓몬 질문', exact: true }).fill('메뉴를 오가도 유지할 질문');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: '팀 이름', exact: true })).toHaveValue('편집 중인 팀');
+  await expect(page.getByLabel('팀 이름', { exact: true })).toHaveValue('편집 중인 팀');
   await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
   await page.getByRole('link', { name: '챗봇', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue('메뉴를 오가도 유지할 질문');
@@ -387,8 +392,8 @@ test('메뉴 왕복 시 편집 중인 팀과 전투 입력 유지', async ({ pag
   await page.getByRole('navigation', { name: '시작할 메뉴 선택' }).getByRole('link', { name: /챗봇/ }).click();
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue('메뉴를 오가도 유지할 질문');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: '팀 이름', exact: true })).toHaveValue('편집 중인 팀');
-  await expect(page.getByRole('combobox', { name: '저장한 내 팀', exact: true })).toHaveValue('seed');
+  await expect(page.getByLabel('팀 이름', { exact: true })).toHaveValue('편집 중인 팀');
+  await expect(page.getByLabel('저장한 내 팀', { exact: true })).toHaveValue('seed');
   await expect(page.getByRole('combobox', { name: '메가 사용 상태', exact: true })).toHaveValue('used');
   expect(await page.evaluate(() => sessionStorage.getItem('poketact-navigation-draft'))).toBeNull();
 });
@@ -400,9 +405,9 @@ test('추천 선봉 적용과 전략 근거 질문 연결', async ({ page }) => 
   await page.getByRole('combobox', { name: '저장한 내 팀', exact: true }).selectOption('seed');
   await page.getByRole('combobox', { name: '상대 팀 불러오기', exact: true }).selectOption('seed');
   await page.getByRole('button', { name: '3마리·선봉 추천', exact: true }).click();
-  await page.getByRole('button', { name: '추천 선봉으로 전투 비교', exact: true }).click();
+  await page.getByRole('button', { name: '이 3마리로 전투 비교', exact: true }).click();
   await expect(page.getByRole('combobox', { name: '현재 내 포켓몬', exact: true })).toHaveValue('0');
-  await page.getByRole('button', { name: '팀·선출 비교', exact: true }).click();
+  await page.getByRole('button', { name: '선출 추천', exact: true }).click();
   await page.getByRole('button', { name: '이 선출의 전략 근거 질문하기', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue(/추천 선출은 테스트1, 테스트2, 테스트3이고 선봉은 테스트1/);
   await expect(page.getByRole('textbox', { name: '포켓몬 질문', exact: true })).toHaveValue(/입력한 공격/);
@@ -419,12 +424,13 @@ test('피해 계산 기술의 타입·습득 필터 및 공격자 변경 초기�
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:1');
   const moves = panel.getByLabel('계산 기술', { exact: true });
   await expect(moves.locator('option[value="double-slap"]')).toHaveAttribute('disabled', '');
+  await panel.getByText('기술 검색과 필터', {exact: true}).click();
   await panel.getByLabel('계산 기술 타입', { exact: true }).selectOption('electric');
   await expect(moves.locator('option[value="surf"]')).toHaveCount(0);
   await panel.getByLabel('계산 기술 습득 방법', { exact: true }).selectOption('machine');
   await expect(moves.locator('option[value="volt-tackle"]')).toHaveCount(0);
   await moves.selectOption('thunderbolt');
-  await expect(panel.getByText(/Champions 육성 기준/)).toHaveCount(2);
+  await panel.getByText('기술 검색과 필터', {exact: true}).click();
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:2');
   await expect(moves).toHaveValue('');
   await expect(panel.getByRole('button', { name: '참조 피해 계산', exact: true })).toBeDisabled();
@@ -458,14 +464,99 @@ test('구성 진행 안내와 목적별 분석 전환 및 계산 입력 유지',
 test('팀 편집과 전투 포켓몬 이름이 선택 언어를 따름', async ({ page }) => {
   await fixture(page);
   for (const row of [
-    {locale:'en',own:'Your team',saved:'Saved teams',battle:'Current battle comparison',active:'Your active Pokémon',name:'Test 1'},
-    {locale:'ja',own:'自分のチーム',saved:'保存した自分のチーム',battle:'現在のバトル比較',active:'現在の自分のポケモン',name:'テスト1'},
-    {locale:'zh',own:'己方队伍',saved:'已保存的己方队伍',battle:'当前对战比较',active:'当前己方宝可梦',name:'测试1'},
+    {selection:'Selection',locale:'en',own:'Your team',saved:'Saved teams',battle:'Current battle comparison',active:'Your active Pokémon',name:'Test 1'},
+    {selection:'選出候補',locale:'ja',own:'自分のチーム',saved:'保存した自分のチーム',battle:'現在のバトル比較',active:'現在の自分のポケモン',name:'テスト1'},
+    {selection:'选出建议',locale:'zh',own:'己方队伍',saved:'已保存的己方队伍',battle:'当前对战比较',active:'当前己方宝可梦',name:'测试1'},
   ]) {
     await page.goto(`/${row.locale}/scenario`);
+    await page.getByRole('button', {name:row.selection,exact:true}).click();
     await page.getByRole('combobox', {name:row.saved,exact:true}).selectOption('seed');
     await expect(page.getByRole('region', {name:row.own,exact:true})).toContainText(row.name);
     await page.getByRole('button', {name:row.battle,exact:true}).click();
     await expect(page.getByRole('combobox', {name:row.active,exact:true})).toContainText(row.name);
   }
+});
+
+
+test('선출 3마리 요청·대면·팀 기술·HP 연결과 팀 수정 후 선출 해제', async ({ page }) => {
+  await fixture(page, true);
+  await page.goto('/ko/scenario');
+  await page.getByLabel('저장한 내 팀', { exact: true }).selectOption('seed');
+  await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption('seed');
+  await page.getByRole('button', { name: '3마리·선봉 추천', exact: true }).click();
+  await expect(page.getByRole('region', {name:'내 팀', exact:true})).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0,0));
+  const cards = page.getByRole('region',{name:'추천 선출과 운영'}).locator('.grid').first();
+  expect(await cards.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(3);
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(() => window.scrollTo(0,0));
+  expect(await cards.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({width:1280,height:900});
+  await page.getByRole('button', { name: '이 3마리로 전투 비교', exact: true }).click();
+  const active = page.getByLabel('현재 내 포켓몬', {exact:true});
+  await expect(active.locator('option')).toHaveCount(3);
+  await active.selectOption('5');
+  await page.getByLabel('현재 상대 포켓몬', {exact:true}).selectOption('4');
+  const battleRequest = page.waitForRequest('**/api/battle/recommend');
+  await page.getByRole('button', { name: '공격·교체 비교', exact:true }).click();
+  const body = (await battleRequest).postDataJSON();
+  expect(body.own.map((m: {pokemonId: string}) => m.pokemonId)).toEqual(['pokemon:4', 'pokemon:5', 'pokemon:6']);
+  expect(body.ownActive).toBe(2);
+  expect(body.opponentActive).toBe(4);
+  await page.getByRole('link',{name:'챗봇',exact:true}).click();
+  await page.getByRole('link',{name:'6:6 시나리오',exact:true}).click();
+  await expect(active.locator('option')).toHaveCount(3);
+  await expect(active).toHaveValue('5');
+  await page.getByRole('button', {name:'이 대면의 피해 계산',exact:true}).click();
+  const panel = page.getByRole('region', {name:'참조 데미지 계산',exact:true});
+  await expect(panel.getByLabel('공격자 포켓몬')).toHaveValue('pokemon:6');
+  await expect(panel.getByLabel('방어자 포켓몬')).toHaveValue('pokemon:5');
+  await expect(panel.getByLabel('계산 기술', {exact:true})).toHaveValue('thunderbolt');
+  await expect(panel.getByText('비우면 팀 HP 50%를 참조 최대 HP로 환산해요')).toBeVisible();
+  await expect(panel.getByText(/팀에 입력한 특성·도구도 효과에서 제외돼요/)).toBeVisible();
+  const submit = panel.getByRole('button', {name:'참조 피해 계산',exact:true});
+  await expect(submit).toBeDisabled();
+  await panel.getByRole('checkbox').check();
+  await page.route('**/api/battle/damage', route => route.fulfill({status:503,json:{error:{code:'TEST',message:'합성 요청 확인'}}}));
+  const damageRequest = page.waitForRequest('**/api/battle/damage');
+  await submit.click();
+  const damageBody = (await damageRequest).postDataJSON();
+  expect(damageBody.defenderHpPercent).toBe(50);
+  expect(damageBody.defenderCurrentHp).toBeNull();
+  expect(damageBody.move).toBe('thunderbolt');
+  expect(damageBody.attacker).not.toHaveProperty('ability');
+  expect(damageBody.defender).not.toHaveProperty('item');
+  await panel.getByLabel('방어자 남은 HP (실수치)', {exact:true}).fill('80');
+  const explicitRequest = page.waitForRequest('**/api/battle/damage');
+  await submit.click();
+  expect((await explicitRequest).postDataJSON()).toMatchObject({defenderCurrentHp:80,defenderHpPercent:null});
+  await panel.getByText('공격자 육성 설정', {exact:true}).click();
+  await panel.getByLabel('공격자 특수공격', {exact:true}).fill('32');
+  await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:4');
+  await expect(panel.getByLabel('공격자 특수공격', {exact:true})).toHaveValue('0');
+  await expect(panel.getByRole('checkbox')).not.toBeChecked();
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(() => window.scrollTo(0,0));
+  await page.getByRole('switch',{name:'다크 모드'}).check();
+  await page.evaluate(() => window.scrollTo(0,0));
+  await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:6');
+  await expect(panel.getByLabel('방어자 남은 HP (실수치)', {exact:true})).toHaveValue('');
+  await page.getByText('양쪽 팀 구성', {exact:false}).first().click();
+  await page.getByRole('region', {name:'내 팀',exact:true}).getByRole('button',{name:'1번 멤버 제거',exact:true}).click();
+  await expect(page.getByText(/팀이 변경되어 선출 적용을 해제했어요/)).toBeVisible();
+  await page.getByRole('button', {name:'현재 전투 비교',exact:true}).click();
+  await expect(active.locator('option')).toHaveCount(5);
+  if (!(await page.getByRole('region',{name:'상대 팀',exact:true}).isVisible())) {
+    await page.getByText('양쪽 팀 구성', {exact:false}).first().click();
+  }
+  const other = page.getByRole('region',{name:'상대 팀',exact:true});
+  await other.getByText('기술·HP·알려진 정보 입력', {exact:true}).first().click();
+  await other.getByLabel('1번 HP', {exact:true}).fill('0');
+  await page.getByRole('button',{name:'피해 계산',exact:true}).click();
+  await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:1');
+  await expect(panel.getByRole('alert')).toContainText('HP 0인 포켓몬은 계산할 수 없어요');
+  await expect(submit).toBeDisabled();
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

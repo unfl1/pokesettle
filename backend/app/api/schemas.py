@@ -428,7 +428,7 @@ class DamageRolls(ResponseModel):
 class ConditionalKo(ResponseModel):
     current_hp: int
     maximum_hp: int
-    hp_basis: Literal["provided", "full_hp_assumed"]
+    hp_basis: Literal["provided", "full_hp_assumed", "team_percent_estimate"]
     qualifying_rolls: int
     total_rolls: int
     outcome: Literal["all", "none", "some"]

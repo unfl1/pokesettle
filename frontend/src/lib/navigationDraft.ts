@@ -30,6 +30,10 @@ export function takeNavigationDraft(): NavigationDraft | null {
       !['team', 'battle', 'damage'].includes(team.tab) ||
       ![team.ownActive, team.opponentActive].every(index => Number.isInteger(index) && index >= 0 && index < 6) ||
       !Array.isArray(team.attackTypes) || !team.attackTypes.every((type: unknown) => typeof type === 'string')) return null;
+    if (team.appliedSelection && (typeof team.appliedSelection.snapshot !== 'string' ||
+      !Array.isArray(team.appliedSelection.pokemonIds) || team.appliedSelection.pokemonIds.length !== 3 ||
+      new Set(team.appliedSelection.pokemonIds).size !== 3 ||
+      !team.appliedSelection.pokemonIds.every((id: unknown) => typeof id === 'string' && team.own.some((m: TeamMember) => m.pokemonId === id)))) return null;
     return { draft: value.draft, team };
   } catch {
     return null;

@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import shutil
@@ -65,6 +66,13 @@ class DamageInput(Model):
     move: str = Field(min_length=1, max_length=80)
     neutral_conditions: bool = Field(strict=True)
     defender_current_hp: int | None = Field(default=None, ge=1, strict=True)
+    defender_hp_percent: float | None = Field(default=None, gt=0, le=100, strict=True)
+
+    @model_validator(mode="after")
+    def validate_hp_basis(self):
+        if self.defender_current_hp is not None and self.defender_hp_percent is not None:
+            raise ValueError("남은 HP는 실수치 또는 백분율 중 하나만 입력하세요.")
+        return self
 
     @field_validator("neutral_conditions")
     @classmethod
@@ -202,7 +210,13 @@ def calculate_damage(body, catalog, settings):
         raise ServiceError(
             "DAMAGE_ENGINE_NOT_READY", "계산기 설치·버전·응답 형식을 확인하세요.", 503
         ) from None
-    current_hp = body.defender_current_hp if body.defender_current_hp is not None else maximum_hp
+    # A displayed team percentage is an estimate, not an observed integer HP.
+    estimated_hp = (
+        max(1, math.floor(maximum_hp * body.defender_hp_percent / 100))
+        if body.defender_hp_percent is not None
+        else maximum_hp
+    )
+    current_hp = body.defender_current_hp if body.defender_current_hp is not None else estimated_hp
     if current_hp > maximum_hp:
         raise ServiceError(
             "DAMAGE_HP_OUT_OF_RANGE", "방어자 남은 HP가 계산된 최대 HP를 초과합니다.", 422
@@ -229,6 +243,8 @@ def calculate_damage(body, catalog, settings):
                 "maximum_hp": maximum_hp,
                 "hp_basis": "provided"
                 if body.defender_current_hp is not None
+                else "team_percent_estimate"
+                if body.defender_hp_percent is not None
                 else "full_hp_assumed",
                 "qualifying_rolls": ko_count,
                 "total_rolls": len(rolls),

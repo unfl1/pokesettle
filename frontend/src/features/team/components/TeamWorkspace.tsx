@@ -1,29 +1,19 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { localizedPath } from '../../../i18n/config';
 import { useWorkspaceContext } from '../../../providers/AppProviders';
 import { pokemonName } from '../../pokemon/routing';
 import { useI18n } from '../../../i18n/I18nProvider';
-import { useTeamDraftContext } from "../../../providers/AppProviders";
+import { useTeamDraftContext } from '../../../providers/AppProviders';
 import SelectionRecommendation from './SelectionRecommendation';
 import DamagePanel from '../../damage/components/DamagePanel';
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { MessageSquare, ShieldAlert, Check, Users, Swords, Calculator } from 'lucide-react';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MessageSquare, ShieldAlert, Users, Swords, Calculator } from 'lucide-react';
 import { pokemonApi } from '../../pokemon/api';
 import { battleApi } from '../api';
 import { useAnalysis } from '../hooks/useAnalysis';
-import {
-  type BattleResult,
-  type Context,
-  type SavedTeam,
-  type SelectionResult,
-  type TeamResult,
-} from '../types';
+import { type BattleResult, type Context, type SavedTeam, type SelectionResult, type TeamResult } from '../types';
 import { useTypeLabels } from '../../pokemon/typeLabels';
 import TeamEditor, { action, control } from './TeamEditor';
 
@@ -37,16 +27,14 @@ function Evidence({ result, label }: { result: Context; label: (id: string) => s
   };
   return (
     <div className="mt-4 border-t border-line pt-3 text-[14px] leading-[1.9]">
-      <p className="text-accent">
-         {translate("일반 타입표 계산 · Champions 적용 여부 미확인")} </p>
-      <p className="mt-2 font-medium text-warning">{translate("미확인")}</p>
-      <ul className="list-disc pl-4 text-muted">
-        {result.unknowns.map((x) => (
-          <li key={x}>{translate(x)}</li>
-        ))}
-      </ul>
       <details className="mt-2 text-muted">
-        <summary className="cursor-pointer">{translate("계산 가정과 출처")}</summary>
+        <summary className="cursor-pointer">{translate('계산 가정과 출처')}</summary>
+        <p className="mt-2 text-accent">{translate('일반 타입표 계산 · Champions 적용 여부 미확인')}</p>
+        <ul className="mt-2 list-disc pl-4 text-warning">
+          {result.unknowns.map((x) => (
+            <li key={x}>{translate(x)}</li>
+          ))}
+        </ul>
         <ul className="mt-2 list-disc pl-4">
           {result.assumptions.map((x) => (
             <li key={x}>{translate(x)}</li>
@@ -57,15 +45,13 @@ function Evidence({ result, label }: { result: Context; label: (id: string) => s
             <li key={`${c.sourceUrl}-${i}`}>
               <a
                 className="text-link underline"
-                href={
-                  c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined
-                }
+                href={c.sourceUrl.startsWith('https://') ? c.sourceUrl : undefined}
                 target="_blank"
                 rel="noreferrer"
               >
                 {citationTitle(c)}
               </a>{' '}
-              · {c.scope}  {translate("· 수집")} {c.collectedAt.slice(0, 10)}
+              · {c.scope} {translate('· 수집')} {c.collectedAt.slice(0, 10)}
             </li>
           ))}
         </ul>
@@ -73,23 +59,19 @@ function Evidence({ result, label }: { result: Context; label: (id: string) => s
     </div>
   );
 }
-function AnalysisState({
-  busy,
-  error,
-}: {
-  busy: boolean;
-  error: Error | null;
-}) {
+function AnalysisState({ busy, error }: { busy: boolean; error: Error | null }) {
   const { t: translate } = useI18n();
   return (
     <>
       {busy && (
         <p role="status" className="mt-3 text-[14px] text-accent">
-           {translate("타입 시나리오 비교 중…")} </p>
+          {translate('타입 시나리오 비교 중…')}{' '}
+        </p>
       )}
       {error && (
         <p role="alert" className="mt-3 text-[14px] text-warning">
-          {translate(error.message)}  {translate("입력을 확인한 뒤 다시 분석해 주세요.")} </p>
+          {translate(error.message)} {translate('입력을 확인한 뒤 다시 분석해 주세요.')}{' '}
+        </p>
       )}
     </>
   );
@@ -106,11 +88,44 @@ export default function TeamWorkspace() {
   const typeLabels = useTypeLabels();
   const { locale, t: translate } = useI18n();
   const cache = useQueryClient();
-  const { own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
-    notice, setNotice, tab, setTab, ownActive, setOwnActive, opponentActive, setOpponentActive,
-    attackTypes, setAttackTypes, megaUsed, setMegaUsed, megaTargetId, setMegaTargetId,
-    switchBlocked, setSwitchBlocked } = useTeamDraftContext();
-  const activeOwn = Math.min(ownActive, Math.max(0, own.length - 1)),
+  const {
+    own,
+    setOwn,
+    opponent,
+    setOpponent,
+    name,
+    setName,
+    selectedId,
+    setSelectedId,
+    notice,
+    setNotice,
+    tab,
+    setTab,
+    ownActive,
+    setOwnActive,
+    opponentActive,
+    setOpponentActive,
+    attackTypes,
+    setAttackTypes,
+    megaUsed,
+    setMegaUsed,
+    megaTargetId,
+    setMegaTargetId,
+    switchBlocked,
+    setSwitchBlocked,
+    appliedSelection,
+    setAppliedSelection,
+  } = useTeamDraftContext();
+  const analysisRef = useRef<HTMLDivElement>(null);
+  const teamSnapshot = JSON.stringify({ own, opponent });
+  const selectionApplied = appliedSelection?.snapshot === teamSnapshot;
+  const battleOwn = selectionApplied ? own.filter((m) => appliedSelection.pokemonIds.includes(m.pokemonId)) : own;
+  const activeOwn = battleOwn.some((m) => m.pokemonId === own[ownActive]?.pokemonId)
+      ? ownActive
+      : Math.max(
+          0,
+          own.findIndex((m) => m.pokemonId === battleOwn[0]?.pokemonId),
+        ),
     activeOpponent = Math.min(opponentActive, Math.max(0, opponent.length - 1));
   const activeId = own[activeOwn]?.pokemonId;
   const teams = useQuery({
@@ -120,13 +135,11 @@ export default function TeamWorkspace() {
     enabled: sessionReady,
   });
   const details = useQueries({
-    queries: [...new Set([...own, ...opponent].map((m) => m.pokemonId))].map(
-      (id) => ({
-        queryKey: ['team-pokemon', id],
-        queryFn: () => pokemonApi.detail(id),
-        staleTime: 60000,
-      }),
-    ),
+    queries: [...new Set([...own, ...opponent].map((m) => m.pokemonId))].map((id) => ({
+      queryKey: ['team-pokemon', id],
+      queryFn: () => pokemonApi.detail(id),
+      staleTime: 60000,
+    })),
   });
   const records = details.flatMap((d) => (d.data ? [d.data] : []));
   const label = (id: string) => {
@@ -141,15 +154,12 @@ export default function TeamWorkspace() {
     staleTime: 60000,
   });
   const possibleMega =
-    megaForms.data?.items.filter(
-      (p) =>
-        p.speciesId === active?.speciesId && p.formIdentifier?.includes('mega'),
-    ) ?? [];
+    megaForms.data?.items.filter((p) => p.speciesId === active?.speciesId && p.formIdentifier?.includes('mega')) ?? [];
   const save = useMutation({
     mutationFn: (id?: string) => battleApi.save(name, own, id),
     onSuccess: (team) => {
       setSelectedId(team.teamId);
-      setNotice("팀 저장 완료");
+      setNotice('팀 저장 완료');
       void cache.invalidateQueries({ queryKey: ['saved-teams'] });
     },
   });
@@ -157,16 +167,23 @@ export default function TeamWorkspace() {
     mutationFn: battleApi.remove,
     onSuccess: () => {
       setSelectedId('');
-      setNotice("저장된 팀 삭제 완료 · 편집 중인 구성 유지");
+      setNotice('저장된 팀 삭제 완료 · 편집 중인 구성 유지');
       void cache.invalidateQueries({ queryKey: ['saved-teams'] });
     },
   });
   const payload = { own, opponent };
   const summary = useAnalysis<TeamResult>('/teams/analyze', payload);
   const selection = useAnalysis<SelectionResult>('/teams/select', payload);
+  useEffect(() => {
+    if (selection.data) analysisRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }, [selection.data]);
   const battle = useAnalysis<BattleResult>('/battle/recommend', {
-    ...payload,
-    ownActive: activeOwn,
+    own: battleOwn,
+    opponent,
+    ownActive: Math.max(
+      0,
+      battleOwn.findIndex((m) => m.pokemonId === own[activeOwn]?.pokemonId),
+    ),
     opponentActive: activeOpponent,
     opponentAttackTypes: attackTypes,
     megaUsed: megaUsed === 'unknown' ? null : megaUsed === 'used',
@@ -187,442 +204,476 @@ export default function TeamWorkspace() {
   };
   return (
     <div>
-      <div className="mb-5 rounded-[12px] border border-line bg-surface p-5">
-        <ol className="grid grid-cols-3 gap-2 text-[14px] max-phone:grid-cols-1" aria-label={translate("준비 순서")}>
-          {[
-            { title: translate("내 팀 구성"), count: own.length },
-            { title: translate("상대 팀 구성"), count: opponent.length },
-          ].map((step, index) => <li key={step.title} className="flex items-center gap-2 rounded-[8px] bg-canvas px-3 py-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-accent">{step.count === 6 ? <Check size={14} aria-label={translate("완료")} /> : index + 1}</span>
-            <span className="flex-1">{step.title}</span><span className="text-muted">{step.count}/6</span>
-          </li>)}
-          <li className={`flex items-center gap-2 rounded-[8px] px-3 py-3 ${own.length === 6 && opponent.length === 6 ? 'bg-accent/8 text-accent' : 'bg-canvas text-muted'}`}>
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface">3</span>{translate("추천 선출 확인")}
-          </li>
-        </ol>
-      </div>
       <details className="mb-5 rounded-[8px] border border-line bg-surface px-4 py-3 text-[13px] leading-relaxed text-muted">
-        <summary className="cursor-pointer"><ShieldAlert size={15} className="mr-2 inline text-warning" />{translate("타입 상성 기반 참고용 · 승률과 실제 피해를 보장하지 않아요")}</summary>
-        <p className="mt-2">{translate("현재는 일반 도감·타입표 기반 준비 시나리오입니다. 현행 Champions 참가 적격성·기술·메가 가능 여부는 미확인입니다. 선출 점수는 비교용이며 승률이 아닙니다. 실제 피해·KO·최선 행동을 확정하지 않습니다.")}</p>
+        <summary className="cursor-pointer">
+          <ShieldAlert size={15} className="mr-2 inline text-warning" />
+          {translate('타입 상성 참고용 · 실제 배틀 결과 미검증')}
+        </summary>
+        <p className="mt-2">
+          {translate(
+            '현재는 일반 도감·타입표 기반 준비 시나리오입니다. 현행 Champions 참가 적격성·기술·메가 가능 여부는 미확인입니다. 선출 점수는 비교용이며 승률이 아닙니다. 실제 피해·KO·최선 행동을 확정하지 않습니다.',
+          )}
+        </p>
       </details>
       {!sessionReady && (
         <p role="alert" className="mb-3 text-[14px] text-warning">
-           {translate("세션 연결 후 팀 저장과 분석을 이용할 수 있습니다.")} </p>
-      )}
-      <h2 className="mb-3 text-[16px] font-semibold">{translate("1. 양쪽 팀 구성")}</h2>
-      {notice && (
-        <p role="status" className="mb-3 text-[14px] text-accent">
-          {translate(notice)}
+          {translate('세션 연결 후 팀 저장과 분석을 이용할 수 있습니다.')}{' '}
         </p>
       )}
-      {(save.error || remove.error || teams.error) && (
-        <p role="alert" className="mb-3 text-[14px] text-warning">
-          {translate((save.error ?? remove.error ?? teams.error)?.message ?? "")}
-          <button
-            className={`${action} ml-2`}
-            onClick={() => void teams.refetch()}
-          >
-             {translate("목록 다시 연결")} </button>
-        </p>
-      )}
-      <div className="grid grid-cols-2 gap-4 max-tablet:grid-cols-1">
-        <TeamEditor title={translate("내 팀")} members={own} onChange={setOwn}>
-          <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
-             {translate("저장한 내 팀")} <select
-              className={control}
-              aria-label={translate("저장한 내 팀")}
-              value={selectedId}
-              onChange={(e) => selectSaved(e.target.value, 'own')}
-            >
-              <option value="">{translate("새 팀")}</option>
-              {teams.data?.items.map((t) => (
-                <option value={t.teamId} key={t.teamId}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
-             {translate("팀 이름")} <input
-              className={control}
-              maxLength={80}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <button
-            className={action}
-            disabled={!sessionReady || !name.trim() || save.isPending}
-            onClick={() => {
-              setNotice('');
-              save.mutate(selectedId || undefined);
-            }}
-          >
-            {save.isPending ? translate("저장 중…") : translate("내 팀 저장")}
-          </button>
-          {selectedId && (
-            <>
-              <button
-                className={action}
-                disabled={save.isPending}
-                onClick={() => save.mutate(undefined)}
-              >
-                 {translate("새 팀으로 저장")} </button>
-              <button
-                className={action}
-                disabled={remove.isPending}
-                onClick={() => remove.mutate(selectedId)}
-              >
-                 {translate("저장된 팀 삭제")} </button>
-            </>
+      <details open={tab === 'team' && !selection.data} className="mb-5 rounded-xl border border-line bg-surface p-4">
+        <summary className="cursor-pointer text-[16px] font-semibold">
+          {translate('양쪽 팀 구성')}{' '}
+          <span className="ml-2 text-[14px] font-normal text-muted">
+            {translate('내 팀 {own}/6 · 상대 {opponent}/6', { own: own.length, opponent: opponent.length })}
+          </span>
+        </summary>
+        <div className="mt-4">
+          {notice && (
+            <p role="status" className="mb-3 text-[14px] text-accent">
+              {translate(notice)}
+            </p>
           )}
-        </TeamEditor>
-        <TeamEditor title={translate("상대 팀")} members={opponent} onChange={setOpponent}>
-          <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
-             {translate("상대 팀 불러오기")} <select
-              className={control}
-              aria-label={translate("상대 팀 불러오기")}
-              value=""
-              onChange={(e) => selectSaved(e.target.value, 'opponent')}
-            >
-              <option value="">{translate("직접 입력 / 저장된 팀 선택")}</option>
-              {teams.data?.items.map((t) => (
-                <option value={t.teamId} key={t.teamId}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </TeamEditor>
-      </div>
-      <h2 className="mb-3 mt-7 text-[16px] font-semibold">{translate("2. 궁금한 내용 선택")}</h2>
-      <div className="grid grid-cols-3 gap-2 max-phone:grid-cols-1" role="group" aria-label={translate("준비 화면 선택")}>
-        {([
-          { value: 'team', title: translate("팀·선출 비교"), description: translate("추천 3마리와 선봉"), icon: Users },
-          { value: 'battle', title: translate("현재 전투 비교"), description: translate("공격과 교체 선택지"), icon: Swords },
-          { value: 'damage', title: translate("피해 계산"), description: translate("기술별 참조 피해 범위"), icon: Calculator },
-        ] as const).map(({ value, title, description, icon: Icon }) => <button key={value}
-          className="flex items-center gap-3 rounded-[10px] border border-line bg-surface p-4 text-left aria-pressed:border-accent aria-pressed:bg-accent/8 aria-pressed:text-accent"
-          aria-label={title} aria-pressed={tab === value} onClick={() => setTab(value)}>
-          <Icon size={20} className="shrink-0" /><span><span className="block text-[14px] font-semibold">{title}</span><span className="mt-1 block text-[12px] text-muted">{description}</span></span>
-        </button>)}
-      </div>
-      {tab === 'team' ? (
-        <section
-          className="mt-4 rounded-[12px] border border-line bg-surface p-4"
-          aria-label={translate("팀 분석 결과")}
-        >
-          <h3 className="mb-1 text-[16px] font-semibold">{translate("추천 선출 확인")}</h3>
-          <p className="mb-4 text-[14px] text-muted">{own.length === 6 && opponent.length === 6 ? translate("준비 완료! 선출 추천을 눌러 조합을 확인하세요.") : translate("선출 추천까지 내 팀 {own}마리, 상대 팀 {opponent}마리를 더 추가하세요.", { own: 6 - own.length, opponent: 6 - opponent.length })}</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              className={`${action} bg-accent text-on-accent disabled:opacity-40`}
-              disabled={
-                !valid ||
-                own.length !== 6 ||
-                opponent.length !== 6 ||
-                selection.busy
-              }
-              onClick={selection.run}
-            >
-               {translate("3마리·선봉 추천")} </button>
-            <button
-              className={action}
-              disabled={!valid || summary.busy}
-              onClick={summary.run}
-            >
-               {translate("타입 상성 분석")} </button>
-          </div>
-          <p className="mt-2 text-[14px] text-muted">
-             {translate("1–6마리 팀 비교 · 선출 비교는 양쪽 6마리 필요 · 같은 종 중복은 팀 편집 정책으로 제한")} </p>
-          <AnalysisState
-            busy={summary.busy || selection.busy}
-            error={summary.error ?? selection.error}
-          />
-          {selection.data && (
-            <div className="mt-5">
-              {selection.data.recommendation && <SelectionRecommendation
-                plan={selection.data.recommendation}
-                label={label}
-                pokemon={records}
-                onApply={() => {
-                  setOwnActive(own.findIndex(m => m.pokemonId === selection.data!.recommendation!.leadId));
-                  setTab('battle');
-                }}
-                onAsk={() => onAsk(`내 팀(${own.map(m => label(m.pokemonId)).join(', ')})과 상대 팀(${opponent.map(m => label(m.pokemonId)).join(', ')})에서 추천 선출은 ${selection.data!.recommendation!.pokemonIds.map(label).join(', ')}이고 선봉은 ${label(selection.data!.recommendation!.leadId)}입니다. 이 조합의 운영과 상대별 주의점을 전략 자료의 근거와 함께 설명해 주세요. 입력된 팀 정보: ${JSON.stringify({ own, opponent })}. 기술 미입력 멤버는 자기 타입 공격을 가정한 계산이며 실제 기술 보유를 확정하지 마세요.`)}
-              />}
-              <details className="mt-4">
-              <summary className="cursor-pointer text-[14px] text-muted">{translate("다른 조합과 점수 비교")}</summary>
-              <h2 className="mt-3 text-[14px] font-semibold">
-                 {translate('선출 후보 {count}개 · 휴리스틱 점수', { count: selection.data.candidateCount })} </h2>
-              <p className="mt-2 text-[14px] text-muted">
-                 {translate("점수 = 약점 공략 상대 수×2 + 가정 공격 반감 대응 수 - 중복 약점 수 · 참가 합법성·승률 미검증")} </p>
-              <ol className="mt-3 flex max-h-90 flex-col gap-2 overflow-auto">
-                {selection.data.candidates.map((c, i) => (
-                  <li
-                    key={c.pokemonIds.join()}
-                    className="rounded-[6px] border border-line p-3 text-[14px]"
-                  >
-                    <strong className="font-medium">
-                      {i + 1}. {c.pokemonIds.map(label).join(' · ')}{' '}
-                      <span className="text-accent">{translate('{score}점', { score: c.score })}</span>
-                    </strong>
-                    <p className="mt-1 text-muted">
-                       {translate("선봉 비교 후보:")} {label(c.leadId)}  {translate("· 공략")}{' '}
-                      {c.components.coveredOpponents}  {translate("· 반감 대응")}{' '}
-                      {c.components.resistedScenarios}  {translate("· 중복 약점")}{' '}
-                      {c.components.sharedWeaknessPenalty}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-              </details>
-              <Evidence result={selection.data} label={label} />
-            </div>
+          {(save.error || remove.error || teams.error) && (
+            <p role="alert" className="mb-3 text-[14px] text-warning">
+              {translate((save.error ?? remove.error ?? teams.error)?.message ?? '')}
+              <button className={`${action} ml-2`} onClick={() => void teams.refetch()}>
+                {translate('목록 다시 연결')}{' '}
+              </button>
+            </p>
           )}
-          {summary.data && (
-            <div className="mt-4">
-              <h2 className="text-[14px] font-semibold">
-                 {translate("공격 커버리지 · 일반 타입 배율")} </h2>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-left text-[14px]">
-                  <thead>
-                    <tr>
-                      <th className="p-2">{translate("내 팀 / 상대")}</th>
-                      {opponent.map((m) => (
-                        <th className="p-2 whitespace-nowrap" key={m.pokemonId}>
-                          {label(m.pokemonId)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {summary.data.members.map((m) => (
-                      <tr
-                        key={m.pokemonId}
-                        className="border-t border-line"
-                      >
-                        <th className="p-2 whitespace-nowrap font-medium">
-                          {label(m.pokemonId)}
-                        </th>
-                        {m.coverage.map((c) => (
-                          <td className="p-2 text-accent" key={c.pokemonId}>
-                            {c.multiplier === null
-                              ? translate("공격 기술 없음")
-                              : `${c.multiplier}×`}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <h3 className="mt-4 text-[14px]">{translate("겹치는 약점과 교체 대응")}</h3>
-              <ul className="mt-2 flex flex-wrap gap-2 text-[14px] text-muted">
-                {summary.data.sharedWeaknesses.map((w) => (
-                  <li
-                    className="rounded-[6px] bg-canvas p-2"
-                    key={w.attackType}
-                  >
-                    {typeLabels[w.attackType]}  {translate("약점")} {w.weakCount}  {translate("· 반감/무효")}{' '}
-                    {w.resistCount}
-                  </li>
-                ))}
-              </ul>
-              {!summary.data.sharedWeaknesses.length && (
-                <p className="mt-2 text-[14px]">
-                   {translate("중복 타입 약점 없음 · 전투 안전 보장 아님")} </p>
-              )}
-              {summary.data.roleGaps.map((g) => (
-                <p className="mt-3 text-[14px] text-muted" key={g}>
-                  {translate(g)}
-                </p>
-              ))}
-              <Evidence result={summary.data} label={label} />
-            </div>
-          )}
-        </section>
-      ) : tab === 'battle' ? (
-        <section
-          className="mt-4 rounded-[12px] border border-line bg-surface p-4"
-          aria-label={translate("전투 분석")}
-        >
-          <h2 className="text-[14px] font-semibold">{translate("공격·교체·메가 시나리오")}</h2>
-          <p className="my-2 text-[14px] text-muted">
-             {translate("기술·HP는 위 멤버 카드에서 입력하세요. 공격 기술을 입력해야 공격 대안을 비교합니다.")} </p>
-          <div className="grid grid-cols-2 gap-3 max-phone:grid-cols-1">
-            <label className="flex flex-col gap-1 text-[14px]">
-               {translate("현재 내 포켓몬")} <select
-                className={control}
-                value={activeOwn}
-                onChange={(e) => setOwnActive(Number(e.target.value))}
-              >
-                {own.map((m, i) => (
-                  <option key={m.pokemonId} value={i}>
-                    {label(m.pokemonId)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-[14px]">
-               {translate("현재 상대 포켓몬")} <select
-                className={control}
-                value={activeOpponent}
-                onChange={(e) => setOpponentActive(Number(e.target.value))}
-              >
-                {opponent.map((m, i) => (
-                  <option key={m.pokemonId} value={i}>
-                    {label(m.pokemonId)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-[14px]">
-               {translate("메가 사용 상태")} <select
-                className={control}
-                value={megaUsed}
-                onChange={(e) => setMegaUsed(e.target.value)}
-              >
-                <option value="unknown">{translate("미확인")}</option>
-                <option value="unused">{translate("아직 사용하지 않음")}</option>
-                <option value="used">{translate("이미 사용함")}</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-[14px]">
-               {translate("전환 후 폼 비교")} <select
-                className={control}
-                disabled={megaUsed === 'used'}
-                value={megaTargetId}
-                onChange={(e) => setMegaTargetId(e.target.value)}
-              >
-                <option value="">{translate("비교 안 함 / 폼 미확인")}</option>
-                {possibleMega.map((p) => (
-                  <option key={p.pokemonId} value={p.pokemonId}>
-                    {pokemonName(p, locale)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-[14px]">
-               {translate("교체 봉쇄 상태")} <select
-                className={control}
-                value={switchBlocked}
-                onChange={(e) => setSwitchBlocked(e.target.value)}
-              >
-                <option value="unknown">{translate("미확인")}</option>
-                <option value="no">{translate("봉쇄 없음")}</option>
-                <option value="yes">{translate("교체 불가")}</option>
-              </select>
-            </label>
-          </div>
-          <fieldset className="mt-4">
-            <legend className="mb-2 text-[14px]">
-               {translate("상대 공개/가정 공격 타입 · 미선택 시 상대 입력 기술 또는 타입 가정")} </legend>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(typeLabels).map(([type, text]) => (
-                <label
-                  key={type}
-                  className="flex items-center gap-1 text-[14px] text-muted"
+          <div className="grid grid-cols-2 gap-4 max-tablet:grid-cols-1">
+            <TeamEditor title={translate('내 팀')} members={own} onChange={setOwn}>
+              <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
+                {translate('저장한 내 팀')}{' '}
+                <select
+                  className={control}
+                  aria-label={translate('저장한 내 팀')}
+                  value={selectedId}
+                  onChange={(e) => selectSaved(e.target.value, 'own')}
                 >
-                  <input
-                    type="checkbox"
-                    checked={attackTypes.includes(type)}
-                    onChange={(e) =>
-                      setAttackTypes(
-                        e.target.checked
-                          ? [...attackTypes, type]
-                          : attackTypes.filter((t) => t !== type),
+                  <option value="">{translate('새 팀')}</option>
+                  {teams.data?.items.map((t) => (
+                    <option value={t.teamId} key={t.teamId}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
+                {translate('팀 이름')}{' '}
+                <input className={control} maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
+              </label>
+              <button
+                className={action}
+                disabled={!sessionReady || !name.trim() || save.isPending}
+                onClick={() => {
+                  setNotice('');
+                  save.mutate(selectedId || undefined);
+                }}
+              >
+                {save.isPending ? translate('저장 중…') : translate('내 팀 저장')}
+              </button>
+              {selectedId && (
+                <>
+                  <button className={action} disabled={save.isPending} onClick={() => save.mutate(undefined)}>
+                    {translate('새 팀으로 저장')}{' '}
+                  </button>
+                  <button className={action} disabled={remove.isPending} onClick={() => remove.mutate(selectedId)}>
+                    {translate('저장된 팀 삭제')}{' '}
+                  </button>
+                </>
+              )}
+            </TeamEditor>
+            <TeamEditor title={translate('상대 팀')} members={opponent} onChange={setOpponent}>
+              <label className="flex min-w-0 flex-col gap-1 text-[14px] text-muted">
+                {translate('상대 팀 불러오기')}{' '}
+                <select
+                  className={control}
+                  aria-label={translate('상대 팀 불러오기')}
+                  value=""
+                  onChange={(e) => selectSaved(e.target.value, 'opponent')}
+                >
+                  <option value="">{translate('직접 입력 / 저장된 팀 선택')}</option>
+                  {teams.data?.items.map((t) => (
+                    <option value={t.teamId} key={t.teamId}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </TeamEditor>
+          </div>
+        </div>
+      </details>
+      <div ref={analysisRef} className="scroll-mt-40">
+        {appliedSelection && !selectionApplied && (
+          <p role="status" className="mb-3 text-[14px] text-muted">
+            {translate('팀이 변경되어 선출 적용을 해제했어요. 다시 선출하거나 전체 팀으로 비교하세요.')}
+          </p>
+        )}
+        {selectionApplied && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[14px]" role="status">
+            <span className="text-accent">
+              {translate('선출 적용 중')}: {battleOwn.map((m) => label(m.pokemonId)).join(' · ')}
+            </span>
+            <button className={action} onClick={() => setAppliedSelection(undefined)}>
+              {translate('전체 6마리로 비교')}
+            </button>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2" role="group" aria-label={translate('준비 화면 선택')}>
+          {(
+            [
+              {
+                value: 'team',
+                title: translate('선출 추천'),
+                icon: Users,
+              },
+              {
+                value: 'battle',
+                title: translate('현재 전투 비교'),
+                icon: Swords,
+              },
+              {
+                value: 'damage',
+                title: translate('피해 계산'),
+                icon: Calculator,
+              },
+            ] as const
+          ).map(({ value, title, icon: Icon }) => (
+            <button
+              key={value}
+              className="flex items-center gap-3 rounded-[10px] border border-line bg-surface px-4 py-3 text-left aria-pressed:border-accent aria-pressed:bg-accent/8 aria-pressed:text-accent"
+              aria-label={title}
+              aria-pressed={tab === value}
+              onClick={() => setTab(value)}
+            >
+              <Icon size={20} className="shrink-0 max-phone:hidden" />
+              <span>
+                <span className="block text-[14px] font-semibold">{title}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        {tab === 'team' ? (
+          <section
+            className="mt-4 rounded-[12px] border border-line bg-surface p-4"
+            aria-label={translate('팀 분석 결과')}
+          >
+            {!selection.data && (
+              <>
+                <h3 className="mb-1 text-[16px] font-semibold">{translate('추천 선출 확인')}</h3>
+                <p className="mb-4 text-[14px] text-muted">
+                  {own.length === 6 && opponent.length === 6
+                    ? translate('준비 완료! 선출 추천을 눌러 조합을 확인하세요.')
+                    : translate('선출 추천까지 내 팀 {own}마리, 상대 팀 {opponent}마리를 더 추가하세요.', {
+                        own: 6 - own.length,
+                        opponent: 6 - opponent.length,
+                      })}
+                </p>
+              </>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={`${action} bg-accent text-on-accent disabled:opacity-40`}
+                disabled={!valid || own.length !== 6 || opponent.length !== 6 || selection.busy}
+                onClick={selection.run}
+              >
+                {selection.data ? translate('선출 다시 추천') : translate('3마리·선봉 추천')}{' '}
+              </button>
+              <button className={action} disabled={!valid || summary.busy} onClick={summary.run}>
+                {translate('타입 상성 분석')}{' '}
+              </button>
+            </div>
+
+            <AnalysisState busy={summary.busy || selection.busy} error={summary.error ?? selection.error} />
+            {selection.data && (
+              <div className="mt-5">
+                {selection.data.recommendation && (
+                  <SelectionRecommendation
+                    plan={selection.data.recommendation}
+                    label={label}
+                    pokemon={records}
+                    onApply={() => {
+                      setAppliedSelection({
+                        pokemonIds: selection.data!.recommendation!.pokemonIds,
+                        snapshot: teamSnapshot,
+                      });
+                      setOwnActive(own.findIndex((m) => m.pokemonId === selection.data!.recommendation!.leadId));
+                      setTab('battle');
+                      analysisRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    }}
+                    onAsk={() =>
+                      onAsk(
+                        `내 팀(${own.map((m) => label(m.pokemonId)).join(', ')})과 상대 팀(${opponent.map((m) => label(m.pokemonId)).join(', ')})에서 추천 선출은 ${selection.data!.recommendation!.pokemonIds.map(label).join(', ')}이고 선봉은 ${label(selection.data!.recommendation!.leadId)}입니다. 이 조합의 운영과 상대별 주의점을 전략 자료의 근거와 함께 설명해 주세요. 입력된 팀 정보: ${JSON.stringify({ own, opponent })}. 기술 미입력 멤버는 자기 타입 공격을 가정한 계산이며 실제 기술 보유를 확정하지 마세요.`,
                       )
                     }
                   />
-                  {text}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <button
-            className={`${action} mt-4`}
-            disabled={!valid || battle.busy}
-            onClick={battle.run}
-          >
-             {translate("공격·교체 비교")} </button>
-          <AnalysisState busy={battle.busy} error={battle.error} />
-          {battle.data && (
-            <div className="mt-4">
-              <p className="text-[14px] leading-[1.9] text-warning">
-                {translate(battle.data.notice)}
-              </p>
-              {(['attack', 'switch'] as const).map((kind) => (
-                <div className="mt-4" key={kind}>
-                  <h3 className="text-[14px]">
-                    {kind === 'attack'
-                      ? translate("공격 대안 · 타입 배율 내림차순")
-                      : translate("교체 대안 · 가정 공격 배율 오름차순")}
-                  </h3>
-                  <ul className="mt-2 flex flex-col gap-2">
-                    {battle
-                      .data!.options.filter((o) => o.kind === kind)
-                      .sort(
-                        (a, b) =>
-                          (a.comparisonOrder ?? 99) - (b.comparisonOrder ?? 99),
-                      )
-                      .map((o) => (
-                        <li
-                          className="rounded-[6px] border border-line p-3 text-[14px]"
-                          key={`${o.kind}-${o.pokemonId}-${o.label}`}
-                        >
-                          <strong className="font-medium">
-                            {o.kind === 'switch' ? label(o.pokemonId) : o.label} ·{' '}
-                            {o.multiplier === null
-                              ? translate("효과 미계산")
-                              : `${o.multiplier}×`}
-                          </strong>
-                          <p className="mt-1 text-muted">{translate(o.reason)}</p>
-                          {o.risks.map((r) => (
-                            <p className="mt-1 text-muted" key={r}>
-                              {translate(r)}
-                            </p>
+                )}
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-[14px] text-muted">
+                    {translate('다른 조합과 점수 비교')}
+                  </summary>
+                  <h2 className="mt-3 text-[14px] font-semibold">
+                    {translate('선출 후보 {count}개 · 휴리스틱 점수', { count: selection.data.candidateCount })}{' '}
+                  </h2>
+                  <p className="mt-2 text-[14px] text-muted">
+                    {translate(
+                      '점수 = 약점 공략 상대 수×2 + 가정 공격 반감 대응 수 - 중복 약점 수 · 참가 합법성·승률 미검증',
+                    )}{' '}
+                  </p>
+                  <ol className="mt-3 flex max-h-90 flex-col gap-2 overflow-auto">
+                    {selection.data.candidates.map((c, i) => (
+                      <li key={c.pokemonIds.join()} className="rounded-[6px] border border-line p-3 text-[14px]">
+                        <strong className="font-medium">
+                          {i + 1}. {c.pokemonIds.map(label).join(' · ')}{' '}
+                          <span className="text-accent">{translate('{score}점', { score: c.score })}</span>
+                        </strong>
+                        <p className="mt-1 text-muted">
+                          {translate('선봉 비교 후보:')} {label(c.leadId)} {translate('· 공략')}{' '}
+                          {c.components.coveredOpponents} {translate('· 반감 대응')} {c.components.resistedScenarios}{' '}
+                          {translate('· 중복 약점')} {c.components.sharedWeaknessPenalty}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+                <Evidence result={selection.data} label={label} />
+              </div>
+            )}
+            {summary.data && (
+              <div className="mt-4">
+                <h2 className="text-[14px] font-semibold">{translate('공격 커버리지 · 일반 타입 배율')} </h2>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-left text-[14px]">
+                    <thead>
+                      <tr>
+                        <th className="p-2">{translate('내 팀 / 상대')}</th>
+                        {opponent.map((m) => (
+                          <th className="p-2 whitespace-nowrap" key={m.pokemonId}>
+                            {label(m.pokemonId)}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.data.members.map((m) => (
+                        <tr key={m.pokemonId} className="border-t border-line">
+                          <th className="p-2 whitespace-nowrap font-medium">{label(m.pokemonId)}</th>
+                          {m.coverage.map((c) => (
+                            <td className="p-2 text-accent" key={c.pokemonId}>
+                              {c.multiplier === null ? translate('공격 기술 없음') : `${c.multiplier}×`}
+                            </td>
                           ))}
-                        </li>
+                        </tr>
                       ))}
-                  </ul>
-                  {!battle.data!.options.some((o) => o.kind === kind) && (
-                    <p className="mt-2 text-[14px] text-muted">
-                      {kind === 'attack'
-                        ? translate("입력한 공격 기술 없음 또는 현재 포켓몬이 쓰러진 상태")
-                        : translate("생존한 교체 후보 없음 또는 교체 봉쇄 상태")}
-                    </p>
-                  )}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-              <h3 className="mt-4 text-[14px]">{translate("메가 상태")}</h3>
-              <p className="mt-2 text-[14px] text-muted">
-                {translate(battle.data.mega.reason)}
-              </p>
-              {battle.data.mega.typeComparison?.map((t) => (
-                <p className="mt-1 text-[14px]" key={t.attackType}>
-                  {typeLabels[t.attackType]}  {translate("공격에 대한 방어:")} {t.before}× →{' '}
-                  {t.after}×
-                </p>
-              ))}
-              <Evidence result={battle.data} label={label} />
+                <h3 className="mt-4 text-[14px]">{translate('겹치는 약점과 교체 대응')}</h3>
+                <ul className="mt-2 flex flex-wrap gap-2 text-[14px] text-muted">
+                  {summary.data.sharedWeaknesses.map((w) => (
+                    <li className="rounded-[6px] bg-canvas p-2" key={w.attackType}>
+                      {typeLabels[w.attackType]} {translate('약점')} {w.weakCount} {translate('· 반감/무효')}{' '}
+                      {w.resistCount}
+                    </li>
+                  ))}
+                </ul>
+                {!summary.data.sharedWeaknesses.length && (
+                  <p className="mt-2 text-[14px]">{translate('중복 타입 약점 없음 · 전투 안전 보장 아님')} </p>
+                )}
+                {summary.data.roleGaps.map((g) => (
+                  <p className="mt-3 text-[14px] text-muted" key={g}>
+                    {translate(g)}
+                  </p>
+                ))}
+                <Evidence result={summary.data} label={label} />
+              </div>
+            )}
+          </section>
+        ) : tab === 'battle' ? (
+          <section
+            className="mt-4 rounded-[12px] border border-line bg-surface p-4"
+            aria-label={translate('전투 분석')}
+          >
+            <h2 className="text-[14px] font-semibold">{translate('공격·교체·메가 시나리오')}</h2>
+            <p className="my-2 text-[14px] text-muted">
+              {translate('팀에 입력한 기술·HP로 비교해요. 타입 기준이며 선공·생존은 계산하지 않아요.')}{' '}
+            </p>
+            <div className="grid grid-cols-2 gap-3 max-phone:grid-cols-1">
+              <label className="flex flex-col gap-1 text-[14px]">
+                {translate('현재 내 포켓몬')}{' '}
+                <select
+                  aria-label={translate('현재 내 포켓몬')}
+                  className={control}
+                  value={activeOwn}
+                  onChange={(e) => setOwnActive(Number(e.target.value))}
+                >
+                  {battleOwn.map((m) => (
+                    <option key={m.pokemonId} value={own.findIndex((member) => member.pokemonId === m.pokemonId)}>
+                      {label(m.pokemonId)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-[14px]">
+                {translate('현재 상대 포켓몬')}{' '}
+                <select
+                  className={control}
+                  aria-label={translate('현재 상대 포켓몬')}
+                  value={activeOpponent}
+                  onChange={(e) => setOpponentActive(Number(e.target.value))}
+                >
+                  {opponent.map((m, i) => (
+                    <option key={m.pokemonId} value={i}>
+                      {label(m.pokemonId)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-[14px]">
+                {translate('메가 사용 상태')}{' '}
+                <select className={control} value={megaUsed} onChange={(e) => setMegaUsed(e.target.value)}>
+                  <option value="unknown">{translate('미확인')}</option>
+                  <option value="unused">{translate('아직 사용하지 않음')}</option>
+                  <option value="used">{translate('이미 사용함')}</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-[14px]">
+                {translate('전환 후 폼 비교')}{' '}
+                <select
+                  className={control}
+                  disabled={megaUsed === 'used'}
+                  value={megaTargetId}
+                  onChange={(e) => setMegaTargetId(e.target.value)}
+                >
+                  <option value="">{translate('비교 안 함 / 폼 미확인')}</option>
+                  {possibleMega.map((p) => (
+                    <option key={p.pokemonId} value={p.pokemonId}>
+                      {pokemonName(p, locale)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-[14px]">
+                {translate('교체 봉쇄 상태')}{' '}
+                <select className={control} value={switchBlocked} onChange={(e) => setSwitchBlocked(e.target.value)}>
+                  <option value="unknown">{translate('미확인')}</option>
+                  <option value="no">{translate('봉쇄 없음')}</option>
+                  <option value="yes">{translate('교체 불가')}</option>
+                </select>
+              </label>
             </div>
-          )}
-        </section>
-      ) : null}
-      <div hidden={tab !== 'damage'}>
-        <DamagePanel own={own} opponent={opponent} label={label} sessionReady={sessionReady} />
+            <details className="mt-4">
+              <summary className="cursor-pointer text-[14px] text-muted">
+                {translate('상대 공격 타입 직접 지정')}
+              </summary>
+              <fieldset className="mt-3">
+                <legend className="mb-2 text-[14px]">
+                  {translate('상대 공개/가정 공격 타입 · 미선택 시 상대 입력 기술 또는 타입 가정')}{' '}
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(typeLabels).map(([type, text]) => (
+                    <label key={type} className="flex items-center gap-1 text-[14px] text-muted">
+                      <input
+                        type="checkbox"
+                        checked={attackTypes.includes(type)}
+                        onChange={(e) =>
+                          setAttackTypes(
+                            e.target.checked ? [...attackTypes, type] : attackTypes.filter((t) => t !== type),
+                          )
+                        }
+                      />
+                      {text}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </details>
+            <button className={`${action} mt-4`} disabled={!valid || battle.busy} onClick={battle.run}>
+              {translate('공격·교체 비교')}{' '}
+            </button>
+            <button className={`${action} ml-2 mt-4`} disabled={!valid} onClick={() => setTab('damage')}>
+              {translate('이 대면의 피해 계산')}
+            </button>
+            <AnalysisState busy={battle.busy} error={battle.error} />
+            {battle.data && (
+              <div className="mt-4">
+                <p className="text-[14px] leading-[1.9] text-warning">{translate(battle.data.notice)}</p>
+                {(['attack', 'switch'] as const).map((kind) => (
+                  <div className="mt-4" key={kind}>
+                    <h3 className="text-[14px]">
+                      {kind === 'attack'
+                        ? translate('공격 대안 · 타입 배율 내림차순')
+                        : translate('교체 대안 · 가정 공격 배율 오름차순')}
+                    </h3>
+                    <ul className="mt-2 flex flex-col gap-2">
+                      {battle
+                        .data!.options.filter((o) => o.kind === kind)
+                        .sort((a, b) => (a.comparisonOrder ?? 99) - (b.comparisonOrder ?? 99))
+                        .map((o) => (
+                          <li
+                            className="rounded-[6px] border border-line p-3 text-[14px]"
+                            key={`${o.kind}-${o.pokemonId}-${o.label}`}
+                          >
+                            <strong className="font-medium">
+                              {o.kind === 'switch' ? label(o.pokemonId) : o.label} ·{' '}
+                              {o.multiplier === null ? translate('효과 미계산') : `${o.multiplier}×`}
+                            </strong>
+                            <p className="mt-1 text-muted">{translate(o.reason)}</p>
+                            {o.risks.map((r) => (
+                              <p className="mt-1 text-muted" key={r}>
+                                {translate(r)}
+                              </p>
+                            ))}
+                          </li>
+                        ))}
+                    </ul>
+                    {!battle.data!.options.some((o) => o.kind === kind) && (
+                      <p className="mt-2 text-[14px] text-muted">
+                        {kind === 'attack'
+                          ? translate('입력한 공격 기술 없음 또는 현재 포켓몬이 쓰러진 상태')
+                          : translate('생존한 교체 후보 없음 또는 교체 봉쇄 상태')}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <h3 className="mt-4 text-[14px]">{translate('메가 상태')}</h3>
+                <p className="mt-2 text-[14px] text-muted">{translate(battle.data.mega.reason)}</p>
+                {battle.data.mega.typeComparison?.map((t) => (
+                  <p className="mt-1 text-[14px]" key={t.attackType}>
+                    {typeLabels[t.attackType]} {translate('공격에 대한 방어:')} {t.before}× → {t.after}×
+                  </p>
+                ))}
+                <Evidence result={battle.data} label={label} />
+              </div>
+            )}
+          </section>
+        ) : null}
+        <div hidden={tab !== 'damage'}>
+          <DamagePanel
+            key={JSON.stringify([own[activeOwn]?.pokemonId, opponent[activeOpponent]?.pokemonId, battleOwn, opponent])}
+            own={battleOwn}
+            opponent={opponent}
+            initialAttackerId={own[activeOwn]?.pokemonId}
+            initialDefenderId={opponent[activeOpponent]?.pokemonId}
+            label={label}
+            sessionReady={sessionReady}
+          />
+        </div>
       </div>
       <button
         className={`${action} my-5 flex items-center gap-2`}
         disabled={!own.length}
         onClick={() =>
           onAsk(
-            `내 팀(${own.map((m) => label(m.pokemonId)).join(', ')})과 상대 팀(${opponent.map((m) => label(m.pokemonId)).join(', ') || translate("미입력")})의 준비를 도와줘. 수집 문서로 확인되는 특징과 추가로 확인할 정보를 출처와 함께 설명해줘. 일반 타입표 계산만으로 Champions 참가 가능 여부, 실제 피해, 승률이나 최선 행동을 단정하지 마.`,
+            `내 팀(${own.map((m) => label(m.pokemonId)).join(', ')})과 상대 팀(${opponent.map((m) => label(m.pokemonId)).join(', ') || translate('미입력')})의 준비를 도와줘. 수집 문서로 확인되는 특징과 추가로 확인할 정보를 출처와 함께 설명해줘. 일반 타입표 계산만으로 Champions 참가 가능 여부, 실제 피해, 승률이나 최선 행동을 단정하지 마.`,
           )
         }
       >
-        <MessageSquare size={15} />{translate("이 구성으로 챗봇에 질문 준비")} </button>
+        <MessageSquare size={15} />
+        {translate('이 구성으로 챗봇에 질문 준비')}{' '}
+      </button>
     </div>
   );
 }
