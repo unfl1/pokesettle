@@ -9,6 +9,7 @@ export interface TeamDraftState {
   selectedId: string;
   notice: string;
   tab: 'team' | 'battle' | 'damage';
+  appliedSelection?: { pokemonIds: string[]; snapshot: string };
   ownActive: number;
   opponentActive: number;
   attackTypes: string[];
@@ -25,6 +26,7 @@ export function useTeamDraft(initial?: TeamDraftState) {
     [selectedId, setSelectedId] = useState(initial?.selectedId ?? '');
   const [notice, setNotice] = useState(initial?.notice ?? ''),
     [tab, setTab] = useState<'team' | 'battle' | 'damage'>(initial?.tab ?? 'team');
+  const [appliedSelection, setAppliedSelection] = useState<TeamDraftState["appliedSelection"]>(initial?.appliedSelection);
   const [ownActive, setOwnActive] = useState(initial?.ownActive ?? 0),
     [opponentActive, setOpponentActive] = useState(initial?.opponentActive ?? 0);
   const [attackTypes, setAttackTypes] = useState<string[]>(initial?.attackTypes ?? []),
@@ -39,13 +41,14 @@ export function useTeamDraft(initial?: TeamDraftState) {
   }, [activeId]);
   function restore(saved: TeamDraftState) {
     previousActiveId.current = saved.own[Math.min(saved.ownActive, Math.max(0, saved.own.length - 1))]?.pokemonId;
+    setAppliedSelection(saved.appliedSelection);
     setOwn(saved.own); setOpponent(saved.opponent); setName(saved.name);
     setSelectedId(saved.selectedId); setNotice(saved.notice); setTab(saved.tab);
     setOwnActive(saved.ownActive); setOpponentActive(saved.opponentActive);
     setAttackTypes(saved.attackTypes); setMegaUsed(saved.megaUsed);
     setMegaTargetId(saved.megaTargetId); setSwitchBlocked(saved.switchBlocked);
   }
-  return { restore, own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
+  return { appliedSelection, setAppliedSelection, restore, own, setOwn, opponent, setOpponent, name, setName, selectedId, setSelectedId,
     notice, setNotice, tab, setTab, ownActive, setOwnActive, opponentActive, setOpponentActive,
     attackTypes, setAttackTypes, megaUsed, setMegaUsed, megaTargetId, setMegaTargetId,
     switchBlocked, setSwitchBlocked };

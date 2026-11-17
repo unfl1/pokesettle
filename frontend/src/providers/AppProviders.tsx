@@ -37,10 +37,10 @@ function WorkspaceProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const save = () => {
       const { own, opponent, name, selectedId, notice, tab, ownActive, opponentActive,
-        attackTypes, megaUsed, megaTargetId, switchBlocked } = teamDraft;
+        attackTypes, megaUsed, megaTargetId, switchBlocked, appliedSelection } = teamDraft;
       saveNavigationDraft({ draft: workspace.draft, team: {
         own, opponent, name, selectedId, notice, tab, ownActive, opponentActive,
-        attackTypes, megaUsed, megaTargetId, switchBlocked,
+        attackTypes, megaUsed, megaTargetId, switchBlocked, appliedSelection,
       } });
     };
     window.addEventListener('pagehide', save);

@@ -11,7 +11,7 @@ export interface DamageResult {
     conditionalKo: {
       currentHp: number;
       maximumHp: number;
-      hpBasis: 'provided' | 'full_hp_assumed';
+      hpBasis: 'provided' | 'full_hp_assumed' | 'team_percent_estimate';
       qualifyingRolls: number;
       totalRolls: number;
       outcome: 'all' | 'none' | 'some';

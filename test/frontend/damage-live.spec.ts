@@ -15,7 +15,7 @@ test('실제 API·DB·Node 계산기와 UI의 조건부 KO 연결', async ({ pag
   } });
   expect(own.ok()).toBeTruthy();
   expect(opponent.ok()).toBeTruthy();
-  await page.goto('/chat');
+  await page.goto('/ko/chat');
   await page.getByRole('link', { name: '6:6 시나리오', exact: true }).click();
   await page.getByLabel('저장한 내 팀', { exact: true }).selectOption({ label: '통합 공격자' });
   await page.getByLabel('상대 팀 불러오기', { exact: true }).selectOption({ label: '통합 방어자' });
@@ -24,6 +24,7 @@ test('실제 API·DB·Node 계산기와 UI의 조건부 KO 연결', async ({ pag
   await panel.getByLabel('공격자 포켓몬').selectOption('pokemon:25');
   await panel.getByLabel('계산 기술', { exact: true }).selectOption('thunderbolt');
   await panel.getByLabel('방어자 포켓몬').selectOption('pokemon:9');
+  await panel.getByText('공격자 육성 설정', {exact:true}).click();
   await panel.getByLabel('공격자 특수공격', { exact: true }).fill('32');
   await panel.getByRole('checkbox').check();
   const submit = panel.getByRole('button', { name: '참조 피해 계산', exact: true });

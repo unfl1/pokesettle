@@ -305,3 +305,26 @@ process.stdout.write(String(moves.length));
         check=True,
     )
     assert int(result.stdout) == len(SUPPORTED_MOVES) > 12
+
+
+@pytest.mark.parametrize("percent", [0, -1, 101, True, "50", float("nan")])
+def test_team_hp_percent_rejects_invalid_values(percent):
+    with pytest.raises(ValidationError):
+        DamageInput.model_validate(request_body(defenderHpPercent=percent))
+
+
+def test_team_hp_percent_conflicts_with_explicit_hp():
+    with pytest.raises(ValidationError):
+        DamageInput.model_validate(request_body(defenderHpPercent=50, defenderCurrentHp=84))
+
+
+def test_team_hp_percent_uses_reference_maximum_and_reports_estimate(actual_engine):
+    settings, catalog = actual_engine
+    for percent, hp in [(50, 77), (99, 152), (0.1, 1), (100, 154)]:
+        result = calculate_damage(
+            DamageInput.model_validate(request_body(defenderHpPercent=percent)), catalog, settings
+        )["calculation"]
+        ko = result["conditional_ko"]
+        assert ko["current_hp"] == hp
+        assert ko["hp_basis"] == "team_percent_estimate"
+        assert ko["qualifying_rolls"] == sum(n >= hp for n in result["damage"]["rolls"])

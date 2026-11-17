@@ -127,6 +127,7 @@
 | GET | `/api/battle/damage/moves/{pokemon_id}` | 참조 계산용 기술·지원 여부, 200 |
 | POST | `/api/battle/analyze`, `/api/battle/recommend`, `/api/battle/damage` | 대면·행동·참조 피해 계산, 200 |
 
+- 참조 피해 HP: `defenderCurrentHp`는 양의 정수, `defenderHpPercent`는 0 초과 100 이하이며 동시 입력 거부함. 백분율은 참조 최대 HP에 곱한 뒤 소수점 버림·최소 1로 환산하고 `hpBasis=team_percent_estimate`로 구분함. 둘 다 미입력 시 최대 HP 가정함
 - 채팅 요청: `question`·UUID `clientRequestId` 필수, `conversationId`·`pokemonId`·`regulationId` 선택임
 - 같은 세션·종류·요청 ID·본문은 기존 작업을 반환함. 같은 ID에 다른 본문은 409, 의도적 재시도는 새 요청 ID 사용함
 - 접수 응답은 `jobId`·`status`·`statusUrl`, 조회 결과는 `status`·`stage`·`result`·`error`·`queuePosition` 등을 반환함
