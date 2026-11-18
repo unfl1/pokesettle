@@ -84,3 +84,37 @@ def test_query_planner_omits_storage_metadata_but_preserves_resource_fields(setu
     assert pokemon["abilities"] == ["test-ability"]
     assert pokemon["types"] == ["test-type"]
     assert pokemon["species_id"] == 1
+
+
+@pytest.mark.parametrize("field", ["evidence_ids", "source_versions", "text"])
+def test_citation_retry_identifies_rejected_field_and_keeps_validation(setup, field):
+    calls = []
+
+    def invoke(purpose, prompt, payload, schema):
+        calls.append(payload.copy())
+        claim = {"text": "조건부 추천 근거", "evidence_ids": ["E1"], "source_versions": []}
+        if len(calls) == 1:
+            claim[field] = {
+                "evidence_ids": ["invented-id"],
+                "source_versions": ["generic"],
+                "text": "조건부 추천 근거 [근거 1]",
+            }[field]
+        else:
+            issues = payload["citation_validation_issues"]
+            issue = next(item for item in issues if item["field"] == field)
+            assert issue["claim_index"] == 0
+            if field == "evidence_ids":
+                assert issue["invalid_values"] == ["invented-id"]
+                assert issue["allowed_values"] == ["E1"]
+            elif field == "source_versions":
+                assert issue["invalid_values"] == ["generic"]
+                assert issue["allowed_values"] == []
+            assert payload["previous_invalid_output"]["claims"][0][field] != claim[field]
+        return schema(answer_status="partial", claims=[claim], assumptions=[], unknowns=[])
+
+    result = build_graph(setup.vectors, SimpleNamespace(invoke=invoke)).invoke({
+        "pokemon_id": "pokemon:1", "question": "조건부 추천",
+    })["result"]
+    assert len(calls) == 2
+    assert result["facts"][0]["evidence_ids"] == ["pokemon:1"]
+    assert result["answer"].startswith("조건부 추천 근거")

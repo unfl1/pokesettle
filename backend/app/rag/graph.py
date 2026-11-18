@@ -30,6 +30,38 @@ class RagState(TypedDict, total=False):
     cache_guide: bool
 
 
+def citation_retry_issues(generated, evidence):
+    """Describe rejected fields using model-local IDs, never storage IDs."""
+    by_id = {item["evidence_id"]: item for item in evidence}
+    issues = []
+    for index, claim in enumerate(generated.claims):
+        invalid_ids = [eid for eid in claim.evidence_ids if eid not in by_id]
+        if invalid_ids:
+            issues.append({
+                "claim_index": index, "field": "evidence_ids",
+                "invalid_values": invalid_ids, "allowed_values": list(by_id),
+                "correction": "Use only directly supporting evidence IDs from the current evidence; remove an unsupported claim instead of substituting an unrelated ID.",
+            })
+        available_versions = sorted({
+            version
+            for eid in claim.evidence_ids if eid in by_id
+            for version in re.findall(r"Description \([^,\n]+, ([a-z0-9-]+)\):", by_id[eid]["text"])
+        })
+        invalid_versions = [v for v in claim.source_versions if v not in available_versions]
+        if invalid_versions:
+            issues.append({
+                "claim_index": index, "field": "source_versions",
+                "invalid_values": invalid_versions, "allowed_values": available_versions,
+                "correction": "Use only versions whose cited Description supports this claim; return [] when no explicit version applies. Never invent a version or scope label.",
+            })
+        if re.search(r"\[근거|https?://", claim.text):
+            issues.append({
+                "claim_index": index, "field": "text",
+                "correction": "Remove citation markers and URLs from text; keep supporting IDs in evidence_ids. The server renders citations.",
+            })
+    return issues
+
+
 def render_answer(generated, evidence, regulation_id):
     by_id = {item["evidence_id"]: item for item in evidence}
     if generated.answer_status == "abstained":
@@ -312,6 +344,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 # Unknown IDs must fail even if they happen to equal a storage ID.
                 if any(eid not in original_ids for claim in output.claims for eid in claim.evidence_ids):
                     payload["validation_feedback"] = "답변에 유효하지 않은 근거가 있습니다."
+                    payload["citation_validation_issues"] = citation_retry_issues(raw_output, payload["evidence"])
                     payload["previous_invalid_output"] = raw_output.model_dump()
                     if attempt == 0:
                         stage("generating")
@@ -347,6 +380,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
                     result = render_answer(output, state["evidence"], state.get("regulation_id"))
                 except ServiceError as error:
                     payload["validation_feedback"] = error.message
+                    payload["citation_validation_issues"] = citation_retry_issues(raw_output, payload["evidence"])
                     payload["previous_invalid_output"] = raw_output.model_dump()
                     if attempt == 0:
                         stage("generating")
