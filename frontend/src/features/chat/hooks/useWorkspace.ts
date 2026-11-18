@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../../lib/apiClient';
 import { systemApi } from '../../../lib/systemApi';
 import { chatApi } from '../api';
-import type { PendingJob } from '../types';
+import type { Job, PendingJob } from '../types';
 
 interface SendRequest {
   pokemonId: string;
@@ -101,6 +101,7 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
     {},
   );
   const pending = jobs[pokemonId];
+  const pendingJobId = pending?.jobId;
 
   useEffect(() => {
     if (!restored) return;
@@ -161,7 +162,11 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
 
   const job = useQuery({
     queryKey: ['job', pending?.jobId],
-    queryFn: () => chatApi.job(pending!.jobId),
+    queryFn: async () => {
+      const snapshot = await chatApi.job(pending!.jobId);
+      const current = cache.getQueryData<Job>(['job', pending!.jobId]);
+      return current?.updatedAt && snapshot.updatedAt && current.updatedAt > snapshot.updatedAt ? current : snapshot;
+    },
     enabled: chatEnabled && session.isSuccess && Boolean(pending),
     retry: 1,
     refetchInterval: (query) =>
@@ -175,18 +180,42 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
   });
 
   useEffect(() => {
+    if (!chatEnabled || !session.isSuccess || !pendingJobId || typeof EventSource === 'undefined') return;
+    const source = new EventSource(`/api/jobs/${encodeURIComponent(pendingJobId)}/events`);
+    source.addEventListener('job', event => {
+      try {
+        const snapshot = JSON.parse((event as MessageEvent<string>).data) as Job;
+        if (snapshot.jobId !== pendingJobId) return;
+        cache.setQueryData<Job>(['job', pendingJobId], current =>
+          current?.updatedAt && snapshot.updatedAt && current.updatedAt > snapshot.updatedAt ? current : snapshot,
+        );
+        if (['completed', 'failed', 'interrupted'].includes(snapshot.status)) source.close();
+      } catch { /* polling remains available for malformed or interrupted streams */ }
+    });
+    return () => source.close();
+  }, [chatEnabled, session.isSuccess, pendingJobId, cache]);
+
+  useEffect(() => {
     const data = job.data;
     if (!pending || !data || data.jobId !== pending.jobId) return;
     if (data.status === 'completed' && data.result?.conversationId) {
       const id = data.result.conversationId;
       setChoices((previous) => ({ ...previous, [pokemonId]: id }));
       void cache.invalidateQueries({ queryKey: ['conversations', pokemonId] });
-      void cache.invalidateQueries({ queryKey: ['messages', id] });
-      setJobs((previous) => {
-        const next = { ...previous };
-        delete next[pokemonId];
-        return next;
-      });
+      // Keep the preview visible until the saved, authoritative answer is loaded.
+      let cancelled = false;
+      void cache.fetchQuery({ queryKey: ['messages', id], queryFn: () => chatApi.messages(id), staleTime: 0 })
+        .catch(() => undefined) // History errors use the existing retry UI, without keeping input locked.
+        .then(() => {
+          if (cancelled) return;
+          setJobs(previous => {
+            if (previous[pokemonId]?.jobId !== data.jobId) return previous;
+            const next = { ...previous };
+            delete next[pokemonId];
+            return next;
+          });
+        });
+      return () => { cancelled = true; };
     } else if (data.status === 'failed' || data.status === 'interrupted') {
       const oldRequest = lastRequests[pokemonId];
       setFailure({

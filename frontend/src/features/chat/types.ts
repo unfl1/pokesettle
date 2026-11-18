@@ -27,6 +27,7 @@ export interface GroundedResult {
   feature?: string;
   guideLimitations?: string[];
   conversationId?: string;
+  assistantMessageId?: string;
   battleContext?: {
     ownName?: string;
     opponentName?: string;
@@ -59,6 +60,8 @@ export interface Job {
   queuePosition?: number | null;
   result: GroundedResult | null;
   error: SafeError | null;
+  previewAnswer?: string | null;
+  updatedAt?: string;
 }
 export interface PendingJob {
   jobId: string;

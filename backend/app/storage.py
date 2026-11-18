@@ -305,6 +305,8 @@ class Store:
         return {**payload, "queue_position": row["queue_position"]}
 
     def update_job(self, job_id, *, db=None, **fields):
+        if fields.get("status") in {"completed", "failed", "interrupted"}:
+            fields["preview_answer"] = ""
         with self.connect() if db is None else nullcontext(db) as db:
             claim = active_job_claim.get()
             if claim and claim[0] == job_id:
@@ -334,6 +336,7 @@ class Store:
                 if payload["status"] in ("queued", "running"):
                     payload.update(
                         status="interrupted",
+                        preview_answer="",
                         updated_at=now(),
                         error=ServiceError(
                             "JOB_INTERRUPTED",

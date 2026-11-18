@@ -8,6 +8,7 @@ from openai import APITimeoutError
 
 from backend.app.core.errors import ServiceError
 from backend.app.core.usage import active_usage
+from backend.app.rag.streaming import AnswerPreviewHandler, active_answer_preview
 
 
 def input_reservation(system, payload, schema_data):
@@ -51,7 +52,8 @@ class StructuredModel:
         luna = model_name in {"gpt-5.6-luna", "gpt-6-luna"}
         reasoning = ("medium" if purpose == "battle_state" else "none") if luna else None
         temperature = 0 if purpose in {"discovery", "generate", "chat_scope"} and not luna else None
-        key = model_name, reasoning, temperature
+        streaming = purpose == "generate" and active_answer_preview.get() is not None
+        key = model_name, reasoning, temperature, streaming
         with self._client_lock:
             if key not in self._clients:
                 self._clients[key] = ChatOpenAI(
@@ -59,6 +61,7 @@ class StructuredModel:
                     api_key=self.settings.api_key, base_url=self.settings.base_url,
                     timeout=self.settings.llm_timeout, max_retries=0,
                     max_completion_tokens=self.settings.model_max_output_tokens,
+                    streaming=streaming, stream_usage=True,
                 )
             return self._clients[key]
 
@@ -98,6 +101,10 @@ class StructuredModel:
                 model_name = self.settings.chat_model
             response = None
             try:
+                publish = active_answer_preview.get() if purpose == "generate" and schema.__name__ == "Generation" else None
+                if publish:
+                    publish("")
+                config = {"callbacks": [AnswerPreviewHandler(publish)]} if publish else None
                 model = self._client(model_name, purpose)
                 with self.telemetry.model_attempt(purpose) if self.telemetry else nullcontext():
                     response = model.with_structured_output(
@@ -106,7 +113,8 @@ class StructuredModel:
                         [
                             SystemMessage(content=system),
                             HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str, separators=(",", ":"))),
-                        ]
+                        ],
+                        **({"config": config} if config else {}),
                     )
                     if response["parsing_error"] is not None or response["parsed"] is None:
                         raise ValueError("Invalid structured response")

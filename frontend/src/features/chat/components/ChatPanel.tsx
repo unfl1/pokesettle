@@ -56,7 +56,7 @@ export default function ChatPanel() {
   const feed = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (feed.current) feed.current.scrollTop = feed.current.scrollHeight;
-  }, [w.messages.data, w.pending, w.job.data?.stage]);
+  }, [w.messages.data, w.pending, w.job.data?.stage, w.job.data?.previewAnswer]);
   const error =
     w.failure?.message ??
     w.job.error?.message ??
@@ -177,7 +177,7 @@ export default function ChatPanel() {
         {items.map((message) => (
           <ChatMessage key={message.messageId} message={message} />
         ))}
-        {w.pending && (
+        {w.pending && !items.some(message => message.messageId === w.job.data?.result?.assistantMessageId) && (
           <>
             {w.pending.question && (
               <div
@@ -188,7 +188,15 @@ export default function ChatPanel() {
                 <p>{w.pending.question}</p>
               </div>
             )}
-            <div
+            {w.job.data?.status === 'completed' && w.job.data.result ? (
+              <ChatMessage message={{messageId: 'pending-answer', role: 'assistant', content: w.job.data.result, createdAt: ''}} />
+            ) : w.job.data?.previewAnswer ? (
+              <div data-testid="answer-stream" aria-busy="true" className="mb-7 text-[14px] leading-[1.9]">
+                <span className="block mb-3 font-medium">PokeSettle</span>
+                <p className="whitespace-pre-wrap wrap-anywhere">{w.job.data.previewAnswer}</p>
+              </div>
+            ) : null}
+            {w.job.data?.status !== 'completed' && <div
               className="px-0 py-4 gap-2.5 flex items-center text-accent text-[14px] [&_p]:text-[14px] [&_p]:text-muted [&_p]:mt-[7px] [&_strong]:font-medium"
               role="status"
             >
@@ -204,7 +212,7 @@ export default function ChatPanel() {
                   ? translate('현재 대기 순서: {position}번째', { position: w.job.data.queuePosition })
                   : translate("다른 메뉴를 살펴본 뒤 돌아와도 작업을 확인할 수 있어요.")}</p>
               </div>
-            </div>
+            </div>}
           </>
         )}
       </div>

@@ -121,6 +121,7 @@
 | DELETE | `/api/conversations/{conversation_id}` | 소유 대화·메시지·전투 상태 삭제, 204 |
 | POST | `/api/chat`, `/api/documents/collect`, `/api/pokemon/{pokemon_id}/guide` | 작업 접수, 202·Location |
 | GET | `/api/jobs/{job_id}` | 작업 상태·결과·안전한 오류, 200 |
+| GET | `/api/jobs/{job_id}/events` | 세션 소유 작업의 SSE 상태·생성 초안 전달, 200·text/event-stream |
 | GET·POST | `/api/teams` | 팀 목록 200·생성 201 |
 | GET·PUT·DELETE | `/api/teams/{team_id}` | 조회·갱신 200·삭제 204 |
 | POST | `/api/teams/analyze`, `/api/teams/select` | 일반 팀 상성·선출 비교, 200 |
@@ -130,6 +131,7 @@
 - 참조 피해 HP: `defenderCurrentHp`는 양의 정수, `defenderHpPercent`는 0 초과 100 이하이며 동시 입력 거부함. 백분율은 참조 최대 HP에 곱한 뒤 소수점 버림·최소 1로 환산하고 `hpBasis=team_percent_estimate`로 구분함. 둘 다 미입력 시 최대 HP 가정함
 - 채팅 요청: `question`·UUID `clientRequestId` 필수, `conversationId`·`pokemonId`·`regulationId` 선택임
 - 같은 세션·종류·요청 ID·본문은 기존 작업을 반환함. 같은 ID에 다른 본문은 409, 의도적 재시도는 새 요청 ID 사용함
+- 생성 초안: 작업 조회의 `previewAnswer`와 SSE `job` 이벤트로 현재 claim 텍스트만 전달함. 생성 중 초안이며 최종 인용·버전 검증 전에는 대화 메시지·출처 카드로 저장하지 않음. 재시도 때 초기화하고 완료·실패·중단 때 제거함. 이벤트 연결은 새 모델 작업을 생성하지 않으며 연결이 끊기면 기존 작업 조회로 복구함
 - 접수 응답은 `jobId`·`status`·`statusUrl`, 조회 결과는 `status`·`stage`·`result`·`error`·`queuePosition` 등을 반환함
 - 작업 상태는 `queued/running/completed/failed/interrupted`, 완료와 AI 답변의 정확성·완전성은 별개임
 - worker는 claim·heartbeat로 소유권 유지, 만료 작업은 안전하게 중단하고 유료 모델 호출을 자동 재실행하지 않음
