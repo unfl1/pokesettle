@@ -41,3 +41,28 @@ def mentioned_pokemon(catalog, question, limit=2):
         spans.append((start, end))
         selected.append((start, identifier))
     return list(dict.fromkeys(pid for _, pid in sorted(selected)))[:limit]
+
+
+def explicit_team_rosters(catalog, question):
+    """Resolve named roster clauses without trusting model-assigned sides."""
+    markers = list(re.finditer(
+        r"(?P<own>(?:내|우리)\s*(?:팀|파티|엔트리|포켓몬|라인업))"
+        r"|(?P<opponent>상대(?:방)?\s*(?:(?:팀|파티|엔트리|포켓몬|라인업)(?:는|은|:)?|는|은|:))",
+        question,
+    ))
+    rosters = {}
+    for index, marker in enumerate(markers):
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(question)
+        text = re.split(r"[.?!]", question[marker.end():end], maxsplit=1)[0]
+        roster = mentioned_pokemon(catalog, text, limit=7)
+        if roster:
+            rosters[f"{marker.lastgroup}_team_ids"] = roster
+    # Korean also places ownership after the list: 'A B ... 가 내거고 상대는 ...'.
+    owner = re.search(r"(?:이|가)?\s*내\s*(?:거|꺼|것)(?:고|이고|야|이야)", question)
+    if owner:
+        text = re.split(r"[.?!]", question[:owner.start()])[-1]
+        if not re.search(r"상대", text):
+            roster = mentioned_pokemon(catalog, text, limit=7)
+            if roster:
+                rosters["own_team_ids"] = roster
+    return rosters

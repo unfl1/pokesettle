@@ -356,3 +356,107 @@ def test_selection_settings_followup_keeps_selection_without_repeating_request(s
     assert result["battle_context"]["state"]["selection_requested"] is True
     detail = result["battle_context"]["selection"]["reported_settings"][0]
     assert detail["move_names"] == ["지진"] and detail["ability"] == "심록"
+
+
+@pytest.mark.parametrize('relevant', [False, True])
+@pytest.mark.parametrize('phrasing', ['recommend', 'own_pokemon', 'our_team', 'postfix', 'multiline'])
+def test_plain_roster_recommendation_uses_calculated_lineup_despite_model_state(setup, monkeypatch, relevant, phrasing):
+    from dataclasses import replace
+    from backend.app.services.topics import explicit_team_rosters
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    setup.service.catalog = catalog
+    setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
+    question = '리자몽 마스카나 갸라도스 라이츄 웨이니발 따라큐 가 내거고 상대는 망나뇽 한카리아스 따라큐 강철톤 루브도 루카리오야. 포켓몬 추천해줘'
+    if phrasing == 'own_pokemon':
+        question = '내 포켓몬은 리자몽 마스카나 갸라도스 라이츄 웨이니발 따라큐고 상대는 망나뇽 한카리아스 따라큐 강철톤 루브도 루카리오야'
+    elif phrasing == 'our_team':
+        question = '우리팀은 리자몽 마스카나 갸라도스 라이츄 웨이니발 따라큐, 상대방 팀은 망나뇽 한카리아스 따라큐 강철톤 루브도 루카리오'
+    elif phrasing == 'multiline':
+        question = '내 라인업:\n리자몽, 마스카나, 갸라도스, 라이츄, 웨이니발, 따라큐\n상대 라인업:\n망나뇽, 한카리아스, 따라큐, 강철톤, 루브도, 루카리오'
+    elif phrasing == 'postfix':
+        question = question.split('. ')[0]
+    expected = explicit_team_rosters(catalog, question)
+    assert len(expected['own_team_ids']) == len(expected['opponent_team_ids']) == 6
+    setup.vectors.upsert_metadata([catalog.get(pid) for pid in set(sum(expected.values(), []))])
+    calls = []
+
+    def invoke(purpose, system, payload, schema):
+        calls.append(purpose)
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
+        if purpose == 'battle_state':
+            # Simulate missing/switching team assignment from model extraction.
+            return BattleUpdate(relevant=relevant, own_team_ids=ENEMY, opponent_team_ids=OWN)
+        raise AssertionError('Bare rosters must use calculated selection, not model-generated lineups')
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    monkeypatch.setattr(setup.service, 'collect', lambda *a, **kw: pytest.fail('Unexpected collection'))
+    results = [setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), setup.store.new_session()) for _ in range(3)]
+    for result in results:
+        context = result['battle_context']
+        assert context['scope'] == 'generic_team_selection'
+        assert context['state']['own_team_ids'] == expected['own_team_ids']
+        assert context['state']['opponent_team_ids'] == expected['opponent_team_ids']
+        assert context['selection']['candidate_count'] == 20
+        assert result['answer'].startswith('제공된 정보와 일반 타입 상성 기준으로는')
+    assert len({r['answer'] for r in results}) == 1
+    assert calls.count('battle_state') == 3
+
+
+@pytest.mark.parametrize('question, expected_sides', [
+    ('내 팀은 피카츄 리자몽, 상대 팀은 망나뇽 한카리아스야. 포켓몬 추천해줘', {'own', 'opponent'}),
+    ('상대 팀 망나뇽 한카리아스. 내 팀은 피카츄 리자몽', {'own', 'opponent'}),
+    ('피카츄 리자몽이 내거고 상대는 망나뇽 한카리아스야', {'own', 'opponent'}),
+    ('피카츄랑 망나뇽 중 포켓몬 추천해줘', set()),
+    ('지금 상대는 망나뇽이야. 피카츄로 공격할까?', {'opponent'}),
+])
+def test_explicit_rosters_keep_sides_and_sentence_boundaries(question, expected_sides):
+    from backend.app.services.topics import explicit_team_rosters
+    rosters = explicit_team_rosters(Catalog(ROOT / 'data/pokemon.json'), question)
+    assert set(rosters) == {f'{side}_team_ids' for side in expected_sides}
+    if question.startswith('지금'):
+        assert rosters['opponent_team_ids'] == ['pokemon:149']
+
+
+@pytest.mark.parametrize('suffix', ['기술 효과 알려줘', '지금 대면에서 교체할까?'])
+def test_roster_intro_does_not_override_a_specific_battle_or_mechanic_question(setup, monkeypatch, suffix):
+    from dataclasses import replace
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    setup.service.catalog = catalog
+    setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
+    setup.vectors.upsert_metadata([catalog.get(pid) for pid in OWN + ENEMY])
+    question = '우리팀은 피카츄 이상해꽃 리자몽 거북왕 한카리아스 토게키스, 상대방 팀은 망나뇽 갸라도스 라우드본 마스카나 맘모꾸리 핫삼. ' + suffix
+
+    def invoke(purpose, system, payload, schema):
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
+        if purpose == 'battle_state':
+            return BattleUpdate(relevant=False)
+        return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=['test'])
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    monkeypatch.setattr(setup.service, 'collect', lambda *a, **kw: {'queries': []})
+    result = setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), setup.store.new_session())
+    assert result.get('battle_context', {}).get('scope') != 'generic_team_selection'
+
+
+def test_incomplete_roster_introduction_asks_for_six_instead_of_inventing_members(setup, monkeypatch):
+    from dataclasses import replace
+
+    setup.service.catalog = Catalog(ROOT / 'data/pokemon.json')
+    setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
+    question = '내 포켓몬은 피카츄 이상해꽃 리자몽 거북왕 한카리아스고 상대는 망나뇽 갸라도스 라우드본 마스카나 맘모꾸리 핫삼이야'
+
+    def invoke(purpose, system, payload, schema):
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
+        if purpose == 'battle_state':
+            return BattleUpdate(relevant=False)
+        pytest.fail('Incomplete rosters must not generate a lineup')
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    result = setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), setup.store.new_session())
+    assert result['battle_context']['recommendation'] == 'need_six_per_team'
+    assert '내 팀 5마리, 상대 6마리' in result['answer']

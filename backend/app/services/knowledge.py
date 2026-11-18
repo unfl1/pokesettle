@@ -20,7 +20,7 @@ from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROM
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
 from backend.app.services.catalog_answers import catalog_navigation
 from backend.app.services.chat_scope import check_chat_scope, scope_refusal
-from backend.app.services.topics import mentioned_pokemon
+from backend.app.services.topics import explicit_team_rosters, mentioned_pokemon
 from backend.app.storage import digest
 
 
@@ -307,23 +307,26 @@ class KnowledgeService:
                 BattleUpdate.model_validate(update), request.question, previous_battle, self.catalog
             )
             battle_state = merge_state(previous_battle, update, set(candidate_ids), self.catalog)
-            for side, marker in (
-                ("own", r"내\s*(?:팀|파티|엔트리)"),
-                ("opponent", r"상대\s*(?:팀|파티|엔트리)"),
-            ):
-                match = re.search(marker, request.question)
-                if match:
-                    text = request.question[match.end() :]
-                    other = re.search(r"(?:내|상대)\s*(?:팀|파티|엔트리)", text)
-                    if other:
-                        text = text[: other.start()]
-                    roster = mentioned_pokemon(self.catalog, text, limit=7)
-                    if roster:
-                        battle_state[f"{side}_team_ids"] = roster
+            explicit_rosters = explicit_team_rosters(self.catalog, request.question)
+            battle_state.update(explicit_rosters)
             battle_state["selection_requested"] = bool(
                 re.search(
                     r"선출|3\s*(?:마리|명)|세\s*마리|선봉\s*(?:추천|(?:은|을)?\s*(?:누구|뭐|어떤))",
                     request.question,
+                )
+                or (
+                    battle_state.get("own_team_ids")
+                    and battle_state.get("opponent_team_ids")
+                    and re.search(r"(?:포켓몬|조합|멤버)\s*(?:을|를)?\s*추천", request.question)
+                    and not re.search(r"지금|대면|공격|교체", request.question)
+                )
+                or (
+                    len(explicit_rosters.get("own_team_ids", [])) > 1
+                    and len(explicit_rosters.get("opponent_team_ids", [])) > 1
+                    and not re.search(
+                        r"지금|대면|공격|교체|(?:기술|특성|아이템|도구).{0,15}(?:추천|설명|효과|알려)",
+                        request.question,
+                    )
                 )
                 or (
                     previous_battle.get("selection_requested")

@@ -758,7 +758,7 @@ def coach_fallback(context, evidence):
         names = selection["names"]
         team = ", ".join(names[pid] for pid in best["pokemon_ids"])
         texts = [
-            f"{team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
+            f"제공된 정보와 일반 타입 상성 기준으로는 {team} 조합을 추천해요. 선봉으로는 {names[best['lead_id']]}부터 고려해 보세요.",
             *explain_selection(selection, names, type_labels),
         ]
         return Generation(
