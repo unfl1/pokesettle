@@ -20,7 +20,7 @@ def test_openapi_describes_all_success_bodies_status_codes_and_safe_errors():
         for method, operation in item.items()
         if method in {"get", "post", "put", "delete"}
     ]
-    assert len(operations) == 26
+    assert len(operations) == 27
     created = {"/api/teams", "/api/conversations"}
     accepted = {"/api/chat", "/api/documents/collect", "/api/pokemon/{pokemon_id}/guide"}
     for path, method, operation in operations:
@@ -40,6 +40,8 @@ def test_openapi_describes_all_success_bodies_status_codes_and_safe_errors():
         assert {code for code in operation["responses"] if code.startswith("2")} == {status}
         if status == "204":
             assert "content" not in success
+        elif path == "/api/jobs/{job_id}/events":
+            assert success["content"]["text/event-stream"]["schema"] == {"type": "string"}
         else:
             model = success["content"]["application/json"]["schema"]
             envelope = spec["components"]["schemas"][model["$ref"].split("/")[-1]]

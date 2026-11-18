@@ -221,6 +221,7 @@ class JobData(ResponseModel):
     created_at: str
     updated_at: str
     queue_position: int | None = None
+    preview_answer: str | None = None
 
 
 class SavedTeam(ResponseModel):

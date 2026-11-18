@@ -6,6 +6,9 @@ export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [react()],
   resolve: {
+    alias: {
+      '@tanstack/react-query': fileURLToPath(new URL('../../frontend/node_modules/@tanstack/react-query/src/index.ts', import.meta.url)),
+    },
     dedupe: ['react', 'react-dom'],
   },
   test: {
