@@ -28,6 +28,7 @@ export interface GroundedResult {
   guideLimitations?: string[];
   conversationId?: string;
   assistantMessageId?: string;
+  userMessageId?: string;
   battleContext?: {
     ownName?: string;
     opponentName?: string;

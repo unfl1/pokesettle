@@ -1,6 +1,6 @@
 'use client';
 import { useI18n } from '../../../i18n/I18nProvider';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpenText,
@@ -15,6 +15,7 @@ import {
   Send,
 } from 'lucide-react';
 import { ChatMessage } from './Reference';
+import { LiveAnswer } from './LiveAnswer';
 import { useWorkspaceContext } from '../../../providers/AppProviders';
 
 const stages: Record<string, string> = {
@@ -54,6 +55,9 @@ export default function ChatPanel() {
     requestAnimationFrame(() => historyToggle.current?.focus());
   };
   const feed = useRef<HTMLDivElement>(null);
+  const followAnswer = useCallback(() => {
+    if (feed.current) feed.current.scrollTop = feed.current.scrollHeight;
+  }, []);
   useEffect(() => {
     if (feed.current) feed.current.scrollTop = feed.current.scrollHeight;
   }, [w.messages.data, w.pending, w.job.data?.stage, w.job.data?.previewAnswer]);
@@ -174,10 +178,13 @@ export default function ChatPanel() {
             </div>
           </div>
         )}
-        {items.map((message) => (
+        {items.filter(message => !w.pending || (
+          message.messageId !== w.job.data?.result?.assistantMessageId &&
+          (!w.pending.question || message.messageId !== w.job.data?.result?.userMessageId)
+        )).map((message) => (
           <ChatMessage key={message.messageId} message={message} />
         ))}
-        {w.pending && !items.some(message => message.messageId === w.job.data?.result?.assistantMessageId) && (
+        {w.pending && (
           <>
             {w.pending.question && (
               <div
@@ -188,14 +195,12 @@ export default function ChatPanel() {
                 <p>{w.pending.question}</p>
               </div>
             )}
-            {w.job.data?.status === 'completed' && w.job.data.result ? (
-              <ChatMessage message={{messageId: 'pending-answer', role: 'assistant', content: w.job.data.result, createdAt: ''}} />
-            ) : w.job.data?.previewAnswer ? (
-              <div data-testid="answer-stream" aria-busy="true" className="mb-7 text-[14px] leading-[1.9]">
-                <span className="block mb-3 font-medium">PokeSettle</span>
-                <p className="whitespace-pre-wrap wrap-anywhere">{w.job.data.previewAnswer}</p>
-              </div>
-            ) : null}
+            <LiveAnswer key={w.pending.jobId}
+              preview={w.job.data?.previewAnswer ?? ''}
+              result={w.job.data?.status === 'completed' ? w.job.data.result : null}
+              onComplete={() => { if (w.pending) w.finishAnswerDisplay(w.pending.jobId); }}
+              onProgress={followAnswer}
+            />
             {w.job.data?.status !== 'completed' && <div
               className="px-0 py-4 gap-2.5 flex items-center text-accent text-[14px] [&_p]:text-[14px] [&_p]:text-muted [&_p]:mt-[7px] [&_strong]:font-medium"
               role="status"
