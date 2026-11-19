@@ -17,7 +17,7 @@ afterEach(() => {
 function timer() {
   vi.useFakeTimers();
 }
-function tick(ms = 10) {
+function tick(ms = 30) {
   act(() => vi.advanceTimersByTime(ms));
 }
 
@@ -27,7 +27,9 @@ test("large SSE chunks reveal exactly one Korean or emoji grapheme per tick", ()
     initialProps: { text: "한글👨‍👩‍👧‍👦" },
   });
   expect(hook.result.current).toBe("");
-  tick();
+  tick(29);
+  expect(hook.result.current).toBe("");
+  tick(1);
   expect(hook.result.current).toBe("한");
   tick();
   expect(hook.result.current).toBe("한글");
