@@ -18,7 +18,7 @@ backend/*
 backend/calculator/*
 !backend/calculator/package.json
 !backend/calculator/pnpm-lock.yaml
-!backend/calculator/calculate.cjs
+!backend/calculator/calculate.cts
 !backend/calculator/supported_moves.json
 !backend/calculator/LICENSE.smogon-calc
 !data/
@@ -59,8 +59,8 @@ frontend/*
 !frontend/patches/
 !frontend/patches/**
 !frontend/next.config.ts
-!frontend/postcss.config.mjs
-!frontend/tailwind-fonts.mjs
+!frontend/postcss.config.json
+!frontend/tailwind-fonts.ts
 !frontend/tsconfig.json
 !frontend/scripts/
 !frontend/scripts/**
