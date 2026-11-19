@@ -463,7 +463,7 @@ def test_incomplete_roster_introduction_asks_for_six_instead_of_inventing_member
 
 
 @pytest.mark.parametrize('previous', [False, True])
-@pytest.mark.parametrize('prefix', ['나', '나는', '난', '저는'])
+@pytest.mark.parametrize('prefix', ['나', '나는', '난', '저는', '나:', '내꺼는', '내 쪽은', '상대가형'])
 def test_bare_self_introduction_selects_three_without_stale_pikachu(setup, monkeypatch, previous, prefix):
     from dataclasses import replace
 
@@ -471,6 +471,12 @@ def test_bare_self_introduction_selects_three_without_stale_pikachu(setup, monke
     setup.service.catalog = catalog
     setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
     question = f'{prefix} 마스카나 라이츄 따라큐 갸라도스 망나뇽 웨이니발인데 상대는 리자몽 이상해꽃 거북왕 따라큐 갸라도스 망나뇽이야'
+    if prefix == '내꺼는':
+        question = question.replace('상대는', '상대꺼는')
+    elif prefix == '내 쪽은':
+        question = question.replace('상대는', '상대 쪽은')
+    elif prefix == '상대가형':
+        question = question.replace('상대가형', '나는').replace('상대는', '상대가')
     own = ['pokemon:908', 'pokemon:26', 'pokemon:778', 'pokemon:130', 'pokemon:149', 'pokemon:914']
     opponent = ['pokemon:6', 'pokemon:3', 'pokemon:9', 'pokemon:778', 'pokemon:130', 'pokemon:149']
     setup.vectors.upsert_metadata([catalog.get(pid) for pid in set(own + opponent + ['pokemon:25'])])
