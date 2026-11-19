@@ -316,6 +316,9 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 
 ### 빌드와 개발 진입점
 
+- Node.js 22.18 이상 사용함. Node 도구·계산기는 TypeScript 소스로 실행하며, `pnpm --dir test typecheck:tools`로 계산기·k6·배포 함수 타입 검사함. k6 스크립트는 TypeScript 기본 지원 버전인 0.57 이상 필요함
+- CloudFront 언어 함수는 `deployment/aws/locale_redirect.ts`를 `build_locale_function.mts`로 타입 제거한 뒤 업로드함. CloudFront 런타임은 기존 JavaScript 2.0 유지함. 함수 게시 도구를 실행하는 환경에도 Node.js 22.18 이상 필요함
+
 - 로컬 설치·실행은 [README](../../README.md#로컬-실행) 참조함
 - 프런트 빌드: `pnpm --dir frontend build`, 코드 변경에 필요한 수동 검사만 선택 실행함
 - 스타일 규칙은 `AGENTS.md`·`.agent/rules/frontend-styling.md`에서 관리함. 도구 사용법·구현 학습은 로컬 학습 가이드로 이동함
@@ -471,9 +474,9 @@ uv run --frozen python -m backend.scripts.index_data
 - 기본 프런트 테스트: `pnpm --dir frontend test`, `test/frontend/**/*.test.ts`·`*.test.tsx`의 로직·컴포넌트 검사 실행함. 변경 감시는 `pnpm --dir frontend test:watch` 사용함
 - Vitest 설정: `test/frontend/vitest.config.ts`·`vitest.setup.ts`, jsdom·React JSX 변환·DOM matcher·테스트별 DOM 정리 적용함. 테스트와 앱의 React 중복 로드를 방지하도록 dedupe 적용함
 - 비동기 서버 컴포넌트·SSR·라우팅·실제 브라우저 레이아웃은 기존 `*.spec.ts` Playwright E2E로 확인함. [Next.js Vitest 가이드](https://nextjs.org/docs/app/guides/testing/vitest) 참고함
-- E2E: 프런트 빌드 후 `pnpm --dir frontend test:e2e`, `test/frontend/fixture-api.mjs`의 로컬 합성 API 사용함. 개발 서버와 포트가 겹치면 `PLAYWRIGHT_PORT` 지정함
+- E2E: 프런트 빌드 후 `pnpm --dir frontend test:e2e`, `test/frontend/fixture-api.ts`의 로컬 합성 API 사용함. 개발 서버와 포트가 겹치면 `PLAYWRIGHT_PORT` 지정함
 - 프런트 테스트 타입: `pnpm --dir frontend exec tsc --project ../test/frontend/tsconfig.json --noEmit` 사용함
-- AWS 로케일 이동: `node --test test/deployment/locale_redirect.test.mjs` 사용함
+- AWS 로케일 이동: `node --test test/deployment/locale_redirect.test.ts` 사용함
 - 공개 캐시: 프런트 빌드 후 `pnpm --dir frontend test:public-cache`, 호출 재사용·실패 복구·런타임 GA 설정 검증함
 - 운영 공개 검사: `PRODUCTION_URL=https://pokesettle.com python3 deployment/check_production.py`, 홈·챗봇·피카츄 상세 SSR·canonical·정적 자산·API 준비 상태 확인함
 - 수동 검사 통과와 운영 배포 완료 구분함. 배포 이미지 빌드와 실제 서버·공개 경로 확인 유지함

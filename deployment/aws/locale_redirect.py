@@ -2,16 +2,24 @@
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
-
-import boto3
 
 FUNCTION_NAME = "pokesettle-home-locale"
 
 
+def compile_locale_function():
+    """Remove erasable types locally; CloudFront still receives plain JavaScript."""
+    source = Path(__file__).with_suffix(".ts")
+    result = subprocess.run([
+        "node", str(Path(__file__).with_name("build_locale_function.mts")), str(source),
+    ], check=True, capture_output=True, timeout=30)
+    return result.stdout
+
+
 def publish_locale_function(cf, name=FUNCTION_NAME):
     config = {"Comment": "PokeSettle home language by saved choice or KR/JP/CN", "Runtime": "cloudfront-js-2.0"}
-    code = Path(__file__).with_suffix(".js").read_bytes()
+    code = compile_locale_function()
     try:
         current = cf.describe_function(Name=name, Stage="DEVELOPMENT")
     except cf.exceptions.NoSuchFunctionExists:
@@ -35,6 +43,8 @@ def associate_locale_function(default, arn):
 
 
 def configure(distribution_id):
+    import boto3
+
     cf = boto3.client("cloudfront", region_name="us-east-1")
     current = cf.get_distribution_config(Id=distribution_id)
     config = current["DistributionConfig"]

@@ -1,42 +1,48 @@
 // Standalone, loopback-only synthetic API for Server Component fetch tests.
 import http from 'node:http';
 import fs from 'node:fs';
-const routes = JSON.parse(fs.readFileSync(new URL('../../frontend/src/generated/pokemon-routes.json', import.meta.url)));
-const typeChart = JSON.parse(fs.readFileSync(new URL('../../data/type_chart.json', import.meta.url)));
+
+interface RouteEntry { pokemonId: string; names: Record<string, string>; slugs: Record<string, string> }
+interface TypeChart { version: string; chart: Record<string, Record<string, number>>; sources: {source_url: string; collected_at: string; licence_url?: string}[] }
+interface WorkspaceFixture { teams?: unknown[]; messages?: unknown[]; conversations?: unknown[] }
+interface FixtureConfig { ready?: boolean; images?: boolean; failedIds?: string[]; delayMs?: number; metaAgeHours?: number; metaData?: Record<string, unknown> | null; workspaceSessions?: Record<string, WorkspaceFixture> }
+
+const routes = JSON.parse(fs.readFileSync(new URL('../../frontend/src/generated/pokemon-routes.json', import.meta.url), 'utf8')) as RouteEntry[];
+const typeChart = JSON.parse(fs.readFileSync(new URL('../../data/type_chart.json', import.meta.url), 'utf8')) as TypeChart;
 const byId = new Map(routes.map(item => [item.pokemonId, item]));
 let ready = false;
 let images = false;
-let failedIds = [];
+let failedIds: string[] = [];
 let delayMs = 0;
 let metaAgeHours = 0;
-let metaData = null;
-let workspaceSessions = {};
-const calls = {};
-const summary = id => ({ ...byId.get(id), pokemonId: id, speciesId: Number(id.split(':')[1]), nameKo: byId.get(id)?.names.ko ?? null, nameEn: byId.get(id)?.names.en ?? id, types: id === 'pokemon:1' ? ['grass','poison'] : ['electric'], scope: 'generic', championsEligibilityStatus: 'unknown' });
-function detail(id) {
+let metaData: Record<string, unknown> | null = null;
+let workspaceSessions: Record<string, WorkspaceFixture> = {};
+const calls: Record<string, number> = {};
+const summary = (id: string) => ({ ...byId.get(id), pokemonId: id, speciesId: Number(id.split(':')[1]), nameKo: byId.get(id)?.names.ko ?? null, nameEn: byId.get(id)?.names.en ?? id, types: id === 'pokemon:1' ? ['grass','poison'] : ['electric'], scope: 'generic', championsEligibilityStatus: 'unknown' });
+function detail(id: string) {
   const pokemon = summary(id);
   if (id === 'pokemon:205') pokemon.nameKo = '전체테스트205';
   return { ...pokemon, typeDefense: { scope: 'generic', version: typeChart.version, multipliers: Object.entries(typeChart.chart).map(([type, values]) => ({ type, multiplier: pokemon.types.reduce((value, defense) => value * values[defense], 1) })), sources: typeChart.sources.map(source => ({ sourceUrl: source.source_url, collectedAt: source.collected_at, licenceUrl: source.licence_url })) }, images: images ? { spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png', artworkUrl: null, sourceUrl: 'https://github.com/PokeAPI/sprites' } : null, baseStats: { hp:35,attack:55,defense:40,spAttack:50,spDefense:50,speed:90 }, abilities: ['static','lightning-rod'], abilityDetails: [{name:'static',nameKo:'정전기',names:{ko:'정전기',en:'Static',ja:'せいでんき',zh:'静电'}},{name:'lightning-rod',nameKo:'피뢰침',names:{ko:'피뢰침',en:'Lightning Rod',ja:'ひらいしん',zh:'避雷针'}}], description: `${pokemon.nameKo} 도감 설명`, descriptionVersion:'shield', descriptions:{ko:{text:`${pokemon.nameKo} 도감 설명`,version:'shield'},en:{text:'English fixture description.',version:'shield'},ja:{text:'日本語のテスト説明。',version:'shield'},zh:{text:'中文测试描述。',version:'shield'}}, sourceUrl:`https://pokeapi.co/api/v2/pokemon/${id.split(':')[1]}/`, learnset: {versionGroup:'champions',moves:[{pp:15,effectMeta:{category:'damage-ailment',ailment:'paralysis',ailmentChance:10},effectTexts:{ko:{text:'마비 상태로 만들 때가 있다.',versionGroup:'fixture'}},name:'10만볼트',nameEn:'thunderbolt',names:{ko:'10만볼트',en:'Thunderbolt',ja:'１０まんボルト',zh:'十万伏特'},method:'train',level:0,type:'electric',category:'special',power:90,accuracy:100},{pp:40,statChanges:[{stat:'attack',change:-1}],statTarget:'target',statChance:0,effectTexts:{ko:{text:'상대의 공격을 떨어뜨린다.',versionGroup:'fixture'}},name:'울음소리',nameEn:'growl',names:{ko:'울음소리',en:'Growl',ja:'なきごえ',zh:'叫声'},method:'level-up',level:1,type:'normal',category:'status',power:null,accuracy:100}]} };
 }
 const server = http.createServer(async (req,res) => {
-  const url = new URL(req.url, 'http://fixture');
-  const send = (data,status=200) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({data})); };
+  const url = new URL(req.url ?? '/', 'http://fixture');
+  const send = (data: unknown,status=200) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({data})); };
   if (url.pathname === '/__fixture' && req.method === 'GET') return send({ calls });
   if (url.pathname === '/__fixture' && req.method === 'POST') {
     let body=''; for await (const chunk of req) body+=chunk;
-    const config=JSON.parse(body);ready=!!config.ready;images=!!config.images;failedIds=config.failedIds??[];delayMs=config.delayMs??0;metaAgeHours=config.metaAgeHours??0;metaData=config.metaData??null;
+    const config=JSON.parse(body) as FixtureConfig;ready=!!config.ready;images=!!config.images;failedIds=config.failedIds??[];delayMs=config.delayMs??0;metaAgeHours=config.metaAgeHours??0;metaData=config.metaData??null;
     workspaceSessions = config.workspaceSessions ?? {};
     for (const key of Object.keys(calls)) delete calls[key];
     return send({ready});
   }
   if (url.pathname.startsWith('/api/')) {
-    calls[req.url] = (calls[req.url] ?? 0) + 1;
-    if (delayMs) await new Promise(resolve => setTimeout(resolve, delayMs));
+    calls[req.url ?? '/'] = (calls[req.url ?? '/'] ?? 0) + 1;
+    if (delayMs) await new Promise<void>(resolve => setTimeout(resolve, delayMs));
   }
   if (url.pathname === '/api/status') return send({ready:true,metadataCount:1351,missing:[]});
   if (url.pathname === '/api/session') return send({active:true});
   const session = /(?:^|;\s*)pokecoach_session=([^;]+)/.exec(req.headers.cookie ?? '')?.[1];
-  const workspace = workspaceSessions[session];
+  const workspace = session ? workspaceSessions[session] : undefined;
   if (url.pathname === '/api/conversations' || url.pathname === '/api/teams' || /^\/api\/conversations\/[^/]+\/messages$/.test(url.pathname)) {
     if (session && !workspace) return send(null, 401);
     const items = url.pathname === '/api/teams' ? workspace?.teams ?? [] : url.pathname.endsWith('/messages') ? workspace?.messages ?? [] : workspace?.conversations ?? [];
@@ -46,7 +52,7 @@ const server = http.createServer(async (req,res) => {
   if (url.pathname === '/health') return send({ready:true});
   if (url.pathname === '/api/pokemon') return ready ? send({items:['pokemon:25','pokemon:1'].map(summary),total:2,limit:100,offset:0}) : send(null,503);
   if (url.pathname.startsWith('/api/pokemon/')) {
-    const id=decodeURIComponent(url.pathname.split('/').at(-1));
+    const id=decodeURIComponent(url.pathname.split('/').at(-1) ?? '');
     if (failedIds.includes(id)) return send(null,503);
     return byId.has(id) ? send(detail(id)) : send(null,404);
   }

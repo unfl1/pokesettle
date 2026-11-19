@@ -18,6 +18,7 @@ PokeSettle is a RAG-based Pokémon Champions ranked singles strategy assistant.
 ## Working rules
 - Inspect existing code before editing; keep changes focused on the current product or production objective.
 - Use snake_case in Python, camelCase in TypeScript, and clear module boundaries.
+- 프런트·Node 도구 소스는 TypeScript(`.ts`·`.tsx`·`.cts`·`.mts`)로 작성하고 타입 검사함. 브라우저·CloudFront용 JavaScript는 실행/배포 시 생성하며 직접 작성한 JS 소스로 GitHub 언어 비율을 늘리지 않음. 정적 설정은 도구가 지원하는 JSON 사용 가능함.
 - Keep UI, API, RAG, retrieval data, and battle calculations separate.
 - Prefer simple solutions; avoid unnecessary abstractions and dependencies.
 - Never commit secrets, invent source facts, fabricate damage/KO/win rates, or present heuristic scores as probabilities.

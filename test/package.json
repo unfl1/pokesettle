@@ -7,14 +7,16 @@
     "test": "vitest run --config frontend/vitest.config.ts",
     "test:watch": "vitest --config frontend/vitest.config.ts",
     "test:e2e": "playwright test --config frontend/playwright.config.ts",
-    "test:deployment": "node --test deployment/*.test.mjs",
-    "test:public-cache": "node frontend/verify-public-cache.mjs"
+    "test:deployment": "node --test deployment/*.test.ts",
+    "test:public-cache": "node frontend/verify-public-cache.ts",
+    "typecheck:tools": "node ../frontend/node_modules/typescript/bin/tsc -p ../tsconfig.tools.json --noEmit"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@types/k6": "2.3.1",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -23,5 +25,8 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   }
 }

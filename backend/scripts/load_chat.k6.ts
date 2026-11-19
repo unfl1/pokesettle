@@ -1,4 +1,13 @@
 import http from 'k6/http';
+import type { Params } from 'k6/http';
+import type { Options } from 'k6/options';
+
+interface SetupData { sessions: string[]; start: number }
+interface ReadyEnvelope { data: { ready: boolean } }
+interface AcceptedEnvelope { data: { statusUrl: string } }
+interface ErrorEnvelope { error: { code: string } }
+interface JobEnvelope { data: { status: string; result?: {answerStatus?: string}; error?: {code: string} } }
+
 import { check, sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
 
@@ -17,12 +26,12 @@ const failed = new Counter('chat_failed');
 const admission = new Trend('chat_admission_ms', true);
 const completion = new Trend('chat_completion_ms', true);
 const launch = new Trend('chat_launch_skew_ms', true);
-const species = [
+const species: [number, string][] = [
   [25, '피카츄'], [6, '리자몽'], [9, '거북왕'], [3, '이상해꽃'], [94, '팬텀'],
   [130, '갸라도스'], [149, '망나뇽'], [445, '한카리아스'], [448, '루카리오'], [700, '님피아'],
 ];
 
-export const options = {
+export const options: Options = {
   setupTimeout: `${Math.ceil(users * sessionInterval + 60)}s`,
   scenarios: {
     simultaneous_questions: {
@@ -41,7 +50,7 @@ export const options = {
   },
 };
 
-function params(index, name, cookie) {
+function params(index: number, name: string, cookie?: string): Params {
   return {
     headers: {
       'Content-Type': 'application/json',
@@ -54,7 +63,7 @@ function params(index, name, cookie) {
   };
 }
 
-export function setup() {
+export function setup(): SetupData {
   if (!Number.isInteger(users) || users < 1 || users > 100
       || !Number.isFinite(timeout) || timeout <= 0
       || !Number.isFinite(sessionInterval) || sessionInterval < 0) {
@@ -65,7 +74,7 @@ export function setup() {
     throw new Error('Use isolated loopback or explicit production mode at https://pokesettle.com');
   }
   const ready = http.get(`${base}/api/status`, { timeout: '15s', tags: { name: 'readiness' } });
-  if (ready.status !== 200 || !ready.json().data.ready) {
+  if (ready.status !== 200 || !(ready.json() as unknown as ReadyEnvelope).data.ready) {
     throw new Error('API/worker not ready');
   }
   const sessions = [];
@@ -80,7 +89,7 @@ export function setup() {
   return { sessions, start: Date.now() + 1500 };
 }
 
-export default function (data) {
+export default function (data: SetupData) {
   const index = __VU - 1;
   const cookie = data.sessions[index];
   const delay = (data.start - Date.now()) / 1000;
@@ -103,14 +112,14 @@ export default function (data) {
   check(response, { 'chat returns a defined admission response': (r) => [202, 429].includes(r.status) });
   if (!isAccepted) {
     let code = response.status === 0 ? 'TRANSPORT_ERROR' : `HTTP_${response.status}_NON_JSON`;
-    try { code = response.json().error.code; } catch (_) { /* counted below */ }
+    try { code = (response.json() as unknown as ErrorEnvelope).error.code; } catch (_) { /* counted below */ }
     rejected.add(1, { code, status: String(response.status) });
     completed.add(false);
     finished.add(1);
     console.log(JSON.stringify({ vu: __VU, status: response.status, code }));
     return;
   }
-  const url = response.json().data.statusUrl;
+  const url = (response.json() as unknown as AcceptedEnvelope).data.statusUrl;
   const deadline = start + timeout * 1000;
   while (Date.now() < deadline) {
     const poll = http.get(`${base}${url}`, params(index, 'job_poll', cookie));
@@ -120,7 +129,7 @@ export default function (data) {
       finished.add(1);
       return;
     }
-    const job = poll.json().data;
+    const job = (poll.json() as unknown as JobEnvelope).data;
     if (['completed', 'failed', 'interrupted'].includes(job.status)) {
       const ok = job.status === 'completed';
       completed.add(ok);
@@ -142,7 +151,7 @@ export default function (data) {
   failed.add(1, { code: 'CLIENT_DEADLINE' });
 }
 
-export function handleSummary(data) {
+export function handleSummary(data: Record<string, unknown>): Record<string, string> {
   delete data.setup_data;
   return { [__ENV.LOAD_SUMMARY || 'runtime/load-test/k6-summary.json']: JSON.stringify(data, null, 2) };
 }

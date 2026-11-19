@@ -87,7 +87,7 @@
 - 기본 답변 순서: 추천 3마리·선봉 → 멤버별 공략·반감 대응 이유 → 실제 기술·특성·도구 추가 안내
 - 기술 미입력 멤버는 자기 타입 공격을 가정함. 습득 가능 기술 전체를 실제 보유 기술로 취급하지 않음
 - 멤버별 입력 기술은 로컬 자료의 타입·분류로 해석해 다시 계산함. 특성·도구는 입력을 보존하고 근거가 있을 때 보충 설명함. 효과를 타입 점수에 계산한 것으로 표시하지 않음
-- 참조 피해 계산의 지원 기술·중립 조건·필수 육성 입력은 [`battle/damage.py`](../../backend/app/battle/damage.py)·[`calculate.cjs`](../../backend/calculator/calculate.cjs) 기준임. 불완전한 입력을 임의 기본값으로 채우지 않음
+- 참조 피해 계산의 지원 기술·중립 조건·필수 육성 입력은 [`battle/damage.py`](../../backend/app/battle/damage.py)·[`calculate.cts`](../../backend/calculator/calculate.cts) 기준임. 불완전한 입력을 임의 기본값으로 채우지 않음
 
 ## 화면·URL·캐시 경계
 

@@ -23,7 +23,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
-  webServer: process.env.PLAYWRIGHT_EXTERNAL_SERVER === '1' ? undefined : [{ cwd: frontendDir, command: 'node ../test/frontend/fixture-api.mjs', env: { FIXTURE_API_PORT: fixturePort }, url: `http://127.0.0.1:${fixturePort}/health`, reuseExistingServer: false }, {
+  webServer: process.env.PLAYWRIGHT_EXTERNAL_SERVER === '1' ? undefined : [{ cwd: frontendDir, command: 'node ../test/frontend/fixture-api.ts', env: { FIXTURE_API_PORT: fixturePort }, url: `http://127.0.0.1:${fixturePort}/health`, reuseExistingServer: false }, {
     cwd: frontendDir,
     command: 'cp -R public .next/standalone/ && cp -R .next/static .next/standalone/.next/ && node .next/standalone/server.js',
     env: { HOSTNAME: '127.0.0.1', PORT: port, API_ORIGIN: `http://127.0.0.1:${fixturePort}`, PUBLIC_DATA_CACHE_SECONDS: '0' },
