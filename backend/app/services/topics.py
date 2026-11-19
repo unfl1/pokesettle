@@ -46,7 +46,8 @@ def mentioned_pokemon(catalog, question, limit=2):
 def explicit_team_rosters(catalog, question):
     """Resolve named roster clauses without trusting model-assigned sides."""
     markers = list(re.finditer(
-        r"(?P<own>(?:내|우리)\s*(?:팀|파티|엔트리|포켓몬|라인업))"
+        r"(?P<own>(?:내|우리)\s*(?:팀|파티|엔트리|포켓몬|라인업)"
+        r"|(?<!\S)(?:나|나는|난|저|저는|전|내가)\s+)"
         r"|(?P<opponent>상대(?:방)?\s*(?:(?:팀|파티|엔트리|포켓몬|라인업)(?:는|은|:)?|는|은|:))",
         question,
     ))

@@ -460,3 +460,47 @@ def test_incomplete_roster_introduction_asks_for_six_instead_of_inventing_member
     result = setup.service.chat(ChatRequest(question=question, client_request_id=uuid4()), setup.store.new_session())
     assert result['battle_context']['recommendation'] == 'need_six_per_team'
     assert '내 팀 5마리, 상대 6마리' in result['answer']
+
+
+@pytest.mark.parametrize('previous', [False, True])
+@pytest.mark.parametrize('prefix', ['나', '나는', '난', '저는'])
+def test_bare_self_introduction_selects_three_without_stale_pikachu(setup, monkeypatch, previous, prefix):
+    from dataclasses import replace
+
+    catalog = Catalog(ROOT / 'data/pokemon.json')
+    setup.service.catalog = catalog
+    setup.service.settings = replace(setup.settings, data_dir=ROOT / 'data')
+    question = f'{prefix} 마스카나 라이츄 따라큐 갸라도스 망나뇽 웨이니발인데 상대는 리자몽 이상해꽃 거북왕 따라큐 갸라도스 망나뇽이야'
+    own = ['pokemon:908', 'pokemon:26', 'pokemon:778', 'pokemon:130', 'pokemon:149', 'pokemon:914']
+    opponent = ['pokemon:6', 'pokemon:3', 'pokemon:9', 'pokemon:778', 'pokemon:130', 'pokemon:149']
+    setup.vectors.upsert_metadata([catalog.get(pid) for pid in set(own + opponent + ['pokemon:25'])])
+    session = setup.store.new_session()
+    conversation = setup.store.conversation(session, 'pokemon:25', None)
+    if previous:
+        setup.store.put('battle_state', conversation, {
+            'own_id': 'pokemon:25', 'own_hp_percent': 25, 'own_moves': ['10만볼트'],
+            'own_attack_types': ['electric'], 'bench_ids': ['pokemon:1'],
+            'opponent_id': 'pokemon:6', 'selection_requested': False,
+        })
+
+    def invoke(purpose, system, payload, schema):
+        if purpose == 'chat_scope':
+            return ChatScope(in_scope=True)
+        if purpose == 'battle_state':
+            # Reproduce extraction that omits own roster and retains an old active Pokémon.
+            return BattleUpdate(relevant=True, own_id='pokemon:25' if previous else None)
+        return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=['test'])
+
+    monkeypatch.setattr(setup.model, 'invoke', invoke)
+    monkeypatch.setattr(setup.service, 'collect', lambda *a, **kw: {'queries': []})
+    result = setup.service.chat(ChatRequest(question=question, conversation_id=conversation, client_request_id=uuid4()), session)
+    context = result['battle_context']
+    assert context['scope'] == 'generic_team_selection'
+    assert context['state']['own_team_ids'] == own
+    assert context['state']['opponent_team_ids'] == opponent
+    assert 'own_id' not in context['state']
+    assert 'own_moves' not in context['state']
+    assert 'bench_ids' not in context['state']
+    assert len(context['selection']['candidates'][0]['pokemon_ids']) == 3
+    assert '조합을 추천' in result['answer'] and '선봉으로는' in result['answer']
+    assert '피카츄' not in result['answer']
