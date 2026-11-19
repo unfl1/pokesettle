@@ -309,6 +309,23 @@ class KnowledgeService:
             battle_state = merge_state(previous_battle, update, set(candidate_ids), self.catalog)
             explicit_rosters = explicit_team_rosters(self.catalog, request.question)
             battle_state.update(explicit_rosters)
+            for side in ("own", "opponent"):
+                roster = explicit_rosters.get(f"{side}_team_ids")
+                if not roster:
+                    continue
+                team_fields = {f"{side}_team_ids", f"{side}_team_members"}
+                if battle_state.get(f"{side}_id") and battle_state[f"{side}_id"] not in roster:
+                    # A newly declared roster cannot retain a previous active Pokémon outside it.
+                    for field in tuple(battle_state):
+                        if field.startswith(f"{side}_") and field not in team_fields:
+                            battle_state.pop(field)
+                    battle_state.pop("damage_scenarios", None)
+                    if side == "own":
+                        for field in ("bench_ids", "bench_members", "requested_defensive_type", "switch_blocked"):
+                            battle_state.pop(field, None)
+                members_key = f"{side}_team_members"
+                if members_key in battle_state:
+                    battle_state[members_key] = [m for m in battle_state[members_key] if m["pokemon_id"] in roster]
             battle_state["selection_requested"] = bool(
                 re.search(
                     r"선출|3\s*(?:마리|명)|세\s*마리|선봉\s*(?:추천|(?:은|을)?\s*(?:누구|뭐|어떤))",
