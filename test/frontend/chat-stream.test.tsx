@@ -103,7 +103,7 @@ test("receives growing previews, resets rejected drafts and ignores stale snapsh
   hook.unmount();
 });
 
-test("a completed stream loads saved history, closes the subscription and removes pending state", async () => {
+test("a completed stream waits for character playback before removing pending state", async () => {
   const hook = workspace();
   await waitFor(() => expect(hook.result.current.canSend).toBe(true));
   act(() => hook.result.current.setDraft("test"));
@@ -120,6 +120,11 @@ test("a completed stream loads saved history, closes the subscription and remove
       error: null,
     }),
   );
+  await waitFor(() => expect(chatApi.messages).toHaveBeenCalled());
+  expect(hook.result.current.pending?.jobId).toBe("job-1");
+  act(() => hook.result.current.finishAnswerDisplay("stale-job"));
+  expect(hook.result.current.pending?.jobId).toBe("job-1");
+  act(() => hook.result.current.finishAnswerDisplay("job-1"));
   await waitFor(() => expect(hook.result.current.pending).toBeUndefined());
   expect(hook.result.current.conversationId).toBe("conversation-1");
   expect(chatApi.messages).toHaveBeenCalledWith("conversation-1");
@@ -145,6 +150,11 @@ test("a history load error releases pending state so the existing retry UI can r
       error: null,
     }),
   );
+  await waitFor(() => expect(chatApi.messages).toHaveBeenCalled());
+  expect(hook.result.current.pending?.jobId).toBe("job-1");
+  act(() => hook.result.current.finishAnswerDisplay("stale-job"));
+  expect(hook.result.current.pending?.jobId).toBe("job-1");
+  act(() => hook.result.current.finishAnswerDisplay("job-1"));
   await waitFor(() => expect(hook.result.current.pending).toBeUndefined());
   expect(hook.result.current.busy).toBe(false);
   expect(hook.result.current.messages.isError).toBe(true);

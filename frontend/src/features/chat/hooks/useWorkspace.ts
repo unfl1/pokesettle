@@ -102,6 +102,8 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
   );
   const pending = jobs[pokemonId];
   const pendingJobId = pending?.jobId;
+  const [displayedJobId, setDisplayedJobId] = useState<string | null>(null);
+  const [historyReadyJobId, setHistoryReadyJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!restored) return;
@@ -202,18 +204,13 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
       const id = data.result.conversationId;
       setChoices((previous) => ({ ...previous, [pokemonId]: id }));
       void cache.invalidateQueries({ queryKey: ['conversations', pokemonId] });
-      // Keep the preview visible until the saved, authoritative answer is loaded.
+      // Loading the saved answer must not skip characters still queued for display.
       let cancelled = false;
       void cache.fetchQuery({ queryKey: ['messages', id], queryFn: () => chatApi.messages(id), staleTime: 0 })
         .catch(() => undefined) // History errors use the existing retry UI, without keeping input locked.
         .then(() => {
           if (cancelled) return;
-          setJobs(previous => {
-            if (previous[pokemonId]?.jobId !== data.jobId) return previous;
-            const next = { ...previous };
-            delete next[pokemonId];
-            return next;
-          });
+          setHistoryReadyJobId(data.jobId);
         });
       return () => { cancelled = true; };
     } else if (data.status === 'failed' || data.status === 'interrupted') {
@@ -234,6 +231,16 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
       });
     }
   }, [job.data, pending, pokemonId, cache, lastRequests]);
+
+  useEffect(() => {
+    if (!pendingJobId || displayedJobId !== pendingJobId || historyReadyJobId !== pendingJobId) return;
+    setJobs(previous => {
+      if (previous[pokemonId]?.jobId !== pendingJobId) return previous;
+      const next = { ...previous };
+      delete next[pokemonId];
+      return next;
+    });
+  }, [pendingJobId, displayedJobId, historyReadyJobId, pokemonId]);
 
   useEffect(() => {
     if (
@@ -289,6 +296,7 @@ export function useWorkspace(initialDraft = '', chatEnabled = true, sessionEnabl
     conversationId,
     job,
     pending,
+    finishAnswerDisplay: (jobId: string) => setDisplayedJobId(jobId),
     busy,
     createConversation,
     deleteConversation,
