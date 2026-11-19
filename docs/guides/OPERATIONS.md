@@ -22,6 +22,32 @@
 - 배포 동시 실행 차단, 실행 중 배포를 새 커밋으로 취소하지 않음
 - 애플리케이션 API 키·DB 비밀번호는 서버에 유지, GitHub Actions에 전달 불필요
 
+## 로컬 개발 실행
+
+필요 환경: Python 3.10 이상 3.14 미만, Node.js 22.18 이상, uv, pnpm 11.25.0, Docker Compose
+
+`.env.example`을 루트 `.env`로 복사한 뒤 모델 키·DB 연결 정보 설정
+
+```bash
+docker compose up -d --wait postgres
+uv sync --python 3.12 --frozen --group dev
+uv run --frozen python -m backend.scripts.index_data
+uv run --frozen python -m backend.scripts.index_strategy
+pnpm --dir backend/calculator install --frozen-lockfile --ignore-scripts
+uv run --frozen uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+별도 터미널에서 프론트엔드 실행
+
+```bash
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend dev
+```
+
+- [로컬 화면](http://127.0.0.1:3000/) · [API 문서](http://127.0.0.1:8000/docs)
+- 최초 색인 시 임베딩 모델 다운로드 필요, 답변 생성 시 설정한 공급자 요금 적용
+- TypeScript 도구·참조 계산기는 Node 타입 제거 실행 사용, 타입 오류는 별도 검사
+
 ## 최초 연결
 
 ### 서버
@@ -319,7 +345,7 @@ sudo docker compose --project-directory . --env-file .env.production -f deployme
 - Node.js 22.18 이상 사용함. Node 도구·계산기는 TypeScript 소스로 실행하며, `pnpm --dir test typecheck:tools`로 계산기·k6·배포 함수 타입 검사함. k6 스크립트는 TypeScript 기본 지원 버전인 0.57 이상 필요함
 - CloudFront 언어 함수는 `deployment/aws/locale_redirect.ts`를 `build_locale_function.mts`로 타입 제거한 뒤 업로드함. CloudFront 런타임은 기존 JavaScript 2.0 유지함. 함수 게시 도구를 실행하는 환경에도 Node.js 22.18 이상 필요함
 
-- 로컬 설치·실행은 [README](../../README.md#로컬-실행) 참조함
+- 로컬 설치·실행은 [로컬 개발 실행](#로컬-개발-실행) 참조
 - 프런트 빌드: `pnpm --dir frontend build`, 코드 변경에 필요한 수동 검사만 선택 실행함
 - 스타일 규칙은 `AGENTS.md`·`.agent/rules/frontend-styling.md`에서 관리함. 도구 사용법·구현 학습은 로컬 학습 가이드로 이동함
 
@@ -398,7 +424,7 @@ python3 deployment/aws/connect_frontend.py --origin-token-file /private/path/ori
 - `RUNTIME_DIR`: 기본 저장소의 `runtime`. 로컬 임베딩 모델 캐시 경로임. 벡터 데이터는 PostgreSQL에 저장함.
 - 기존 모델 공급자 설정 유지함. DB 연결 문자열은 설정 객체의 `repr`에서 제외함.
 
-로컬 초기 실행 명령은 [README](../../README.md#로컬-실행) 참조함
+로컬 초기 실행 명령은 [로컬 개발 실행](#로컬-개발-실행) 참조
 
 
 - 기존 PostgreSQL 사용 시 Compose 시작 생략 가능함. UTF-8 DB·pgvector 설치·스키마 생성 권한 필요함. `CREATE EXTENSION vector WITH SCHEMA public` 실행 권한 또는 관리자의 사전 확장 생성 필요함.

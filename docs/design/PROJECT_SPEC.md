@@ -5,7 +5,7 @@
 - 목적: Pokémon Champions 랭크 싱글 준비·복기를 위한 근거 기반 전략 안내
 - 우선순위: 현재 사용자 요청과 운영의 사용성·신뢰성·보안·비용·유지보수성
 - 문서 역할: 제품 범위·모듈 책임·데이터 흐름·API 사용 규약을 이 문서에 통합함
-- 설치는 [README](../../README.md), 운영은 [운영 지침](../guides/OPERATIONS.md), 출처·라이선스는 [데이터 출처](../guides/DATA_SOURCES.md) 참조
+- 서비스 소개는 [README](../../README.md), 설치·운영은 [운영 지침](../guides/OPERATIONS.md), 출처·라이선스는 [데이터 출처](../guides/DATA_SOURCES.md) 참조
 - 초기 Phase 계획·실험·작업 이력·학습 내용은 Git 제외 로컬 `docs/private/LEARNING_GUIDE.md`에서 관리함
 
 ## 제품 범위와 판단 기준
