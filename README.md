@@ -24,7 +24,9 @@ Pokémon Champions 랭크 싱글 준비와 복기를 위한 RAG 기반 포켓몬
 
 ## 로컬 실행
 
-필요 환경: Python 3.10 이상 3.14 미만, Node.js 20.19+ 또는 22.12+, uv, pnpm, Docker Compose
+필요 환경: Python 3.10 이상 3.14 미만, Node.js 22.18 이상, uv, pnpm 11.25.0, Docker Compose
+
+TypeScript 도구와 참조 계산기는 Node의 타입 제거 실행을 사용하며 타입 오류 검사는 별도 명령으로 수행함
 
 `.env.example`을 루트 `.env`로 복사한 뒤 모델 키와 DB 연결 정보 설정
 

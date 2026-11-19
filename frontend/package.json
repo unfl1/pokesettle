@@ -9,9 +9,9 @@
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "node ../test/node_modules/@playwright/test/cli.js test --config ../test/frontend/playwright.config.ts",
-    "test:public-cache": "node ../test/frontend/verify-public-cache.mjs",
-    "prebuild": "node scripts/generate-pokemon-routes.mjs",
-    "pretypecheck": "node scripts/generate-pokemon-routes.mjs",
+    "test:public-cache": "node ../test/frontend/verify-public-cache.ts",
+    "prebuild": "node scripts/generate-pokemon-routes.ts",
+    "pretypecheck": "node scripts/generate-pokemon-routes.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint",
@@ -39,5 +39,8 @@
     "prettier": "3.9.10",
     "oxlint": "1.90.0"
   },
-  "packageManager": "pnpm@11.25.0"
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22.18.0"
+  }
 }

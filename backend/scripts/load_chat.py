@@ -292,7 +292,7 @@ def run(args, settings):
             with (output / 'k6.log').open('w') as log:
                 result = subprocess.run([
                     'k6', 'run', '--quiet', '--out', f'json={output / "k6-samples.jsonl"}',
-                    str(ROOT / 'backend/scripts/load_chat.k6.js'),
+                    str(ROOT / 'backend/scripts/load_chat.k6.ts'),
                 ], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env={
                     **os.environ, 'LOAD_BASE_URL': f'http://127.0.0.1:{args.port}',
                     'LOAD_USERS': str(args.users), 'LOAD_SHARED_IP': str(int(args.shared_ip)),
@@ -404,7 +404,7 @@ def run_production(args):
             result = subprocess.run([
                 'k6', 'run', '--quiet', '--out', f'json={output / "k6-samples.jsonl"}',
                 *(['--dns', 'policy=onlyIPv6'] if args.ipv6 else []),
-                str(ROOT / 'backend/scripts/load_chat.k6.js'),
+                str(ROOT / 'backend/scripts/load_chat.k6.ts'),
             ], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env={
                 **{key: value for key, value in os.environ.items() if not key.startswith('LOAD_')},
                 'LOAD_PRODUCTION': '1', 'LOAD_BASE_URL': metadata['base_url'],

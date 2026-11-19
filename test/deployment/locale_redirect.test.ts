@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
+import { stripTypeScriptTypes } from 'node:module';
 
-const handler = runInNewContext(`${readFileSync(new URL('../../deployment/aws/locale_redirect.js', import.meta.url), 'utf8')}; handler;`);
-function request(country, preference, extra = {}) {
+interface RedirectResult { statusCode: number; headers: Record<string, {value: string}> }
+const handler: (event: {request: ReturnType<typeof request>}) => ReturnType<typeof request> | RedirectResult = runInNewContext(`${stripTypeScriptTypes(readFileSync(new URL('../../deployment/aws/locale_redirect.ts', import.meta.url), 'utf8'))}; handler;`);
+function request(country?: string | null, preference?: string | null, extra: Record<string, unknown> = {}) {
   return {
     uri: '/', method: 'GET', querystring: {},
     headers: country ? { 'cloudfront-viewer-country': { value: country } } : {},
@@ -18,6 +20,7 @@ for (const [country, path] of [['KR', '/ko'], ['JP', '/ja'], ['CN', '/zh'], ['US
     const input = request(country);
     const output = handler({ request: input });
     if (!path) return assert.equal(output, input);
+    assert.ok('statusCode' in output);
     assert.equal(output.statusCode, 307);
     assert.equal(output.headers.location.value, path);
     assert.equal(output.headers['cache-control'].value, 'private, no-store');
@@ -28,6 +31,7 @@ for (const [country, saved, path] of [['KR', 'en', null], ['JP', 'ko', '/ko'], [
     const input = request(country, saved);
     const output = handler({ request: input });
     if (!path) return assert.equal(output, input);
+    assert.ok('statusCode' in output);
     assert.equal(output.headers.location.value, path);
   });
 }
@@ -38,6 +42,7 @@ test('preserves encoded queries and repeated parameters on HEAD', () => {
       tag: { value: 'a', multiValue: [{ value: 'a' }, { value: 'b%26c' }] },
     },
   }) });
+  assert.ok('statusCode' in output);
   assert.equal(output.headers.location.value, '/ja?q=%ED%94%BC%EC%B9%B4%EC%B8%84&tag=a&tag=b%26c');
 });
 test('explicit URLs, API, assets, and write requests pass through', () => {

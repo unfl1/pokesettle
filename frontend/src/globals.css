@@ -156,6 +156,6 @@
 @custom-variant screen-360 (@media (width <= 360px));
 @custom-variant screen-header (@media (781px <= width <= 1080px));
 
-@plugin "../tailwind-fonts.mjs";
+@plugin "../tailwind-fonts.ts";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

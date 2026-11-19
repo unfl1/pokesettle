@@ -13,7 +13,7 @@
 | `frontend/src/globals.css` | The only authored CSS file: Tailwind import, shared theme tokens, animation keyframes, custom variants, and font plugin registration |
 | `frontend/src/styles/document.ts` | Shared document utilities: defaults, inherited dark palette, focus visibility, selection, and reduced motion |
 | React components | Layout, spacing, typography, responsive behavior, and interaction states through `className` utilities |
-| `frontend/tailwind-fonts.mjs` | Generate Unicode font-face subsets from the existing manifest; preserve font licenses and loading behavior |
+| `frontend/tailwind-fonts.ts` | Generate Unicode font-face subsets from the existing manifest; preserve font licenses and loading behavior |
 | `frontend/src/app/fonts.ts` | Next.js local font registration for common glyphs |
 
 ## Required styling approach

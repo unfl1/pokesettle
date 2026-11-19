@@ -396,3 +396,36 @@ def test_locale_function_preserves_viewer_response_and_rejects_request_conflicts
         associate_locale_function({"LambdaFunctionAssociations": {"Quantity": 1, "Items": [
             {"EventType": "viewer-request", "LambdaFunctionARN": "arn:lambda"},
         ]}}, "arn:locale")
+
+
+def test_locale_typescript_build_produces_valid_javascript_without_aws():
+    import re
+    import subprocess
+
+    from deployment.aws.locale_redirect import compile_locale_function
+
+    code = compile_locale_function()
+    assert re.search(rb'function handler\(event\s*\)', code)
+    assert b'interface CloudFront' not in code
+    subprocess.run(['node', '--check', '--input-type=commonjs'], input=code, check=True, capture_output=True)
+
+
+def test_locale_function_upload_uses_compiled_code_and_existing_runtime():
+    from types import SimpleNamespace
+
+    from deployment.aws.locale_redirect import publish_locale_function
+
+    uploaded = {}
+    def update(**kwargs):
+        uploaded.update(kwargs)
+        return {'ETag': 'updated'}
+    cf = SimpleNamespace(
+        describe_function=lambda **kwargs: {'ETag': 'existing'},
+        update_function=update,
+        publish_function=lambda **kwargs: {'FunctionSummary': {'FunctionMetadata': {'FunctionARN': 'arn:test'}}},
+        exceptions=SimpleNamespace(NoSuchFunctionExists=RuntimeError),
+    )
+    assert publish_locale_function(cf) == 'arn:test'
+    assert uploaded['FunctionConfig']['Runtime'] == 'cloudfront-js-2.0'
+    assert isinstance(uploaded['FunctionCode'], bytes)
+    assert b'interface CloudFront' not in uploaded['FunctionCode']

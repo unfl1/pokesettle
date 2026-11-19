@@ -120,7 +120,10 @@ def damage_move_options(catalog, pokemon_id):
                 )
             )
             rows[name] = {
-                **data,
+                # Keep the damage API contract independent of richer catalog metadata.
+                **{key: data[key] for key in (
+                    "name", "name_ko", "type", "category", "power", "accuracy", "names"
+                )},
                 "supported": reason is None,
                 "unsupported_reason": reason,
                 "methods": [],
@@ -167,7 +170,7 @@ def calculate_damage(body, catalog, settings):
         )
     try:
         process = subprocess.run(
-            [executable, str(ROOT / "backend/calculator/calculate.cjs")],
+            [executable, str(ROOT / "backend/calculator/calculate.cts")],
             input=json.dumps(payload),
             text=True,
             capture_output=True,
