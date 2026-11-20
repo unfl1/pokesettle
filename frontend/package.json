@@ -12,6 +12,7 @@
     "test:public-cache": "node ../test/frontend/verify-public-cache.ts",
     "prebuild": "node scripts/generate-pokemon-routes.ts",
     "pretypecheck": "node scripts/generate-pokemon-routes.ts",
+    "generate:fonts": "node scripts/generate-fonts.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint",

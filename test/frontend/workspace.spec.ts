@@ -739,11 +739,11 @@ test('챗봇 진입은 도감을 요청하지 않고 메뉴·뒤로 가기로 �
 });
 
 test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', async ({ page, request }) => {
-  const html = await request.get('/pokedex');
+  const html = await request.get('/ko/pokedex');
   expect(html.status()).toBe(200);
   expect(html.headers()['x-powered-by']).toBeUndefined();
   expect(await html.text()).toContain('포켓몬의 타입·특성·종족값과 기술을 확인하세요.');
-  const rsc = await request.get('/meta', { headers: { RSC: '1' } });
+  const rsc = await request.get('/ko/meta', { headers: { RSC: '1' } });
   expect(rsc.headers()['content-type']).toContain('text/x-component');
 
   await fixture(page);
@@ -753,13 +753,13 @@ test('Next 서버 HTML·RSC 응답과 경로 분리·동적 폰트 로딩', asyn
     if (new URL(request.url()).pathname.endsWith('.woff2')) fonts.add(request.url());
   });
   page.on('pageerror', error => hydrationErrors.push(error.message));
-  await page.goto('/chat');
+  await page.goto('/ko/chat');
   await expect(page.getByLabel('포켓몬 질문')).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   expect(fonts.size).toBeGreaterThan(0);
   expect(fonts.size).toBeLessThan(92);
-  expect([...fonts].some(url => url.includes('/_next/static/'))).toBe(true);
-  expect([...fonts].some(url => url.includes('/fonts/pretendard/'))).toBe(true);
+  expect([...fonts].every(url => new URL(url).pathname.startsWith('/_next/static/media/'))).toBe(true);
+  expect(await page.locator('link[rel="preload"][as="font"]').count()).toBe(0);
   await expect(page.locator('[data-testid="pokedex-page"], [data-testid="scenario-page"]')).toHaveCount(0);
   await page.getByRole('link', { name: '도감', exact: true }).click();
   await expect(page.getByLabel('포켓몬 이름 검색')).toBeVisible();
