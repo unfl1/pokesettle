@@ -121,7 +121,8 @@
 - Pretendard Variable 1.3.9, 수집·확인일 2026-10-26, [공식 저장소](https://github.com/orioncactus/pretendard/tree/v1.3.9)
 - [공식 동적 서브셋 CSS](https://github.com/orioncactus/pretendard/blob/v1.3.9/packages/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css)의 Unicode 범위와 WOFF2 92개 사용
 - 라이선스: SIL Open Font License 1.1, 원문 `frontend/public/fonts/pretendard/1.3.9/LICENSE.txt` 유지
-- 사용: `frontend/src/app/fonts.ts`의 `next/font/local` 공통 글리프, `frontend/tailwind-fonts.ts`·`frontend/src/styles/pretendard-subsets.json`의 나머지 범위, 바이너리 수정 없음
+- 사용: `frontend/src/styles/pretendard-subsets.json`의 92개 Unicode 범위에서 `frontend/scripts/generate-fonts.ts`로 `frontend/src/app/fonts.ts`의 정적 `next/font/local` 선언·Tailwind 폰트 목록 생성함. `preload: false`로 문자별 선택 다운로드 유지, 공통 서브셋의 보정 대체 폰트는 목록 마지막에 배치함. 바이너리·라이선스 수정 없음
+- 서빙: 활성 폰트는 Next.js의 해시 정적 자산 경로 사용함. 기존 `/fonts/pretendard/1.3.9/` 파일·캐시·이전 주소 별칭은 과거 CSS 호환을 위해 유지함
 - 공식 API 근거: [Next Font](https://nextjs.org/docs/app/api-reference/components/font), [Next Image](https://nextjs.org/docs/app/api-reference/components/image), [Google Analytics](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
 
 

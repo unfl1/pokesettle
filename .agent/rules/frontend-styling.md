@@ -10,11 +10,11 @@
 
 | Location | Responsibility |
 | --- | --- |
-| `frontend/src/globals.css` | The only authored CSS file: Tailwind import, shared theme tokens, animation keyframes, custom variants, and font plugin registration |
+| `frontend/src/globals.css` | The only authored CSS file: Tailwind import, shared theme tokens, animation keyframes, custom variants, and generated font stack |
 | `frontend/src/styles/document.ts` | Shared document utilities: defaults, inherited dark palette, focus visibility, selection, and reduced motion |
 | React components | Layout, spacing, typography, responsive behavior, and interaction states through `className` utilities |
-| `frontend/tailwind-fonts.ts` | Generate Unicode font-face subsets from the existing manifest; preserve font licenses and loading behavior |
-| `frontend/src/app/fonts.ts` | Next.js local font registration for common glyphs |
+| `frontend/scripts/generate-fonts.ts` | Generate static Next.js font calls and the Tailwind font stack from the subset manifest |
+| `frontend/src/app/fonts.ts` | Generated Next.js local font registration for all Unicode subsets |
 
 ## Required styling approach
 
@@ -36,7 +36,7 @@
 - Reuse existing responsive variants. `max-tablet` includes 780px; do not reintroduce the duplicate `screen-780` variant. Preserve inclusive boundary behavior when refactoring.
 - Declare overlapping maximum-width variants from widest to narrowest so narrower layouts win in the generated cascade.
 - Keep keyframes in `@theme`, connected to `--animate-*` tokens. Preserve related animation timing and reduced-motion alternatives.
-- Use the font plugin for generated font-face declarations. Do not replace Unicode subsets with eager full-font downloads.
+- Use `next/font/local` for every subset, preserving per-subset `unicode-range` and `preload: false`. Regenerate static calls and the font stack with `node frontend/scripts/generate-fonts.ts`; verify synchronization with `--check`. Keep the common subset last so its metric-adjusted fallback cannot hide other subsets. Do not replace Unicode subsets with eager full-font downloads.
 
 ## Runtime values and accessibility
 

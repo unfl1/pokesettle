@@ -141,7 +141,7 @@
 
 /* Resolve the next/font variable where font-sans is used (including descendants). */
 @theme inline {
-  --font-sans: var(--font-pretendard), Arial, sans-serif;
+  --font-sans: var(--font-pretendard-0), var(--font-pretendard-1), var(--font-pretendard-2), var(--font-pretendard-3), var(--font-pretendard-4), var(--font-pretendard-5), var(--font-pretendard-6), var(--font-pretendard-7), var(--font-pretendard-8), var(--font-pretendard-9), var(--font-pretendard-10), var(--font-pretendard-11), var(--font-pretendard-12), var(--font-pretendard-13), var(--font-pretendard-14), var(--font-pretendard-15), var(--font-pretendard-16), var(--font-pretendard-17), var(--font-pretendard-18), var(--font-pretendard-19), var(--font-pretendard-20), var(--font-pretendard-21), var(--font-pretendard-22), var(--font-pretendard-23), var(--font-pretendard-24), var(--font-pretendard-25), var(--font-pretendard-26), var(--font-pretendard-27), var(--font-pretendard-28), var(--font-pretendard-29), var(--font-pretendard-30), var(--font-pretendard-31), var(--font-pretendard-32), var(--font-pretendard-33), var(--font-pretendard-34), var(--font-pretendard-35), var(--font-pretendard-36), var(--font-pretendard-37), var(--font-pretendard-38), var(--font-pretendard-39), var(--font-pretendard-40), var(--font-pretendard-41), var(--font-pretendard-42), var(--font-pretendard-43), var(--font-pretendard-44), var(--font-pretendard-45), var(--font-pretendard-46), var(--font-pretendard-47), var(--font-pretendard-48), var(--font-pretendard-49), var(--font-pretendard-50), var(--font-pretendard-51), var(--font-pretendard-52), var(--font-pretendard-53), var(--font-pretendard-54), var(--font-pretendard-55), var(--font-pretendard-56), var(--font-pretendard-57), var(--font-pretendard-58), var(--font-pretendard-59), var(--font-pretendard-60), var(--font-pretendard-61), var(--font-pretendard-62), var(--font-pretendard-63), var(--font-pretendard-64), var(--font-pretendard-65), var(--font-pretendard-66), var(--font-pretendard-67), var(--font-pretendard-68), var(--font-pretendard-69), var(--font-pretendard-70), var(--font-pretendard-71), var(--font-pretendard-72), var(--font-pretendard-73), var(--font-pretendard-74), var(--font-pretendard-75), var(--font-pretendard-76), var(--font-pretendard-77), var(--font-pretendard-78), var(--font-pretendard-79), var(--font-pretendard-80), var(--font-pretendard-81), var(--font-pretendard-82), var(--font-pretendard-83), var(--font-pretendard-84), var(--font-pretendard-85), var(--font-pretendard-86), var(--font-pretendard-87), var(--font-pretendard-88), var(--font-pretendard-89), var(--font-pretendard-90), var(--font-pretendard), Arial, sans-serif;
 }
 
 @custom-variant max-desktop (@media (width <= 1150px));
@@ -156,6 +156,5 @@
 @custom-variant screen-360 (@media (width <= 360px));
 @custom-variant screen-header (@media (781px <= width <= 1080px));
 
-@plugin "../tailwind-fonts.ts";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
