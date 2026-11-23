@@ -91,7 +91,7 @@ def test_chat_selection_keeps_all_twelve_ids_and_persists_rosters(setup, monkeyp
 
     def invoke(purpose, prompt, payload, schema):
         if purpose == "chat_scope":
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == "battle_state":
             seen.append(payload)
             return BattleUpdate(
@@ -336,7 +336,7 @@ def test_selection_settings_followup_keeps_selection_without_repeating_request(s
 
     def invoke(purpose, prompt, payload, schema):
         if purpose == "chat_scope":
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == "battle_state" and payload["question"] == first:
             return BattleUpdate(relevant=True, own_team_ids=OWN, opponent_team_ids=ENEMY,
                                 input_evidence=[{"field": "own_team_ids", "quote": first},
@@ -384,7 +384,7 @@ def test_plain_roster_recommendation_uses_calculated_lineup_despite_model_state(
     def invoke(purpose, system, payload, schema):
         calls.append(purpose)
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == 'battle_state':
             # Simulate missing/switching team assignment from model extraction.
             return BattleUpdate(relevant=relevant, own_team_ids=ENEMY, opponent_team_ids=OWN)
@@ -431,7 +431,7 @@ def test_roster_intro_does_not_override_a_specific_battle_or_mechanic_question(s
 
     def invoke(purpose, system, payload, schema):
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == 'battle_state':
             return BattleUpdate(relevant=False)
         return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=['test'])
@@ -451,7 +451,7 @@ def test_incomplete_roster_introduction_asks_for_six_instead_of_inventing_member
 
     def invoke(purpose, system, payload, schema):
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == 'battle_state':
             return BattleUpdate(relevant=False)
         pytest.fail('Incomplete rosters must not generate a lineup')
@@ -491,7 +491,7 @@ def test_bare_self_introduction_selects_three_without_stale_pikachu(setup, monke
 
     def invoke(purpose, system, payload, schema):
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == 'battle_state':
             # Reproduce extraction that omits own roster and retains an old active Pokémon.
             return BattleUpdate(relevant=True, own_id='pokemon:25' if previous else None)

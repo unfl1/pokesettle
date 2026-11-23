@@ -101,6 +101,20 @@ def catalog_navigation(catalog, selected_id, question):
     return None
 
 
+def is_model_free_navigation(catalog, navigation, question):
+    """Only the bounded Korean lookup path needs neither language AI nor quota."""
+    if not navigation:
+        return False
+    prose = question
+    target = navigation["catalog_navigation"]["pokemon"]
+    if target:
+        pokemon = catalog.get(target["pokemon_id"])
+        for name in (pokemon.name_ko, pokemon.name_en):
+            if name:
+                prose = re.sub(re.escape(name), "", prose, flags=re.I)
+    return bool(re.search(r"[가-힣]", prose))
+
+
 def navigation_result(pokemon=None, move_type=None, *, moves=False):
     if moves and pokemon is None:
         answer = "기술은 도감에서 포켓몬을 선택한 뒤 ‘배울 수 있는 기술’과 타입별 필터로 확인할 수 있어요. 포켓몬마다 배울 수 있는 기술이 달라요."

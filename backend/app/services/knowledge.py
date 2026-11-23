@@ -17,9 +17,11 @@ from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
 from backend.app.rag.prompts import PROMPT_VERSION, QUERY_PROMPT, SELECTION_PROMPT
+from backend.app.rag.streaming import active_answer_preview
 from backend.app.schemas import Candidate, Document, QueryPlan, Selection
-from backend.app.services.catalog_answers import catalog_navigation
-from backend.app.services.chat_scope import check_chat_scope, scope_refusal
+from backend.app.services.answer_language import localize_answer
+from backend.app.services.catalog_answers import catalog_navigation, is_model_free_navigation
+from backend.app.services.chat_scope import classify_chat_scope, language_refusal, scope_refusal
 from backend.app.services.topics import explicit_team_rosters, mentioned_pokemon
 from backend.app.storage import digest
 
@@ -199,11 +201,38 @@ class KnowledgeService:
         conversation_id = self.store.conversation(
             session_id, request.pokemon_id, request.regulation_id, request.conversation_id
         )
+        history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
+        response_language = "ko"
         navigation = (
             catalog_navigation(self.catalog, focus, request.question)
             if feature is None else None
         )
+        # The existing parser accepts only complete, bounded lookup requests.
+        # Preserve its model-free Korean path; names alone do not select language.
+        korean_navigation = is_model_free_navigation(self.catalog, navigation, request.question)
+        # All remaining questions share a task/language classification call.
+        if feature != "pokemon_guide" and not korean_navigation:
+            stage("checking_scope")
+            decision = classify_chat_scope(
+                self.model, request.question, history, self.catalog.get(focus) if focus else None
+            )
+            if decision.language == "unsupported" or not decision.in_scope:
+                result = language_refusal() if decision.language == "unsupported" else scope_refusal()
+                if decision.language != "unsupported":
+                    result = localize_answer(self.model, result, decision.language, self.catalog)
+                stage("saving")
+                user_id, assistant_id = self.store.save_exchange(
+                    conversation_id, request.question, result
+                )
+                return {
+                    **result,
+                    "conversation_id": conversation_id,
+                    "user_message_id": user_id,
+                    "assistant_message_id": assistant_id,
+                }
+            response_language = decision.language
         if navigation:
+            navigation = localize_answer(self.model, navigation, response_language, self.catalog)
             target = navigation["catalog_navigation"]["pokemon"]
             if target:
                 self.store.put("chat_topic", conversation_id, target["pokemon_id"])
@@ -217,25 +246,6 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
-        history = [] if feature == "pokemon_guide" else self.store.history(conversation_id)
-        # Exact catalog requests and server-authored guides have a bounded task.
-        # All other requests must pass before mutating topic/battle state or RAG work.
-        if feature != "pokemon_guide":
-            stage("checking_scope")
-            if not check_chat_scope(
-                self.model, request.question, history, self.catalog.get(focus) if focus else None
-            ):
-                result = scope_refusal()
-                stage("saving")
-                user_id, assistant_id = self.store.save_exchange(
-                    conversation_id, request.question, result
-                )
-                return {
-                    **result,
-                    "conversation_id": conversation_id,
-                    "user_message_id": user_id,
-                    "assistant_message_id": assistant_id,
-                }
         if focus is None:
             result = {
                 "answer_status": "partial",
@@ -244,6 +254,7 @@ class KnowledgeService:
                 "assumptions": [],
                 "unknowns": [],
             }
+            result = localize_answer(self.model, result, response_language, self.catalog)
             user_id, assistant_id = self.store.save_exchange(
                 conversation_id, request.question, result
             )
@@ -385,6 +396,7 @@ class KnowledgeService:
                 "unknowns": [],
                 "battle_context": battle_context,
             }
+            result = localize_answer(self.model, result, response_language, self.catalog)
             user_id, assistant_id = self.store.save_exchange(
                 conversation_id, request.question, result, battle_state=battle_state
             )
@@ -440,19 +452,27 @@ class KnowledgeService:
                 )
             )[:2]
         graph = build_graph(self.vectors, self.model, stage)
-        state = graph.invoke(
-            {
-                "pokemon_id": request.pokemon_id,
-                "context_pokemon_ids": context_ids,
-                "battle_context": battle_context,
-                "question": request.question,
-                "retrieval_query": request.question + " " + " ".join(collection["queries"]),
-                "regulation_id": request.regulation_id,
-                # Guides are public reference answers, independent of private conversation.
-                "history": history,
-                "cache_guide": feature == "pokemon_guide",
-            }
-        )
+        # Non-Korean model prose can require localization after generation. Do not
+        # publish a wrong-language draft before that reader-facing check completes.
+        preview_token = active_answer_preview.set(None) if response_language != "ko" else None
+        try:
+            state = graph.invoke(
+                {
+                    "pokemon_id": request.pokemon_id,
+                    "context_pokemon_ids": context_ids,
+                    "battle_context": battle_context,
+                    "question": request.question,
+                    "retrieval_query": request.question + " " + " ".join(collection["queries"]),
+                    "regulation_id": request.regulation_id,
+                    # Guides are public reference answers, independent of private conversation.
+                    "history": history,
+                    "cache_guide": feature == "pokemon_guide",
+                    "response_language": response_language,
+                }
+            )
+        finally:
+            if preview_token is not None:
+                active_answer_preview.reset(preview_token)
         stage("saving")
         result = state["result"]
         if (
@@ -482,6 +502,7 @@ class KnowledgeService:
         display_question = (
             "근거 기반 운용 가이드를 작성해 줘." if feature == "pokemon_guide" else request.question
         )
+        result = localize_answer(self.model, result, response_language, self.catalog)
         user_id, assistant_id = self.store.save_exchange(
             conversation_id,
             display_question,

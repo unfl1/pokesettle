@@ -103,7 +103,7 @@ def test_real_pipeline_persists_user_state_and_supplies_citable_calculation(setu
 
     def invoke(purpose, system, payload, schema):
         if purpose == "chat_scope":
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == "battle_state":
             update = next(updates)
             from backend.app.battle.conversation import InputEvidence
@@ -475,7 +475,7 @@ def test_unknown_new_opponent_is_saved_without_searching_old_opponent(setup, mon
     monkeypatch.setattr(
         setup.model,
         "invoke",
-        lambda purpose, *args: ChatScope(in_scope=True) if purpose == "chat_scope" else BattleUpdate(relevant=True, own_id="pokemon:908", opponent_id="pokemon:130"),
+        lambda purpose, *args: ChatScope(in_scope=True, language="ko") if purpose == "chat_scope" else BattleUpdate(relevant=True, own_id="pokemon:908", opponent_id="pokemon:130"),
     )
     monkeypatch.setattr(
         setup.service,

@@ -90,7 +90,7 @@ def test_chat_pipeline_crosses_all_generations_and_overrides_stale_model_opponen
 
     def invoke(purpose, prompt, payload, schema):
         if purpose == "chat_scope":
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == "battle_state":
             # Simulate a model retaining the previous opponent despite an explicit new name.
             return BattleUpdate(relevant=True, own_id=current["own"], opponent_id=current["stale"])

@@ -42,7 +42,7 @@ def test_scope_rejection_precedes_all_answer_paths_and_preserves_state(setup, mo
         assert schema is ChatScope
         assert payload["question"] == question
         assert bool(payload["history_for_interpretation_only"]) == existing_battle
-        return ChatScope(in_scope=False)
+        return ChatScope(in_scope=False, language="ko")
 
     monkeypatch.setattr(setup.model, "invoke", invoke)
     monkeypatch.setattr(setup.service, "collect", lambda *args: pytest.fail("rejected requests must not collect"))
@@ -59,7 +59,7 @@ def test_scope_rejection_precedes_all_answer_paths_and_preserves_state(setup, mo
 
 
 def test_no_pokemon_or_history_still_rejects_unrelated_task(setup, monkeypatch):
-    monkeypatch.setattr(setup.model, "invoke", lambda *args: ChatScope(in_scope=False))
+    monkeypatch.setattr(setup.model, "invoke", lambda *args: ChatScope(in_scope=False, language="ko"))
     result = setup.service.chat(ChatRequest(question="점심 추천해줘", client_request_id=uuid4()), setup.store.new_session())
     assert result["answer"] == SCOPE_REFUSAL
 
@@ -88,7 +88,7 @@ def test_scope_receives_current_request_and_history_without_rewriting():
     def invoke(purpose, prompt, payload, schema):
         assert purpose == "chat_scope" and schema is ChatScope
         assert payload == {"question": question, "history_for_interpretation_only": history}
-        return ChatScope(in_scope=True)
+        return ChatScope(in_scope=True, language="ko")
 
     assert check_chat_scope(SimpleNamespace(invoke=invoke), question, history)
 
@@ -101,13 +101,13 @@ def test_selected_pokemon_is_only_supplied_as_interpretation_context():
         assert payload["selected_pokemon_for_interpretation_only"] == {
             "name_ko": "망나뇽", "name_en": "Dragonite",
         }
-        return ChatScope(in_scope=True)
+        return ChatScope(in_scope=True, language="ko")
 
     assert check_chat_scope(SimpleNamespace(invoke=invoke), "얘는 어떻게 키우면 돼?", [], pokemon)
 
 
 def test_api_returns_saved_refusal_as_completed_chat_job(setup, monkeypatch):
-    monkeypatch.setattr(setup.model, "invoke", lambda *args: ChatScope(in_scope=False))
+    monkeypatch.setattr(setup.model, "invoke", lambda *args: ChatScope(in_scope=False, language="ko"))
     with TestClient(create_app(setup.settings, service=setup.service)) as client:
         client.post("/api/session")
         response = client.post("/api/chat", json={

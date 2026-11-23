@@ -9,8 +9,8 @@ from backend.app.pokemon_names import normalize_pokemon_names
 @lru_cache(maxsize=4)
 def _matcher(records):
     by_name = {}
-    for identifier, korean, english, form in records:
-        for name in {korean, english} - {None, ""}:
+    for identifier, names, form in records:
+        for name in set(names) - {None, ""}:
             by_name.setdefault(name.casefold(), []).append((identifier, form))
     patterns = []
     for name in sorted(by_name, key=len, reverse=True):
@@ -24,7 +24,7 @@ def _matcher(records):
 def mentioned_pokemon(catalog, question, limit=2):
     matches = []
     text = normalize_pokemon_names(catalog, question).casefold()
-    records = tuple((p.pokemon_id, p.name_ko, p.name_en, p.form_identifier) for p in catalog.items.values())
+    records = tuple((p.pokemon_id, (p.name_ko, p.name_en, *p.names.values()), p.form_identifier) for p in catalog.items.values())
     matcher, by_name = _matcher(records)
     for match in matcher.finditer(text):
         for identifier, form in by_name[match[1]]:
