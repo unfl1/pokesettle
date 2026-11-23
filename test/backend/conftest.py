@@ -94,7 +94,7 @@ class FakeModel:
         if self.fail:
             raise RuntimeError("SECRET_TEST_TOKEN full prompt raw provider exception")
         if purpose == "chat_scope":
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == "discovery":
             return self.discovery_plan
         if purpose == "queries":

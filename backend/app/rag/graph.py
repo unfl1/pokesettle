@@ -11,6 +11,7 @@ from backend.app.rag.prompts import (
     BATTLE_EXPLANATION_PROMPT,
     BATTLE_GENERATION_PROMPT,
     GENERATION_PROMPT,
+    language_instruction,
 )
 from backend.app.rag.retriever import retrieve
 from backend.app.schemas import BattleExplanation, Generation
@@ -27,6 +28,7 @@ class RagState(TypedDict, total=False):
     context_pokemon_ids: list[str]
     battle_context: dict | None
     result: dict
+    response_language: str
     cache_guide: bool
 
 
@@ -317,6 +319,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
             if calculated:
                 prompt, schema = BATTLE_EXPLANATION_PROMPT, BattleExplanation
                 payload["supplemental_evidence_ids"] = sorted(aliases[eid] for eid in supplemental_ids)
+            prompt += language_instruction(state.get("response_language", "ko"))
             cache_key = None
             if state.get("cache_guide") and not context and not state.get("history"):
                 settings = getattr(model, "settings", vector_store.settings)

@@ -24,7 +24,7 @@ export function useCharacterReveal(target: string) {
     }
     if (reducedMotion || visible === target) return;
     const next = segmenter.segment(target.slice(visible.length))[Symbol.iterator]().next().value?.segment ?? '';
-    const timer = window.setTimeout(() => setBuffer(visible + next), 30);
+    const timer = window.setTimeout(() => setBuffer(visible + next), 25);
     return () => window.clearTimeout(timer);
   }, [target, visible, buffer, reducedMotion]);
 

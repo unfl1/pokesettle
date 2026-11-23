@@ -29,7 +29,7 @@ def test_only_evaluated_battles_reuse_prepared_index_without_external_collection
     def invoke(purpose, prompt, payload, schema):
         invoked.append(purpose)
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         if purpose == 'battle_state':
             return BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911')
         return Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[])
@@ -94,7 +94,7 @@ def test_repeated_battle_followups_fit_model_limit_with_stored_results(setup, mo
             sent.append((self.schema, payload))
             assert input_reservation(messages[0].content, payload, self.schema.model_json_schema()) <= settings.model_max_input_tokens
             if self.schema is ChatScope:
-                return {'parsed': ChatScope(in_scope=True), 'raw': None, 'parsing_error': None}
+                return {'parsed': ChatScope(in_scope=True, language="ko"), 'raw': None, 'parsing_error': None}
             if self.schema is BattleUpdate:
                 return {'parsed': BattleUpdate(relevant=True, own_id='pokemon:908', opponent_id='pokemon:911'), 'raw': None, 'parsing_error': None}
             return {'parsed': Generation(answer_status='abstained', claims=[], assumptions=[], unknowns=[]), 'raw': None, 'parsing_error': None}
@@ -265,7 +265,7 @@ def test_only_plain_species_strategy_requests_use_local_query_planning(setup, qu
 
 @pytest.mark.parametrize('battle', [False, True])
 def test_generation_uses_battle_instructions_only_with_calculated_context(setup, monkeypatch, battle):
-    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT, GENERATION_PROMPT
+    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT, GENERATION_PROMPT, language_instruction
 
     catalog = Catalog(ROOT / 'data/pokemon.json')
     pid = 'pokemon:25'
@@ -282,7 +282,7 @@ def test_generation_uses_battle_instructions_only_with_calculated_context(setup,
     build_graph(setup.vectors, setup.model).invoke({
         'pokemon_id': pid, 'question': '설명해줘', 'battle_context': context,
     })
-    assert prompts == [BATTLE_EXPLANATION_PROMPT if battle else GENERATION_PROMPT]
+    assert prompts == [(BATTLE_EXPLANATION_PROMPT if battle else GENERATION_PROMPT) + language_instruction("ko")]
     assert 'damage_comparisons' not in GENERATION_PROMPT
     assert 'supplemental_evidence_ids' in BATTLE_EXPLANATION_PROMPT
     assert 'Champions applicability is unknown' in GENERATION_PROMPT
@@ -312,7 +312,7 @@ def test_reexplanation_reuses_state_but_changes_and_topic_switches_use_extractio
 
     def invoke(purpose, prompt, payload, schema):
         if purpose == 'chat_scope':
-            return ChatScope(in_scope=True)
+            return ChatScope(in_scope=True, language="ko")
         calls.append(purpose)
         assert purpose == 'battle_state', 'no supplemental evidence should mean no generation'
         if '40%' in payload['question']:
@@ -344,7 +344,7 @@ def test_reexplanation_reuses_state_but_changes_and_topic_switches_use_extractio
 def test_battle_supplement_schema_and_citation_validation(setup, monkeypatch):
     from pydantic import ValidationError
 
-    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT
+    from backend.app.rag.prompts import BATTLE_EXPLANATION_PROMPT, language_instruction
 
     catalog = Catalog(ROOT / 'data/pokemon.json')
     pid = 'pokemon:25'
@@ -354,7 +354,7 @@ def test_battle_supplement_schema_and_citation_validation(setup, monkeypatch):
     calls = []
 
     def invoke(purpose, prompt, payload, schema):
-        assert schema is BattleExplanation and prompt == BATTLE_EXPLANATION_PROMPT
+        assert schema is BattleExplanation and prompt == BATTLE_EXPLANATION_PROMPT + language_instruction("ko")
         calls.append(payload.copy())
         eid = payload['supplemental_evidence_ids'][0]
         # Valid supporting ID plus an invented ID must still fail validation.
