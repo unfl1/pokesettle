@@ -26,6 +26,7 @@ data/*
 !data/pokemon.json
 !data/pokemon_names.json
 !data/catalog_details.json
+!data/champions_balance.json
 !data/battle_names.json
 !data/type_chart.json
 !data/sources.json

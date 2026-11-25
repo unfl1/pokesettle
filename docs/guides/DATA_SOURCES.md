@@ -84,6 +84,13 @@
 - 명령: `python -m backend.scripts.index_strategy`, 기초 메커니즘의 원문·라이선스·수집 시각과 직접 작성한 분석을 분리 색인
 - 질문에 명시된 포켓몬의 자료도 함께 검색하되 기존 대화 항목·선택 메타 유지, 다른 폼의 전략 자동 적용 없음
 
+## Champions 배틀 밸런스 공지 — 2026-12-02 점검 예정
+
+- 2026-11-25 확인한 [Pokémon Champions 공식 공지](https://champions-news.pokemon-home.com/en/page/877.html)의 변경 중 스톤샤워와 삼삼드래 날개쉬기를 [별도 자료](../../data/champions_balance.json)에 요약함
+- 모든 레귤레이션 대상. 스톤샤워 명중률 90% → 95%, 풀죽음 확률 30% → 20%, 삼삼드래 날개쉬기 습득 추가 예정임. 점검 완료·구체적 습득 방법·개별 레귤레이션 적격성은 미확인임
+- 공식 공지에 별도 재배포 라이선스 표기 없음. 원문·이미지 복제 없이 변경 사실 요약과 출처만 저장함
+- 챗봇은 관련 질문에서 공지를 공식 근거로 전달하며 일반 기술 데이터와 적용 범위를 분리함. 도감은 삼삼드래와 Champions 버전 그룹에 스톤샤워가 있는 항목의 습득 목록 위에 공지를 표시함. PokéAPI 원본과 참조 데미지 계산 자료 보존함
+
 ## Champions 싱글 메타 API 연동 — 2026-10-25
 
 - 출처: [Pokémon Champions Battle Data](https://championsbattledata.com/), 비공식 제공자

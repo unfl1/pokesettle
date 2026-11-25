@@ -153,6 +153,12 @@ class Learnset(ResponseModel):
     moves: list[LearnsetMove]
 
 
+class ChampionsBalanceNotice(ResponseModel):
+    maintenance_date: str
+    source_url: str
+    summaries: list[dict[str, str]]
+
+
 class TypeMultiplier(ResponseModel):
     type: str
     multiplier: float
@@ -177,6 +183,7 @@ class PokemonDetail(Pokemon):
     learnset: Learnset | None
     learnset_sources: list[JsonObject]
     learnset_licence_url: str | None
+    champions_balance_notice: ChampionsBalanceNotice | None = None
 
 
 class ConversationCreated(ResponseModel):

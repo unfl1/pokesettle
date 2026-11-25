@@ -1,13 +1,46 @@
 from dataclasses import replace
+from uuid import uuid4
 
 import pytest
 
 from backend.app.catalog import Catalog, metadata_text
+from backend.app.core.config import ROOT
 from backend.app.core.errors import ServiceError
+from backend.app.data_preparation.champions_balance import load_balance_notice
 from backend.app.rag.graph import build_graph, render_answer
 from backend.app.rag.vector_store import VectorStore
-from backend.app.schemas import Generation
+from backend.app.schemas import ChatRequest, Generation
 from test.backend.conftest import document, embed
+
+
+@pytest.mark.parametrize(("pokemon_id", "question", "expected", "unrelated"), [
+    (None, "스톤샤워 명중률이 바뀌나요?", ["90% → 95%", "30% → 20%"], "Hydreigon"),
+    ("pokemon:1", "스톤샤워 명중률이 바뀌나요?", ["90% → 95%", "30% → 20%"], "Hydreigon"),
+    ("pokemon:635", "삼삼드래가 날개쉬기를 배울 수 있나요?", ["Hydreigon gains access to Roost"], "Rock Slide"),
+])
+def test_chat_cites_the_official_balance_notice(setup, pokemon_id, question, expected, unrelated):
+    setup.catalog.balance_notice = load_balance_notice(ROOT / "data")
+    if pokemon_id == "pokemon:635":
+        hydreigon = Catalog(ROOT / "data" / "pokemon.json").get(pokemon_id)
+        setup.catalog.items[pokemon_id] = hydreigon
+        setup.vectors.upsert_metadata([hydreigon])
+    session = setup.store.new_session()
+    result = setup.service.chat(
+        ChatRequest(pokemon_id=pokemon_id, question=question, client_request_id=uuid4()),
+        session,
+    )
+    _, payload = next(call for call in setup.model.calls if call[0] == "generate")
+    evidence = payload["evidence"][0]
+    assert evidence["document_id"] == "pokemon-champions:balance:877"
+    assert "2026-12-02" in evidence["text"] and "pre-patch" in evidence["text"]
+    assert all(text in evidence["text"] for text in expected)
+    assert unrelated not in evidence["text"]
+    assert result["citations"][0]["source_url"].endswith("/en/page/877.html")
+    assert result["facts"][0]["verification_status"] == "verified"
+    saved = setup.store.messages(session, result["conversation_id"])["items"][-1]["content"]
+    assert saved["citations"] == result["citations"]
+    if pokemon_id is None:
+        assert setup.source.searches == 0
 
 
 def test_100_metadata_and_idempotent_upsert(setup):

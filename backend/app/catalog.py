@@ -2,12 +2,14 @@ import json
 from pathlib import Path
 
 from backend.app.core.errors import ServiceError
+from backend.app.data_preparation.champions_balance import load_balance_notice, profile_balance_notice
 from backend.app.schemas import Pokemon
 
 
 class Catalog:
     def __init__(self, path: Path):
         self.items = {}
+        self.balance_notice = load_balance_notice(path.parent)
         details_path = path.parent / "catalog_details.json"
         self.details = json.loads(details_path.read_text()) if details_path.exists() else {}
         names_path = path.parent / "battle_names.json"
@@ -92,6 +94,9 @@ class Catalog:
             for source in self.details.get("sources", []) + self.localization.get("sources", [])
         }.values()) if detail else []
         result["learnset_licence_url"] = self.details.get("licence_url") if detail else None
+        balance_notice = profile_balance_notice(self.balance_notice, pokemon_id, result["learnset"])
+        if balance_notice:
+            result["champions_balance_notice"] = balance_notice
         return result
 
 

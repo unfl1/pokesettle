@@ -1,0 +1,30 @@
+{
+  "document_id": "pokemon-champions:balance:877",
+  "source_url": "https://champions-news.pokemon-home.com/en/page/877.html",
+  "collected_at": "2026-11-25",
+  "maintenance_date": "2026-12-02",
+  "updates": [
+    {
+      "id": "rock-slide",
+      "move_slug": "rock-slide",
+      "aliases": ["스톤샤워", "Rock Slide", "rock-slide", "いわなだれ", "岩崩"],
+      "summary": {
+        "ko": "스톤샤워 명중률 90% → 95%, 풀죽음 확률 30% → 20%",
+        "en": "Rock Slide accuracy 90% → 95%, flinch chance 30% → 20%",
+        "ja": "いわなだれの命中率 90% → 95%、ひるむ確率 30% → 20%",
+        "zh": "岩崩命中率 90% → 95%，畏缩概率 30% → 20%"
+      }
+    },
+    {
+      "id": "hydreigon-roost",
+      "pokemon_id": "pokemon:635",
+      "aliases": ["삼삼드래", "Hydreigon", "サザンドラ", "三首恶龙", "三首惡龍"],
+      "summary": {
+        "ko": "삼삼드래가 날개쉬기를 배울 수 있게 됨",
+        "en": "Hydreigon gains access to Roost",
+        "ja": "サザンドラがはねやすめを覚えられるようになる",
+        "zh": "三首恶龙将可以学会羽栖"
+      }
+    }
+  ]
+}

@@ -13,6 +13,7 @@ from backend.app.battle.conversation import (
     resolve_named_opponent,
 )
 from backend.app.core.errors import ServiceError
+from backend.app.data_preparation.champions_balance import balance_evidence, matching_updates
 from backend.app.pokemon_names import normalize_pokemon_names
 from backend.app.rag.graph import build_graph
 from backend.app.rag.guide import metadata_guide
@@ -246,7 +247,9 @@ class KnowledgeService:
                 "user_message_id": user_id,
                 "assistant_message_id": assistant_id,
             }
-        if focus is None:
+        notice = self.catalog.balance_notice if feature is None else None
+        balance_updates = matching_updates(notice, request.question, focus)
+        if focus is None and not balance_updates:
             result = {
                 "answer_status": "partial",
                 "answer": "내 포켓몬과 상대 포켓몬, 또는 궁금한 포켓몬 이름을 질문에 적어주세요. 도감에서 선택할 필요는 없어요.",
@@ -265,8 +268,8 @@ class KnowledgeService:
                 "assistant_message_id": assistant_id,
             }
         request = request.model_copy(update={"pokemon_id": focus})
-        self.catalog.get(focus)
-        self.store.put("chat_topic", conversation_id, focus)
+        if focus is not None:
+            self.store.put("chat_topic", conversation_id, focus)
         previous_answer = history[-1].get("content") if history and history[-1].get("role") == "assistant" else None
         previous_battle = self.store.get("battle_state", conversation_id) or {}
         battle_state, battle_context = previous_battle, None
@@ -279,7 +282,10 @@ class KnowledgeService:
             battle_context = evaluate_state(
                 battle_state, self.catalog, self.settings.data_dir, self.settings
             )
-        elif feature is None and needs_battle_update(request.question, previous_battle):
+        elif (
+            feature is None and focus is not None
+            and needs_battle_update(request.question, previous_battle)
+        ):
             stage("interpreting_battle")
             candidate_ids = list(
                 dict.fromkeys(
@@ -422,6 +428,8 @@ class KnowledgeService:
         )
         if use_prepared_index:
             collection = {"queries": [], "source": "prepared_local_index"}
+        elif focus is None:
+            collection = {"queries": [], "source": "champions_balance_notice"}
         else:
             collection = self.collect(
                 request.pokemon_id, request.question, request.regulation_id, stage
@@ -468,6 +476,7 @@ class KnowledgeService:
                     "history": history,
                     "cache_guide": feature == "pokemon_guide",
                     "response_language": response_language,
+                    "balance_evidence": balance_evidence(notice, balance_updates),
                 }
             )
         finally:
