@@ -74,6 +74,25 @@ def test_localized_ability_names_preserve_source_identifiers():
     )
 
 
+def test_champions_balance_notice_is_separate_from_the_learnset_snapshot():
+    from backend.app.api.schemas import PokemonDetail
+    from backend.app.catalog import Catalog
+    from backend.app.core.config import ROOT
+
+    catalog = Catalog(ROOT / "data/pokemon.json")
+    profile = PokemonDetail.model_validate(catalog.profile("pokemon:635"))
+    notice = profile.champions_balance_notice
+    assert notice.maintenance_date == "2026-12-02"
+    assert notice.source_url.endswith("/en/page/877.html")
+    assert "95%" in notice.summaries[0]["ko"] and "20%" in notice.summaries[0]["ko"]
+    assert "날개쉬기" in notice.summaries[1]["ko"]
+    moves = {move.name_en: move for move in profile.learnset.moves}
+    assert moves["rock-slide"].accuracy == 90
+    assert moves["rock-slide"].effect_meta.flinch_chance == 30
+    assert "roost" not in moves
+    assert "champions_balance_notice" not in catalog.profile("pokemon:25")
+
+
 def test_profile_localizes_reference_data_without_changing_identifiers():
     from backend.app.catalog import Catalog
     from backend.app.core.config import ROOT

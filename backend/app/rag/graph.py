@@ -19,12 +19,13 @@ from backend.app.storage import digest
 
 
 class RagState(TypedDict, total=False):
-    pokemon_id: str
+    pokemon_id: str | None
     question: str
     retrieval_query: str
     regulation_id: str | None
     history: list
     evidence: list
+    balance_evidence: list
     context_pokemon_ids: list[str]
     battle_context: dict | None
     result: dict
@@ -176,7 +177,9 @@ def build_graph(vector_store, model, stage=lambda _: None):
     def retrieve_node(state):
         stage("retrieving")
         query = state.get("retrieval_query") or state["question"]
-        ids = list(dict.fromkeys([state["pokemon_id"], *state.get("context_pokemon_ids", [])]))
+        ids = list(dict.fromkeys(
+            pid for pid in [state.get("pokemon_id"), *state.get("context_pokemon_ids", [])] if pid
+        ))
         groups = [retrieve(vector_store, pid, query, state.get("regulation_id")) for pid in ids]
         # Preserve selected metadata and explicitly mentioned metadata within total Top-k.
         metadata = [group[0] for group in groups if group]
@@ -195,7 +198,7 @@ def build_graph(vector_store, model, stage=lambda _: None):
                     if manifest and eid in manifest["ids"]:
                         documents.append(vector_store.evidence(eid, text, meta))
         # Species strategy notes have their own retrieval lane so Pokédex prose cannot crowd them out.
-        context_ids = set(state.get("context_pokemon_ids", []) or [state["pokemon_id"]])
+        context_ids = set(state.get("context_pokemon_ids", []) or ids)
 
         def priority(item):
             doc_id = item.get("document_id", "")
@@ -232,7 +235,10 @@ def build_graph(vector_store, model, stage=lambda _: None):
                 }
             ]
         combined, seen = [], set()
-        for item in [*metadata, *calculations, *documents]:
+        official = state.get("balance_evidence", [])
+        # Keep the calculation available to the server's battle answer.
+        prioritized = [*calculations, *official, *metadata] if official else [*metadata, *calculations]
+        for item in [*prioritized, *documents]:
             if item["evidence_id"] not in seen:
                 combined.append(item)
                 seen.add(item["evidence_id"])

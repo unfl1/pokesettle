@@ -24,6 +24,7 @@ const statColors: Record<StatName, string> = {
 export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }: { pokemon: PokemonDetail; locale: Locale; dictionary: Dictionary; headingLevel?: 1 | 2 }) {
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
   const translate = createTranslator(dictionary);
+  const balanceNotice = pokemon.championsBalanceNotice;
   const description = pokemon.descriptions?.[locale] ?? (locale === 'ko' && pokemon.description ? { text: pokemon.description, version: pokemon.descriptionVersion } : pokemon.descriptions?.en);
   const descriptionLanguage = pokemon.descriptions?.[locale] || locale === 'ko' ? locale : 'en';
   const maximum = Math.max(...Object.values(pokemon.baseStats));
@@ -94,6 +95,16 @@ export function PokemonProfile({ pokemon, locale, dictionary, headingLevel = 2 }
               <TypeDefense defense={pokemon.typeDefense} dictionary={dictionary} />
             </div>
           </div>
+          {balanceNotice && <aside className="mt-4 rounded-lg border border-line px-4 py-3 text-sm">
+            <a className="font-semibold text-ink underline underline-offset-2" href={balanceNotice.sourceUrl} target="_blank" rel="noreferrer">
+              {translate('Champions {date} 점검 예정 변경', { date: balanceNotice.maintenanceDate })}
+            </a>
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-muted">
+              {balanceNotice.summaries.map(summary => (
+                <li key={summary.en} lang={summary[locale] ? undefined : 'en'}>{summary[locale] ?? summary.en}</li>
+              ))}
+            </ul>
+          </aside>}
           <Learnset pokemon={{ learnset: pokemon.learnset }} locale={locale} dictionary={dictionary} />
         </div>
       </div>

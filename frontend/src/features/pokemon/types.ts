@@ -50,6 +50,11 @@ export interface PokemonDetail extends PokemonSummary {
   learnset?: { versionGroup: string; moves: { name: string; nameEn?: string | null; names?: PokemonSummary['names']; method: string; level: number; pp?: number | null; statChanges?: { stat: string; change: number }[] | null; statTarget?: 'user' | 'target' | null; statChance?: number | null; effectMeta?: { category?: string | null; ailment?: string | null; ailmentChance?: number | null; flinchChance?: number | null; healing?: number | null; drain?: number | null; critRate?: number | null; minHits?: number | null; maxHits?: number | null; priority?: number | null; tags?: string[] } | null; effectTexts?: Partial<Record<import('../../i18n/config').Locale, { text: string; versionGroup: string }>> | null; type?: string | null; category?: string | null; power?: number | null; accuracy?: number | null }[] } | null;
   learnsetSources?: { url: string; collectedAt: string; contentHash: string }[];
   learnsetLicenceUrl?: string | null;
+  championsBalanceNotice?: {
+    maintenanceDate: string;
+    sourceUrl: string;
+    summaries: Partial<Record<import('../../i18n/config').Locale, string>>[];
+  } | null;
   availableMoves: string[] | null;
   sourceUrl: string;
   collectedAt: string;
